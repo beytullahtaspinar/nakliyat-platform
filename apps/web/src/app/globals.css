@@ -3,26 +3,26 @@
 /*
  * evdenevenakliyat.app görsel kimliği
  *
- * brand  : lacivert; güven ve kurumsallık. Birincil eylemler, bağlantılar, vurgu yüzeyleri.
+ * brand  : koyu yeşil; güven ve kurumsallık. Birincil eylemler, bağlantılar, vurgu yüzeyleri.
  * accent : koli turuncusu; az ve bilinçli kullanılır (logo, ikon, küçük vurgular). Buton rengi değildir.
  * zinc   : nötrler, hafif mavimsi (slate) tona çekildi.
  *
  * Mevcut ekranlar `blue-*` ve `zinc-*` sınıflarını kullanıyor. Aşağıdaki eşlemeyle bu sınıflar
- * marka paletine bağlanır; böylece her sayfa tek yerden aynı kimliği alır. Yeni kodda anlamı
+ * marka paletine bağlanır (`blue-*` artık marka yeşilidir); böylece her sayfa tek yerden aynı kimliği alır. Yeni kodda anlamı
  * belli olsun diye `brand-*` / `accent-*` tercih edilir.
  */
 @theme {
-  --color-brand-50: #f0f5ff;
-  --color-brand-100: #e0eaff;
-  --color-brand-200: #c2d5fe;
-  --color-brand-300: #94b3fb;
-  --color-brand-400: #5e87f3;
-  --color-brand-500: #3563e3;
-  --color-brand-600: #2349c4;
-  --color-brand-700: #1d3a9e;
-  --color-brand-800: #1a3280;
-  --color-brand-900: #172a61;
-  --color-brand-950: #0d1838;
+  --color-brand-50: #effaf4;
+  --color-brand-100: #d8f3e3;
+  --color-brand-200: #b3e6ca;
+  --color-brand-300: #7fd2a9;
+  --color-brand-400: #48b683;
+  --color-brand-500: #259a67;
+  --color-brand-600: #177d52;
+  --color-brand-700: #136544;
+  --color-brand-800: #125139;
+  --color-brand-900: #10432f;
+  --color-brand-950: #06251a;
 
   --color-accent-50: #fff6ed;
   --color-accent-100: #ffead4;
