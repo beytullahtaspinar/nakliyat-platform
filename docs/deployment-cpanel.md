@@ -11,61 +11,62 @@ Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin pa
 
 > **.app uzantısı hakkında:** .app alan adları tarayıcılarda yalnızca HTTPS ile açılır (HSTS preload). Ana alan adı ve her alt alan adı için SSL sertifikası (cPanel AutoSSL veya Let's Encrypt) site yayına girmeden önce aktif olmalı. Sertifika yoksa site hiç açılmaz.
 
-## 1. Hosting'de önce kontrol edilecekler
+## 1. Sunucu (Veridyen jsJunior paketi)
 
-- [ ] cPanel'de **Setup Node.js App** menüsü var mı? Node.js **22** (en az 20.9) seçilebiliyor mu?
-- [x] Veritabanı: sunucuda **MariaDB 10.6** var (PostgreSQL yok). Uygulama MariaDB/MySQL ile çalışır.
-- [ ] **SSH Access** açık mı? Otomatik deploy için gerekli.
-- [ ] Disk ve inode kotası: API paketi bağımlılıklarıyla birlikte ~420 MB, web paketi ~70 MB tutuyor.
+- [x] **Setup Node.js App** var, Node.js **22** seçilebiliyor.
+- [x] Veritabanı **MariaDB 10.11**. Uygulama MariaDB/MySQL ile çalışır.
+- [x] cPanel **Terminal** ve **Cron Jobs** var. Dışarıdan SSH **kapalı** (hosting izin vermiyor), bu yüzden deploy "çekme" yöntemiyle çalışır.
+- Disk: 2 GB. API paketi bağımlılıklarıyla ~430 MB, web ~70 MB. Kurulum sırasında geçici olarak bunun iki katı yer gerekir.
 
-## 2. İlk kurulum (bir kez)
+## 2. Deploy nasıl çalışır?
 
-1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. `cms.` alt alan adına WordPress kurulur (Softaculous ile) ve arama motorlarına kapatılır. Ana alan adında eski bir WordPress varsa önce yedekle ve `cms.` adresine taşı. Tüm adresler için SSL'i (AutoSSL / Let's Encrypt) aç.
-2. **Veritabanı:** cPanel → **Database Wizard** (MySQL) ile veritabanı ve kullanıcı oluştur, kullanıcıya **ALL PRIVILEGES** ver. cPanel adların başına hesap adını ekler (ör. `evdenevenakliyat_nakliyat`).
+1. `main` dalına her birleştirmede GitHub Actions **Canlı sürüm paketi** iş akışı çalışır: API ve web paketlerini derler (`scripts/package-release.sh`) ve `release.tar.gz` dosyasını GitHub Release olarak yayınlar (`surum-N`). Son 3 sürüm tutulur.
+2. Sunucuda cron ile birkaç dakikada bir çalışan `~/deploy.sh` (`scripts/server-deploy.sh`) yeni sürüm varsa indirir, `node_modules` klasörlerini CloudLinux sanal ortamına (`~/nodevenv/<uygulama>/22/lib/node_modules`) taşır, uygulama dosyalarını yeniler ve `tmp/restart.txt` ile uygulamaları yeniden başlatır.
+3. API açılırken bekleyen veritabanı migration'larını kendisi uygular (`app.cjs`). Veritabanı bağlantısı cPanel'deki ortam değişkenlerinden gelir; ayrı bir yere kopyalanmaz.
+
+Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-release`.
+
+## 3. İlk kurulum (bir kez)
+
+1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. Tüm adresler için SSL'i (AutoSSL / Let's Encrypt) aç. Blog editörü WordPress (`cms.`) eski PHP paketinde kalır, DNS ile yönlendirilir.
+2. **Veritabanı:** cPanel → **Database Wizard** ile veritabanı ve kullanıcı oluştur, kullanıcıya **ALL PRIVILEGES** ver. Şifreyi sembolsüz üret (yalnızca harf ve rakam), böylece bağlantı adresinde kodlama gerekmez.
 3. **API uygulaması** (Setup Node.js App → Create Application):
-   - Node.js version: 22
-   - Application mode: Production
-   - Application root: `nakliyat-api`
-   - Application URL: `api.evdenevenakliyat.app`
+   - Node.js version: 22, Application mode: Production
+   - Application root: `nakliyat-api`, Application URL: `api.evdenevenakliyat.app`
    - Application startup file: `app.cjs`
-   - Environment variables: `NODE_ENV=production`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI` (şifrede özel karakter varsa URL kodlamasıyla yaz, ör. `@` → `%40`), `WEB_URL=https://evdenevenakliyat.app`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
-4. **Web uygulaması**:
-   - Application root: `nakliyat-web`
-   - Application URL: `evdenevenakliyat.app`
-   - Application startup file: `apps/web/server.js`
-   - Environment variables: `NODE_ENV=production`
-5. **SSH anahtarı:** cPanel → SSH Access → Manage SSH Keys → Generate a New Key (RSA 4096). cPanel şifre koymayı zorunlu tutar; şifreyi `CPANEL_SSH_KEY_PASSPHRASE` secret'ına gir. Anahtarı **Manage → Authorize** ile yetkilendir, özel anahtarı (View/Download) `CPANEL_SSH_KEY` secret'ına yapıştır.
+   - Environment variables: `NODE_ENV=production`, `WEB_URL=https://evdenevenakliyat.app`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI`, `JWT_ACCESS_SECRET` (uzun, rastgele)
+   - **Run NPM Install**'a basma; bağımlılıkları deploy getirir.
+4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`.
+5. **GitHub:** Repo → Settings → Environments → `production` → Variable `NEXT_PUBLIC_API_URL` = `https://api.evdenevenakliyat.app`.
+6. **Sunucunun GitHub'a erişimi:** GitHub → Settings → Developer settings → **Fine-grained tokens** → Generate new token. Repository access: yalnızca `nakliyat-platform`. Permissions: **Contents: Read-only**. Token'ı cPanel → **Terminal**'de şu komutla kaydet (ekrana yazılmaz, sohbete veya dosyaya yapıştırma):
 
-## 3. GitHub ayarları
+   ```bash
+   mkdir -p ~/.config/nakliyat && chmod 700 ~/.config/nakliyat
+   read -rs -p "Token: " T && printf '%s' "$T" > ~/.config/nakliyat/github-token && chmod 600 ~/.config/nakliyat/github-token && unset T && echo
+   ```
 
-Repo → Settings → Environments → `production`:
+7. **Betiği indir ve ilk kurulumu yap** (Terminal):
 
-| Tür | Ad | Örnek |
-|---|---|---|
-| Secret | `CPANEL_SSH_HOST` | `sunucu.hosting.com` |
-| Secret | `CPANEL_SSH_PORT` | `22` (bazı firmalarda farklıdır) |
-| Secret | `CPANEL_SSH_USER` | cPanel kullanıcı adı |
-| Secret | `CPANEL_SSH_KEY` | Özel SSH anahtarı |
-| Secret | `CPANEL_SSH_KEY_PASSPHRASE` | Anahtarın şifresi (şifresizse boş bırak) |
-| Variable | `CPANEL_API_DIR` | `nakliyat-api` |
-| Variable | `CPANEL_WEB_DIR` | `nakliyat-web` |
-| Variable | `NEXT_PUBLIC_API_URL` | `https://api.evdenevenakliyat.app` |
+   ```bash
+   curl -fsSL -H "Authorization: Bearer $(cat ~/.config/nakliyat/github-token)" \
+     -H "Accept: application/vnd.github.raw" \
+     https://api.github.com/repos/beytullahtaspinar/nakliyat-platform/contents/scripts/server-deploy.sh \
+     -o ~/deploy.sh && chmod +x ~/deploy.sh
+   ~/deploy.sh 2>&1 | tee -a ~/deploy.log
+   ```
 
-## 4. Deploy
+8. **Otomatik güncelleme:** cPanel → **Cron Jobs** → her 5 dakika (`*/5 * * * *`), komut:
 
-GitHub → Actions → **cPanel'e deploy** → Run workflow.
+   ```bash
+   /bin/bash $HOME/deploy.sh >> $HOME/deploy.log 2>&1
+   ```
 
-İş akışı şunları yapar: paketleri derler (`scripts/package-release.sh`), rsync ile sunucuya yükler, `prisma migrate deploy` çalıştırır, `tmp/restart.txt` ile uygulamaları yeniden başlatır ve `/v1/health` adresini kontrol eder.
+## 4. Günlük kullanım
 
-> Not: `node_modules` klasörleri CloudLinux Node.js Selector'ın beklediği `~/nodevenv/<uygulama>/22/lib/node_modules` yoluna yüklenir. Hosting'in bu yapıyı kullanmıyorsa ilk deploy'da bu yolu birlikte ayarlarız.
-
-## 5. Elle deploy (SSH yoksa)
-
-```bash
-./scripts/package-release.sh
-```
-
-`out/api` ve `out/web` klasörlerini (node_modules hariç) File Manager ile uygulama klasörlerine yükle, `node_modules` içeriğini yukarıdaki sanal ortam yoluna koy, ardından Setup Node.js App ekranından **Restart** et.
+- Yeni sürüm: PR'ı `main`'e birleştir. Birkaç dakika içinde canlıya çıkar.
+- Aynı sürümü yeniden kur: Terminal'de `~/deploy.sh --force`.
+- GitHub'a erişilemezse: Release sayfasından `release.tar.gz`'yi indir, File Manager ile ana klasöre yükle, Terminal'de `~/deploy.sh --from-file ~/release.tar.gz`.
+- Token'ın süresi dolarsa yenisini oluşturup 6. adımdaki komutla tekrar kaydet.
 
 ## Yerelde Docker
 
