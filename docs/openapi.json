@@ -15,6 +15,43 @@
         ]
       }
     },
+    "/v1/locations/cities": {
+      "get": {
+        "operationId": "LocationsController_cities",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "İl ve ilçeler"
+        ]
+      }
+    },
+    "/v1/locations/cities/{code}/districts": {
+      "get": {
+        "operationId": "LocationsController_districts",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "İl ve ilçeler"
+        ]
+      }
+    },
     "/v1/auth/register": {
       "post": {
         "operationId": "AuthController_register",
@@ -155,6 +192,172 @@
         ],
         "tags": [
           "Kimlik doğrulama"
+        ]
+      }
+    },
+    "/v1/requests": {
+      "post": {
+        "operationId": "RequestsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      },
+      "get": {
+        "operationId": "RequestsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      }
+    },
+    "/v1/requests/{id}": {
+      "get": {
+        "operationId": "RequestsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      },
+      "patch": {
+        "operationId": "RequestsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      }
+    },
+    "/v1/requests/{id}/cancel": {
+      "post": {
+        "operationId": "RequestsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
         ]
       }
     }
@@ -314,6 +517,214 @@
           "accessToken",
           "refreshToken"
         ]
+      },
+      "CreateRequestDto": {
+        "type": "object",
+        "properties": {
+          "fromCityCode": {
+            "type": "string",
+            "example": "34",
+            "description": "Çıkış ili plaka kodu"
+          },
+          "fromDistrict": {
+            "type": "string",
+            "example": "kadikoy",
+            "description": "Çıkış ilçesi adres kodu (GET /locations/cities/:code/districts)"
+          },
+          "fromAddress": {
+            "type": "string",
+            "example": "Caferağa Mah. Moda Cad. No:1 D:5"
+          },
+          "fromFloor": {
+            "type": "number",
+            "example": 3,
+            "description": "Kat (bodrum için -1)"
+          },
+          "fromHasElevator": {
+            "type": "boolean"
+          },
+          "toCityCode": {
+            "type": "string",
+            "example": "06"
+          },
+          "toDistrict": {
+            "type": "string",
+            "example": "cankaya"
+          },
+          "toAddress": {
+            "type": "string",
+            "example": "Kızılay Mah. Atatürk Blv. No:10 D:2"
+          },
+          "toFloor": {
+            "type": "number",
+            "example": 2
+          },
+          "toHasElevator": {
+            "type": "boolean"
+          },
+          "homeType": {
+            "type": "string",
+            "enum": [
+              "STUDIO",
+              "ONE_PLUS_ONE",
+              "TWO_PLUS_ONE",
+              "THREE_PLUS_ONE",
+              "FOUR_PLUS_ONE",
+              "VILLA",
+              "OFFICE"
+            ],
+            "example": "TWO_PLUS_ONE"
+          },
+          "moveDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-11-15",
+            "description": "Taşınma tarihi (en erken yarın, en geç 1 yıl sonra)"
+          },
+          "isDateFlexible": {
+            "type": "boolean",
+            "default": false
+          },
+          "needsPacking": {
+            "type": "boolean",
+            "default": false
+          },
+          "needsAssembly": {
+            "type": "boolean",
+            "default": false
+          },
+          "needsStorage": {
+            "type": "boolean",
+            "default": false
+          },
+          "specialItems": {
+            "example": [
+              "Piyano",
+              "Antika vitrin"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "example": "Sokak dar, kamyon girmiyor."
+          }
+        },
+        "required": [
+          "fromCityCode",
+          "fromDistrict",
+          "fromAddress",
+          "fromFloor",
+          "fromHasElevator",
+          "toCityCode",
+          "toDistrict",
+          "toAddress",
+          "toFloor",
+          "toHasElevator",
+          "homeType",
+          "moveDate"
+        ]
+      },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateRequestDto": {
+        "type": "object",
+        "properties": {
+          "fromCityCode": {
+            "type": "string",
+            "example": "34",
+            "description": "Çıkış ili plaka kodu"
+          },
+          "fromDistrict": {
+            "type": "string",
+            "example": "kadikoy",
+            "description": "Çıkış ilçesi adres kodu (GET /locations/cities/:code/districts)"
+          },
+          "fromAddress": {
+            "type": "string",
+            "example": "Caferağa Mah. Moda Cad. No:1 D:5"
+          },
+          "fromFloor": {
+            "type": "number",
+            "example": 3,
+            "description": "Kat (bodrum için -1)"
+          },
+          "fromHasElevator": {
+            "type": "boolean"
+          },
+          "toCityCode": {
+            "type": "string",
+            "example": "06"
+          },
+          "toDistrict": {
+            "type": "string",
+            "example": "cankaya"
+          },
+          "toAddress": {
+            "type": "string",
+            "example": "Kızılay Mah. Atatürk Blv. No:10 D:2"
+          },
+          "toFloor": {
+            "type": "number",
+            "example": 2
+          },
+          "toHasElevator": {
+            "type": "boolean"
+          },
+          "homeType": {
+            "type": "string",
+            "enum": [
+              "STUDIO",
+              "ONE_PLUS_ONE",
+              "TWO_PLUS_ONE",
+              "THREE_PLUS_ONE",
+              "FOUR_PLUS_ONE",
+              "VILLA",
+              "OFFICE"
+            ],
+            "example": "TWO_PLUS_ONE"
+          },
+          "moveDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-11-15",
+            "description": "Taşınma tarihi (en erken yarın, en geç 1 yıl sonra)"
+          },
+          "isDateFlexible": {
+            "type": "boolean",
+            "default": false
+          },
+          "needsPacking": {
+            "type": "boolean",
+            "default": false
+          },
+          "needsAssembly": {
+            "type": "boolean",
+            "default": false
+          },
+          "needsStorage": {
+            "type": "boolean",
+            "default": false
+          },
+          "specialItems": {
+            "example": [
+              "Piyano",
+              "Antika vitrin"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string",
+            "example": "Sokak dar, kamyon girmiyor."
+          }
+        }
       }
     }
   }

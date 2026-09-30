@@ -6,7 +6,9 @@ import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { HealthController } from './health/health.controller.js';
+import { LocationsController } from './locations/locations.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { RequestsModule } from './requests/requests.module.js';
 
 @Module({
   imports: [
@@ -14,8 +16,9 @@ import { PrismaModule } from './prisma/prisma.module.js';
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }]),
     PrismaModule,
     AuthModule,
+    RequestsModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, LocationsController],
   providers: [
     // Sıra önemli: önce hız sınırı, sonra kimlik, sonra rol kontrolü.
     { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -76,8 +76,9 @@ model Company {
   k3LicenseNumber    String?
   description        String?
   logoUrl            String?
-  city               String
-  serviceCities      String[]
+  cityCode           String             @db.Char(2)
+  // Hizmet verilen iller (plaka kodu)
+  serviceCityCodes   String[]
   verificationStatus VerificationStatus @default(PENDING)
   verifiedAt         DateTime?
   ratingAverage      Decimal            @default(0) @db.Decimal(3, 2)
@@ -95,7 +96,7 @@ model Company {
   reviews   Review[]
 
   @@index([verificationStatus])
-  @@index([city])
+  @@index([cityCode])
 }
 
 enum CompanyDocumentType {
@@ -169,12 +170,13 @@ model MovingRequest {
   customerId String
   status     RequestStatus @default(OPEN)
 
-  fromCity        String
+  // İl plaka kodu ("34") ve ilçe adres kodu ("kadikoy"), bkz. @nakliyat/locations
+  fromCityCode    String  @db.Char(2)
   fromDistrict    String
   fromAddress     String
   fromFloor       Int
   fromHasElevator Boolean
-  toCity          String
+  toCityCode      String  @db.Char(2)
   toDistrict      String
   toAddress       String
   toFloor         Int
@@ -205,7 +207,8 @@ model MovingRequest {
   quotes   Quote[]
   booking  Booking?
 
-  @@index([status, fromCity])
+  @@index([status, fromCityCode])
+  @@index([status, toCityCode])
   @@index([customerId])
 }
 

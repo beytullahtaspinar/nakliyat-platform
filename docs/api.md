@@ -40,15 +40,26 @@ Durum: ✅ yazıldı ve test edildi · ⏳ planlandı
 | ⏳ | POST | `/auth/otp/verify` | Giriş yapmış | Telefonu doğrula |
 | ⏳ | POST | `/auth/password/forgot` · `/auth/password/reset` | Herkes | SMS ile şifre sıfırlama |
 
+### İl ve ilçeler
+
+| Durum | Yöntem | Yol | Kim | Açıklama |
+|---|---|---|---|---|
+| ✅ | GET | `/locations/cities` | Herkes | 81 il: plaka kodu, ad, adres kodu |
+| ✅ | GET | `/locations/cities/:code/districts` | Herkes | İlin ilçeleri (ad ve adres kodu) |
+
+Talep ve firma kayıtlarında il **plaka koduyla** (`"34"`), ilçe **adres koduyla** (`"kadikoy"`) tutulur; yanıtlarda okunabilir adlar da döner.
+
 ### Müşteri: taşıma talepleri
 
 | Durum | Yöntem | Yol | Kim | Açıklama |
 |---|---|---|---|---|
-| ⏳ | POST | `/requests` | Müşteri | Talep oluştur. Sistem m³, ekip ve süre tahmini ekler. |
-| ⏳ | GET | `/requests` | Müşteri | Kendi talepleri |
-| ⏳ | GET | `/requests/:id` | Müşteri | Talep detayı |
-| ⏳ | PATCH | `/requests/:id` | Müşteri | Teklif gelmeden önce düzenleme |
-| ⏳ | POST | `/requests/:id/cancel` | Müşteri | Talebi iptal et |
+| ✅ | POST | `/requests` | Müşteri | Talep oluştur. İl-ilçe uyumu ve tarih (en erken yarın, en geç 1 yıl) kontrol edilir. Sistem m³, ekip, süre tahmini ve şehirler arası ise karayolu mesafesi ekler. Teklif toplama süresi taşınma tarihine kadar, en fazla 30 gün. |
+| ✅ | GET | `/requests` | Müşteri | Kendi talepleri |
+| ✅ | GET | `/requests/:id` | Müşteri | Talep detayı |
+| ✅ | PATCH | `/requests/:id` | Müşteri | Teklif gelmeden önce düzenleme |
+| ✅ | POST | `/requests/:id/cancel` | Müşteri | Açık talebi iptal et |
+
+Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle bilgi sızmaz). Teklif gelmiş talep düzenlenemez (409).
 | ⏳ | POST | `/requests/:id/photos` | Müşteri | Fotoğraf yükleme adresi al (S3 imzalı URL) |
 | ⏳ | GET | `/requests/:id/quotes` | Müşteri | Gelen teklifler (firma puanı, tamamlanan iş, doğrulama rozeti ile) |
 | ⏳ | POST | `/quotes/:id/accept` | Müşteri | Teklifi kabul et → iş (booking) oluşur, diğer teklifler reddedilir |

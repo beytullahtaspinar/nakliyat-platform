@@ -6,10 +6,10 @@
 |---|---|
 | `User` | Tüm kullanıcılar. Rol: müşteri, firma, admin. Telefon zorunlu ve benzersiz (OTP ile doğrulanır). |
 | `RefreshToken` | JWT yenileme anahtarları (hash olarak saklanır). |
-| `Company` | Nakliyat firması profili, hizmet verdiği şehirler, doğrulama durumu, puan özeti. |
+| `Company` | Nakliyat firması profili, merkez ili ve hizmet verdiği iller (plaka kodu), doğrulama durumu, puan özeti. |
 | `CompanyDocument` | K3 yetki belgesi, vergi levhası, ticaret sicil gibi doğrulama belgeleri. |
 | `Vehicle` | Firma araçları (MVP'de opsiyonel). |
-| `MovingRequest` | Müşterinin taşıma talebi: adresler, kat, asansör, ev tipi, tarih, ek hizmetler, sistemin hesapladığı m³ / ekip / süre. |
+| `MovingRequest` | Müşterinin taşıma talebi: il (plaka kodu) ve ilçe (adres kodu), açık adres, kat, asansör, ev tipi, tarih, ek hizmetler, sistemin hesapladığı m³ / ekip / süre ve şehirler arası mesafe. |
 | `RequestPhoto` | Talebe eklenen fotoğraflar. |
 | `Quote` | Firmanın teklifi. Bir firma bir talebe yalnızca bir teklif verebilir. |
 | `Booking` | Müşterinin kabul ettiği teklif, yani anlaşılan iş. |
