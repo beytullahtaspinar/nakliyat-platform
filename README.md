@@ -9,11 +9,11 @@ Evden eve taşınacak müşterileri doğrulanmış nakliyat firmalarıyla buluş
 ```
 apps/
   api/   NestJS + Prisma + PostgreSQL (REST API, /v1)
-  web/   Next.js + Tailwind (müşteri, firma ve admin arayüzü)
+  web/   Next.js + Tailwind (tanıtım + müşteri, firma ve admin panelleri)
 docs/    Mimari, veritabanı, kurulum ve cPanel dokümanları
 ```
 
-Tanıtım sitesi ve blog ayrı olarak WordPress üzerinde çalışır.
+Tanıtım sayfaları ve tüm paneller tek Next.js uygulamasındadır. Blog isteğe bağlı olarak WordPress ile `blog.` alt alan adında çalışabilir.
 
 ## Hızlı başlangıç
 

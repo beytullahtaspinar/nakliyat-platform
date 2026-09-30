@@ -5,9 +5,9 @@ Canlı ortam cPanel üzerinde iki Node.js uygulaması olarak çalışır:
 | Uygulama | Alan adı (örnek) | Başlangıç dosyası |
 |---|---|---|
 | API | `api.evdenevenakliyat.app` | `app.cjs` |
-| Web | `app.evdenevenakliyat.app` | `apps/web/server.js` |
+| Web | `evdenevenakliyat.app` | `apps/web/server.js` |
 
-WordPress tanıtım sitesi ve blog ana alan adında (`evdenevenakliyat.app`) çalışır.
+Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin panelleri aynı Next.js uygulamasında, ana alan adında çalışır. Blog isteğe bağlı olarak WordPress ile `blog.evdenevenakliyat.app` adresinde tutulabilir.
 
 > **.app uzantısı hakkında:** .app alan adları tarayıcılarda yalnızca HTTPS ile açılır (HSTS preload). Ana alan adı ve her alt alan adı için SSL sertifikası (cPanel AutoSSL veya Let's Encrypt) site yayına girmeden önce aktif olmalı. Sertifika yoksa site hiç açılmaz.
 
@@ -20,7 +20,7 @@ WordPress tanıtım sitesi ve blog ana alan adında (`evdenevenakliyat.app`) ça
 
 ## 2. İlk kurulum (bir kez)
 
-1. **Alt alan adları:** `api.` ve `app.` alt alan adlarını oluştur, SSL'i (AutoSSL / Let's Encrypt) aç.
+1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. Ana alan adında WordPress varsa önce yedekle ve blog'a taşı. Her iki adres için SSL'i (AutoSSL / Let's Encrypt) aç.
 2. **Veritabanı:** PostgreSQL veritabanı ve kullanıcısı oluştur, kullanıcıya tüm yetkileri ver.
 3. **API uygulaması** (Setup Node.js App → Create Application):
    - Node.js version: 22
@@ -28,10 +28,10 @@ WordPress tanıtım sitesi ve blog ana alan adında (`evdenevenakliyat.app`) ça
    - Application root: `nakliyat-api`
    - Application URL: `api.evdenevenakliyat.app`
    - Application startup file: `app.cjs`
-   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `WEB_URL=https://app.evdenevenakliyat.app`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
+   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `WEB_URL=https://evdenevenakliyat.app`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
 4. **Web uygulaması**:
    - Application root: `nakliyat-web`
-   - Application URL: `app.evdenevenakliyat.app`
+   - Application URL: `evdenevenakliyat.app`
    - Application startup file: `apps/web/server.js`
    - Environment variables: `NODE_ENV=production`
 5. **SSH anahtarı:** cPanel → SSH Access → Manage SSH Keys ile bir anahtar oluştur/ekle ve yetkilendir. Özel anahtarı GitHub'a secret olarak gir.
