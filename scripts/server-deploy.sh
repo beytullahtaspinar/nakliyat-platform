@@ -44,13 +44,16 @@ else
   RELEASE_JSON="$(gh_api -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$REPO/releases/latest")"
   # JSON'u sunucudaki Node ile ayrıştır (jq kurulu olmayabilir)
   NODE_BIN="$(command -v node || echo "$HOME/nodevenv/$API_DIR/$NODE_MAJOR/bin/node")"
-  read -r TAG ASSET_ID < <(printf '%s' "$RELEASE_JSON" | "$NODE_BIN" -e '
+  # Not: CloudLinux CageFS'te /dev/fd yok, bu yüzden süreç ikamesi (<(...)) kullanılmıyor.
+  PARSED="$(printf '%s' "$RELEASE_JSON" | "$NODE_BIN" -e '
     let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
       const r = JSON.parse(s);
       const a = (r.assets || []).find((x) => x.name === "release.tar.gz");
       if (!a) { console.error("Sürümde release.tar.gz yok"); process.exit(1); }
       console.log(r.tag_name, a.id);
-    });')
+    });')"
+  TAG="${PARSED%% *}"
+  ASSET_ID="${PARSED##* }"
 
   CURRENT="$(cat "$STATE_FILE" 2>/dev/null || true)"
   if [ "$TAG" = "$CURRENT" ] && [ "$MODE" != "--force" ]; then
