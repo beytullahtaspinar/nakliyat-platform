@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
@@ -9,7 +11,11 @@ export default function Home() {
           Talebini bir kez gir, doğrulanmış nakliyat firmalarından teklifleri
           karşılaştır, sana en uygun olanı seç.
         </p>
-        <p className="mt-8 text-sm text-zinc-500">Yakında.</p>
+        <p className="mt-8 text-sm text-zinc-500">
+          <Link href="/evden-eve-nakliyat" className="underline">
+            Hizmet verdiğimiz iller
+          </Link>
+        </p>
       </div>
     </main>
   );

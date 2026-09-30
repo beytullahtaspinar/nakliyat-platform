@@ -1,5 +1,6 @@
 packages:
   - "apps/*"
+  - "packages/*"
 
 ignoredBuiltDependencies:
   - sharp
@@ -9,4 +10,5 @@ onlyBuiltDependencies:
   - "@prisma/engines"
   - prisma
 
-injectWorkspacePackages: true
+# Workspace paketleri symlink kalsın (geliştirme kolaylığı); pnpm deploy eski yöntemle kopyalar.
+forceLegacyDeploy: true

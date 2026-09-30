@@ -17,3 +17,8 @@ Platformdaki firmalardan Ulaştırma ve Altyapı Bakanlığı K3 yetki belgesi, 
 ## Sayfalar
 
 - [Ana sayfa](https://evdenevenakliyat.app/)
+- [Türkiye geneli evden eve nakliyat (81 il)](https://evdenevenakliyat.app/evden-eve-nakliyat)
+- [İstanbul evden eve nakliyat](https://evdenevenakliyat.app/istanbul-evden-eve-nakliyat)
+- [Ankara evden eve nakliyat](https://evdenevenakliyat.app/ankara-evden-eve-nakliyat)
+- [İzmir evden eve nakliyat](https://evdenevenakliyat.app/izmir-evden-eve-nakliyat)
+- [İstanbul - Ankara şehirler arası nakliyat](https://evdenevenakliyat.app/istanbul-ankara-sehirler-arasi-nakliyat)
