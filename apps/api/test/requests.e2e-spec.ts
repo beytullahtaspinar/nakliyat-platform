@@ -5,7 +5,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 
-// Çalışan bir PostgreSQL gerektirir (DATABASE_URL).
+// Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL).
 describe('Taşıma talepleri (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;

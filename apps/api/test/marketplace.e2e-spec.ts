@@ -6,7 +6,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 
-// Talep → teklif → karşılaştırma → kabul akışının tamamı. Çalışan bir PostgreSQL gerektirir.
+// Talep → teklif → karşılaştırma → kabul akışının tamamı. Çalışan bir MariaDB/MySQL gerektirir.
 describe('Pazaryeri akışı (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;

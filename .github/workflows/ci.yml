@@ -9,21 +9,23 @@ jobs:
   check:
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:16-alpine
+      # Canlı sunucuyla aynı sürüm (cPanel: MariaDB 10.6)
+      mariadb:
+        image: mariadb:10.6
         env:
-          POSTGRES_USER: nakliyat
-          POSTGRES_PASSWORD: nakliyat
-          POSTGRES_DB: nakliyat
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: nakliyat
+          MARIADB_USER: nakliyat
+          MARIADB_PASSWORD: nakliyat
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd "pg_isready -U nakliyat"
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
           --health-interval 5s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 20
     env:
-      DATABASE_URL: postgresql://nakliyat:nakliyat@localhost:5432/nakliyat?schema=public
+      DATABASE_URL: mysql://nakliyat:nakliyat@127.0.0.1:3306/nakliyat
       JWT_ACCESS_SECRET: ci-test-secret
       NEXT_TELEMETRY_DISABLED: 1
     steps:

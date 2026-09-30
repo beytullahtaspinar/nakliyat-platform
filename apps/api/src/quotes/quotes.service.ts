@@ -5,10 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { getCityByCode, getDistrict } from '@nakliyat/locations';
-import type { Company, MovingRequest, Quote } from '../generated/prisma/client.js';
+import type { MovingRequest, Quote } from '../generated/prisma/client.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { QuoteStatus, RequestStatus } from '../generated/prisma/enums.js';
-import { CompaniesService, toPublicCompany } from '../companies/companies.service.js';
+import {
+  CompaniesService,
+  toPublicCompany,
+  type CompanyWithCities,
+} from '../companies/companies.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { PaginationDto } from '../requests/dto/list-requests.dto.js';
 import type { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto.js';
@@ -244,7 +248,9 @@ export class QuotesService {
   }
 }
 
-const serviceArea = (company: Company) => [...new Set([company.cityCode, ...company.serviceCityCodes])];
+const serviceArea = (company: CompanyWithCities) => [
+  ...new Set([company.cityCode, ...company.serviceCities.map((c) => c.cityCode)]),
+];
 
 function assertAcceptingQuotes(request: MovingRequest) {
   if (request.status !== RequestStatus.OPEN || request.expiresAt < new Date()) {

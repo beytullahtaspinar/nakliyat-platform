@@ -2,11 +2,14 @@
 
 Şema: [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma)
 
+Veritabanı: **MariaDB 10.6** (canlı cPanel sunucusu), MySQL 8 ile de uyumlu. Karakter seti `utf8mb4`.
+
 | Tablo | Amaç |
 |---|---|
 | `User` | Tüm kullanıcılar. Rol: müşteri, firma, admin. Telefon zorunlu ve benzersiz (OTP ile doğrulanır). |
 | `RefreshToken` | JWT yenileme anahtarları (hash olarak saklanır). |
-| `Company` | Nakliyat firması profili, merkez ili ve hizmet verdiği iller (plaka kodu), doğrulama durumu, puan özeti. |
+| `Company` | Nakliyat firması profili, merkez ili (plaka kodu), doğrulama durumu, puan özeti. |
+| `CompanyServiceCity` | Firmanın hizmet verdiği iller (firma + plaka kodu). |
 | `CompanyDocument` | K3 yetki belgesi, vergi levhası, ticaret sicil gibi doğrulama belgeleri. |
 | `Vehicle` | Firma araçları (MVP'de opsiyonel). |
 | `MovingRequest` | Müşterinin taşıma talebi: il (plaka kodu) ve ilçe (adres kodu), açık adres, kat, asansör, ev tipi, tarih, ek hizmetler, sistemin hesapladığı m³ / ekip / süre ve şehirler arası mesafe. |

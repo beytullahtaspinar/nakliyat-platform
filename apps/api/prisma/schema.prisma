@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 // ─── Kullanıcılar ───────────────────────────────────────────────
@@ -70,18 +70,16 @@ enum VerificationStatus {
 model Company {
   id                 String             @id @default(cuid())
   ownerId            String             @unique
-  legalName          String
+  legalName          String             @db.VarChar(200)
   displayName        String
   taxNumber          String             @unique
   k3LicenseNumber    String?
-  description        String?
-  logoUrl            String?
+  description        String?            @db.Text
+  logoUrl            String?            @db.VarChar(1000)
   cityCode           String             @db.Char(2)
-  // Hizmet verilen iller (plaka kodu)
-  serviceCityCodes   String[]
   verificationStatus VerificationStatus @default(PENDING)
   verifiedAt         DateTime?
-  verificationNote   String?
+  verificationNote   String?            @db.VarChar(500)
   ratingAverage      Decimal            @default(0) @db.Decimal(3, 2)
   ratingCount        Int                @default(0)
   completedJobs      Int                @default(0)
@@ -89,14 +87,26 @@ model Company {
   updatedAt          DateTime           @updatedAt
   deletedAt          DateTime?
 
-  owner     User              @relation(fields: [ownerId], references: [id])
-  documents CompanyDocument[]
-  vehicles  Vehicle[]
-  quotes    Quote[]
-  bookings  Booking[]
-  reviews   Review[]
+  owner         User                 @relation(fields: [ownerId], references: [id])
+  serviceCities CompanyServiceCity[]
+  documents     CompanyDocument[]
+  vehicles      Vehicle[]
+  quotes        Quote[]
+  bookings      Booking[]
+  reviews       Review[]
 
   @@index([verificationStatus])
+  @@index([cityCode])
+}
+
+/// Firmanın hizmet verdiği iller (plaka kodu). "Bu ile kim hizmet veriyor?" sorgusu için ayrı tablo.
+model CompanyServiceCity {
+  companyId String
+  cityCode  String @db.Char(2)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, cityCode])
   @@index([cityCode])
 }
 
@@ -112,9 +122,9 @@ model CompanyDocument {
   id         String              @id @default(cuid())
   companyId  String
   type       CompanyDocumentType
-  fileUrl    String
+  fileUrl    String              @db.VarChar(1000)
   status     VerificationStatus  @default(PENDING)
-  reviewNote String?
+  reviewNote String?             @db.VarChar(500)
   createdAt  DateTime            @default(now())
   reviewedAt DateTime?
 
@@ -174,12 +184,12 @@ model MovingRequest {
   // İl plaka kodu ("34") ve ilçe adres kodu ("kadikoy"), bkz. @nakliyat/locations
   fromCityCode    String  @db.Char(2)
   fromDistrict    String
-  fromAddress     String
+  fromAddress     String  @db.VarChar(300)
   fromFloor       Int
   fromHasElevator Boolean
   toCityCode      String  @db.Char(2)
   toDistrict      String
-  toAddress       String
+  toAddress       String  @db.VarChar(300)
   toFloor         Int
   toHasElevator   Boolean
 
@@ -189,8 +199,9 @@ model MovingRequest {
   needsPacking   Boolean  @default(false)
   needsAssembly  Boolean  @default(false)
   needsStorage   Boolean  @default(false)
-  specialItems   String[]
-  notes          String?
+  /// Metin dizisi (JSON): ["Piyano", ...]
+  specialItems   Json
+  notes          String?  @db.Text
 
   // Sistem tarafından hesaplanan standart değerler
   estimatedVolumeM3 Int?
@@ -216,7 +227,7 @@ model MovingRequest {
 model RequestPhoto {
   id        String   @id @default(cuid())
   requestId String
-  fileUrl   String
+  fileUrl   String   @db.VarChar(1000)
   caption   String?
   createdAt DateTime @default(now())
 
@@ -246,7 +257,7 @@ model Quote {
   includesInsurance Boolean     @default(false)
   crewSize          Int
   vehicleType       VehicleType
-  message           String?
+  message           String?     @db.Text
   validUntil        DateTime
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -291,7 +302,7 @@ model Booking {
   scheduledAt  DateTime
   completedAt  DateTime?
   cancelledAt  DateTime?
-  cancelReason String?
+  cancelReason String?       @db.Text
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -310,8 +321,8 @@ model Review {
   companyId    String
   customerId   String
   rating       Int // 1-5
-  comment      String?
-  companyReply String?
+  comment      String?  @db.Text
+  companyReply String?  @db.Text
   isPublished  Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -330,7 +341,7 @@ model Message {
   quoteId   String?
   bookingId String?
   senderId  String
-  body      String
+  body      String    @db.Text
   readAt    DateTime?
   createdAt DateTime  @default(now())
 
@@ -354,7 +365,7 @@ model Notification {
   channel   NotificationChannel
   type      String
   title     String
-  body      String
+  body      String              @db.Text
   data      Json?
   sentAt    DateTime?
   readAt    DateTime?

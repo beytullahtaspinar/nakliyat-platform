@@ -8,7 +8,7 @@ Evden eve taşınacak müşterileri doğrulanmış nakliyat firmalarıyla buluş
 
 ```
 apps/
-  api/   NestJS + Prisma + PostgreSQL (REST API, /v1)
+  api/   NestJS + Prisma + MariaDB/MySQL (REST API, /v1)
   web/   Next.js + Tailwind (tanıtım + müşteri, firma ve admin panelleri)
 docs/    Mimari, veritabanı, kurulum ve cPanel dokümanları
 ```
@@ -21,7 +21,7 @@ Gerekenler: Node.js 22, pnpm 10, Docker (yerel veritabanı için).
 
 ```bash
 pnpm install
-docker compose up -d                 # yerel PostgreSQL
+docker compose up -d                 # yerel MariaDB 10.6
 cp apps/api/.env.example apps/api/.env
 pnpm db:migrate                      # tabloları oluşturur
 pnpm dev                             # web: http://localhost:3000  api: http://localhost:4000/v1/health

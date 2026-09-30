@@ -14,21 +14,21 @@ Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin pa
 ## 1. Hosting'de önce kontrol edilecekler
 
 - [ ] cPanel'de **Setup Node.js App** menüsü var mı? Node.js **22** (en az 20.9) seçilebiliyor mu?
-- [ ] **PostgreSQL Databases** menüsü var mı? Yoksa hosting firmasından açılmasını iste. Açılamıyorsa MySQL'e geçebiliriz (Prisma'da tek satır), ama `String[]` alanları için şemada küçük değişiklik gerekir.
+- [x] Veritabanı: sunucuda **MariaDB 10.6** var (PostgreSQL yok). Uygulama MariaDB/MySQL ile çalışır.
 - [ ] **SSH Access** açık mı? Otomatik deploy için gerekli.
 - [ ] Disk ve inode kotası: API paketi bağımlılıklarıyla birlikte ~380 MB tutuyor.
 
 ## 2. İlk kurulum (bir kez)
 
 1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. `cms.` alt alan adına WordPress kurulur (Softaculous ile) ve arama motorlarına kapatılır. Ana alan adında eski bir WordPress varsa önce yedekle ve `cms.` adresine taşı. Tüm adresler için SSL'i (AutoSSL / Let's Encrypt) aç.
-2. **Veritabanı:** PostgreSQL veritabanı ve kullanıcısı oluştur, kullanıcıya tüm yetkileri ver.
+2. **Veritabanı:** cPanel → **Database Wizard** (MySQL) ile veritabanı ve kullanıcı oluştur, kullanıcıya **ALL PRIVILEGES** ver. cPanel adların başına hesap adını ekler (ör. `evdenevenakliyat_nakliyat`).
 3. **API uygulaması** (Setup Node.js App → Create Application):
    - Node.js version: 22
    - Application mode: Production
    - Application root: `nakliyat-api`
    - Application URL: `api.evdenevenakliyat.app`
    - Application startup file: `app.cjs`
-   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `WEB_URL=https://evdenevenakliyat.app`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
+   - Environment variables: `NODE_ENV=production`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI` (şifrede özel karakter varsa URL kodlamasıyla yaz, ör. `@` → `%40`), `WEB_URL=https://evdenevenakliyat.app`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
 4. **Web uygulaması**:
    - Application root: `nakliyat-web`
    - Application URL: `evdenevenakliyat.app`
