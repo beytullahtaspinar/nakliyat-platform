@@ -11,7 +11,7 @@ export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <rect x="12.5" y="16.5" width="7" height="7.5" rx="1" className="fill-accent-500" />
+      <rect x="12.5" y="16.5" width="7" height="7.5" rx="1" className="fill-accent-400" />
       <path d="M16 16.5v3" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );
@@ -22,7 +22,7 @@ export function Logo() {
     <span className="flex items-center gap-2 sm:gap-2.5">
       <LogoMark />
       <span className="font-display text-[0.9rem] font-bold tracking-tight text-zinc-900 sm:text-[1.05rem] dark:text-white">
-        evdenevenakliyat<span className="text-accent-600 dark:text-accent-400">.app</span>
+        evdenevenakliyat<span className="text-accent-700 dark:text-accent-400">.app</span>
       </span>
     </span>
   );
