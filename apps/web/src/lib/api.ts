@@ -87,4 +87,63 @@ export type MovingRequest = {
   quoteCount: number;
 };
 
+export type MovingRequestDetail = MovingRequest & {
+  fromAddress: string;
+  fromFloor: number;
+  fromHasElevator: boolean;
+  toAddress: string;
+  toFloor: number;
+  toHasElevator: boolean;
+  isDateFlexible: boolean;
+  needsPacking: boolean;
+  needsAssembly: boolean;
+  needsStorage: boolean;
+  specialItems: string[];
+  notes: string | null;
+  estimatedCrew: number | null;
+  estimatedHours: number | null;
+};
+
+export type PublicCompany = {
+  id: string;
+  displayName: string;
+  logoUrl: string | null;
+  cityName: string | null;
+  verified: boolean;
+  ratingAverage: string;
+  ratingCount: number;
+  completedJobs: number;
+};
+
+export type CompanyContact = PublicCompany & { contactName: string; contactPhone: string };
+
+export type QuoteStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "WITHDRAWN" | "EXPIRED";
+export type VehicleType = "PANELVAN" | "KAMYONET" | "KAMYON" | "TIR";
+
+export type CustomerQuote = {
+  id: string;
+  status: QuoteStatus;
+  /** TL, ondalıklı metin: "12500" veya "12500.5" */
+  priceTry: string;
+  includesPacking: boolean;
+  includesAssembly: boolean;
+  includesInsurance: boolean;
+  crewSize: number;
+  vehicleType: VehicleType;
+  message: string | null;
+  validUntil: string;
+  isExpired: boolean;
+  company: PublicCompany;
+};
+
+export type CustomerBooking = {
+  id: string;
+  requestId: string;
+  quoteId: string;
+  status: "SCHEDULED" | "COMPLETED" | "CANCELLED";
+  scheduledAt: string;
+  priceTry: string;
+  company: CompanyContact;
+};
+
 export type Paginated<T> = { items: T[]; total: number; page: number; limit: number };
