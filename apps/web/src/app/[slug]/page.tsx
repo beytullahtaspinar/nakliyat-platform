@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveLocalPage, type LocalPage } from "@nakliyat/locations";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/local/breadcrumbs";
 import { Faq } from "@/components/local/faq";
 import { LinkGrid } from "@/components/local/link-grid";
+import { ButtonLink } from "@/components/ui/button";
 import {
   breadcrumbs,
   faq,
@@ -89,12 +89,9 @@ export default async function LocalLandingPage({ params }: Props) {
       </h1>
       <p className="mt-4 text-lg text-zinc-700 dark:text-zinc-300">{intro(page)}</p>
 
-      <Link
-        href={requestHref(page)}
-        className="mt-6 inline-block rounded-lg bg-blue-700 px-5 py-3 font-medium text-white hover:bg-blue-800"
-      >
+      <ButtonLink href={requestHref(page)} size="lg" className="mt-6">
         Ücretsiz teklif al
-      </Link>
+      </ButtonLink>
 
       {stats && (
         <section className="mt-12">
