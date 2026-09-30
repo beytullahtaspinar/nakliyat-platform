@@ -16,7 +16,7 @@ Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin pa
 - [ ] cPanel'de **Setup Node.js App** menüsü var mı? Node.js **22** (en az 20.9) seçilebiliyor mu?
 - [x] Veritabanı: sunucuda **MariaDB 10.6** var (PostgreSQL yok). Uygulama MariaDB/MySQL ile çalışır.
 - [ ] **SSH Access** açık mı? Otomatik deploy için gerekli.
-- [ ] Disk ve inode kotası: API paketi bağımlılıklarıyla birlikte ~380 MB tutuyor.
+- [ ] Disk ve inode kotası: API paketi bağımlılıklarıyla birlikte ~420 MB, web paketi ~70 MB tutuyor.
 
 ## 2. İlk kurulum (bir kez)
 
@@ -34,7 +34,7 @@ Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin pa
    - Application URL: `evdenevenakliyat.app`
    - Application startup file: `apps/web/server.js`
    - Environment variables: `NODE_ENV=production`
-5. **SSH anahtarı:** cPanel → SSH Access → Manage SSH Keys ile bir anahtar oluştur/ekle ve yetkilendir. Özel anahtarı GitHub'a secret olarak gir.
+5. **SSH anahtarı:** cPanel → SSH Access → Manage SSH Keys → Generate a New Key (RSA 4096). cPanel şifre koymayı zorunlu tutar; şifreyi `CPANEL_SSH_KEY_PASSPHRASE` secret'ına gir. Anahtarı **Manage → Authorize** ile yetkilendir, özel anahtarı (View/Download) `CPANEL_SSH_KEY` secret'ına yapıştır.
 
 ## 3. GitHub ayarları
 
@@ -46,6 +46,7 @@ Repo → Settings → Environments → `production`:
 | Secret | `CPANEL_SSH_PORT` | `22` (bazı firmalarda farklıdır) |
 | Secret | `CPANEL_SSH_USER` | cPanel kullanıcı adı |
 | Secret | `CPANEL_SSH_KEY` | Özel SSH anahtarı |
+| Secret | `CPANEL_SSH_KEY_PASSPHRASE` | Anahtarın şifresi (şifresizse boş bırak) |
 | Variable | `CPANEL_API_DIR` | `nakliyat-api` |
 | Variable | `CPANEL_WEB_DIR` | `nakliyat-web` |
 | Variable | `NEXT_PUBLIC_API_URL` | `https://api.evdenevenakliyat.app` |
