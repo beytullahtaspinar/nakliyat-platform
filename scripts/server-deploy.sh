@@ -37,7 +37,8 @@ if [ "$MODE" = "--from-file" ]; then
   tar -xzf "$ARCHIVE" -C "$WORK"
 else
   [ -s "$TOKEN_FILE" ] || { log "HATA: $TOKEN_FILE yok veya boş."; exit 1; }
-  TOKEN="$(tr -d '[:space:]' < "$TOKEN_FILE")"
+  # Web Terminal'de yapıştırırken eklenebilen görünmez karakterleri (bracketed paste) temizle
+  TOKEN="$(sed 's/\x1b\[20[01]~//g' "$TOKEN_FILE" | tr -d '[:space:]')"
   gh_api() { curl -fsSL --retry 3 -H "Authorization: Bearer $TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" "$@"; }
 
   RELEASE_JSON="$(gh_api -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$REPO/releases/latest")"

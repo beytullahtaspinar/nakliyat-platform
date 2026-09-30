@@ -45,6 +45,8 @@ Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-releas
    read -rs -p "Token: " T && printf '%s' "$T" > ~/.config/nakliyat/github-token && chmod 600 ~/.config/nakliyat/github-token && unset T && echo
    ```
 
+   Kontrol: `wc -c < ~/.config/nakliyat/github-token` 90 civarı, `head -c 11 ~/.config/nakliyat/github-token` ise `github_pat_` göstermeli. Web Terminal yapıştırmada görünmez karakter eklerse şu komut temizler: `sed -i 's/\x1b\[20[01]~//g; s/[[:space:]]//g' ~/.config/nakliyat/github-token`
+
 7. **Betiği indir ve ilk kurulumu yap** (Terminal):
 
    ```bash
