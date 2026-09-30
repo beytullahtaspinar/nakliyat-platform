@@ -11,7 +11,13 @@ export default function Home() {
           Talebini bir kez gir, doğrulanmış nakliyat firmalarından teklifleri
           karşılaştır, sana en uygun olanı seç.
         </p>
-        <p className="mt-8 text-sm text-zinc-500">
+        <Link
+          href="/talep-olustur"
+          className="mt-8 inline-block rounded-lg bg-blue-700 px-5 py-3 font-medium text-white hover:bg-blue-800"
+        >
+          Ücretsiz teklif al
+        </Link>
+        <p className="mt-6 text-sm text-zinc-500">
           <Link href="/evden-eve-nakliyat" className="underline">
             Hizmet verdiğimiz iller
           </Link>
