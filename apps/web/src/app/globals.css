@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * evdenevenakliyat.app görsel kimliği
+ *
+ * brand  : koyu yeşil; güven ve kurumsallık. Birincil eylemler, bağlantılar, vurgu yüzeyleri.
+ * accent : koli turuncusu; az ve bilinçli kullanılır (logo, ikon, küçük vurgular). Buton rengi değildir.
+ * zinc   : nötrler, hafif mavimsi (slate) tona çekildi.
+ *
+ * Mevcut ekranlar `blue-*` ve `zinc-*` sınıflarını kullanıyor. Aşağıdaki eşlemeyle bu sınıflar
+ * marka paletine bağlanır (`blue-*` artık marka yeşilidir); böylece her sayfa tek yerden aynı kimliği alır. Yeni kodda anlamı
+ * belli olsun diye `brand-*` / `accent-*` tercih edilir.
+ */
+@theme {
+  --color-brand-50: #effaf4;
+  --color-brand-100: #d8f3e3;
+  --color-brand-200: #b3e6ca;
+  --color-brand-300: #7fd2a9;
+  --color-brand-400: #48b683;
+  --color-brand-500: #259a67;
+  --color-brand-600: #177d52;
+  --color-brand-700: #136544;
+  --color-brand-800: #125139;
+  --color-brand-900: #10432f;
+  --color-brand-950: #06251a;
+
+  --color-accent-50: #fff6ed;
+  --color-accent-100: #ffead4;
+  --color-accent-200: #fed1a8;
+  --color-accent-300: #fdb071;
+  --color-accent-400: #fb8a3c;
+  --color-accent-500: #f06a17;
+  --color-accent-600: #d9530c;
+  --color-accent-700: #b43f0d;
+  --color-accent-800: #8f3312;
+  --color-accent-900: #742c12;
+  --color-accent-950: #3f1407;
+
+  --color-zinc-50: #f8fafc;
+  --color-zinc-100: #f1f5f9;
+  --color-zinc-200: #e2e8f0;
+  --color-zinc-300: #cbd5e1;
+  --color-zinc-400: #94a3b8;
+  --color-zinc-500: #64748b;
+  --color-zinc-600: #475569;
+  --color-zinc-700: #334155;
+  --color-zinc-800: #1e293b;
+  --color-zinc-900: #0f172a;
+  --color-zinc-950: #0b1120;
+
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08);
 }
 
 @theme inline {
+  --color-blue-50: var(--color-brand-50);
+  --color-blue-100: var(--color-brand-100);
+  --color-blue-200: var(--color-brand-200);
+  --color-blue-300: var(--color-brand-300);
+  --color-blue-400: var(--color-brand-400);
+  --color-blue-500: var(--color-brand-500);
+  --color-blue-600: var(--color-brand-600);
+  --color-blue-700: var(--color-brand-700);
+  --color-blue-800: var(--color-brand-800);
+  --color-blue-900: var(--color-brand-900);
+  --color-blue-950: var(--color-brand-950);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-jakarta);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: var(--color-zinc-900);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-zinc-950);
+    --foreground: var(--color-zinc-100);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--color-brand-200);
+    color: var(--color-brand-950);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
 }
