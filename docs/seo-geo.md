@@ -47,13 +47,51 @@ Toplam ~7.500 sayfa üretilebilir (81 il + 973 ilçe + 6.480 rota). Hepsini bird
 - İç linkler: il → ilçeler, yakın iller ve rotalar; ilçe → il ve diğer ilçeler; rota → iki il ve ters yön
 - **Bölge verisi bölümü:** API'de istatistik uç noktası yazılınca doğrulanmış firma sayısı ve ev tipine göre gerçek teklif aralıkları otomatik görünür (`apps/web/src/lib/local-stats.ts`). Veri yokken uydurma rakam gösterilmez.
 
-### Google İşletme Profili (harita sonuçları)
+### Harita sonuçları neden hedef değil?
 
-Harita sonuçlarında (local pack) çıkmak için fiziksel adres gerekir. Google, sanal ofis veya her il için ayrı sahte adres açılmasını yasaklıyor ve bu durum profilin kapatılmasına yol açıyor. Doğru yol:
+Biz yerel bir işletme değil, ulusal bir platformuz. Harita sonuçları (local pack) fiziksel adresi olan işletmeler içindir; orada platformdaki firmalar görünür. Biz il ve ilçe sayfalarıyla **organik sonuçlarda** ve yapay zekâ yanıtlarında kaynak olarak görünmeyi hedefliyoruz. Şirketin gerçek adresi için tek bir İşletme Profili yalnızca marka güveni için açılır; il başına sanal adres açılmaz (Google kurallarına aykırı).
 
-- Şirketin gerçek adresi için **tek bir** İşletme Profili açılır.
-- Diğer illerde organik sonuçlarda il ve ilçe sayfalarıyla görünürüz.
-- Platformdaki firmaları kendi İşletme Profillerini açmaya teşvik ederiz. Firma profil sayfamızdan onların profiline bağlantı veririz.
+## Otorite stratejisi
+
+Hedef: "evden eve nakliyat" konusunda Türkiye'de Google'ın ve yapay zekâ motorlarının ilk başvurduğu kaynak olmak. Otorite dört ayak üzerinde kurulur:
+
+### 1. Özgün veri (en güçlü ayak)
+
+Başka hiçbir sitede olmayan, platformun kendi verisi:
+
+| İçerik | Sıklık | Nerede |
+|---|---|---|
+| **Türkiye Taşınma Fiyat Endeksi**: il ve ev tipine göre ortalama teklif, yıllık değişim | Üç ayda bir rapor | `/rapor/tasinma-fiyat-endeksi-2026-q4` |
+| Bölge sayfalarında canlı fiyat aralıkları | Günlük | İl, ilçe ve rota sayfaları |
+| Taşınma yoğunluğu takvimi (hangi ay, hangi gün pahalı) | Yıllık | Rehber sayfası |
+
+Her veri sayfasında yöntem açıklaması, örneklem büyüklüğü ve güncelleme tarihi bulunur. Basın ve yapay zekâ motorları kaynak olarak bu sayfaları gösterir.
+
+### 2. Konu kümeleri (topical authority)
+
+Her ana konu için bir kapsamlı rehber sayfası ve ona bağlı alt yazılar (blog, WordPress'ten):
+
+| Ana rehber | Alt konular |
+|---|---|
+| Evden eve nakliyat fiyatları | ev tipine göre fiyat, şehirler arası fiyat, ek hizmet ücretleri, kapora ve ödeme |
+| Taşınma rehberi | taşınma kontrol listesi, paketleme, abonelik nakil işlemleri, adres değişikliği (e-Devlet) |
+| Nakliyat firması seçimi | K3 yetki belgesi nedir, sözleşmede nelere bakılmalı, sigorta, dolandırıcılık uyarıları |
+| Özel eşya taşıma | piyano, beyaz eşya, antika, ofis taşıma |
+| Firmalar için | K3 belgesi nasıl alınır, teklif hazırlama, müşteri memnuniyeti |
+
+### 3. Araçlar (tekrar ziyaret ve doğal bağlantı getirir)
+
+- **Taşınma maliyeti hesaplayıcı** (platform verisine dayalı tahmini aralık)
+- **Eşya hacmi (m³) hesaplayıcı**
+- **Taşınma kontrol listesi** (yazdırılabilir, tarih bazlı)
+- **Firma doğrulama sorgusu**: K3 belge numarasıyla firma ara
+
+### 4. Güven sinyalleri (E-E-A-T)
+
+- Yazar profilleri: sektör deneyimi olan yazarlar ve editörler, her yazıda imza ve güncelleme tarihi
+- `/hakkimizda`, `/yayin-ilkeleri`, `/firma-dogrulama-sureci`, `/veri-yontemi` sayfaları
+- Organization yapısal verisinde ülke çapında hizmet bölgesi ve uzmanlık alanları (hazır); sosyal medya, basın ve Wikidata profilleri açıldıkça `sameAs` alanına eklenir
+- Dijital PR: fiyat endeksi raporları haber sitelerine veri kaynağı olarak sunulur
 
 ## Sayfa türlerine göre kurallar
 

@@ -39,6 +39,18 @@ const organizationJsonLd = [
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
+    description:
+      "Türkiye genelinde evden eve ve şehirler arası nakliyat için doğrulanmış firma, fiyat ve taşınma rehberi platformu.",
+    areaServed: { "@type": "Country", name: "Türkiye" },
+    knowsAbout: [
+      "Evden eve nakliyat",
+      "Şehirler arası nakliyat",
+      "Nakliyat fiyatları",
+      "K3 yetki belgesi",
+      "Taşınma planlama",
+    ],
+    // Sosyal medya, Wikidata ve basın profilleri açıldıkça eklenecek (varlık/entity sinyali)
+    sameAs: [],
   },
   {
     "@context": "https://schema.org",

@@ -1,6 +1,6 @@
 # evdenevenakliyat.app
 
-> Türkiye'de evden eve taşınacak kişileri doğrulanmış nakliyat firmalarıyla buluşturan teklif karşılaştırma platformu. Müşteri taşınma bilgilerini bir kez girer, firmalar fiyat ve hizmet kapsamıyla teklif verir, müşteri puanlara ve yorumlara bakarak seçer.
+> Türkiye genelinde evden eve ve şehirler arası nakliyat için doğrulanmış firma, fiyat verisi ve taşınma rehberi platformu. Müşteri taşınma bilgilerini bir kez girer, firmalar fiyat ve hizmet kapsamıyla teklif verir, müşteri puanlara ve yorumlara bakarak seçer.
 
 ## Nasıl çalışır
 
