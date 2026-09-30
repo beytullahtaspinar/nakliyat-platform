@@ -43,10 +43,14 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           if [ -n "$SSH_KEY_PASSPHRASE" ]; then
-            ssh-keygen -p -P "$SSH_KEY_PASSPHRASE" -N "" -f ~/.ssh/id_deploy > /dev/null
+            ssh-keygen -p -P "$SSH_KEY_PASSPHRASE" -N "" -f ~/.ssh/id_deploy > /dev/null \
+              || { echo "::error::SSH anahtarı açılamadı. CPANEL_SSH_KEY içeriğini ve CPANEL_SSH_KEY_PASSPHRASE şifresini kontrol et."; exit 1; }
           fi
+          ssh-keygen -y -f ~/.ssh/id_deploy > /dev/null \
+            || { echo "::error::CPANEL_SSH_KEY geçerli bir özel anahtar değil (BEGIN/END satırları dahil tamamı yapıştırılmalı)."; exit 1; }
           printf 'Host *\n  IdentityFile ~/.ssh/id_deploy\n  IdentitiesOnly yes\n' > ~/.ssh/config
-          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -T 20 -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts \
+            || { echo "::error::Sunucunun SSH portuna ulaşılamadı. CPANEL_SSH_HOST ve CPANEL_SSH_PORT değerlerini, sunucuda SSH'nin dış IP'lere açık olduğunu kontrol et."; exit 1; }
 
       # CloudLinux Node.js Selector, node_modules klasörünü sanal ortamda tutar ve
       # uygulama klasörüne sembolik bağ olarak ekler. Bu yüzden iki ayrı hedefe yüklüyoruz.
