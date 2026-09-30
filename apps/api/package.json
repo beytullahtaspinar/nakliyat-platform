@@ -1,7 +1,7 @@
 {
   "name": "@nakliyat/api",
   "version": "0.0.1",
-  "description": "Nakliyat platformu REST API",
+  "description": "evdenevenakliyat.app REST API",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

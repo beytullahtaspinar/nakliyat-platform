@@ -1,6 +1,6 @@
 # API Tasarımı
 
-- Temel adres: `https://api.alanadi.com/v1` (yerelde `http://localhost:4000/v1`)
+- Temel adres: `https://api.evdenevenakliyat.app/v1` (yerelde `http://localhost:4000/v1`)
 - Canlı dokümantasyon (Swagger): `/docs`, JSON şema: `/docs-json`
 - Şemanın repodaki kopyası: [`docs/openapi.json`](openapi.json) (`pnpm --filter @nakliyat/api openapi:export` ile güncellenir)
 

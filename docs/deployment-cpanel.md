@@ -4,10 +4,12 @@ Canlı ortam cPanel üzerinde iki Node.js uygulaması olarak çalışır:
 
 | Uygulama | Alan adı (örnek) | Başlangıç dosyası |
 |---|---|---|
-| API | `api.alanadi.com` | `app.cjs` |
-| Web | `app.alanadi.com` | `apps/web/server.js` |
+| API | `api.evdenevenakliyat.app` | `app.cjs` |
+| Web | `app.evdenevenakliyat.app` | `apps/web/server.js` |
 
-WordPress tanıtım sitesi ana alan adında (`alanadi.com`) olduğu gibi kalır.
+WordPress tanıtım sitesi ve blog ana alan adında (`evdenevenakliyat.app`) çalışır.
+
+> **.app uzantısı hakkında:** .app alan adları tarayıcılarda yalnızca HTTPS ile açılır (HSTS preload). Ana alan adı ve her alt alan adı için SSL sertifikası (cPanel AutoSSL veya Let's Encrypt) site yayına girmeden önce aktif olmalı. Sertifika yoksa site hiç açılmaz.
 
 ## 1. Hosting'de önce kontrol edilecekler
 
@@ -24,12 +26,12 @@ WordPress tanıtım sitesi ana alan adında (`alanadi.com`) olduğu gibi kalır.
    - Node.js version: 22
    - Application mode: Production
    - Application root: `nakliyat-api`
-   - Application URL: `api.alanadi.com`
+   - Application URL: `api.evdenevenakliyat.app`
    - Application startup file: `app.cjs`
-   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `WEB_URL=https://app.alanadi.com`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
+   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `WEB_URL=https://app.evdenevenakliyat.app`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
 4. **Web uygulaması**:
    - Application root: `nakliyat-web`
-   - Application URL: `app.alanadi.com`
+   - Application URL: `app.evdenevenakliyat.app`
    - Application startup file: `apps/web/server.js`
    - Environment variables: `NODE_ENV=production`
 5. **SSH anahtarı:** cPanel → SSH Access → Manage SSH Keys ile bir anahtar oluştur/ekle ve yetkilendir. Özel anahtarı GitHub'a secret olarak gir.
@@ -46,7 +48,7 @@ Repo → Settings → Environments → `production`:
 | Secret | `CPANEL_SSH_KEY` | Özel SSH anahtarı |
 | Variable | `CPANEL_API_DIR` | `nakliyat-api` |
 | Variable | `CPANEL_WEB_DIR` | `nakliyat-web` |
-| Variable | `NEXT_PUBLIC_API_URL` | `https://api.alanadi.com` |
+| Variable | `NEXT_PUBLIC_API_URL` | `https://api.evdenevenakliyat.app` |
 
 ## 4. Deploy
 

@@ -160,7 +160,7 @@
     }
   },
   "info": {
-    "title": "Nakliyat Platformu API",
+    "title": "evdenevenakliyat.app API",
     "description": "Evden eve taşınma pazaryeri REST API. Korunan uç noktalar için `Authorization: Bearer <accessToken>` başlığı gerekir.",
     "version": "0.1.0",
     "contact": {}

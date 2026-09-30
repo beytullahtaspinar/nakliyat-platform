@@ -1,4 +1,4 @@
-// Nakliyat platformu veri modeli (MVP)
+// evdenevenakliyat.app veri modeli (MVP)
 // Ayrıntılı açıklama: docs/veritabani.md
 
 generator client {

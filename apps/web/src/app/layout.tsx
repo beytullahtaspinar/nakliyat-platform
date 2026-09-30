@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nakliyat Platformu",
+  title: "Evden Eve Nakliyat Teklifi Al | evdenevenakliyat.app",
   description: "Evden eve taşınma için doğrulanmış firmalardan teklif alın.",
 };
 

@@ -1,4 +1,4 @@
-# Nakliyat Platformu
+# evdenevenakliyat.app
 
 Evden eve taşınacak müşterileri doğrulanmış nakliyat firmalarıyla buluşturan pazaryeri.
 

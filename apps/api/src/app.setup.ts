@@ -6,7 +6,7 @@ export const API_PREFIX = 'v1';
 
 export function buildOpenApiDocument(app: INestApplication) {
   const config = new DocumentBuilder()
-    .setTitle('Nakliyat Platformu API')
+    .setTitle('evdenevenakliyat.app API')
     .setDescription(
       'Evden eve taşınma pazaryeri REST API. Korunan uç noktalar için `Authorization: Bearer <accessToken>` başlığı gerekir.',
     )
