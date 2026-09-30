@@ -26,6 +26,36 @@ fi
 
 # Web: Next.js standalone çıktısı + statik dosyalar
 cp -r apps/web/.next/standalone "$OUT/web"
+
+# Standalone çıktısı pnpm'in sembolik bağlantılı düzenini kullanır. Sunucudaki LiteSpeed Node
+# çalıştırıcısı bağlantıları her zaman çözmediği için paketler birbirini bulamıyor
+# (ör. next -> @swc/helpers). Bağımlılıkları bağlantısız, düz bir node_modules'a açıyoruz.
+WEB_MODS="$OUT/web/node_modules"
+FLAT="$OUT/web/node_modules.flat"
+mkdir -p "$FLAT"
+for pkg in "$WEB_MODS"/.pnpm/*/node_modules/*; do
+  [ -e "$pkg" ] || continue
+  name="${pkg##*/}"
+  if [[ "$name" == @* ]]; then
+    # Kapsamlı paketler (@swc/helpers gibi) bir alt klasördedir
+    for sub in "$pkg"/*; do
+      rel="$name/${sub##*/}"
+      if [ -e "$sub" ] && [ ! -e "$FLAT/$rel" ]; then
+        mkdir -p "$FLAT/$name"
+        cp -rL "$sub" "$FLAT/$rel"
+      fi
+    done
+  elif [ ! -e "$FLAT/$name" ]; then
+    cp -rL "$pkg" "$FLAT/$name"
+  fi
+done
+rm -rf "$WEB_MODS" "$OUT/web/apps/web/node_modules"
+mv "$FLAT" "$WEB_MODS"
+if find "$WEB_MODS" -type l | grep -q .; then
+  echo "HATA: web node_modules içinde hâlâ sembolik bağlantı var" >&2
+  exit 1
+fi
+
 mkdir -p "$OUT/web/apps/web/.next"
 cp -r apps/web/.next/static "$OUT/web/apps/web/.next/static"
 if [ -d apps/web/public ]; then
