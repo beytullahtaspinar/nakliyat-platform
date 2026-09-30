@@ -16,6 +16,14 @@ pnpm build
 # API: sadece üretim bağımlılıklarıyla bağımsız klasör
 pnpm --filter @nakliyat/api deploy --prod "$OUT/api"
 
+# Migration motoru (schema-engine) platforma özeldir. PRISMA_CLI_BINARY_TARGETS verilmişse
+# (ör. sunucu için rhel-openssl-*), pnpm önbelleğinden gelen kopyaya o motorları da indir.
+if [ -n "${PRISMA_CLI_BINARY_TARGETS:-}" ]; then
+  ENGINES_DIR="$(cd "$OUT/api" && node -p "require('path').dirname(require.resolve('@prisma/engines/package.json', { paths: [require.resolve('prisma/package.json')] }))")"
+  (cd "$ENGINES_DIR" && node scripts/postinstall.js)
+  ls "$ENGINES_DIR" | grep schema-engine
+fi
+
 # Web: Next.js standalone çıktısı + statik dosyalar
 cp -r apps/web/.next/standalone "$OUT/web"
 mkdir -p "$OUT/web/apps/web/.next"

@@ -1,24 +1,29 @@
-name: cPanel'e deploy
+name: Canlı sürüm paketi
 
-# Şimdilik elle tetiklenir (Actions > cPanel'e deploy > Run workflow).
-# Gerekli secret'lar ve ilk kurulum: docs/deployment-cpanel.md
+# Sunucu dışarıdan SSH kabul etmiyor. Bu yüzden deploy "çekme" ile çalışır:
+# 1. Bu iş akışı API ve web paketlerini üretip GitHub Release olarak yayınlar.
+# 2. Sunucudaki scripts/server-deploy.sh (cron ile) yeni sürümü görüp indirir ve kurar.
+# Kurulum: docs/deployment-cpanel.md
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
-concurrency: deploy-production
+concurrency: release-production
+
+permissions:
+  contents: write
 
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
     environment: production
     env:
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_MAJOR: "22"
-      SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
-      SSH_PORT: ${{ secrets.CPANEL_SSH_PORT }}
-      SSH_USER: ${{ secrets.CPANEL_SSH_USER }}
-      API_DIR: ${{ vars.CPANEL_API_DIR }}
-      WEB_DIR: ${{ vars.CPANEL_WEB_DIR }}
+      # Sunucu CloudLinux (RHEL tabanlı). Migration motorunun o platform için de inmesi gerekir.
+      PRISMA_CLI_BINARY_TARGETS: debian-openssl-3.0.x,rhel-openssl-1.1.x,rhel-openssl-3.0.x
+      GH_TOKEN: ${{ github.token }}
+      KEEP_RELEASES: 3
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -32,50 +37,20 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
         run: ./scripts/package-release.sh
 
-      # cPanel anahtar oluştururken şifre zorunlu tutuyor. Şifre verilmişse
-      # anahtar yalnızca bu geçici makinede şifresiz hale getirilir.
-      - name: SSH anahtarını hazırla
-        env:
-          SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
-          SSH_KEY_PASSPHRASE: ${{ secrets.CPANEL_SSH_KEY_PASSPHRASE }}
+      - name: Arşivle
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
-          chmod 600 ~/.ssh/id_deploy
-          if [ -n "$SSH_KEY_PASSPHRASE" ]; then
-            ssh-keygen -p -P "$SSH_KEY_PASSPHRASE" -N "" -f ~/.ssh/id_deploy > /dev/null
-          fi
-          printf 'Host *\n  IdentityFile ~/.ssh/id_deploy\n  IdentitiesOnly yes\n' > ~/.ssh/config
-          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+          cp scripts/server-deploy.sh out/
+          tar -czf release.tar.gz -C out .
+          ls -lh release.tar.gz
 
-      # CloudLinux Node.js Selector, node_modules klasörünü sanal ortamda tutar ve
-      # uygulama klasörüne sembolik bağ olarak ekler. Bu yüzden iki ayrı hedefe yüklüyoruz.
-      - name: API'yi yükle
+      - name: Release olarak yayınla
         run: |
-          RSH="ssh -p ${SSH_PORT:-22}"
-          rsync -az --delete --exclude node_modules --exclude .env --exclude tmp -e "$RSH" out/api/ "$SSH_USER@$SSH_HOST:$API_DIR/"
-          rsync -az --delete -e "$RSH" out/api/node_modules/ "$SSH_USER@$SSH_HOST:nodevenv/$API_DIR/$NODE_MAJOR/lib/node_modules/"
-
-      - name: Web'i yükle
-        run: |
-          RSH="ssh -p ${SSH_PORT:-22}"
-          rsync -az --delete --exclude node_modules --exclude .env --exclude tmp -e "$RSH" out/web/ "$SSH_USER@$SSH_HOST:$WEB_DIR/"
-          rsync -az --delete -e "$RSH" out/web/node_modules/ "$SSH_USER@$SSH_HOST:nodevenv/$WEB_DIR/$NODE_MAJOR/lib/node_modules/"
-
-      - name: Migration ve yeniden başlatma
-        run: |
-          ssh -p "${SSH_PORT:-22}" "$SSH_USER@$SSH_HOST" bash -s <<SCRIPT
-          set -e
-          # Selector node_modules bağını ancak npm install sonrası kurar; yoksa biz kuralım.
-          for DIR in $API_DIR $WEB_DIR; do
-            [ -e ~/\$DIR/node_modules ] || ln -s ~/nodevenv/\$DIR/$NODE_MAJOR/lib/node_modules ~/\$DIR/node_modules
-          done
-          source ~/nodevenv/$API_DIR/$NODE_MAJOR/bin/activate
-          cd ~/$API_DIR
-          npx prisma migrate deploy
-          mkdir -p tmp && touch tmp/restart.txt
-          mkdir -p ~/$WEB_DIR/tmp && touch ~/$WEB_DIR/tmp/restart.txt
-          SCRIPT
-
-      - name: Sağlık kontrolü
-        run: curl -fsS --retry 5 --retry-delay 5 "${{ vars.NEXT_PUBLIC_API_URL }}/v1/health"
+          TAG="surum-${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" release.tar.gz \
+            --target "$GITHUB_SHA" \
+            --title "Sürüm ${GITHUB_RUN_NUMBER}" \
+            --notes "Commit: ${GITHUB_SHA}" \
+            --latest
+          # Eski sürümleri sil, sadece son birkaçını tut
+          gh release list --limit 100 --json tagName --jq ".[${KEEP_RELEASES}:][].tagName" \
+            | xargs -r -n1 gh release delete --cleanup-tag --yes
