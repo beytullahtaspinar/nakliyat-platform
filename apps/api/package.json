@@ -22,10 +22,11 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate dev && prisma generate",
     "db:deploy": "prisma migrate deploy",
     "postinstall": "prisma generate",
-    "openapi:export": "nest build && node dist/export-openapi.js"
+    "openapi:export": "nest build && node dist/export-openapi.js",
+    "admin:create": "node dist/create-admin.js"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",

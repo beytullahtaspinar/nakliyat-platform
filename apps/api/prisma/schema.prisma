@@ -81,6 +81,7 @@ model Company {
   serviceCityCodes   String[]
   verificationStatus VerificationStatus @default(PENDING)
   verifiedAt         DateTime?
+  verificationNote   String?
   ratingAverage      Decimal            @default(0) @db.Decimal(3, 2)
   ratingCount        Int                @default(0)
   completedJobs      Int                @default(0)
@@ -250,14 +251,27 @@ model Quote {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
-  request  MovingRequest @relation(fields: [requestId], references: [id])
-  company  Company       @relation(fields: [companyId], references: [id])
-  booking  Booking?
-  messages Message[]
+  request   MovingRequest   @relation(fields: [requestId], references: [id])
+  company   Company         @relation(fields: [companyId], references: [id])
+  booking   Booking?
+  messages  Message[]
+  revisions QuoteRevision[]
 
   // Bir firma bir talebe yalnızca bir teklif verebilir
   @@unique([requestId, companyId])
   @@index([companyId, status])
+}
+
+/// Teklif fiyatının her değişikliği saklanır (fiyat endeksi ve anlaşmazlık kaydı için).
+model QuoteRevision {
+  id        String   @id @default(cuid())
+  quoteId   String
+  priceTry  Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId, createdAt])
 }
 
 // ─── Anlaşılan işler ────────────────────────────────────────────

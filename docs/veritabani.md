@@ -12,6 +12,7 @@
 | `MovingRequest` | Müşterinin taşıma talebi: il (plaka kodu) ve ilçe (adres kodu), açık adres, kat, asansör, ev tipi, tarih, ek hizmetler, sistemin hesapladığı m³ / ekip / süre ve şehirler arası mesafe. |
 | `RequestPhoto` | Talebe eklenen fotoğraflar. |
 | `Quote` | Firmanın teklifi. Bir firma bir talebe yalnızca bir teklif verebilir. |
+| `QuoteRevision` | Teklif fiyatının her değişikliği (fiyat endeksi ve anlaşmazlıklar için). |
 | `Booking` | Müşterinin kabul ettiği teklif, yani anlaşılan iş. |
 | `Review` | İş tamamlandıktan sonra müşterinin puanı ve yorumu, firmanın yanıtı. |
 | `Message` | Teklif veya iş üzerinden müşteri-firma yazışması. |

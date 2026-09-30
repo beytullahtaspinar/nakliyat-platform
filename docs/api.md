@@ -61,21 +61,22 @@ Talep ve firma kayıtlarında il **plaka koduyla** (`"34"`), ilçe **adres koduy
 
 Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle bilgi sızmaz). Teklif gelmiş talep düzenlenemez (409).
 | ⏳ | POST | `/requests/:id/photos` | Müşteri | Fotoğraf yükleme adresi al (S3 imzalı URL) |
-| ⏳ | GET | `/requests/:id/quotes` | Müşteri | Gelen teklifler (firma puanı, tamamlanan iş, doğrulama rozeti ile) |
-| ⏳ | POST | `/quotes/:id/accept` | Müşteri | Teklifi kabul et → iş (booking) oluşur, diğer teklifler reddedilir |
+| ✅ | GET | `/requests/:id/quotes` | Müşteri | Gelen teklifler (firma puanı, tamamlanan iş, doğrulama rozeti ile) |
+| ✅ | POST | `/quotes/:id/accept` | Müşteri | Teklifi kabul et → iş (booking) oluşur, diğer teklifler reddedilir, firmanın iletişim bilgisi açılır. Aynı anda iki kabul engellenir. |
 
 ### Firma
 
 | Durum | Yöntem | Yol | Kim | Açıklama |
 |---|---|---|---|---|
-| ⏳ | POST | `/company/profile` | Firma | Firma profilini oluştur |
-| ⏳ | PATCH | `/company/profile` | Firma | Profili güncelle |
+| ✅ | POST · GET | `/company/profile` | Firma | Firma profilini oluştur / görüntüle (vergi no benzersiz) |
+| ✅ | PATCH | `/company/profile` | Firma | Profili güncelle. Unvan, vergi no veya K3 no değişirse firma yeniden doğrulamaya düşer. |
 | ⏳ | POST | `/company/documents` | Firma | K3, vergi levhası vb. belge yükle |
-| ⏳ | GET | `/company/requests` | Doğrulanmış firma | Hizmet bölgesindeki açık talepler. Müşteri adı ve açık adres gizli. |
-| ⏳ | POST | `/company/requests/:id/quotes` | Doğrulanmış firma | Teklif ver (talep başına bir teklif) |
-| ⏳ | PATCH | `/company/quotes/:id` | Firma | Teklifi güncelle veya geri çek |
-| ⏳ | GET | `/company/quotes` | Firma | Verdiği teklifler |
-| ⏳ | GET | `/company/bookings` | Firma | Kazandığı işler (müşteri iletişim bilgisi burada açılır) |
+| ✅ | GET · GET | `/company/requests`, `/company/requests/:id` | Firma | Hizmet bölgesindeki açık talepler. Müşteri adı ve açık adres gizli. |
+| ✅ | POST | `/company/requests/:id/quotes` | Doğrulanmış firma | Teklif ver (talep başına bir teklif, yalnızca hizmet bölgesindeki taleplere) |
+| ✅ | PATCH | `/company/quotes/:id` | Firma | Bekleyen teklifi güncelle. Her fiyat değişikliği geçmişe kaydedilir. |
+| ✅ | POST | `/company/quotes/:id/withdraw` | Firma | Teklifi geri çek |
+| ✅ | GET | `/company/quotes` | Firma | Verdiği teklifler |
+| ✅ | GET | `/company/bookings` | Firma | Kazandığı işler (müşteri iletişim bilgisi ve açık adres burada açılır) |
 | ⏳ | POST | `/company/bookings/:id/complete` | Firma | İşi tamamlandı olarak işaretle |
 | ⏳ | POST | `/company/reviews/:id/reply` | Firma | Yoruma yanıt ver |
 
@@ -84,6 +85,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | Durum | Yöntem | Yol | Kim | Açıklama |
 |---|---|---|---|---|
 | ⏳ | GET | `/companies/:id` | Herkes | Firmanın herkese açık profili ve yorumları |
+| ✅ | GET | `/bookings` | Müşteri | Anlaşılan işler, firmanın iletişim bilgisiyle |
 | ⏳ | GET | `/bookings/:id` | Taraflar | İş detayı |
 | ⏳ | POST | `/bookings/:id/review` | Müşteri | Tamamlanan işe puan ve yorum |
 | ⏳ | GET · POST | `/quotes/:id/messages` | Taraflar | Teklif üzerinden yazışma |
@@ -95,15 +97,19 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 
 | Durum | Yöntem | Yol | Açıklama |
 |---|---|---|---|
-| ⏳ | GET | `/admin/companies?status=PENDING` | Doğrulama bekleyen firmalar |
-| ⏳ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle) |
+| ✅ | GET | `/admin/companies?status=PENDING` | Doğrulama bekleyen firmalar |
+| ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle) |
 | ⏳ | PATCH | `/admin/documents/:id` | Belgeyi onayla/reddet |
 | ⏳ | GET | `/admin/users` · `/admin/requests` · `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
 | ⏳ | POST | `/admin/users/:id/suspend` | Kullanıcıyı askıya al |
 | ⏳ | PATCH | `/admin/reviews/:id` | Uygunsuz yorumu yayından kaldır |
 | ⏳ | GET | `/admin/stats` | Talep, teklif, dönüşüm, firma sayıları |
 
-Tüm admin işlemleri `AuditLog` tablosuna kaydedilir.
+Tüm admin işlemleri `AuditLog` tablosuna kaydedilir. İlk admin hesabı sunucuda oluşturulur (dışarıdan kayıtla açılamaz):
+
+```bash
+ADMIN_PHONE=05xxxxxxxxx ADMIN_PASSWORD='en-az-12-karakter' ADMIN_NAME='Ad Soyad' pnpm --filter @nakliyat/api admin:create
+```
 
 ## Talep → iş durum akışı
 

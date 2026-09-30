@@ -360,6 +360,581 @@
           "Taşıma talepleri (müşteri)"
         ]
       }
+    },
+    "/v1/company/profile": {
+      "post": {
+        "operationId": "CompanyProfileController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: profil"
+        ]
+      },
+      "get": {
+        "operationId": "CompanyProfileController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: profil"
+        ]
+      },
+      "patch": {
+        "operationId": "CompanyProfileController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: profil"
+        ]
+      }
+    },
+    "/v1/company/requests": {
+      "get": {
+        "operationId": "CompanyQuotesController_listRequests",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: talepler ve teklifler"
+        ]
+      }
+    },
+    "/v1/company/requests/{id}": {
+      "get": {
+        "operationId": "CompanyQuotesController_getRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: talepler ve teklifler"
+        ]
+      }
+    },
+    "/v1/company/requests/{id}/quotes": {
+      "post": {
+        "operationId": "CompanyQuotesController_createQuote",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: talepler ve teklifler"
+        ]
+      }
+    },
+    "/v1/company/quotes": {
+      "get": {
+        "operationId": "CompanyQuotesController_listQuotes",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: talepler ve teklifler"
+        ]
+      }
+    },
+    "/v1/company/quotes/{id}": {
+      "patch": {
+        "operationId": "CompanyQuotesController_updateQuote",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: talepler ve teklifler"
+        ]
+      }
+    },
+    "/v1/company/quotes/{id}/withdraw": {
+      "post": {
+        "operationId": "CompanyQuotesController_withdraw",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: talepler ve teklifler"
+        ]
+      }
+    },
+    "/v1/requests/{id}/quotes": {
+      "get": {
+        "operationId": "CustomerQuotesController_list",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      }
+    },
+    "/v1/quotes/{id}/accept": {
+      "post": {
+        "operationId": "CustomerQuotesController_accept",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      }
+    },
+    "/v1/company/bookings": {
+      "get": {
+        "operationId": "BookingsController_companyBookings",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/bookings": {
+      "get": {
+        "operationId": "BookingsController_customerBookings",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/admin/companies": {
+      "get": {
+        "operationId": "AdminCompaniesController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "VERIFIED",
+                "REJECTED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/companies/{id}/verify": {
+      "post": {
+        "operationId": "AdminCompaniesController_verify",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/companies/{id}/reject": {
+      "post": {
+        "operationId": "AdminCompaniesController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
     }
   },
   "info": {
@@ -725,6 +1300,206 @@
             "example": "Sokak dar, kamyon girmiyor."
           }
         }
+      },
+      "CreateCompanyProfileDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string",
+            "example": "Örnek Nakliyat Taşımacılık Ltd. Şti."
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Örnek Nakliyat",
+            "description": "Müşterilere görünen ad"
+          },
+          "taxNumber": {
+            "type": "string",
+            "example": "1234567890",
+            "description": "Vergi kimlik no (10 hane) veya şahıs şirketi için TCKN (11 hane)"
+          },
+          "k3LicenseNumber": {
+            "type": "string",
+            "example": "K3.34.123456"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cityCode": {
+            "type": "string",
+            "example": "34",
+            "description": "Merkez ili plaka kodu"
+          },
+          "serviceCityCodes": {
+            "example": [
+              "34",
+              "41",
+              "16"
+            ],
+            "description": "Hizmet verilen iller (plaka kodu)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "legalName",
+          "displayName",
+          "taxNumber",
+          "cityCode",
+          "serviceCityCodes"
+        ]
+      },
+      "UpdateCompanyProfileDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string",
+            "example": "Örnek Nakliyat Taşımacılık Ltd. Şti."
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Örnek Nakliyat",
+            "description": "Müşterilere görünen ad"
+          },
+          "taxNumber": {
+            "type": "string",
+            "example": "1234567890",
+            "description": "Vergi kimlik no (10 hane) veya şahıs şirketi için TCKN (11 hane)"
+          },
+          "k3LicenseNumber": {
+            "type": "string",
+            "example": "K3.34.123456"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cityCode": {
+            "type": "string",
+            "example": "34",
+            "description": "Merkez ili plaka kodu"
+          },
+          "serviceCityCodes": {
+            "example": [
+              "34",
+              "41",
+              "16"
+            ],
+            "description": "Hizmet verilen iller (plaka kodu)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateQuoteDto": {
+        "type": "object",
+        "properties": {
+          "priceTry": {
+            "type": "number",
+            "example": 18500,
+            "description": "KDV dahil toplam fiyat (TL)"
+          },
+          "includesPacking": {
+            "type": "boolean",
+            "default": false
+          },
+          "includesAssembly": {
+            "type": "boolean",
+            "default": false
+          },
+          "includesInsurance": {
+            "type": "boolean",
+            "default": false
+          },
+          "crewSize": {
+            "type": "number",
+            "example": 3
+          },
+          "vehicleType": {
+            "type": "string",
+            "enum": [
+              "PANELVAN",
+              "KAMYONET",
+              "KAMYON",
+              "TIR"
+            ],
+            "example": "KAMYON"
+          },
+          "message": {
+            "type": "string",
+            "example": "Asansörlü taşıma dahildir."
+          },
+          "validUntil": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Teklifin geçerlilik sonu. Verilmezse talep süresi sonuna kadar geçerli."
+          }
+        },
+        "required": [
+          "priceTry",
+          "crewSize",
+          "vehicleType"
+        ]
+      },
+      "UpdateQuoteDto": {
+        "type": "object",
+        "properties": {
+          "priceTry": {
+            "type": "number",
+            "example": 18500,
+            "description": "KDV dahil toplam fiyat (TL)"
+          },
+          "includesPacking": {
+            "type": "boolean",
+            "default": false
+          },
+          "includesAssembly": {
+            "type": "boolean",
+            "default": false
+          },
+          "includesInsurance": {
+            "type": "boolean",
+            "default": false
+          },
+          "crewSize": {
+            "type": "number",
+            "example": 3
+          },
+          "vehicleType": {
+            "type": "string",
+            "enum": [
+              "PANELVAN",
+              "KAMYONET",
+              "KAMYON",
+              "TIR"
+            ],
+            "example": "KAMYON"
+          },
+          "message": {
+            "type": "string",
+            "example": "Asansörlü taşıma dahildir."
+          },
+          "validUntil": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Teklifin geçerlilik sonu. Verilmezse talep süresi sonuna kadar geçerli."
+          }
+        }
+      },
+      "RejectCompanyDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "K3 belgesinin süresi dolmuş, güncel belgeyi yükleyin."
+          }
+        },
+        "required": [
+          "reason"
+        ]
       }
     }
   }
