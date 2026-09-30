@@ -26,7 +26,7 @@ WordPress tanıtım sitesi ana alan adında (`alanadi.com`) olduğu gibi kalır.
    - Application root: `nakliyat-api`
    - Application URL: `api.alanadi.com`
    - Application startup file: `app.cjs`
-   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `WEB_URL=https://app.alanadi.com`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
+   - Environment variables: `NODE_ENV=production`, `DATABASE_URL`, `WEB_URL=https://app.alanadi.com`, `JWT_ACCESS_SECRET` (uzun ve rastgele bir değer)
 4. **Web uygulaması**:
    - Application root: `nakliyat-web`
    - Application URL: `app.alanadi.com`

@@ -24,6 +24,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://nakliyat:nakliyat@localhost:5432/nakliyat?schema=public
+      JWT_ACCESS_SECRET: ci-test-secret
       NEXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v4

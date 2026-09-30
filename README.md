@@ -41,5 +41,6 @@ pnpm dev                             # web: http://localhost:3000  api: http://l
 ## Dokümanlar
 
 - [Geliştirme rehberi](CONTRIBUTING.md)
+- [API tasarımı](docs/api.md) (canlı Swagger: `http://localhost:4000/docs`)
 - [Veritabanı modeli](docs/veritabani.md)
 - [cPanel'e kurulum](docs/deployment-cpanel.md)
