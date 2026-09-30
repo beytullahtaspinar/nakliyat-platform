@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Company } from '../generated/prisma/client.js';
+import type { Company, Prisma } from '../generated/prisma/client.js';
 import { VerificationStatus } from '../generated/prisma/enums.js';
 import { assertCityCodes, cityName } from '../common/utils/locations.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -12,6 +12,9 @@ import type {
   CreateCompanyProfileDto,
   UpdateCompanyProfileDto,
 } from './dto/company-profile.dto.js';
+
+export const WITH_CITIES = { serviceCities: { select: { cityCode: true } } } satisfies Prisma.CompanyInclude;
+export type CompanyWithCities = Company & { serviceCities: { cityCode: string }[] };
 
 /** Değişirse firmanın yeniden doğrulanması gereken alanlar */
 const IDENTITY_FIELDS = ['legalName', 'taxNumber', 'k3LicenseNumber'] as const;
@@ -28,8 +31,14 @@ export class CompaniesService {
     if (await this.prisma.company.findUnique({ where: { taxNumber: dto.taxNumber } })) {
       throw new ConflictException('Bu vergi numarasıyla kayıtlı bir firma var');
     }
+    const { serviceCityCodes, ...fields } = dto;
     const company = await this.prisma.company.create({
-      data: { ...dto, ownerId, serviceCityCodes: unique(dto.serviceCityCodes) },
+      data: {
+        ...fields,
+        ownerId,
+        serviceCities: { create: unique(serviceCityCodes).map((cityCode) => ({ cityCode })) },
+      },
+      include: WITH_CITIES,
     });
     return toProfile(company);
   }
@@ -49,11 +58,18 @@ export class CompaniesService {
     const identityChanged = IDENTITY_FIELDS.some(
       (field) => dto[field] !== undefined && dto[field] !== company[field],
     );
+    const { serviceCityCodes, ...fields } = dto;
     const updated = await this.prisma.company.update({
       where: { id: company.id },
+      include: WITH_CITIES,
       data: {
-        ...dto,
-        ...(dto.serviceCityCodes && { serviceCityCodes: unique(dto.serviceCityCodes) }),
+        ...fields,
+        ...(serviceCityCodes && {
+          serviceCities: {
+            deleteMany: {},
+            create: unique(serviceCityCodes).map((cityCode) => ({ cityCode })),
+          },
+        }),
         ...(identityChanged && {
           verificationStatus: VerificationStatus.PENDING,
           verifiedAt: null,
@@ -64,15 +80,15 @@ export class CompaniesService {
     return toProfile(updated);
   }
 
-  async requireCompany(ownerId: string): Promise<Company> {
-    const company = await this.prisma.company.findUnique({ where: { ownerId } });
+  async requireCompany(ownerId: string): Promise<CompanyWithCities> {
+    const company = await this.prisma.company.findUnique({ where: { ownerId }, include: WITH_CITIES });
     if (!company || company.deletedAt) {
       throw new NotFoundException('Önce firma profilinizi oluşturun');
     }
     return company;
   }
 
-  async requireVerifiedCompany(ownerId: string): Promise<Company> {
+  async requireVerifiedCompany(ownerId: string): Promise<CompanyWithCities> {
     const company = await this.requireCompany(ownerId);
     if (company.verificationStatus !== VerificationStatus.VERIFIED) {
       throw new ForbiddenException('Teklif verebilmek için firmanızın doğrulanması gerekiyor');
@@ -83,12 +99,14 @@ export class CompaniesService {
 
 const unique = (codes: string[]) => [...new Set(codes)];
 
-export function toProfile(company: Company) {
-  const { deletedAt: _deletedAt, ownerId: _ownerId, ...rest } = company;
+export function toProfile(company: CompanyWithCities) {
+  const { deletedAt: _deletedAt, ownerId: _ownerId, serviceCities, ...rest } = company;
+  const serviceCityCodes = serviceCities.map((c) => c.cityCode).sort();
   return {
     ...rest,
     cityName: cityName(company.cityCode),
-    serviceCities: company.serviceCityCodes.map((code) => ({ code, name: cityName(code) })),
+    serviceCityCodes,
+    serviceCities: serviceCityCodes.map((code) => ({ code, name: cityName(code) })),
   };
 }
 

@@ -1,11 +1,11 @@
 // İlk admin hesabını oluşturur veya şifresini yeniler. Admin dışarıdan kayıtla açılamaz.
 //   ADMIN_PHONE=05xx... ADMIN_PASSWORD=... ADMIN_NAME="Ad Soyad" node dist/create-admin.js
 import 'dotenv/config';
-import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
 import { normalizeTrMobile } from './common/utils/phone.js';
 import { PrismaClient } from './generated/prisma/client.js';
 import { UserRole } from './generated/prisma/enums.js';
+import { createMariaDbAdapter } from './prisma/connection.js';
 
 const phone = normalizeTrMobile(process.env.ADMIN_PHONE ?? '');
 const password = process.env.ADMIN_PASSWORD ?? '';
@@ -15,9 +15,7 @@ if (!phone || password.length < 12) {
   process.exit(1);
 }
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL! }),
-});
+const prisma = new PrismaClient({ adapter: createMariaDbAdapter(process.env.DATABASE_URL!) });
 const passwordHash = await bcrypt.hash(password, 12);
 const user = await prisma.user.upsert({
   where: { phone },

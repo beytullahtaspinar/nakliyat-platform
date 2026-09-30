@@ -12,7 +12,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
-import { toProfile } from '../companies/companies.service.js';
+import { toProfile, WITH_CITIES } from '../companies/companies.service.js';
 import { UserRole, VerificationStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
@@ -33,7 +33,7 @@ export class AdminCompaniesController {
         orderBy: { createdAt: 'asc' },
         skip: (page - 1) * limit,
         take: limit,
-        include: { owner: { select: { fullName: true, phone: true, email: true } } },
+        include: { ...WITH_CITIES, owner: { select: { fullName: true, phone: true, email: true } } },
       }),
       this.prisma.company.count({ where }),
     ]);
@@ -64,6 +64,7 @@ export class AdminCompaniesController {
     const [updated] = await this.prisma.$transaction([
       this.prisma.company.update({
         where: { id },
+        include: WITH_CITIES,
         data: {
           verificationStatus: status,
           verifiedAt: status === VerificationStatus.VERIFIED ? new Date() : null,
