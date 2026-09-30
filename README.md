@@ -13,7 +13,7 @@ apps/
 docs/    Mimari, veritabanı, kurulum ve cPanel dokümanları
 ```
 
-Tanıtım sayfaları ve tüm paneller tek Next.js uygulamasındadır. Blog isteğe bağlı olarak WordPress ile `blog.` alt alan adında çalışabilir.
+Tanıtım sayfaları ve tüm paneller tek Next.js uygulamasındadır. Blog yazıları `cms.` alt alan adındaki WordPress'ten girilir, `/blog` altında Next.js ile yayınlanır.
 
 ## Hızlı başlangıç
 
@@ -42,5 +42,6 @@ pnpm dev                             # web: http://localhost:3000  api: http://l
 
 - [Geliştirme rehberi](CONTRIBUTING.md)
 - [API tasarımı](docs/api.md) (canlı Swagger: `http://localhost:4000/docs`)
+- [SEO ve GEO rehberi](docs/seo-geo.md)
 - [Veritabanı modeli](docs/veritabani.md)
 - [cPanel'e kurulum](docs/deployment-cpanel.md)

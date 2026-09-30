@@ -7,7 +7,7 @@ Canlı ortam cPanel üzerinde iki Node.js uygulaması olarak çalışır:
 | API | `api.evdenevenakliyat.app` | `app.cjs` |
 | Web | `evdenevenakliyat.app` | `apps/web/server.js` |
 
-Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin panelleri aynı Next.js uygulamasında, ana alan adında çalışır. Blog isteğe bağlı olarak WordPress ile `blog.evdenevenakliyat.app` adresinde tutulabilir.
+Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin panelleri aynı Next.js uygulamasında, ana alan adında çalışır. Blog `evdenevenakliyat.app/blog` altında yayınlanır. Yazılar `cms.evdenevenakliyat.app` adresindeki WordPress'ten girilir ve Next.js tarafından çekilir. Ayrıntılar: [SEO ve GEO rehberi](seo-geo.md).
 
 > **.app uzantısı hakkında:** .app alan adları tarayıcılarda yalnızca HTTPS ile açılır (HSTS preload). Ana alan adı ve her alt alan adı için SSL sertifikası (cPanel AutoSSL veya Let's Encrypt) site yayına girmeden önce aktif olmalı. Sertifika yoksa site hiç açılmaz.
 
@@ -20,7 +20,7 @@ Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin pa
 
 ## 2. İlk kurulum (bir kez)
 
-1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. Ana alan adında WordPress varsa önce yedekle ve blog'a taşı. Her iki adres için SSL'i (AutoSSL / Let's Encrypt) aç.
+1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. `cms.` alt alan adına WordPress kurulur (Softaculous ile) ve arama motorlarına kapatılır. Ana alan adında eski bir WordPress varsa önce yedekle ve `cms.` adresine taşı. Tüm adresler için SSL'i (AutoSSL / Let's Encrypt) aç.
 2. **Veritabanı:** PostgreSQL veritabanı ve kullanıcısı oluştur, kullanıcıya tüm yetkileri ver.
 3. **API uygulaması** (Setup Node.js App → Create Application):
    - Node.js version: 22

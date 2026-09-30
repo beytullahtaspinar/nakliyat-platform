@@ -1,0 +1,19 @@
+# evdenevenakliyat.app
+
+> Türkiye'de evden eve taşınacak kişileri doğrulanmış nakliyat firmalarıyla buluşturan teklif karşılaştırma platformu. Müşteri taşınma bilgilerini bir kez girer, firmalar fiyat ve hizmet kapsamıyla teklif verir, müşteri puanlara ve yorumlara bakarak seçer.
+
+## Nasıl çalışır
+
+- Müşteri nereden, nereye, ev tipi, kat, asansör durumu ve tarih bilgisini girer.
+- Sistem tahmini eşya hacmini (m³), ekip sayısını ve süreyi hesaplar.
+- Hizmet bölgesindeki doğrulanmış firmalar teklif verir.
+- Müşteri teklifleri fiyat, kapsam (paketleme, montaj, sigorta), firma puanı ve tamamlanan iş sayısına göre karşılaştırır.
+- Taşınma sonrası yalnızca gerçek müşteriler yorum yazabilir.
+
+## Firma doğrulama
+
+Platformdaki firmalardan Ulaştırma ve Altyapı Bakanlığı K3 yetki belgesi, vergi levhası ve ticaret sicil kaydı istenir.
+
+## Sayfalar
+
+- [Ana sayfa](https://evdenevenakliyat.app/)
