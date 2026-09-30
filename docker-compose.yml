@@ -1,0 +1,15 @@
+# Sadece yerel geliştirme için. Canlı ortam cPanel üzerinde çalışır (docs/deployment-cpanel.md).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nakliyat
+      POSTGRES_PASSWORD: nakliyat
+      POSTGRES_DB: nakliyat
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

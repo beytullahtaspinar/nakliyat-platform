@@ -1,0 +1,12 @@
+packages:
+  - "apps/*"
+
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver
+
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - prisma
+
+injectWorkspacePackages: true

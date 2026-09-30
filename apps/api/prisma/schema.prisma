@@ -1,0 +1,365 @@
+// Nakliyat platformu veri modeli (MVP)
+// Ayrıntılı açıklama: docs/veritabani.md
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Kullanıcılar ───────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  COMPANY
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id              String     @id @default(cuid())
+  role            UserRole
+  status          UserStatus @default(ACTIVE)
+  fullName        String
+  email           String?    @unique
+  phone           String     @unique
+  phoneVerifiedAt DateTime?
+  passwordHash    String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  company       Company?
+  requests      MovingRequest[]
+  reviews       Review[]
+  sentMessages  Message[]
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── Nakliyat firmaları ─────────────────────────────────────────
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Company {
+  id                 String             @id @default(cuid())
+  ownerId            String             @unique
+  legalName          String
+  displayName        String
+  taxNumber          String             @unique
+  k3LicenseNumber    String?
+  description        String?
+  logoUrl            String?
+  city               String
+  serviceCities      String[]
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  ratingAverage      Decimal            @default(0) @db.Decimal(3, 2)
+  ratingCount        Int                @default(0)
+  completedJobs      Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  owner     User              @relation(fields: [ownerId], references: [id])
+  documents CompanyDocument[]
+  vehicles  Vehicle[]
+  quotes    Quote[]
+  bookings  Booking[]
+  reviews   Review[]
+
+  @@index([verificationStatus])
+  @@index([city])
+}
+
+enum CompanyDocumentType {
+  K3_LICENSE
+  TAX_CERTIFICATE
+  TRADE_REGISTRY
+  INSURANCE
+  OTHER
+}
+
+model CompanyDocument {
+  id         String              @id @default(cuid())
+  companyId  String
+  type       CompanyDocumentType
+  fileUrl    String
+  status     VerificationStatus  @default(PENDING)
+  reviewNote String?
+  createdAt  DateTime            @default(now())
+  reviewedAt DateTime?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+enum VehicleType {
+  PANELVAN
+  KAMYONET
+  KAMYON
+  TIR
+}
+
+model Vehicle {
+  id            String      @id @default(cuid())
+  companyId     String
+  plate         String
+  type          VehicleType
+  capacityM3    Int
+  hasLiftSystem Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, plate])
+}
+
+// ─── Taşıma talepleri ───────────────────────────────────────────
+
+enum HomeType {
+  STUDIO
+  ONE_PLUS_ONE
+  TWO_PLUS_ONE
+  THREE_PLUS_ONE
+  FOUR_PLUS_ONE
+  VILLA
+  OFFICE
+}
+
+enum RequestStatus {
+  DRAFT
+  OPEN
+  BOOKED
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+model MovingRequest {
+  id         String        @id @default(cuid())
+  customerId String
+  status     RequestStatus @default(OPEN)
+
+  fromCity        String
+  fromDistrict    String
+  fromAddress     String
+  fromFloor       Int
+  fromHasElevator Boolean
+  toCity          String
+  toDistrict      String
+  toAddress       String
+  toFloor         Int
+  toHasElevator   Boolean
+
+  homeType       HomeType
+  moveDate       DateTime
+  isDateFlexible Boolean  @default(false)
+  needsPacking   Boolean  @default(false)
+  needsAssembly  Boolean  @default(false)
+  needsStorage   Boolean  @default(false)
+  specialItems   String[]
+  notes          String?
+
+  // Sistem tarafından hesaplanan standart değerler
+  estimatedVolumeM3 Int?
+  estimatedCrew     Int?
+  estimatedHours    Int?
+  distanceKm        Int?
+
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  customer User           @relation(fields: [customerId], references: [id])
+  photos   RequestPhoto[]
+  quotes   Quote[]
+  booking  Booking?
+
+  @@index([status, fromCity])
+  @@index([customerId])
+}
+
+model RequestPhoto {
+  id        String   @id @default(cuid())
+  requestId String
+  fileUrl   String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  request MovingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+// ─── Teklifler ──────────────────────────────────────────────────
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  EXPIRED
+}
+
+model Quote {
+  id                String      @id @default(cuid())
+  requestId         String
+  companyId         String
+  status            QuoteStatus @default(PENDING)
+  priceTry          Decimal     @db.Decimal(10, 2)
+  includesPacking   Boolean     @default(false)
+  includesAssembly  Boolean     @default(false)
+  includesInsurance Boolean     @default(false)
+  crewSize          Int
+  vehicleType       VehicleType
+  message           String?
+  validUntil        DateTime
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  request  MovingRequest @relation(fields: [requestId], references: [id])
+  company  Company       @relation(fields: [companyId], references: [id])
+  booking  Booking?
+  messages Message[]
+
+  // Bir firma bir talebe yalnızca bir teklif verebilir
+  @@unique([requestId, companyId])
+  @@index([companyId, status])
+}
+
+// ─── Anlaşılan işler ────────────────────────────────────────────
+
+enum BookingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  requestId    String        @unique
+  quoteId      String        @unique
+  companyId    String
+  status       BookingStatus @default(SCHEDULED)
+  scheduledAt  DateTime
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  request  MovingRequest @relation(fields: [requestId], references: [id])
+  quote    Quote         @relation(fields: [quoteId], references: [id])
+  company  Company       @relation(fields: [companyId], references: [id])
+  review   Review?
+  messages Message[]
+
+  @@index([companyId, status])
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  bookingId    String   @unique
+  companyId    String
+  customerId   String
+  rating       Int // 1-5
+  comment      String?
+  companyReply String?
+  isPublished  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  booking  Booking @relation(fields: [bookingId], references: [id])
+  company  Company @relation(fields: [companyId], references: [id])
+  customer User    @relation(fields: [customerId], references: [id])
+
+  @@index([companyId])
+}
+
+// ─── Mesajlaşma ve bildirimler ──────────────────────────────────
+
+model Message {
+  id        String    @id @default(cuid())
+  quoteId   String?
+  bookingId String?
+  senderId  String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  quote   Quote?   @relation(fields: [quoteId], references: [id])
+  booking Booking? @relation(fields: [bookingId], references: [id])
+  sender  User     @relation(fields: [senderId], references: [id])
+
+  @@index([quoteId, createdAt])
+  @@index([bookingId, createdAt])
+}
+
+enum NotificationChannel {
+  IN_APP
+  SMS
+  EMAIL
+}
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  channel   NotificationChannel
+  type      String
+  title     String
+  body      String
+  data      Json?
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+// ─── Yönetim ────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+}
