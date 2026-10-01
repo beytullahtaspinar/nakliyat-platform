@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { companyProfileBody } from "@/lib/company-form";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
@@ -103,4 +104,14 @@ export async function setUserPassword(
   }
   revalidatePath("/yonetim", "layout");
   return { notice: "Yeni şifre kaydedildi; kullanıcının açık oturumları kapatıldı. Şifreyi kullanıcıya güvenli bir yoldan ilet." };
+}
+
+export async function deleteUser(userId: string): Promise<AdminActionState> {
+  try {
+    await apiFetch(`/admin/users/${encodeURIComponent(userId)}`, { method: "DELETE", token: await adminToken() });
+  } catch (err) {
+    return failure(err, "Hesap silinemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  redirect("/yonetim/kullanicilar?silindi=1");
 }

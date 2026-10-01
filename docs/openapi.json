@@ -1259,6 +1259,32 @@
         "tags": [
           "Admin: kullanıcılar"
         ]
+      },
+      "delete": {
+        "operationId": "AdminUsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kullanıcılar"
+        ]
       }
     },
     "/v1/admin/users/{id}/password": {

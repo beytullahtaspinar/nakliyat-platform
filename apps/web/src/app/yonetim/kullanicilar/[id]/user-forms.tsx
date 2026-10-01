@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Field, FormError, Input, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
 import { Button } from "@/components/ui/button";
-import { setUserPassword, updateUser, type AdminActionState } from "@/lib/actions/admin";
+import { deleteUser, setUserPassword, updateUser, type AdminActionState } from "@/lib/actions/admin";
 import type { AdminUser } from "@/lib/api";
 import { formatPhone } from "@/lib/format";
 
@@ -83,5 +83,47 @@ export function PasswordForm({ userId }: { userId: string }) {
         </Button>
       </div>
     </form>
+  );
+}
+
+/** İki adımlı silme: yanlışlıkla tek tıkla hesap silinmesin. */
+export function DeleteUserForm({ userId, name }: { userId: string; name: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string>();
+  const [pending, startTransition] = useTransition();
+
+  if (!confirming) {
+    return (
+      <Button type="button" size="sm" variant="secondary" className="text-red-700" onClick={() => setConfirming(true)}>
+        Hesabı sil
+      </Button>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium text-red-800">
+        {name} hesabı kalıcı olarak silinecek. Bu işlem geri alınamaz.
+      </p>
+      <FormError message={error} />
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          className="bg-red-700 hover:bg-red-800"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await deleteUser(userId);
+              setError(result?.error);
+            })
+          }
+        >
+          {pending ? "Siliniyor…" : "Evet, kalıcı olarak sil"}
+        </Button>
+        <Button type="button" size="sm" variant="secondary" disabled={pending} onClick={() => setConfirming(false)}>
+          Vazgeç
+        </Button>
+      </div>
+    </div>
   );
 }

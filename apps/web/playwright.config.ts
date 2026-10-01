@@ -35,7 +35,7 @@ export default defineConfig({
       cwd: "../api",
       url: `http://localhost:${API_PORT}/v1/health`,
       reuseExistingServer: !CI,
-      env: { PORT: String(API_PORT), WEB_URL: `http://localhost:${WEB_PORT}` },
+      env: { PORT: String(API_PORT), WEB_URL: `http://localhost:${WEB_PORT}`, AUTH_RATE_LIMIT: "1000" },
       timeout: 60_000,
     },
     {

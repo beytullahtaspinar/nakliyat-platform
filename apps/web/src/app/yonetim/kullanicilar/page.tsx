@@ -44,6 +44,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
   return (
     <>
       <PageHeader title="Kullanıcılar" description="Müşteri, firma ve yönetici hesapları." />
+      {params.silindi && (
+        <p role="status" className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+          Hesap silindi.
+        </p>
+      )}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <FilterTabs
           label="Kullanıcı rolü"

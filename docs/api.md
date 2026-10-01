@@ -108,6 +108,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | GET | `/admin/users?role=&q=` | Kullanıcılar; ad, telefon veya e-postada arama |
 | ✅ | GET · PATCH | `/admin/users/:id` | Kullanıcı detayı; ad, telefon, e-posta, hesap durumu (askıya alınca oturumlar kapanır) |
 | ✅ | POST | `/admin/users/:id/password` | Yeni şifre belirle; mevcut şifre hiç gösterilmez, tüm oturumlar kapanır |
+| ✅ | DELETE | `/admin/users/:id` | Hesabı sil: ad, telefon, e-posta, şifre silinir; açık talepler iptal, firma listeden kalkar, bekleyen teklifler geri çekilir. Kayıtlar isimsiz kalır. Planlanmış işi olan hesap ve yönetici hesapları silinmez |
 | ✅ | PATCH | `/admin/companies/:id` | Firma bilgilerini düzelt (doğrulama durumu korunur) |
 | ⏳ | GET | `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
 | ⏳ | PATCH | `/admin/reviews/:id` | Uygunsuz yorumu yayından kaldır |

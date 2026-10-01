@@ -6,13 +6,14 @@ import { getAdminContext } from "@/lib/admin";
 import { ApiError, apiFetch, type AdminUserDetail } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { PageHeader, ROLE_LABELS, VerificationBadge } from "../../admin-bits";
-import { PasswordForm, UserForm } from "./user-forms";
+import { DeleteUserForm, PasswordForm, UserForm } from "./user-forms";
 
 export const metadata: Metadata = { title: "Kullanıcı" };
 
 const ACTION_LABELS: Record<string, string> = {
   "user.update": "Bilgiler güncellendi",
   "user.password_set": "Yeni şifre belirlendi",
+  "user.delete": "Hesap silindi",
 };
 const FIELD_LABELS: Record<string, string> = {
   fullName: "ad soyad",
@@ -69,6 +70,20 @@ export default async function AdminUserPage({ params }: PageProps<"/yonetim/kull
               <PasswordForm userId={u.id} />
             </div>
           </Card>
+          {u.role !== "ADMIN" && (
+            <Card className="border-red-200 p-5">
+              <h2 className="font-semibold">Hesabı sil</h2>
+              <p className="mt-1 text-sm text-zinc-600">
+                Ad, telefon, e-posta ve şifre silinir; kişi bir daha bu hesapla giremez. Açık talepleri iptal
+                edilir{u.company ? ", firması listelerden kalkar ve bekleyen teklifleri geri çekilir" : ""}. Geçmiş
+                talep, teklif ve iş kayıtları raporlar için isimsiz olarak kalır. Planlanmış taşıma işi olan hesap
+                iş bitene kadar silinemez.
+              </p>
+              <div className="mt-3">
+                <DeleteUserForm userId={u.id} name={u.fullName} />
+              </div>
+            </Card>
+          )}
           {u.history.length > 0 && (
             <Card className="p-5">
               <h2 className="font-semibold">Yönetim geçmişi</h2>

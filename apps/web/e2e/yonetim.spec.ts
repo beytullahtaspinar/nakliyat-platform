@@ -164,3 +164,36 @@ test("roller birbirinin ekranına girmez; açık oturumla giriş sayfası hesap 
   });
   expect(api.status()).toBe(403);
 });
+
+test("yönetici hesabı siler", async ({ page, request }) => {
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  const customerPhone = `0536${uniqueDigits(7)}`;
+  const customerName = `Silinecek Müşteri ${uniqueDigits(5)}`;
+  const reg = await request.post(`${API}/auth/register`, {
+    data: { role: "CUSTOMER", fullName: customerName, phone: customerPhone, password: PASSWORD },
+  });
+  expect(reg.ok()).toBeTruthy();
+  const { user } = await reg.json();
+
+  await page.goto("/giris");
+  await page.getByLabel("Cep telefonu").fill(adminPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/yonetim$/);
+
+  await page.goto(`/yonetim/kullanicilar/${user.id}`);
+  await page.getByRole("button", { name: "Hesabı sil" }).click();
+  await expect(page.getByText("kalıcı olarak silinecek")).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole("button", { name: "Evet, kalıcı olarak sil" }).click();
+  await expect(page).toHaveURL(/\/yonetim\/kullanicilar\?silindi=1/);
+  await expect(page.getByRole("status")).toHaveText("Hesap silindi.");
+  await expect(page.getByRole("link", { name: customerName })).toHaveCount(0);
+
+  const login = await request.post(`${API}/auth/login`, { data: { phone: customerPhone, password: PASSWORD } });
+  expect(login.status()).toBe(401);
+});
