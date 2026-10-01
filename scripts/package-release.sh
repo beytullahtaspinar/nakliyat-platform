@@ -62,4 +62,10 @@ if [ -d apps/web/public ]; then
   cp -r apps/web/public "$OUT/web/apps/web/public"
 fi
 
+# Sürüm etiketi: hata raporlarında ve sağlık kontrolünde (/v1/health, /api/saglik) görünür
+if [ -n "${RELEASE_TAG:-}" ]; then
+  echo "$RELEASE_TAG" > "$OUT/api/RELEASE"
+  echo "$RELEASE_TAG" > "$OUT/web/apps/web/RELEASE"
+fi
+
 echo "Paketler hazır: $OUT/api ve $OUT/web"

@@ -34,9 +34,9 @@ Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-releas
    - Node.js version: 22, Application mode: Production
    - Application root: `nakliyat-api`, Application URL: `api.evdenevenakliyat.app`
    - Application startup file: `app.cjs`
-   - Environment variables: `NODE_ENV=production`, `WEB_URL=https://evdenevenakliyat.app`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI`, `JWT_ACCESS_SECRET` (uzun, rastgele)
+   - Environment variables: `NODE_ENV=production`, `WEB_URL=https://evdenevenakliyat.app`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI`, `JWT_ACCESS_SECRET` (uzun, rastgele), isteğe bağlı `SENTRY_DSN` ([izleme.md](izleme.md))
    - **Run NPM Install**'a basma; bağımlılıkları deploy getirir.
-4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`.
+4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`, isteğe bağlı `SENTRY_DSN`.
 5. **GitHub:** Repo → Settings → Environments → `production` → Variable `NEXT_PUBLIC_API_URL` = `https://api.evdenevenakliyat.app`.
 6. **Sunucunun GitHub'a erişimi:** GitHub → Settings → Developer settings → **Fine-grained tokens** → Generate new token. Repository access: yalnızca `nakliyat-platform`. Permissions: **Contents: Read-only**. Token'ı cPanel → **Terminal**'de şu komutla kaydet (ekrana yazılmaz, sohbete veya dosyaya yapıştırma):
 
@@ -63,10 +63,27 @@ Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-releas
    /bin/bash $HOME/deploy.sh >> $HOME/deploy.log 2>&1
    ```
 
-## 4. Günlük kullanım
+9. **Veritabanı yedeği:** [yedekleme.md](yedekleme.md). Ayarlandıktan sonra her kurulumdan önce otomatik yedek de alınır.
+
+## 4. Kurulumun güvenlik ağı
+
+Her kurulumda `deploy.sh` şunları yapar:
+
+1. Veritabanının yedeğini alır (`~/yedekler/veritabani/...-oncesi-surum-N.sql.gz`). Yedek alınamazsa kurulum yapılmaz.
+2. Yeni sürümü kurar ve uygulamaları yeniden başlatır.
+3. **Sağlık kontrolü:** `https://api.evdenevenakliyat.app/v1/health` ve `https://evdenevenakliyat.app/api/saglik` adreslerinin `"status":"ok"` ve yeni sürüm etiketini döndürmesini bekler (6 deneme × 10 sn).
+4. Kontrol başarısızsa **otomatik olarak önceki sürüme döner** ve bozuk sürümü atlanacaklar listesine yazar (`~/.config/nakliyat/skip-release`). Bir sonraki düzeltme `main`'e birleşince o yeni sürüm normal şekilde kurulur.
+
+Veritabanı migration'ları geri alınmaz. Bu yüzden şema değişiklikleri **genişlet → taşı → daralt** sırasıyla yapılır (önce kolon eklenir, kod ikisiyle de çalışır, eski kolon sonraki bir sürümde silinir); böylece önceki sürüm yeni şemayla da çalışır. Gerekirse yedekten dönülür.
+
+Log dosyaları da her çalışmada kısaltılır: `~/deploy.log` ve `~/yedek.log` 5 MB'ı, uygulama logları 20 MB'ı geçerse son kısmı tutulur.
+
+## 5. Günlük kullanım
 
 - Yeni sürüm: PR'ı `main`'e birleştir. Birkaç dakika içinde canlıya çıkar.
-- Aynı sürümü yeniden kur: Terminal'de `~/deploy.sh --force`.
+- Kurulu sürüm: `cat ~/.config/nakliyat/current-release` ya da tarayıcıda `/v1/health`.
+- **Bir önceki sürüme dön:** Terminal'de `~/deploy.sh --rollback 2>&1 | tee -a ~/deploy.log`. Dönülen sürüm, yeni bir sürüm çıkana kadar tekrar kurulmaz.
+- Aynı sürümü yeniden kur (atlananlar listesini de temizler): Terminal'de `~/deploy.sh --force`.
 - GitHub'a erişilemezse: Release sayfasından `release.tar.gz`'yi indir, File Manager ile ana klasöre yükle, Terminal'de `~/deploy.sh --from-file ~/release.tar.gz`.
 - Token'ın süresi dolarsa yenisini oluşturup 6. adımdaki komutla tekrar kaydet.
 

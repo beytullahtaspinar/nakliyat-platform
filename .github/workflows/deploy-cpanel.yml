@@ -35,11 +35,12 @@ jobs:
       - name: Paketleri üret
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          RELEASE_TAG: surum-${{ github.run_number }}
         run: ./scripts/package-release.sh
 
       - name: Arşivle
         run: |
-          cp scripts/server-deploy.sh out/
+          cp scripts/server-deploy.sh scripts/db-backup.sh scripts/db-restore.sh out/
           tar -czf release.tar.gz -C out .
           ls -lh release.tar.gz
 
