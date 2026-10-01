@@ -83,3 +83,35 @@ export async function createRequest(
   }
   redirect(`/hesabim?yeni=${created.id}`);
 }
+
+async function customerToken(): Promise<string> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "CUSTOMER") {
+    throw new ApiError(401, "Oturumun sona ermiş, lütfen tekrar giriş yap.");
+  }
+  return (await getAccessToken())!;
+}
+
+export async function acceptQuote(requestId: string, quoteId: string): Promise<RequestFormState> {
+  try {
+    await apiFetch(`/quotes/${encodeURIComponent(quoteId)}/accept`, {
+      method: "POST",
+      token: await customerToken(),
+    });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Teklif kabul edilemedi, lütfen tekrar deneyin." };
+  }
+  redirect(`/hesabim/talepler/${encodeURIComponent(requestId)}?kabul=1`);
+}
+
+export async function cancelRequest(requestId: string): Promise<RequestFormState> {
+  try {
+    await apiFetch(`/requests/${encodeURIComponent(requestId)}/cancel`, {
+      method: "POST",
+      token: await customerToken(),
+    });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Talep iptal edilemedi, lütfen tekrar deneyin." };
+  }
+  redirect(`/hesabim/talepler/${encodeURIComponent(requestId)}`);
+}

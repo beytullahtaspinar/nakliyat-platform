@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { apiFetch, type MovingRequest, type Paginated, type RequestStatus } from "@/lib/api";
-import { formatDate } from "@/lib/format";
-import { homeTypeLabel } from "@/lib/request-options";
+import { apiFetch, type MovingRequest, type Paginated } from "@/lib/api";
+import { formatDate, place } from "@/lib/format";
+import { REQUEST_STATUS, homeTypeLabel } from "@/lib/request-options";
 import { getAccessToken, getCurrentUser, homeFor } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -11,17 +11,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const STATUS: Record<RequestStatus, { label: string; className: string }> = {
-  DRAFT: { label: "Taslak", className: "bg-zinc-100 text-zinc-700" },
-  OPEN: { label: "Teklif bekliyor", className: "bg-blue-50 text-blue-800" },
-  BOOKED: { label: "Firma seçildi", className: "bg-green-50 text-green-800" },
-  COMPLETED: { label: "Tamamlandı", className: "bg-green-50 text-green-800" },
-  CANCELLED: { label: "İptal edildi", className: "bg-zinc-100 text-zinc-600" },
-  EXPIRED: { label: "Süresi doldu", className: "bg-zinc-100 text-zinc-600" },
-};
-
-const place = (city: string | null, district: string | null) =>
-  [district, city].filter(Boolean).join(", ");
 
 export default async function AccountPage({ searchParams }: PageProps<"/hesabim">) {
   const user = await getCurrentUser();
@@ -67,7 +56,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
       ) : (
         <ul className="mt-8 space-y-3">
           {items.map((r) => {
-            const status = STATUS[r.status];
+            const status = REQUEST_STATUS[r.status];
             return (
               <li
                 key={r.id}
@@ -76,9 +65,9 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
                 }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <p className="font-medium">
+                  <Link href={`/hesabim/talepler/${r.id}`} className="font-medium hover:underline">
                     {place(r.fromCityName, r.fromDistrictName)} → {place(r.toCityName, r.toDistrictName)}
-                  </p>
+                  </Link>
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
                     {status.label}
                   </span>
@@ -89,7 +78,9 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
                 </p>
                 <p className="mt-2 text-sm">
                   {r.quoteCount > 0 ? (
-                    <strong>{r.quoteCount} teklif geldi</strong>
+                    <Link href={`/hesabim/talepler/${r.id}`} className="font-semibold text-blue-700 hover:underline">
+                      {r.status === "OPEN" ? `${r.quoteCount} teklifi karşılaştır →` : "Detayı gör →"}
+                    </Link>
                   ) : (
                     <span className="text-zinc-500">Henüz teklif yok</span>
                   )}
