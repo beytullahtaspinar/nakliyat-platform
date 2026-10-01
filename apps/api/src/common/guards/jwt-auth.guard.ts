@@ -4,12 +4,15 @@ import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 import type { AccessTokenPayload } from '../../auth/auth.service.js';
+import { UserStatus } from '../../generated/prisma/enums.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwt: JwtService,
     private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -24,12 +27,22 @@ export class JwtAuthGuard implements CanActivate {
     if (type !== 'Bearer' || !token) {
       throw new UnauthorizedException('Oturum açmanız gerekiyor');
     }
+    let payload: AccessTokenPayload;
     try {
-      const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token);
-      request.user = { id: payload.sub, role: payload.role };
+      payload = await this.jwt.verifyAsync<AccessTokenPayload>(token);
     } catch {
       throw new UnauthorizedException('Oturum süresi dolmuş veya geçersiz');
     }
+    // Rol ve hesap durumu anahtardan değil veritabanından okunur: yönetici rolü değiştirdiğinde
+    // veya hesabı askıya aldığında, açık oturumlar eski yetkiyle çalışmaya devam etmesin.
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { role: true, status: true, deletedAt: true },
+    });
+    if (!user || user.deletedAt || user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException('Oturum süresi dolmuş veya geçersiz');
+    }
+    request.user = { id: payload.sub, role: user.role };
     return true;
   }
 }

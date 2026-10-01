@@ -20,7 +20,7 @@ export interface AccessTokenPayload {
   role: UserRole;
 }
 
-const BCRYPT_ROUNDS = 12;
+export const BCRYPT_ROUNDS = 12;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');

@@ -105,8 +105,10 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ⏳ | PATCH | `/admin/documents/:id` | Belgeyi onayla/reddet |
 | ✅ | GET | `/admin/requests?status=` | Tüm talepler, müşteri iletişimiyle |
 | ✅ | GET | `/admin/users?role=&q=` | Kullanıcılar; ad, telefon veya e-postada arama |
+| ✅ | GET · PATCH | `/admin/users/:id` | Kullanıcı detayı; ad, telefon, e-posta, hesap durumu (askıya alınca oturumlar kapanır) |
+| ✅ | POST | `/admin/users/:id/password` | Yeni şifre belirle; mevcut şifre hiç gösterilmez, tüm oturumlar kapanır |
+| ✅ | PATCH | `/admin/companies/:id` | Firma bilgilerini düzelt (doğrulama durumu korunur) |
 | ⏳ | GET | `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
-| ⏳ | POST | `/admin/users/:id/suspend` | Kullanıcıyı askıya al |
 | ⏳ | PATCH | `/admin/reviews/:id` | Uygunsuz yorumu yayından kaldır |
 | ⏳ | GET | `/admin/stats` | Dönüşüm oranları, zamana göre grafikler |
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ApiError, apiFetch } from "@/lib/api";
+import { companyProfileBody } from "@/lib/company-form";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 
 export type AdminActionState = { error?: string; notice?: string };
@@ -49,4 +50,57 @@ export async function rejectCompany(
   }
   revalidatePath("/yonetim", "layout");
   return { notice: "Firma reddedildi; gerekçe firma panelinde gösterilir." };
+}
+
+export async function updateCompany(
+  companyId: string,
+  _prev: AdminActionState & { saved?: boolean },
+  formData: FormData,
+): Promise<AdminActionState & { saved?: boolean }> {
+  try {
+    await apiFetch(`/admin/companies/${encodeURIComponent(companyId)}`, {
+      method: "PATCH",
+      token: await adminToken(),
+      body: companyProfileBody(formData, false),
+    });
+  } catch (err) {
+    return failure(err, "Firma bilgileri kaydedilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { saved: true };
+}
+
+export async function updateUser(userId: string, _prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const text = (name: string) => String(formData.get(name) ?? "").trim();
+  try {
+    await apiFetch(`/admin/users/${encodeURIComponent(userId)}`, {
+      method: "PATCH",
+      token: await adminToken(),
+      body: { fullName: text("fullName"), phone: text("phone"), email: text("email"), status: text("status") },
+    });
+  } catch (err) {
+    return failure(err, "Kullanıcı bilgileri kaydedilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Kaydedildi." };
+}
+
+export async function setUserPassword(
+  userId: string,
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) return { error: "Şifre en az 8 karakter olmalı." };
+  try {
+    await apiFetch(`/admin/users/${encodeURIComponent(userId)}/password`, {
+      method: "POST",
+      token: await adminToken(),
+      body: { password },
+    });
+  } catch (err) {
+    return failure(err, "Şifre değiştirilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Yeni şifre kaydedildi; kullanıcının açık oturumları kapatıldı. Şifreyi kullanıcıya güvenli bir yoldan ilet." };
 }
