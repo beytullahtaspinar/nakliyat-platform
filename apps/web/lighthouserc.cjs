@@ -1,5 +1,5 @@
 /**
- * Lighthouse CI: Google PageSpeed'in kullandığı ölçümün aynısı, her PR'da.
+ * Lighthouse CI: Google PageSpeed'in kullandığı ölçümün aynısı, ayda bir (.github/workflows/lighthouse.yml).
  * Mobil ölçüm (yavaş 4G + orta seviye telefon), her sayfa 3 kez ölçülür ve ortanca alınır.
  *
  * Kural: Erişilebilirlik, En İyi Uygulamalar ve SEO tam puan (100); performans en az 95.
