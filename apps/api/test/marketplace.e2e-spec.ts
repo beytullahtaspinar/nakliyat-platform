@@ -302,4 +302,24 @@ describe('Pazaryeri akışı (e2e)', () => {
     await prisma.user.update({ where: { phone: phones.companyA }, data: { role: 'COMPANY' } });
     await http().get('/v1/admin/summary').set(auth('companyA')).expect(403);
   });
+  it('admin firma ve talepleri arar, talep kaydını teklifleriyle görür', async () => {
+    const companies = await http().get('/v1/admin/companies?q=companyB').set(auth('admin')).expect(200);
+    expect(companies.body.items.map((c: { id: string }) => c.id)).toEqual([companyIds.companyB]);
+    const byPhone = await http().get('/v1/admin/companies?q=0532 000 0202').set(auth('admin')).expect(200);
+    expect(byPhone.body.items.map((c: { id: string }) => c.id)).toEqual([companyIds.companyA]);
+
+    const requests = await http().get('/v1/admin/requests?q=0532 000 0201').set(auth('admin')).expect(200);
+    expect(requests.body.items.map((r: { id: string }) => r.id)).toContain(requestId);
+
+    const detail = await http().get(`/v1/admin/requests/${requestId}`).set(auth('admin')).expect(200);
+    expect(detail.body).toMatchObject({
+      fromAddress: 'Moda Cad. No:1 D:5',
+      customer: { phone: phones.customer },
+      booking: { status: 'SCHEDULED' },
+    });
+    expect(detail.body.quotes.map((q: { id: string }) => q.id)).toEqual([quoteB, quoteA]);
+    await http().get('/v1/admin/requests/yok').set(auth('admin')).expect(404);
+    await http().get(`/v1/admin/requests/${requestId}`).set(auth('customer')).expect(403);
+  });
+
 });

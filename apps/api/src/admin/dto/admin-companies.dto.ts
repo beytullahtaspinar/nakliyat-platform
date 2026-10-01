@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsOptional, IsString, Length, MaxLength } from 'class-validator';
 import { VerificationStatus } from '../../generated/prisma/enums.js';
 import { PaginationDto } from '../../requests/dto/list-requests.dto.js';
 
@@ -8,6 +9,13 @@ export class ListCompaniesDto extends PaginationDto {
   @IsOptional()
   @IsEnum(VerificationStatus)
   status?: VerificationStatus;
+
+  @ApiPropertyOptional({ description: 'Firma adı, unvan, vergi no veya yetkili telefonunda arar' })
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @MaxLength(100)
+  q?: string;
 }
 
 export class RejectCompanyDto {

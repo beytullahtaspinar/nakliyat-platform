@@ -20,6 +20,13 @@ export class AdminListRequestsDto extends PaginationDto {
   @IsOptional()
   @IsEnum(RequestStatus)
   status?: RequestStatus;
+
+  @ApiPropertyOptional({ description: 'Müşteri adı veya telefonunda arar' })
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100)
+  q?: string;
 }
 
 export class AdminListUsersDto extends PaginationDto {
@@ -68,4 +75,10 @@ export class AdminSetPasswordDto {
   @MinLength(8, { message: 'Şifre en az 8 karakter olmalı' })
   @MaxLength(72)
   password: string;
+}
+
+/** "0532 123" → "532123": telefonlar +90 ile saklandığı için baştaki 0 atılır; 3 haneden kısaysa aranmaz. */
+export function phoneDigits(q: string | undefined): string | undefined {
+  const digits = q?.replace(/\D/g, '').replace(/^0/, '');
+  return digits && digits.length >= 3 ? digits : undefined;
 }

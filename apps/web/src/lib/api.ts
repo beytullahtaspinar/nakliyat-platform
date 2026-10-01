@@ -272,6 +272,22 @@ export type AdminRequest = MovingRequest & {
   customer: { id: string; fullName: string; phone: string };
 };
 
+export type AdminRequestDetail = MovingRequestDetail & {
+  customer: { id: string; fullName: string; phone: string; email: string | null };
+  quotes: (Omit<CustomerQuote, "company" | "isExpired"> & {
+    createdAt: string;
+    company: { id: string; displayName: string; verificationStatus: VerificationStatus };
+  })[];
+  booking: {
+    id: string;
+    status: CustomerBooking["status"];
+    scheduledAt: string;
+    completedAt: string | null;
+    cancelledAt: string | null;
+    cancelReason: string | null;
+  } | null;
+};
+
 export type AdminUser = {
   id: string;
   role: UserRole;

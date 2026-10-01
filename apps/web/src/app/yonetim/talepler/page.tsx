@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Card } from "@/components/ui/card";
+import Link from "next/link";
 import { getAdminContext, oneParam, pageParam } from "@/lib/admin";
 import { apiFetch, type AdminRequest, type Paginated, type RequestStatus } from "@/lib/api";
 import { formatDate, formatPhone, place } from "@/lib/format";
 import { REQUEST_STATUS, homeTypeLabel } from "@/lib/request-options";
-import { FilterTabs, Pager, query } from "../admin-bits";
+import { DataTable, EmptyRow, FilterTabs, PageHeader, Pager, SearchForm, query, td, th } from "../admin-bits";
 
 export const metadata: Metadata = { title: "Talepler" };
 
@@ -16,70 +16,75 @@ const FILTERS: { value: string; label: string; status?: RequestStatus }[] = [
   { value: "iptal", label: "İptal", status: "CANCELLED" },
   { value: "suresi-doldu", label: "Süresi doldu", status: "EXPIRED" },
 ];
-const LIMIT = 20;
+const LIMIT = 25;
 
 export default async function AdminRequestsPage({ searchParams }: PageProps<"/yonetim/talepler">) {
   const { token } = await getAdminContext();
   const params = await searchParams;
   const filter = FILTERS.find((f) => f.value === oneParam(params.durum)) ?? FILTERS[0];
+  const q = oneParam(params.ara)?.trim().slice(0, 100) || undefined;
   const page = pageParam(params.sayfa);
   const { items, total } = await apiFetch<Paginated<AdminRequest>>(
-    `/admin/requests${query({ status: filter.status, page, limit: LIMIT })}`,
+    `/admin/requests${query({ status: filter.status, q, page, limit: LIMIT })}`,
     { token },
   );
   const href = (durum: string, sayfa = 1) =>
-    `/yonetim/talepler${query({ durum: durum === "tumu" ? undefined : durum, sayfa })}`;
+    `/yonetim/talepler${query({ durum: durum === "tumu" ? undefined : durum, ara: q, sayfa })}`;
 
   return (
     <>
-      <h1 className="text-2xl font-bold tracking-tight">Talepler</h1>
-      <p className="mt-1 text-sm text-zinc-600">{total} talep, en yenisi önce.</p>
-      <div className="mt-4">
+      <PageHeader title="Talepler" description="Müşterilerin açtığı taşıma talepleri, en yenisi önce." />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <FilterTabs
           label="Talep durumu"
           current={filter.value}
           options={FILTERS.map((f) => ({ value: f.value, label: f.label, href: href(f.value) }))}
         />
+        <SearchForm action="/yonetim/talepler" q={q} placeholder="Müşteri adı veya telefon" keep={{ durum: oneParam(params.durum) }} />
       </div>
 
-      {items.length === 0 ? (
-        <p className="mt-6 text-zinc-600">Bu durumda talep yok.</p>
-      ) : (
-        <ul className="mt-5 space-y-3">
+      <DataTable label="Talepler">
+        <thead>
+          <tr>
+            <th scope="col" className={th}>Güzergâh</th>
+            <th scope="col" className={th}>Müşteri</th>
+            <th scope="col" className={th}>Ev</th>
+            <th scope="col" className={th}>Taşınma</th>
+            <th scope="col" className={th}>Teklif</th>
+            <th scope="col" className={th}>Durum</th>
+            <th scope="col" className={th}>Açıldı</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.length === 0 && <EmptyRow colSpan={7}>Bu süzgece uyan talep yok.</EmptyRow>}
           {items.map((r) => {
             const status = REQUEST_STATUS[r.status];
             return (
-              <li key={r.id}>
-                <Card className="p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <p className="font-semibold">
-                      {place(r.fromCityName, r.fromDistrictName)} → {place(r.toCityName, r.toDistrictName)}
-                    </p>
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>
-                      {status.label}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-zinc-600">
-                    {homeTypeLabel(r.homeType)} · taşınma {formatDate(r.moveDate)}
-                    {r.distanceKm ? ` · ${r.distanceKm} km` : ""}
-                  </p>
-                  <div className="mt-2 flex flex-wrap justify-between gap-2 text-sm">
-                    <span>
-                      {r.customer.fullName} ·{" "}
-                      <a href={`tel:${r.customer.phone}`} className="font-medium text-brand-700 hover:underline">
-                        {formatPhone(r.customer.phone)}
-                      </a>
-                    </span>
-                    <span className="text-zinc-500">
-                      {r.quoteCount} teklif · açıldı {formatDate(r.createdAt)}
-                    </span>
-                  </div>
-                </Card>
-              </li>
+              <tr key={r.id} className="hover:bg-slate-50">
+                <td className={td}>
+                  <Link href={`/yonetim/talepler/${r.id}`} className="font-semibold text-slate-900 hover:text-brand-700 hover:underline">
+                    {place(r.fromCityName, r.fromDistrictName)} → {place(r.toCityName, r.toDistrictName)}
+                  </Link>
+                  {r.distanceKm ? <div className="text-xs text-slate-500">{r.distanceKm} km</div> : null}
+                </td>
+                <td className={td}>
+                  {r.customer.fullName}
+                  <div className="text-xs text-slate-500">{formatPhone(r.customer.phone)}</div>
+                </td>
+                <td className={td}>{homeTypeLabel(r.homeType)}</td>
+                <td className={`${td} whitespace-nowrap`}>{formatDate(r.moveDate)}</td>
+                <td className={`${td} tabular-nums`}>{r.quoteCount}</td>
+                <td className={td}>
+                  <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>
+                    {status.label}
+                  </span>
+                </td>
+                <td className={`${td} whitespace-nowrap text-slate-600`}>{formatDate(r.createdAt)}</td>
+              </tr>
             );
           })}
-        </ul>
-      )}
+        </tbody>
+      </DataTable>
       <Pager page={page} limit={LIMIT} total={total} href={(p) => href(filter.value, p)} />
     </>
   );

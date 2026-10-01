@@ -21,7 +21,12 @@ import { normalizeTrMobile } from '../common/utils/phone.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { UserRole, UserStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { AdminListUsersDto, AdminSetPasswordDto, AdminUpdateUserDto } from './dto/admin-lists.dto.js';
+import {
+  AdminListUsersDto,
+  AdminSetPasswordDto,
+  AdminUpdateUserDto,
+  phoneDigits,
+} from './dto/admin-lists.dto.js';
 
 /** Yanıtlarda dönen alanlar. Şifre özeti ve anahtarlar hiç seçilmez. */
 const USER_FIELDS = {
@@ -50,7 +55,7 @@ export class AdminUsersController {
   /** Kullanıcılar, en yenisi önce. */
   @Get()
   async list(@Query() { role, q, page, limit }: AdminListUsersDto) {
-    const digits = q?.replace(/\D/g, '').replace(/^0/, '');
+    const digits = phoneDigits(q);
     const where: Prisma.UserWhereInput = {
       deletedAt: null,
       ...(role && { role }),
@@ -58,7 +63,7 @@ export class AdminUsersController {
         OR: [
           { fullName: { contains: q } },
           { email: { contains: q } },
-          ...(digits && digits.length >= 3 ? [{ phone: { contains: digits } }] : []),
+          ...(digits ? [{ phone: { contains: digits } }] : []),
         ],
       }),
     };

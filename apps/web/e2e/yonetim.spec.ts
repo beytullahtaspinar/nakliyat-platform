@@ -46,10 +46,16 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await page.getByLabel("Şifre").fill(PASSWORD);
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page).toHaveURL(/\/yonetim$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Özet" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pano" })).toBeVisible();
+  // Yönetim paneli tanıtım sitesinin menüsünü ve altbilgisini göstermez
+  await expect(page.getByRole("link", { name: "Teklif al" })).toHaveCount(0);
+  await expect(page.getByRole("contentinfo")).toHaveCount(0);
   await expectAccessible(page);
 
-  await page.getByRole("link", { name: "Firmalar", exact: true }).click();
+  await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Firmalar/ }).click();
+  await page.getByRole("search").getByRole("searchbox").fill(companyName);
+  await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
+  await expectAccessible(page);
   await page.getByRole("link", { name: companyName }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(companyName);
   await expect(page.getByText("K3.34.123456")).toBeVisible();

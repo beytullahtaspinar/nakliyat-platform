@@ -1,11 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { inputClass } from "@/components/forms/fields";
-import { Badge, Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/card";
 import { getAdminContext, oneParam, pageParam } from "@/lib/admin";
 import { apiFetch, type AdminUser, type Paginated, type UserRole } from "@/lib/api";
 import { formatDate, formatPhone } from "@/lib/format";
-import { FilterTabs, Pager, VerificationBadge, query } from "../admin-bits";
+import {
+  DataTable,
+  EmptyRow,
+  FilterTabs,
+  PageHeader,
+  Pager,
+  ROLE_LABELS,
+  SearchForm,
+  VerificationBadge,
+  query,
+  td,
+  th,
+} from "../admin-bits";
 
 export const metadata: Metadata = { title: "Kullanıcılar" };
 
@@ -15,8 +26,7 @@ const FILTERS: { value: string; label: string; role?: UserRole }[] = [
   { value: "firma", label: "Firmalar", role: "COMPANY" },
   { value: "yonetici", label: "Yöneticiler", role: "ADMIN" },
 ];
-const ROLE_LABELS: Record<UserRole, string> = { CUSTOMER: "Müşteri", COMPANY: "Firma", ADMIN: "Yönetici" };
-const LIMIT = 20;
+const LIMIT = 25;
 
 export default async function AdminUsersPage({ searchParams }: PageProps<"/yonetim/kullanicilar">) {
   const { token } = await getAdminContext();
@@ -33,72 +43,62 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
 
   return (
     <>
-      <h1 className="text-2xl font-bold tracking-tight">Kullanıcılar</h1>
-      <form action="/yonetim/kullanicilar" className="mt-4 flex max-w-md gap-2" role="search">
-        {filter.role && <input type="hidden" name="rol" value={filter.value} />}
-        <label className="sr-only" htmlFor="ara">
-          Ad, telefon veya e-posta
-        </label>
-        <input
-          id="ara"
-          name="ara"
-          type="search"
-          defaultValue={q}
-          placeholder="Ad, telefon veya e-posta"
-          className={inputClass.replace("mt-1 ", "")}
-        />
-        <button type="submit" className="rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800">
-          Ara
-        </button>
-      </form>
-      <div className="mt-4">
+      <PageHeader title="Kullanıcılar" description="Müşteri, firma ve yönetici hesapları." />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <FilterTabs
           label="Kullanıcı rolü"
           current={filter.value}
           options={FILTERS.map((f) => ({ value: f.value, label: f.label, href: href(f.value) }))}
         />
+        <SearchForm action="/yonetim/kullanicilar" q={q} placeholder="Ad, telefon veya e-posta" keep={{ rol: oneParam(params.rol) }} />
       </div>
-      <p className="mt-4 text-sm text-zinc-600">{total} kullanıcı, en yenisi önce.</p>
 
-      {items.length === 0 ? (
-        <p className="mt-4 text-zinc-600">Aramaya uyan kullanıcı yok.</p>
-      ) : (
-        <ul className="mt-3 space-y-2">
+      <DataTable label="Kullanıcılar">
+        <thead>
+          <tr>
+            <th scope="col" className={th}>Ad soyad</th>
+            <th scope="col" className={th}>Rol</th>
+            <th scope="col" className={th}>Telefon</th>
+            <th scope="col" className={th}>E-posta</th>
+            <th scope="col" className={th}>Firma / talep</th>
+            <th scope="col" className={th}>Hesap</th>
+            <th scope="col" className={th}>Kayıt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.length === 0 && <EmptyRow colSpan={7}>Aramaya uyan kullanıcı yok.</EmptyRow>}
           {items.map((u) => (
-            <li key={u.id}>
-              <Card className="flex flex-wrap items-start justify-between gap-2 p-4">
-                <div>
-                  <p className="font-semibold">
-                    <Link href={`/yonetim/kullanicilar/${u.id}`} className="hover:underline">
-                      {u.fullName}
-                    </Link>{" "}
-                    <span className="text-sm font-normal text-zinc-500">· {ROLE_LABELS[u.role]}</span>
-                  </p>
-                  <p className="text-sm text-zinc-600">
-                    <a href={`tel:${u.phone}`} className="text-brand-700 hover:underline">
-                      {formatPhone(u.phone)}
-                    </a>
-                    {u.email ? ` · ${u.email}` : ""}
-                  </p>
-                  {u.company && (
-                    <p className="mt-1 text-sm">
-                      <Link href={`/yonetim/firmalar/${u.company.id}`} className="font-medium text-brand-700 hover:underline">
-                        {u.company.displayName}
-                      </Link>{" "}
-                      <VerificationBadge status={u.company.verificationStatus} />
-                    </p>
-                  )}
-                </div>
-                <div className="text-right text-sm text-zinc-500">
-                  {u.status === "SUSPENDED" && <Badge tone="warning">Askıda</Badge>}
-                  <p>Kayıt {formatDate(u.createdAt)}</p>
-                  {u.role === "CUSTOMER" && <p>{u.requestCount} talep</p>}
-                </div>
-              </Card>
-            </li>
+            <tr key={u.id} className="hover:bg-slate-50">
+              <td className={td}>
+                <Link href={`/yonetim/kullanicilar/${u.id}`} className="font-semibold text-slate-900 hover:text-brand-700 hover:underline">
+                  {u.fullName}
+                </Link>
+              </td>
+              <td className={td}>{ROLE_LABELS[u.role]}</td>
+              <td className={`${td} whitespace-nowrap`}>{formatPhone(u.phone)}</td>
+              <td className={td}>{u.email ?? <span className="text-slate-400">Yok</span>}</td>
+              <td className={td}>
+                {u.company ? (
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <Link href={`/yonetim/firmalar/${u.company.id}`} className="text-brand-700 hover:underline">
+                      {u.company.displayName}
+                    </Link>
+                    <VerificationBadge status={u.company.verificationStatus} />
+                  </span>
+                ) : u.role === "CUSTOMER" ? (
+                  `${u.requestCount} talep`
+                ) : (
+                  <span className="text-slate-400">—</span>
+                )}
+              </td>
+              <td className={td}>
+                {u.status === "SUSPENDED" ? <Badge tone="warning">Askıda</Badge> : <Badge tone="success">Aktif</Badge>}
+              </td>
+              <td className={`${td} whitespace-nowrap text-slate-600`}>{formatDate(u.createdAt)}</td>
+            </tr>
           ))}
-        </ul>
-      )}
+        </tbody>
+      </DataTable>
       <Pager page={page} limit={LIMIT} total={total} href={(p) => href(filter.value, p)} />
     </>
   );

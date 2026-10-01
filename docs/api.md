@@ -99,11 +99,12 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | Durum | Yöntem | Yol | Açıklama |
 |---|---|---|---|
 | ✅ | GET | `/admin/summary` | Yönetim özeti: bekleyen firma, açık talep, kullanıcı, planlanmış iş sayıları |
-| ✅ | GET | `/admin/companies?status=PENDING` | Doğrulama bekleyen firmalar |
+| ✅ | GET | `/admin/companies?status=&q=` | Firmalar; ad, unvan, vergi no, K3 veya sahip adı/telefonunda arama |
 | ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |
 | ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle) |
 | ⏳ | PATCH | `/admin/documents/:id` | Belgeyi onayla/reddet |
-| ✅ | GET | `/admin/requests?status=` | Tüm talepler, müşteri iletişimiyle |
+| ✅ | GET | `/admin/requests?status=&q=` | Tüm talepler, müşteri iletişimiyle; müşteri adı/telefonunda arama |
+| ✅ | GET | `/admin/requests/:id` | Talep kaydı: müşteri, tüm teklifler (fiyata göre), iş |
 | ✅ | GET | `/admin/users?role=&q=` | Kullanıcılar; ad, telefon veya e-postada arama |
 | ✅ | GET · PATCH | `/admin/users/:id` | Kullanıcı detayı; ad, telefon, e-posta, hesap durumu (askıya alınca oturumlar kapanır) |
 | ✅ | POST | `/admin/users/:id/password` | Yeni şifre belirle; mevcut şifre hiç gösterilmez, tüm oturumlar kapanır |
