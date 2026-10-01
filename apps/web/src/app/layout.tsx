@@ -1,16 +1,25 @@
-import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { JsonLd } from "@/components/json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
-// Tek yazı tipi ailesi: indirilen font dosyası az olsun, ilk boyama (LCP) gecikmesin
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+// Tek yazı tipi ailesi: indirilen font dosyası az olsun, ilk boyama (LCP) gecikmesin.
+// Inter, Türkçe karakterlerde (ı, ş, ğ) aralıkları düzgün çizdiği için seçildi.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
+  // Ön yükleme kapalı: başlık önce eşlenmiş sistem fontuyla çizilir, LCP fonta takılmaz
+  preload: false,
 });
+
+// Koyu mod yok: tarayıcı arayüzü ve form denetimleri de açık temada kalsın
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  colorScheme: "light",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -65,7 +74,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="tr"
-      className={`${jakarta.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
         <JsonLd data={organizationJsonLd} />
