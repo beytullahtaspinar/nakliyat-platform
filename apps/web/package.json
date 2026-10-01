@@ -13,7 +13,8 @@
     "next": "16.3.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "@nakliyat/locations": "workspace:*"
+    "@nakliyat/locations": "workspace:*",
+    "@nakliyat/monitoring": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -18,7 +18,7 @@ describe('HealthController', () => {
 
   it('veritabanı erişilebilirken ok döner', async () => {
     queryRaw.mockResolvedValue([{ '?column?': 1 }]);
-    await expect(controller.check()).resolves.toEqual({ status: 'ok', database: 'up' });
+    await expect(controller.check()).resolves.toMatchObject({ status: 'ok', database: 'up' });
   });
 
   it('veritabanı yoksa 503 döner', async () => {

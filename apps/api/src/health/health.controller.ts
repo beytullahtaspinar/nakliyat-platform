@@ -1,6 +1,7 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator.js';
+import { APP_RELEASE } from '../observability/error-reporter.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @ApiTags('Sistem')
@@ -16,6 +17,7 @@ export class HealthController {
     } catch {
       throw new ServiceUnavailableException({ status: 'error', database: 'down' });
     }
-    return { status: 'ok', database: 'up' };
+    // release: kurulu sürüm etiketi; deploy betiği yeni sürümün gerçekten açıldığını bununla doğrular
+    return { status: 'ok', database: 'up', release: APP_RELEASE ?? 'yerel' };
   }
 }

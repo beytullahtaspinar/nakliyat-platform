@@ -10,6 +10,8 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** API'nin verdiği istek kimliği; destek ve log araması için */
+    readonly requestId?: string,
   ) {
     super(message);
   }
@@ -40,17 +42,22 @@ export async function apiFetch<T>(path: string, { method = "GET", body, token }:
 
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, errorMessage(res.status, data));
+  if (!res.ok) {
+    const requestId = (data as { requestId?: unknown } | null)?.requestId;
+    const id = typeof requestId === "string" ? requestId : undefined;
+    throw new ApiError(res.status, errorMessage(res.status, data, id), id);
+  }
   return data as T;
 }
 
 /** API hata gövdesinden kullanıcıya gösterilebilir Türkçe mesajı çıkarır. */
-function errorMessage(status: number, data: unknown): string {
+function errorMessage(status: number, data: unknown, requestId?: string): string {
   const message = (data as { message?: unknown } | null)?.message;
   if (typeof message === "string" && status < 500) return message;
   if (Array.isArray(message)) return "Formdaki bilgileri kontrol edin.";
   if (status === 429) return "Çok fazla deneme yapıldı, bir dakika sonra tekrar deneyin.";
-  return "Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.";
+  const code = requestId ? ` (hata kodu: ${requestId})` : "";
+  return `Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.${code}`;
 }
 
 // ─── API yanıt tipleri ─────────────────────────────────────────
