@@ -9,9 +9,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     services:
-      # Canlı sunucuyla aynı sürüm (cPanel: MariaDB 10.6)
+      # Canlı sunucuyla aynı sürüm (Veridyen Junior.js: MariaDB 10.11)
       mariadb:
-        image: mariadb:10.6
+        image: mariadb:10.11
         env:
           MARIADB_ROOT_PASSWORD: root
           MARIADB_DATABASE: nakliyat
@@ -44,3 +44,54 @@ jobs:
       - name: API e2e testleri
         run: pnpm --filter @nakliyat/api test:e2e
       - run: pnpm build
+
+  # Tarayıcıda uçtan uca testler (Playwright) ve PageSpeed ölçümü (Lighthouse CI).
+  # Canlıdaki gibi derlenmiş API + Next.js standalone çıktısıyla çalışır.
+  tarayici:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: nakliyat
+          MARIADB_USER: nakliyat
+          MARIADB_PASSWORD: nakliyat
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: mysql://nakliyat:nakliyat@127.0.0.1:3306/nakliyat
+      JWT_ACCESS_SECRET: ci-test-secret
+      NEXT_TELEMETRY_DISABLED: 1
+      API_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Veritabanı migration
+        run: pnpm --filter @nakliyat/api db:deploy
+      - name: Playwright tarayıcısı
+        run: pnpm --filter @nakliyat/web exec playwright install --with-deps chromium
+      - name: Uçtan uca testler (mobil + masaüstü)
+        run: pnpm --filter @nakliyat/web test:e2e
+      - name: Lighthouse (PageSpeed) ölçümü
+        run: pnpm --filter @nakliyat/web lighthouse
+      - name: Raporları sakla
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tarayici-raporlari
+          path: |
+            apps/web/playwright-report/
+            apps/web/.lighthouseci/rapor/
+          retention-days: 14

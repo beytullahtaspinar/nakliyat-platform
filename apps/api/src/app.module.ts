@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { HealthController } from './health/health.controller.js';
 import { LocationsController } from './locations/locations.controller.js';
+import { ObservabilityModule } from './observability/observability.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QuotesModule } from './quotes/quotes.module.js';
 import { RequestsModule } from './requests/requests.module.js';
@@ -17,6 +18,7 @@ import { RequestsModule } from './requests/requests.module.js';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ObservabilityModule,
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }]),
     PrismaModule,
     AuthModule,

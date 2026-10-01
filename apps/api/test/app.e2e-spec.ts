@@ -32,7 +32,26 @@ describe('API (e2e)', () => {
     return request(app.getHttpServer())
       .get('/v1/health')
       .expect(200)
-      .expect({ status: 'ok', database: 'up' });
+      .expect('X-Request-Id', /^[0-9a-f]{12}$/)
+      .expect((res) => expect(res.body).toMatchObject({ status: 'ok', database: 'up' }));
+  });
+
+  it('hata yanıtları istek kimliğini taşır', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/v1/olmayan-adres')
+      .set('X-Request-Id', 'web-istek-123')
+      .expect(404);
+    expect(res.headers['x-request-id']).toBe('web-istek-123');
+    expect(res.body).toMatchObject({ statusCode: 404, requestId: 'web-istek-123' });
+  });
+
+  it('bozuk JSON 400 döner', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/v1/auth/login')
+      .set('Content-Type', 'application/json')
+      .send('{bozuk')
+      .expect(400);
+    expect(res.body.requestId).toEqual(expect.any(String));
   });
 
   it('GET /docs-json OpenAPI şemasını döner', async () => {

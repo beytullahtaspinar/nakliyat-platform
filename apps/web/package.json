@@ -7,13 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:e2e": "playwright test",
+    "lighthouse": "lhci autorun"
   },
   "dependencies": {
     "next": "16.3.7",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "@nakliyat/locations": "workspace:*"
+    "@nakliyat/locations": "workspace:*",
+    "@nakliyat/monitoring": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -23,7 +26,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@playwright/test": "^1.63.0",
+    "@axe-core/playwright": "^4.13.0",
+    "@lhci/cli": "^0.15.1"
   },
   "packageManager": "pnpm@10.33.0"
 }
