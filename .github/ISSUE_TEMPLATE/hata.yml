@@ -1,0 +1,42 @@
+name: Hata bildirimi
+description: Sitede veya uygulamada bir şey beklendiği gibi çalışmıyor
+title: "[Hata] "
+labels: ["hata"]
+body:
+  - type: input
+    id: sayfa
+    attributes:
+      label: Hangi sayfada?
+      placeholder: https://evdenevenakliyat.app/talep-olustur
+    validations:
+      required: true
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Ne yaptın, ne oldu?
+      description: Adım adım. Ne bekliyordun, ne gördün?
+      placeholder: |
+        1. Talep formunu doldurdum
+        2. "Ücretsiz teklif iste"ye bastım
+        3. "Beklenmeyen bir hata oluştu" yazdı
+    validations:
+      required: true
+  - type: input
+    id: kod
+    attributes:
+      label: Hata kodu (ekranda göründüyse)
+      placeholder: "hata kodu: 7f3a9c1b2d4e"
+  - type: dropdown
+    id: cihaz
+    attributes:
+      label: Cihaz
+      options: [Telefon, Tablet, Bilgisayar]
+  - type: dropdown
+    id: alan
+    attributes:
+      label: Bölüm
+      options: [Web / ekran, API / sunucu, Veritabanı, Deploy / altyapı, SEO, Bilmiyorum]
+  - type: textarea
+    id: ek
+    attributes:
+      label: Ekran görüntüsü veya ek bilgi

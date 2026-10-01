@@ -18,7 +18,7 @@ export default defineConfig({
   workers: CI ? 2 : undefined,
   reporter: CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: `http://localhost:${WEB_PORT}`,
+    baseURL: `http://127.0.0.1:${WEB_PORT}`,
     locale: "tr-TR",
     timezoneId: "Europe/Istanbul",
     trace: "retain-on-failure",
@@ -43,9 +43,10 @@ export default defineConfig({
       command:
         "cp -r .next/static .next/standalone/apps/web/.next/ && cp -r public .next/standalone/apps/web/ && " +
         "node .next/standalone/apps/web/server.js",
-      url: `http://localhost:${WEB_PORT}/api/saglik`,
+      url: `http://127.0.0.1:${WEB_PORT}/api/saglik`,
       reuseExistingServer: !CI,
-      env: { PORT: String(WEB_PORT), API_URL: `http://localhost:${API_PORT}` },
+      // GitHub Actions HOSTNAME değişkenini makine adına ayarlar; sunucu yerel adreste dinlesin
+      env: { PORT: String(WEB_PORT), HOSTNAME: "127.0.0.1", API_URL: `http://localhost:${API_PORT}` },
       timeout: 60_000,
     },
   ],

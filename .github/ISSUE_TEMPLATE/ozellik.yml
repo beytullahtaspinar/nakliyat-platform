@@ -1,0 +1,21 @@
+name: Özellik veya iyileştirme
+description: Yeni bir özellik ya da mevcut bir şeyin iyileştirilmesi
+title: "[Özellik] "
+labels: ["ozellik"]
+body:
+  - type: textarea
+    id: ihtiyac
+    attributes:
+      label: Kimin, hangi ihtiyacı?
+      placeholder: Firma olarak gelen talepleri telefonda hızlıca görmek istiyorum.
+    validations:
+      required: true
+  - type: textarea
+    id: oneri
+    attributes:
+      label: Önerilen çözüm
+  - type: dropdown
+    id: alan
+    attributes:
+      label: Bölüm
+      options: [Web / ekran, API / sunucu, Veritabanı, Mobil, Tasarım / UX, Deploy / altyapı, Test, SEO]
