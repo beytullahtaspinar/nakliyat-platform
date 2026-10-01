@@ -2,7 +2,10 @@
  * Tarayıcıdaki hataları sunucuya bildirir (/api/hata-bildirimi). Sunucu bunları loglar ve
  * Sentry açıksa oraya iletir. Tarayıcıya hiçbir izleme kütüphanesi yüklenmez (PageSpeed).
  */
+import { unstable_isUnrecognizedActionError } from "next/navigation";
+
 const ENDPOINT = "/api/hata-bildirimi";
+const RELOAD_KEY = "nk_surum_yenileme";
 const MAX_REPORTS_PER_PAGE = 5;
 let sent = 0;
 
@@ -11,7 +14,28 @@ const IGNORED = [/ResizeObserver loop/i, /^Script error\.?$/i, /extension:\/\//i
 
 export type ClientErrorSource = "window" | "promise" | "boundary";
 
+/**
+ * Sekme açıkken yeni sürüm yayınlandıysa eski sayfanın form eylemleri sunucuda bulunamaz
+ * (UnrecognizedActionError). Bu bir hata değil: sayfa bir kez yenilenip yeni sürüm yüklenir.
+ * Döngüye girmemek için aynı sekmede 30 saniye içinde ikinci kez yenilenmez.
+ */
+function reloadIfStaleBuild(error: unknown): boolean {
+  const stale =
+    unstable_isUnrecognizedActionError(error) || (error instanceof Error && error.name === "UnrecognizedActionError");
+  if (!stale) return false;
+  try {
+    const last = Number(sessionStorage.getItem(RELOAD_KEY) ?? 0);
+    if (Date.now() - last < 30_000) return false;
+    sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+  } catch {
+    // sessionStorage kapalıysa yine de bir kez yenile
+  }
+  window.location.reload();
+  return true;
+}
+
 export function reportClientError(error: unknown, source: ClientErrorSource, digest?: string) {
+  if (reloadIfStaleBuild(error)) return;
   try {
     if (sent >= MAX_REPORTS_PER_PAGE) return;
     const err = error instanceof Error ? error : new Error(typeof error === "string" ? error : "Bilinmeyen hata");
