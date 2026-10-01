@@ -9,8 +9,9 @@ import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 
-// Kaba kuvvet denemelerine karşı: IP başına dakikada 10 istek
-const AUTH_THROTTLE = { default: { limit: 10, ttl: 60_000 } };
+// Kaba kuvvet denemelerine karşı: IP başına dakikada 10 istek. Tarayıcı testleri tüm girişleri
+// tek IP'den yaptığı için sınırı AUTH_RATE_LIMIT ile yükseltir; canlıda tanımlanmaz.
+const AUTH_THROTTLE = { default: { limit: Number(process.env.AUTH_RATE_LIMIT) || 10, ttl: 60_000 } };
 
 @ApiTags('Kimlik doğrulama')
 @Controller('auth')

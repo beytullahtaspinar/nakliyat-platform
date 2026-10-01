@@ -3,6 +3,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -19,7 +20,7 @@ import { CurrentUser, type AuthUser } from '../common/decorators/current-user.de
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { normalizeTrMobile } from '../common/utils/phone.js';
 import type { Prisma } from '../generated/prisma/client.js';
-import { UserRole, UserStatus } from '../generated/prisma/enums.js';
+import { BookingStatus, QuoteStatus, RequestStatus, UserRole, UserStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   AdminListUsersDto,
@@ -159,6 +160,73 @@ export class AdminUsersController {
       this.revokeSessions(id),
       this.prisma.auditLog.create({
         data: { actorId: admin.id, action: 'user.password_set', entityType: 'User', entityId: id },
+      }),
+    ]);
+  }
+
+  /**
+   * Hesabı siler. Talep, teklif, iş ve karar geçmişi kayıtları bozulmasın diye satır silinmez;
+   * ad, telefon, e-posta ve şifre geri dönülemez şekilde silinir, hesap bir daha açılamaz.
+   * Açık talepler iptal edilir, firmanın bekleyen teklifleri geri çekilir ve firma listelerden kalkar.
+   * Planlanmış işi olan hesap silinmez (karşı taraf ortada kalmasın); o sürede askıya alınabilir.
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
+    if (id === admin.id) throw new BadRequestException('Kendi hesabını silemezsin');
+    const user = await this.prisma.user.findFirst({
+      where: { id, deletedAt: null },
+      include: { company: { select: { id: true } } },
+    });
+    if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
+    if (user.role === UserRole.ADMIN) throw new BadRequestException('Yönetici hesapları panelden silinemez');
+
+    const companyId = user.company?.id;
+    const scheduled = await this.prisma.booking.count({
+      where: {
+        status: BookingStatus.SCHEDULED,
+        OR: [{ request: { customerId: id } }, ...(companyId ? [{ companyId }] : [])],
+      },
+    });
+    if (scheduled) {
+      throw new ConflictException('Bu hesabın planlanmış bir taşıma işi var, iş bitmeden silinemez. Şimdilik hesabı askıya alabilirsin.');
+    }
+
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id },
+        data: {
+          deletedAt: now,
+          status: UserStatus.SUSPENDED,
+          fullName: 'Silinmiş kullanıcı',
+          phone: `silindi-${id}`,
+          phoneVerifiedAt: null,
+          email: null,
+          // bcrypt özeti olmadığı için hiçbir şifre eşleşmez
+          passwordHash: '!',
+        },
+      }),
+      this.prisma.refreshToken.deleteMany({ where: { userId: id } }),
+      this.prisma.movingRequest.updateMany({
+        where: { customerId: id, status: { in: [RequestStatus.DRAFT, RequestStatus.OPEN] } },
+        data: { status: RequestStatus.CANCELLED },
+      }),
+      ...(companyId
+        ? [
+            this.prisma.quote.updateMany({
+              where: { companyId, status: QuoteStatus.PENDING },
+              data: { status: QuoteStatus.WITHDRAWN },
+            }),
+            // Vergi no boşa çıkar: firma ileride yeniden kayıt olabilsin
+            this.prisma.company.update({
+              where: { id: companyId },
+              data: { deletedAt: now, taxNumber: `silindi-${companyId}` },
+            }),
+          ]
+        : []),
+      this.prisma.auditLog.create({
+        data: { actorId: admin.id, action: 'user.delete', entityType: 'User', entityId: id, details: { role: user.role } },
       }),
     ]);
   }

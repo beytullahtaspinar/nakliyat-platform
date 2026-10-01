@@ -24,13 +24,15 @@ describe('Pazaryeri akışı (e2e)', () => {
   let requestId: string;
   let quoteA: string;
   let quoteB: string;
+  const deletedUserIds: string[] = [];
 
   const http = () => request(app.getHttpServer());
   const auth = (who: keyof typeof phones) => ({ Authorization: `Bearer ${tokens[who]}` });
   const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
 
   const cleanup = async () => {
-    const users = { phone: { in: allPhones } };
+    // Silinen hesapların telefonu değiştiği için kimlikle de bulunur
+    const users = { OR: [{ phone: { in: allPhones } }, { id: { in: deletedUserIds } }] };
     await prisma.booking.deleteMany({ where: { request: { customer: users } } });
     await prisma.quote.deleteMany({ where: { request: { customer: users } } });
     await prisma.movingRequest.deleteMany({ where: { customer: users } });
@@ -320,6 +322,36 @@ describe('Pazaryeri akışı (e2e)', () => {
     expect(detail.body.quotes.map((q: { id: string }) => q.id)).toEqual([quoteB, quoteA]);
     await http().get('/v1/admin/requests/yok').set(auth('admin')).expect(404);
     await http().get(`/v1/admin/requests/${requestId}`).set(auth('customer')).expect(403);
+  });
+
+  it('admin hesabı siler: kişisel bilgiler silinir, giriş kapanır, kayıtlar kalır', async () => {
+    const idOf = async (who: keyof typeof phones) => (await prisma.user.findUniqueOrThrow({ where: { phone: phones[who] } })).id;
+    const [adminId, customerId, companyAId, companyBId] = await Promise.all(
+      (['admin', 'customer', 'companyA', 'companyB'] as const).map(idOf),
+    );
+
+    await http().delete(`/v1/admin/users/${adminId}`).set(auth('admin')).expect(400);
+    // Planlanmış işi olan taraflar silinemez
+    await http().delete(`/v1/admin/users/${customerId}`).set(auth('admin')).expect(409);
+    await http().delete(`/v1/admin/users/${companyAId}`).set(auth('admin')).expect(409);
+    await http().delete(`/v1/admin/users/${companyBId}`).set(auth('companyA')).expect(403);
+
+    deletedUserIds.push(companyBId);
+    await http().delete(`/v1/admin/users/${companyBId}`).set(auth('admin')).expect(204);
+    await http().delete(`/v1/admin/users/${companyBId}`).set(auth('admin')).expect(404);
+
+    const row = await prisma.user.findUniqueOrThrow({ where: { id: companyBId }, include: { company: true } });
+    expect(row).toMatchObject({ fullName: 'Silinmiş kullanıcı', email: null, phone: `silindi-${companyBId}` });
+    expect(row.deletedAt).not.toBeNull();
+    expect(row.company?.deletedAt).not.toBeNull();
+    expect(await prisma.quote.count({ where: { id: quoteB } })).toBe(1);
+
+    await http().post('/v1/auth/login').send({ phone: phones.companyB, password: 'GucluSifre123' }).expect(401);
+    await http().get('/v1/company/profile').set(auth('companyB')).expect(401);
+    await http().get(`/v1/admin/users/${companyBId}`).set(auth('admin')).expect(404);
+    await http().get(`/v1/admin/companies/${companyIds.companyB}`).set(auth('admin')).expect(404);
+    const log = await prisma.auditLog.findFirst({ where: { entityId: companyBId, action: 'user.delete' } });
+    expect(log?.details).toEqual({ role: 'COMPANY' });
   });
 
 });
