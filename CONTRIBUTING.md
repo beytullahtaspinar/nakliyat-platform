@@ -36,7 +36,7 @@ docs: cPanel kurulum adımları
 | `pnpm --filter @nakliyat/web test:e2e` | Tarayıcıda uçtan uca akışlar (Playwright), mobil ve masaüstü; her sayfada erişilebilirlik (axe) ve konsol hatası kontrolü | MariaDB + `pnpm build`; ilk seferde `pnpm --filter @nakliyat/web exec playwright install chromium` |
 | `pnpm --filter @nakliyat/web lighthouse` | PageSpeed ölçümü: erişilebilirlik, en iyi uygulamalar ve SEO 100, performans en az 95 olmalı | `pnpm build` |
 
-CI her PR'da hepsini çalıştırır; biri kırmızıysa PR birleştirilmez (birleşen her şey otomatik canlıya gider).
+CI her PR'da Lighthouse dışındakilerin hepsini çalıştırır; biri kırmızıysa PR birleştirilmez (birleşen her şey otomatik canlıya gider). Lighthouse ayda bir otomatik çalışır (`.github/workflows/lighthouse.yml`); tasarımı veya sayfa yapısını belirgin değiştiren bir PR'dan sonra Actions sekmesinden elle çalıştırılır.
 
 Kurallar:
 

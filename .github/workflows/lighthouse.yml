@@ -1,0 +1,35 @@
+name: PageSpeed (Lighthouse)
+
+# Ayda bir (her ayın 1'i, 09:00 TR) canlıdaki gibi derlenmiş siteyi ölçer.
+# Eşikler apps/web/lighthouserc.cjs içinde: erişilebilirlik, en iyi uygulamalar ve SEO 100, performans en az 95.
+# Başarısız olursa GitHub e-posta gönderir. Büyük bir tasarım değişikliğinden sonra
+# Actions → "PageSpeed (Lighthouse)" → "Run workflow" ile elle de çalıştırılabilir.
+on:
+  schedule:
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      API_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@nakliyat/web
+      - name: Lighthouse (PageSpeed) ölçümü
+        run: pnpm --filter @nakliyat/web lighthouse
+      - name: Raporları sakla
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-raporlari
+          path: apps/web/.lighthouseci/rapor/
+          retention-days: 60
