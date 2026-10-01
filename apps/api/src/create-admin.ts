@@ -16,6 +16,16 @@ if (!phone || password.length < 12) {
 }
 
 const prisma = new PrismaClient({ adapter: createMariaDbAdapter(process.env.DATABASE_URL!) });
+// Bu numarayla açılmış müşteri veya firma hesabı yanlışlıkla yöneticiye çevrilmesin
+const existing = await prisma.user.findUnique({ where: { phone }, select: { role: true } });
+if (existing && existing.role !== UserRole.ADMIN && process.env.ADMIN_PROMOTE !== 'evet') {
+  console.error(
+    `Bu numara zaten bir ${existing.role === UserRole.COMPANY ? 'firma' : 'müşteri'} hesabına ait. ` +
+      'Yönetici için ayrı bir numara kullanın. Bu hesabı bilerek yöneticiye çevirmek için ADMIN_PROMOTE=evet ekleyin.',
+  );
+  await prisma.$disconnect();
+  process.exit(1);
+}
 const passwordHash = await bcrypt.hash(password, 12);
 const user = await prisma.user.upsert({
   where: { phone },

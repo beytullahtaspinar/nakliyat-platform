@@ -47,10 +47,10 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
   redirect(safeNext(formData.get("next")) ?? homeFor(result.user.role));
 }
 
-export async function logout() {
+export async function logout(formData?: FormData) {
   const refreshToken = await clearSession();
   if (refreshToken) {
     await apiFetch("/auth/logout", { method: "POST", body: { refreshToken } }).catch(() => undefined);
   }
-  redirect("/");
+  redirect(safeNext(formData?.get("next")) ?? "/");
 }
