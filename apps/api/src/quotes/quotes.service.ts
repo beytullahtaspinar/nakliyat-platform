@@ -13,6 +13,7 @@ import {
   toPublicCompany,
   type CompanyWithCities,
 } from '../companies/companies.service.js';
+import { DomainEvents } from '../events/domain-events.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { PaginationDto } from '../requests/dto/list-requests.dto.js';
 import type { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto.js';
@@ -22,6 +23,7 @@ export class QuotesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly companies: CompaniesService,
+    private readonly events: DomainEvents,
   ) {}
 
   // ─── Firma tarafı ─────────────────────────────────────────────
@@ -105,6 +107,7 @@ export class QuotesService {
           revisions: { create: { priceTry: dto.priceTry } },
         },
       });
+      this.events.emit('quote.created', { quoteId: quote.id });
       return quote;
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
@@ -224,6 +227,7 @@ export class QuotesService {
         },
       });
     });
+    this.events.emit('quote.accepted', { quoteId: quote.id, bookingId: booking.id });
 
     return {
       booking,

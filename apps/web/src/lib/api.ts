@@ -226,3 +226,16 @@ export type CompanyBooking = {
   request: { id: string; from: BookingPlace; to: BookingPlace; homeType: string; moveDate: string; notes: string | null };
   customer: { fullName: string; phone: string };
 };
+
+export type NotificationChannel = "EMAIL" | "SMS" | "PUSH";
+
+export type NotificationPreferences = {
+  email: string | null;
+  channels: NotificationChannel[];
+  items: {
+    type: string;
+    label: string;
+    description: string;
+    channels: Partial<Record<NotificationChannel, boolean>>;
+  }[];
+};

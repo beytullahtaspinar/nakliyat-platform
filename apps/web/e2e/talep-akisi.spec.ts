@@ -35,4 +35,17 @@ test("müşteri talep oluşturur ve hesabında görür", async ({ page }) => {
   await expect(page).toHaveURL(/\/hesabim/);
   await expect(page.getByText(/Kadıköy/).first()).toBeVisible();
   await expect(page.getByText(/Çankaya/).first()).toBeVisible();
+
+  // Bildirim ayarları: e-posta eklenir, bir bildirim kapatılır, kayıt kalıcıdır
+  await page.getByRole("link", { name: "Bildirim ayarları" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bildirim ayarları");
+  await page.getByLabel("Bildirim e-postası").fill(`musteri${phone}@test.local`);
+  const accepted = page.getByRole("listitem").filter({ hasText: "Teklif kabulü" });
+  await accepted.getByRole("checkbox").uncheck();
+  await page.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByRole("status")).toHaveText("Bildirim ayarların kaydedildi.");
+  await page.reload();
+  await expect(page.getByLabel("Bildirim e-postası")).toHaveValue(`musteri${phone}@test.local`);
+  await expect(accepted.getByRole("checkbox")).not.toBeChecked();
+  await expect(page.getByRole("listitem").filter({ hasText: "Talebime yeni teklif" }).getByRole("checkbox")).toBeChecked();
 });

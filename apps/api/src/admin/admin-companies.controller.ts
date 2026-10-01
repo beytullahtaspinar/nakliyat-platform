@@ -13,6 +13,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { toProfile, WITH_CITIES } from '../companies/companies.service.js';
+import { DomainEvents } from '../events/domain-events.js';
 import { UserRole, VerificationStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
@@ -22,7 +23,10 @@ import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js
 @Roles(UserRole.ADMIN)
 @Controller('admin/companies')
 export class AdminCompaniesController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: DomainEvents,
+  ) {}
 
   @Get()
   async list(@Query() { status, page, limit }: ListCompaniesDto) {
@@ -81,6 +85,9 @@ export class AdminCompaniesController {
         },
       }),
     ]);
+    if (company.verificationStatus !== status) {
+      this.events.emit('company.verification_changed', { companyId: id });
+    }
     return toProfile(updated);
   }
 }

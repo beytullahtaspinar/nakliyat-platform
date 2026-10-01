@@ -19,7 +19,8 @@ Veritabanı: **MariaDB 10.6** (canlı cPanel sunucusu), MySQL 8 ile de uyumlu. K
 | `Booking` | Müşterinin kabul ettiği teklif, yani anlaşılan iş. |
 | `Review` | İş tamamlandıktan sonra müşterinin puanı ve yorumu, firmanın yanıtı. |
 | `Message` | Teklif veya iş üzerinden müşteri-firma yazışması. |
-| `Notification` | Uygulama içi, SMS ve e-posta bildirimleri. |
+| `Notification` | Bildirimler, kanal başına bir satır: `IN_APP` satırları bildirim kutusu, `EMAIL`/`SMS`/`PUSH` satırları gönderim kaydı (durum, deneme sayısı, son hata). |
+| `NotificationPreference` | Kullanıcının tür ve kanal bazında kapattığı/açtığı bildirimler. Satır yoksa açık sayılır. |
 | `AuditLog` | Admin işlemlerinin kaydı. |
 
 ## Kurallar
