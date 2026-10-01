@@ -256,7 +256,7 @@ export type CompanyDocument = {
 };
 
 export type AdminCompanyDetail = AdminCompany & {
-  owner: CompanyOwner & { createdAt: string };
+  owner: CompanyOwner & { id: string; createdAt: string };
   documents: CompanyDocument[];
   quoteCount: number;
   bookingCount: number;
@@ -283,6 +283,10 @@ export type AdminUser = {
   createdAt: string;
   company: { id: string; displayName: string; verificationStatus: VerificationStatus } | null;
   requestCount: number;
+};
+
+export type AdminUserDetail = AdminUser & {
+  history: { action: string; details: unknown; createdAt: string; actor: { fullName: string } }[];
 };
 
 export type NotificationChannel = "EMAIL" | "SMS" | "PUSH";

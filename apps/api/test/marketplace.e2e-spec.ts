@@ -246,4 +246,60 @@ describe('Pazaryeri akışı (e2e)', () => {
     const desc = await http().patch('/v1/company/profile').set(auth('companyC')).send({ description: 'Yeni açıklama' }).expect(200);
     expect(desc.body.verificationStatus).toBe('VERIFIED');
   });
+  it('admin firma bilgilerini düzeltir; doğrulama durumu korunur, vergi no çakışması reddedilir', async () => {
+    const res = await http()
+      .patch(`/v1/admin/companies/${companyIds.companyC}`)
+      .set(auth('admin'))
+      .send({ displayName: 'C Nakliyat Yeni', k3LicenseNumber: 'K3.35.111', serviceCityCodes: ['35', '09'] })
+      .expect(200);
+    expect(res.body).toMatchObject({ displayName: 'C Nakliyat Yeni', verificationStatus: 'VERIFIED', serviceCityCodes: ['09', '35'] });
+    await http().patch(`/v1/admin/companies/${companyIds.companyC}`).set(auth('admin')).send({ taxNumber: '1111111111' }).expect(409);
+    await http().patch(`/v1/admin/companies/${companyIds.companyC}`).set(auth('companyC')).send({ displayName: 'X' }).expect(403);
+    const log = await prisma.auditLog.findFirst({ where: { entityId: companyIds.companyC, action: 'company.update' } });
+    expect(log?.details).toMatchObject({ fields: expect.arrayContaining(['displayName', 'k3LicenseNumber', 'serviceCityCodes']) });
+  });
+
+  it('admin kullanıcı bilgilerini günceller; telefon çakışması reddedilir', async () => {
+    const id = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.customer } })).id;
+    const res = await http()
+      .patch(`/v1/admin/users/${id}`)
+      .set(auth('admin'))
+      .send({ fullName: 'Ayşe Müşteri', email: 'AYSE@ornek.com' })
+      .expect(200);
+    expect(res.body).toMatchObject({ fullName: 'Ayşe Müşteri', email: 'ayse@ornek.com', history: [{ action: 'user.update' }] });
+    expect(res.body.passwordHash).toBeUndefined();
+    await http().patch(`/v1/admin/users/${id}`).set(auth('admin')).send({ phone: phones.companyA }).expect(409);
+    await http().patch(`/v1/admin/users/${id}`).set(auth('admin')).send({ email: '' }).expect(200);
+    await http().patch(`/v1/admin/users/${id}`).set(auth('companyA')).send({ fullName: 'X' }).expect(403);
+  });
+
+  it('admin yeni şifre belirler: eski şifre ve açık oturumlar geçersiz olur', async () => {
+    const login = await http().post('/v1/auth/login').send({ phone: phones.companyB, password: 'GucluSifre123' }).expect(200);
+    const id = login.body.user.id;
+    await http().post(`/v1/admin/users/${id}/password`).set(auth('admin')).send({ password: 'kisa' }).expect(400);
+    await http().post(`/v1/admin/users/${id}/password`).set(auth('admin')).send({ password: 'YeniSifre2026' }).expect(204);
+    await http().post('/v1/auth/refresh').send({ refreshToken: login.body.refreshToken }).expect(401);
+    await http().post('/v1/auth/login').send({ phone: phones.companyB, password: 'GucluSifre123' }).expect(401);
+    await http().post('/v1/auth/login').send({ phone: phones.companyB, password: 'YeniSifre2026' }).expect(200);
+    expect(await prisma.auditLog.count({ where: { entityId: id, action: 'user.password_set' } })).toBe(1);
+  });
+
+  it('askıya alınan hesabın açık oturumu hemen kapanır; admin kendini askıya alamaz', async () => {
+    const id = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.companyC } })).id;
+    await http().get('/v1/company/profile').set(auth('companyC')).expect(200);
+    await http().patch(`/v1/admin/users/${id}`).set(auth('admin')).send({ status: 'SUSPENDED' }).expect(200);
+    await http().get('/v1/company/profile').set(auth('companyC')).expect(401);
+    await http().patch(`/v1/admin/users/${id}`).set(auth('admin')).send({ status: 'ACTIVE' }).expect(200);
+    await http().get('/v1/company/profile').set(auth('companyC')).expect(200);
+
+    const adminId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.admin } })).id;
+    await http().patch(`/v1/admin/users/${adminId}`).set(auth('admin')).send({ status: 'SUSPENDED' }).expect(400);
+  });
+
+  it('rolü değişen kullanıcının eski anahtarı yeni rolle değerlendirilir', async () => {
+    await prisma.user.update({ where: { phone: phones.companyA }, data: { role: 'ADMIN' } });
+    await http().get('/v1/admin/summary').set(auth('companyA')).expect(200);
+    await prisma.user.update({ where: { phone: phones.companyA }, data: { role: 'COMPANY' } });
+    await http().get('/v1/admin/summary').set(auth('companyA')).expect(403);
+  });
 });

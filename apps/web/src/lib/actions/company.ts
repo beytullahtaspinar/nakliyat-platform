@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
+import { companyProfileBody } from "@/lib/company-form";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 
 export type CompanyFormState = { error?: string; saved?: boolean; notice?: string };
@@ -27,20 +28,7 @@ export async function saveCompanyProfile(
   _prev: CompanyFormState,
   formData: FormData,
 ): Promise<CompanyFormState> {
-  const k3 = text(formData, "k3LicenseNumber");
-  const description = text(formData, "description");
-  const cityCode = text(formData, "cityCode");
-  const serviceCityCodes = [...new Set([cityCode, ...formData.getAll("serviceCityCodes").map(String)])];
-  const body = {
-    displayName: text(formData, "displayName"),
-    legalName: text(formData, "legalName"),
-    taxNumber: text(formData, "taxNumber").replace(/\s/g, ""),
-    cityCode,
-    serviceCityCodes,
-    // Güncellemede boş bırakılan alan silinmez; yeni profilde hiç gönderilmez
-    ...(k3 ? { k3LicenseNumber: k3 } : {}),
-    ...(description || !isNew ? { description } : {}),
-  };
+  const body = companyProfileBody(formData, isNew);
   try {
     await apiFetch("/company/profile", { method: isNew ? "POST" : "PATCH", token: await companyToken(), body });
   } catch (err) {

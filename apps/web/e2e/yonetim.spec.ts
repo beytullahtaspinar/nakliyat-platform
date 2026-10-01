@@ -62,6 +62,49 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await expect(page.getByText("Onaylı", { exact: true }).first()).toBeVisible();
 });
 
+test("yönetici kullanıcının bilgilerini ve şifresini değiştirir", async ({ page, request, browser }) => {
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  const customerPhone = `0536${uniqueDigits(7)}`;
+  const reg = await request.post(`${API}/auth/register`, {
+    data: { role: "CUSTOMER", fullName: "Eski Ad", phone: customerPhone, password: PASSWORD },
+  });
+  expect(reg.ok()).toBeTruthy();
+  const { user } = await reg.json();
+
+  await page.goto("/giris");
+  await page.getByLabel("Cep telefonu").fill(adminPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/yonetim$/);
+
+  await page.goto(`/yonetim/kullanicilar/${user.id}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Eski Ad");
+  await expectAccessible(page);
+  await page.getByLabel("Ad soyad").fill("Yeni Ad Soyad");
+  await page.getByRole("button", { name: "Kaydet" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Yeni Ad Soyad");
+
+  await page.getByRole("button", { name: "Şifre oluştur" }).click();
+  const newPassword = await page.getByLabel("Yeni şifre").inputValue();
+  expect(newPassword).toHaveLength(12);
+  await page.getByRole("button", { name: "Şifreyi değiştir" }).click();
+  await expect(page.getByText(/Yeni şifre kaydedildi/)).toBeVisible();
+
+  // Kullanıcı yeni şifreyle girer
+  const context = await browser.newContext();
+  const userPage = await context.newPage();
+  await userPage.goto("/giris");
+  await userPage.getByLabel("Cep telefonu").fill(customerPhone);
+  await userPage.getByLabel("Şifre").fill(newPassword);
+  await userPage.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(userPage).toHaveURL(/\/hesabim/);
+  await context.close();
+});
+
 test("yönetim sayfaları girişsiz açılmaz", async ({ page }) => {
   await page.goto("/yonetim/firmalar");
   await expect(page).toHaveURL(/\/giris\?next=%2Fyonetim|\/giris\?next=\/yonetim/);

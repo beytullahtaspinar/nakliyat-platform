@@ -3,13 +3,20 @@
 import { useState } from "react";
 import { Field, FormError, Input, SubmitButton, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
-import { saveCompanyProfile } from "@/lib/actions/company";
+import { saveCompanyProfile, type CompanyFormState } from "@/lib/actions/company";
 import type { CompanyProfile } from "@/lib/api";
 
 type City = { code: string; name: string };
 
-export function ProfileForm({ cities, profile }: { cities: City[]; profile?: CompanyProfile }) {
-  const { state, pending, formProps } = useFormAction(saveCompanyProfile.bind(null, !profile), {});
+type Props = {
+  cities: City[];
+  profile?: CompanyProfile;
+  /** Yönetim ekranı kendi kayıt eylemini verir; firma kimlik değişikliğinde yeniden doğrulamaya düşmez. */
+  action?: (state: CompanyFormState, formData: FormData) => Promise<CompanyFormState>;
+};
+
+export function ProfileForm({ cities, profile, action }: Props) {
+  const { state, pending, formProps } = useFormAction(action ?? saveCompanyProfile.bind(null, !profile), {});
   const [cityCode, setCityCode] = useState(profile?.cityCode ?? "");
   const [service, setService] = useState<Set<string>>(new Set(profile?.serviceCityCodes ?? []));
   const toggle = (code: string) =>
@@ -106,7 +113,7 @@ export function ProfileForm({ cities, profile }: { cities: City[]; profile?: Com
         />
       </Field>
 
-      {profile && (
+      {profile && !action && (
         <p className="text-xs text-zinc-500">
           Unvan, vergi numarası veya K3 belge numarası değişirse firman yeniden doğrulamaya alınır.
         </p>

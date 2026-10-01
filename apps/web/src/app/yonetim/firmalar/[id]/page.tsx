@@ -50,7 +50,12 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
       <div className="mt-6 grid gap-4 md:grid-cols-[1fr_20rem]">
         <div className="space-y-4">
           <Card className="p-5">
-            <h2 className="font-semibold">Kimlik ve belge bilgileri</h2>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-semibold">Kimlik ve belge bilgileri</h2>
+              <Link href={`/yonetim/firmalar/${c.id}/duzenle`} className="text-sm font-semibold text-brand-700 hover:underline">
+                Bilgileri düzenle
+              </Link>
+            </div>
             <dl className="mt-3 space-y-2 text-sm">
               <Row label="Ticari unvan" value={c.legalName} />
               <Row label="Vergi / TC kimlik no" value={c.taxNumber} mono />
@@ -95,7 +100,11 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
                 {c.history.map((h, i) => (
                   <li key={i}>
                     <span className="font-medium">
-                      {h.details?.to ? VERIFICATION[h.details.to].label : h.action}
+                      {h.details?.to
+                        ? VERIFICATION[h.details.to].label
+                        : h.action === "company.update"
+                          ? "Bilgiler yönetimden düzenlendi"
+                          : h.action}
                     </span>{" "}
                     <span className="text-zinc-500">
                       · {h.actor.fullName} · {formatDate(h.createdAt)}
@@ -110,7 +119,12 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
 
         <div className="space-y-4">
           <Card className="p-5">
-            <h2 className="font-semibold">Yetkili kişi</h2>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-semibold">Yetkili kişi</h2>
+              <Link href={`/yonetim/kullanicilar/${c.owner.id}`} className="text-sm font-semibold text-brand-700 hover:underline">
+                Hesabı yönet
+              </Link>
+            </div>
             <dl className="mt-3 space-y-2 text-sm">
               <Row label="Ad soyad" value={c.owner.fullName} />
               <div>

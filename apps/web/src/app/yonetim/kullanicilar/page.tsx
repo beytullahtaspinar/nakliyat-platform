@@ -69,7 +69,10 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
               <Card className="flex flex-wrap items-start justify-between gap-2 p-4">
                 <div>
                   <p className="font-semibold">
-                    {u.fullName} <span className="text-sm font-normal text-zinc-500">· {ROLE_LABELS[u.role]}</span>
+                    <Link href={`/yonetim/kullanicilar/${u.id}`} className="hover:underline">
+                      {u.fullName}
+                    </Link>{" "}
+                    <span className="text-sm font-normal text-zinc-500">· {ROLE_LABELS[u.role]}</span>
                   </p>
                   <p className="text-sm text-zinc-600">
                     <a href={`tel:${u.phone}`} className="text-brand-700 hover:underline">
