@@ -74,7 +74,7 @@ export default function Home() {
       <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white dark:from-brand-950/60 dark:to-zinc-950">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-40 right-[-10%] h-[28rem] w-[28rem] rounded-full bg-brand-200/40 blur-3xl dark:bg-brand-700/20"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_28rem_at_90%_-10%,var(--color-brand-200),transparent_70%)] opacity-60 dark:bg-[radial-gradient(40rem_28rem_at_90%_-10%,var(--color-brand-800),transparent_70%)] dark:opacity-40"
         />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:py-24">
           <div>
@@ -92,7 +92,7 @@ export default function Home() {
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {["Ücretsiz", "Bağlayıcı değil", "81 ilde"].map((item) => (
                 <li key={item} className="flex items-center gap-1.5">
-                  <CheckIcon className="h-4 w-4 text-accent-600" /> {item}
+                  <CheckIcon className="h-4 w-4 text-accent-700" /> {item}
                 </li>
               ))}
             </ul>
@@ -169,7 +169,7 @@ export default function Home() {
             {STEPS.map((step, i) => (
               <li key={step.title}>
                 <Card className="h-full p-7">
-                  <span className="font-display text-sm font-bold text-accent-600">
+                  <span className="font-display text-sm font-bold text-accent-700">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-3 text-xl font-bold text-zinc-900 dark:text-white">{step.title}</h3>
@@ -249,7 +249,7 @@ export default function Home() {
       {/* Firmalar için */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         <div className="grid items-center gap-8 rounded-3xl bg-gradient-to-br from-accent-50 to-accent-100 p-8 sm:p-12 md:grid-cols-[auto_1fr_auto] dark:from-accent-950 dark:to-zinc-900">
-          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-500 text-white">
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-400 text-brand-950">
             <TruckIcon className="h-7 w-7" />
           </span>
           <div>
@@ -259,7 +259,7 @@ export default function Home() {
             </p>
           </div>
           <ButtonLink href="/kayit?rol=firma" variant="secondary">
-            <StarIcon className="h-5 w-5 text-accent-600" /> Firma olarak katıl
+            <StarIcon className="h-5 w-5 text-accent-700" /> Firma olarak katıl
           </ButtonLink>
         </div>
       </section>
