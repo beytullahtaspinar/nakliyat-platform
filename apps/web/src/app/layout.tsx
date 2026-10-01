@@ -11,8 +11,9 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "latin-ext"],
-  // Ön yükleme kapalı: başlık önce eşlenmiş sistem fontuyla çizilir, LCP fonta takılmaz
-  preload: false,
+  // Font ilk boyamaya yetişmezse o sayfa boyutu eşlenmiş sistem fontuyla kalır: sonradan
+  // font değişip içerik kaymaz (CLS) ve LCP fonta takılmaz. Sonraki ziyarette Inter önbellekten gelir.
+  display: "optional",
 });
 
 // Koyu mod yok: tarayıcı arayüzü ve form denetimleri de açık temada kalsın
