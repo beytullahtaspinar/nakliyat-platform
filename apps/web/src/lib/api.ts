@@ -147,3 +147,75 @@ export type CustomerBooking = {
 };
 
 export type Paginated<T> = { items: T[]; total: number; page: number; limit: number };
+
+// ─── Firma paneli ──────────────────────────────────────────────
+
+export type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
+
+export type CompanyProfile = {
+  id: string;
+  legalName: string;
+  displayName: string;
+  taxNumber: string;
+  k3LicenseNumber: string | null;
+  description: string | null;
+  cityCode: string;
+  cityName: string | null;
+  verificationStatus: VerificationStatus;
+  verificationNote: string | null;
+  serviceCityCodes: string[];
+};
+
+/** Firmaya gösterilen talep: müşteri adı ve açık adres yok */
+export type CompanyRequestView = {
+  id: string;
+  status: RequestStatus;
+  fromCityCode: string;
+  fromCityName: string | null;
+  fromDistrictName: string | null;
+  fromFloor: number;
+  fromHasElevator: boolean;
+  toCityCode: string;
+  toCityName: string | null;
+  toDistrictName: string | null;
+  toFloor: number;
+  toHasElevator: boolean;
+  homeType: string;
+  moveDate: string;
+  isDateFlexible: boolean;
+  needsPacking: boolean;
+  needsAssembly: boolean;
+  needsStorage: boolean;
+  specialItems: string[];
+  notes: string | null;
+  estimatedVolumeM3: number | null;
+  estimatedCrew: number | null;
+  estimatedHours: number | null;
+  distanceKm: number | null;
+  expiresAt: string;
+  createdAt: string;
+};
+
+export type OwnQuote = Omit<CustomerQuote, "company" | "isExpired"> & { createdAt: string };
+
+export type CompanyRequest = CompanyRequestView & { quoteCount: number; myQuote: OwnQuote | null };
+
+export type CompanyQuote = OwnQuote & { request: CompanyRequestView };
+
+type BookingPlace = {
+  cityName: string | null;
+  districtName: string | null;
+  address: string;
+  floor: number;
+  hasElevator: boolean;
+};
+
+export type CompanyBooking = {
+  id: string;
+  requestId: string;
+  status: CustomerBooking["status"];
+  scheduledAt: string;
+  priceTry: string;
+  request: { id: string; from: BookingPlace; to: BookingPlace; homeType: string; moveDate: string; notes: string | null };
+  customer: { fullName: string; phone: string };
+};

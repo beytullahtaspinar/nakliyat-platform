@@ -2,10 +2,9 @@
 
 import { useActionState, useState } from "react";
 import { FormError } from "@/components/forms/fields";
-import type { RequestFormState } from "@/lib/actions/requests";
 
 type Props = {
-  action: () => Promise<RequestFormState>;
+  action: () => Promise<{ error?: string }>;
   label: string;
   confirmText: string;
   confirmLabel: string;

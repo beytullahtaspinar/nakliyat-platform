@@ -14,7 +14,7 @@ import { acceptQuote, cancelRequest } from "@/lib/actions/requests";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { getAccessToken, getCurrentUser, homeFor } from "@/lib/session";
-import { ConfirmButton } from "./confirm-button";
+import { ConfirmButton } from "@/components/forms/confirm-button";
 
 export const metadata: Metadata = {
   title: "Talep ve teklifler",
