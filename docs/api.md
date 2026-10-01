@@ -97,13 +97,17 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 
 | Durum | Yöntem | Yol | Açıklama |
 |---|---|---|---|
+| ✅ | GET | `/admin/summary` | Yönetim özeti: bekleyen firma, açık talep, kullanıcı, planlanmış iş sayıları |
 | ✅ | GET | `/admin/companies?status=PENDING` | Doğrulama bekleyen firmalar |
+| ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |
 | ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle) |
 | ⏳ | PATCH | `/admin/documents/:id` | Belgeyi onayla/reddet |
-| ⏳ | GET | `/admin/users` · `/admin/requests` · `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
+| ✅ | GET | `/admin/requests?status=` | Tüm talepler, müşteri iletişimiyle |
+| ✅ | GET | `/admin/users?role=&q=` | Kullanıcılar; ad, telefon veya e-postada arama |
+| ⏳ | GET | `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
 | ⏳ | POST | `/admin/users/:id/suspend` | Kullanıcıyı askıya al |
 | ⏳ | PATCH | `/admin/reviews/:id` | Uygunsuz yorumu yayından kaldır |
-| ⏳ | GET | `/admin/stats` | Talep, teklif, dönüşüm, firma sayıları |
+| ⏳ | GET | `/admin/stats` | Dönüşüm oranları, zamana göre grafikler |
 
 Tüm admin işlemleri `AuditLog` tablosuna kaydedilir. İlk admin hesabı sunucuda oluşturulur (dışarıdan kayıtla açılamaz):
 

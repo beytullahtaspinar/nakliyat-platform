@@ -226,3 +226,61 @@ export type CompanyBooking = {
   request: { id: string; from: BookingPlace; to: BookingPlace; homeType: string; moveDate: string; notes: string | null };
   customer: { fullName: string; phone: string };
 };
+
+// ─── Yönetim ───────────────────────────────────────────────────
+
+export type AdminSummary = {
+  companies: { pending: number; verified: number; rejected: number };
+  requests: { open: number; booked: number; total: number };
+  users: { customers: number; companies: number; total: number };
+  bookings: { scheduled: number };
+};
+
+type CompanyOwner = { fullName: string; phone: string; email: string | null };
+
+export type AdminCompany = CompanyProfile & {
+  serviceCities: { code: string; name: string | null }[];
+  verifiedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  owner: CompanyOwner;
+};
+
+export type CompanyDocument = {
+  id: string;
+  type: "K3_LICENSE" | "TAX_CERTIFICATE" | "TRADE_REGISTRY" | "INSURANCE" | "OTHER";
+  fileUrl: string;
+  status: VerificationStatus;
+  reviewNote: string | null;
+  createdAt: string;
+};
+
+export type AdminCompanyDetail = AdminCompany & {
+  owner: CompanyOwner & { createdAt: string };
+  documents: CompanyDocument[];
+  quoteCount: number;
+  bookingCount: number;
+  history: {
+    action: string;
+    details: { from?: VerificationStatus; to?: VerificationStatus; note?: string | null } | null;
+    createdAt: string;
+    actor: { fullName: string };
+  }[];
+};
+
+export type AdminRequest = MovingRequest & {
+  customer: { id: string; fullName: string; phone: string };
+};
+
+export type AdminUser = {
+  id: string;
+  role: UserRole;
+  status: "ACTIVE" | "SUSPENDED";
+  fullName: string;
+  phone: string;
+  email: string | null;
+  phoneVerifiedAt: string | null;
+  createdAt: string;
+  company: { id: string; displayName: string; verificationStatus: VerificationStatus } | null;
+  requestCount: number;
+};

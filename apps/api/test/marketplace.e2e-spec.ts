@@ -200,6 +200,43 @@ describe('Pazaryeri akışı (e2e)', () => {
     expect(customer.body.items[0].company.contactPhone).toBe(phones.companyA);
   });
 
+  it('yönetim ekranı uçları yalnızca admine açık', async () => {
+    for (const path of ['/v1/admin/summary', '/v1/admin/requests', '/v1/admin/users', `/v1/admin/companies/${companyIds.companyA}`]) {
+      await http().get(path).set(auth('customer')).expect(403);
+      await http().get(path).set(auth('companyA')).expect(403);
+    }
+  });
+
+  it('admin özeti, talepleri ve kullanıcıları görür', async () => {
+    const summary = await http().get('/v1/admin/summary').set(auth('admin')).expect(200);
+    expect(summary.body.companies.verified).toBeGreaterThanOrEqual(3);
+    expect(summary.body.bookings.scheduled).toBeGreaterThanOrEqual(1);
+
+    const requests = await http().get('/v1/admin/requests?status=BOOKED').set(auth('admin')).expect(200);
+    const item = requests.body.items.find((r: { id: string }) => r.id === requestId);
+    expect(item).toMatchObject({ quoteCount: 2, fromDistrictName: 'Kadıköy', customer: { phone: phones.customer } });
+
+    const users = await http().get('/v1/admin/users?role=COMPANY&q=0532 000 02').set(auth('admin')).expect(200);
+    const ids = users.body.items.map((u: { phone: string }) => u.phone);
+    expect(ids).toEqual(expect.arrayContaining([phones.companyA, phones.companyB]));
+    expect(ids).not.toContain(phones.customer);
+    expect(users.body.items[0].passwordHash).toBeUndefined();
+  });
+
+  it('admin firma detayında sahibi ve karar geçmişini görür; reddedince gerekçe kaydedilir', async () => {
+    await http().post(`/v1/admin/companies/${companyIds.companyC}/reject`).set(auth('admin')).send({ reason: 'K3 belgesi geçersiz' }).expect(200);
+    const res = await http().get(`/v1/admin/companies/${companyIds.companyC}`).set(auth('admin')).expect(200);
+    expect(res.body).toMatchObject({
+      verificationStatus: 'REJECTED',
+      verificationNote: 'K3 belgesi geçersiz',
+      owner: { phone: phones.companyC },
+      documents: [],
+    });
+    expect(res.body.history.map((h: { action: string }) => h.action)).toEqual(['company.reject', 'company.verify']);
+    await http().post(`/v1/admin/companies/${companyIds.companyC}/verify`).set(auth('admin')).expect(200);
+    await http().get('/v1/admin/companies/yok').set(auth('admin')).expect(404);
+  });
+
   it('kimlik bilgisi değişen firma yeniden doğrulamaya düşer', async () => {
     const res = await http().patch('/v1/company/profile').set(auth('companyB')).send({ taxNumber: '2222222223' }).expect(200);
     expect(res.body.verificationStatus).toBe('PENDING');
