@@ -45,8 +45,9 @@ jobs:
         run: pnpm --filter @nakliyat/api test:e2e
       - run: pnpm build
 
-  # Tarayıcıda uçtan uca testler (Playwright) ve PageSpeed ölçümü (Lighthouse CI).
+  # Tarayıcıda uçtan uca testler (Playwright, erişilebilirlik dahil).
   # Canlıdaki gibi derlenmiş API + Next.js standalone çıktısıyla çalışır.
+  # PageSpeed ölçümü (Lighthouse) ayda bir: lighthouse.yml
   tarayici:
     runs-on: ubuntu-latest
     services:
@@ -84,14 +85,10 @@ jobs:
         run: pnpm --filter @nakliyat/web exec playwright install --with-deps chromium
       - name: Uçtan uca testler (mobil + masaüstü)
         run: pnpm --filter @nakliyat/web test:e2e
-      - name: Lighthouse (PageSpeed) ölçümü
-        run: pnpm --filter @nakliyat/web lighthouse
       - name: Raporları sakla
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: tarayici-raporlari
-          path: |
-            apps/web/playwright-report/
-            apps/web/.lighthouseci/rapor/
+          path: apps/web/playwright-report/
           retention-days: 14
