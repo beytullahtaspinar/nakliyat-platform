@@ -28,12 +28,17 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
           <h1 className="text-2xl font-semibold tracking-tight">Merhaba {user.fullName.split(" ")[0]}</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Taşıma taleplerin ve gelen teklifler</p>
         </div>
-        <Link
-          href="/talep-olustur"
-          className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
-        >
-          Yeni talep
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/hesabim/bildirimler" className="text-sm font-medium text-zinc-700 hover:underline">
+            Bildirim ayarları
+          </Link>
+          <Link
+            href="/talep-olustur"
+            className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800"
+          >
+            Yeni talep
+          </Link>
+        </div>
       </div>
 
       {yeni && (

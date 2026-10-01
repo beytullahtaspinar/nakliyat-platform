@@ -90,8 +90,9 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ⏳ | POST | `/bookings/:id/review` | Müşteri | Tamamlanan işe puan ve yorum |
 | ⏳ | GET · POST | `/quotes/:id/messages` | Taraflar | Teklif üzerinden yazışma |
 | ⏳ | GET · POST | `/bookings/:id/messages` | Taraflar | İş üzerinden yazışma |
-| ⏳ | GET | `/notifications` | Giriş yapmış | Bildirimler |
-| ⏳ | POST | `/notifications/:id/read` | Giriş yapmış | Okundu işaretle |
+| ✅ | GET | `/notifications` | Giriş yapmış | Uygulama içi bildirimler, okunmamış sayısıyla (`unread`) |
+| ✅ | POST | `/notifications/:id/read` · `/notifications/read-all` | Giriş yapmış | Okundu işaretle |
+| ✅ | GET · PATCH | `/notifications/preferences` | Giriş yapmış | Bildirim e-postası ve tür/kanal bazında aç-kapa ([bildirimler.md](bildirimler.md)) |
 
 ### Admin
 

@@ -284,3 +284,16 @@ export type AdminUser = {
   company: { id: string; displayName: string; verificationStatus: VerificationStatus } | null;
   requestCount: number;
 };
+
+export type NotificationChannel = "EMAIL" | "SMS" | "PUSH";
+
+export type NotificationPreferences = {
+  email: string | null;
+  channels: NotificationChannel[];
+  items: {
+    type: string;
+    label: string;
+    description: string;
+    channels: Partial<Record<NotificationChannel, boolean>>;
+  }[];
+};

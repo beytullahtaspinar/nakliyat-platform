@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { getCityByCode, getDistanceKm, getDistrict } from '@nakliyat/locations';
 import type { MovingRequest } from '../generated/prisma/client.js';
+import { DomainEvents } from '../events/domain-events.js';
 import { RequestStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateRequestDto } from './dto/create-request.dto.js';
@@ -28,7 +29,10 @@ type LocationFields = Pick<
 
 @Injectable()
 export class RequestsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: DomainEvents,
+  ) {}
 
   async create(customerId: string, dto: CreateRequestDto) {
     const now = new Date();
@@ -50,6 +54,7 @@ export class RequestsService {
         expiresAt: new Date(Math.min(dto.moveDate.getTime(), now.getTime() + MAX_OPEN_DAYS * DAY_MS)),
       },
     });
+    this.events.emit('request.created', { requestId: request.id });
     return toRequestResponse(request, 0);
   }
 

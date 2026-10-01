@@ -41,8 +41,9 @@ model User {
   requests      MovingRequest[]
   reviews       Review[]
   sentMessages  Message[]
-  notifications Notification[]
-  refreshTokens RefreshToken[]
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+  refreshTokens           RefreshToken[]
   auditLogs     AuditLog[]
 }
 
@@ -357,16 +358,32 @@ enum NotificationChannel {
   IN_APP
   SMS
   EMAIL
+  PUSH
 }
 
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  /// Kanal kapalı/yapılandırılmamış ya da alıcının bu kanalda adresi yok
+  SKIPPED
+}
+
+/// Kullanıcıya giden her bildirim, kanal başına bir satır.
+/// IN_APP satırları uygulama içi bildirim kutusudur; EMAIL/SMS/PUSH satırları gönderim kaydıdır.
 model Notification {
   id        String              @id @default(cuid())
   userId    String
   channel   NotificationChannel
-  type      String
+  /// Bildirim türü, bkz. src/notifications/notification-types.ts
+  type      String              @db.VarChar(50)
   title     String
   body      String              @db.Text
+  /// Uygulama içi bağlantı (ör. /hesabim/talepler/...) ve türe özel alanlar
   data      Json?
+  status    NotificationStatus  @default(PENDING)
+  attempts  Int                 @default(0)
+  lastError String?             @db.VarChar(500)
   sentAt    DateTime?
   readAt    DateTime?
   createdAt DateTime            @default(now())
@@ -374,6 +391,21 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt])
+  @@index([userId, channel, createdAt])
+  @@index([status, createdAt])
+}
+
+/// Kullanıcının kapattığı/açtığı bildirimler. Satır yoksa varsayılan (açık) geçerlidir.
+model NotificationPreference {
+  userId    String
+  type      String              @db.VarChar(50)
+  channel   NotificationChannel
+  enabled   Boolean
+  updatedAt DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, type, channel])
 }
 
 // ─── Yönetim ────────────────────────────────────────────────────

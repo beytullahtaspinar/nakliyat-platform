@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import request from 'supertest';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
+import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 
 // Talep → teklif → karşılaştırma → kabul akışının tamamı. Çalışan bir MariaDB/MySQL gerektirir.
@@ -85,6 +86,8 @@ describe('Pazaryeri akışı (e2e)', () => {
   });
 
   afterAll(async () => {
+    // Arka planda çalışan bildirim dinleyicileri bitmeden kullanıcıları silme
+    await app.get(DomainEvents).drain();
     await cleanup();
     await app.close();
   });
