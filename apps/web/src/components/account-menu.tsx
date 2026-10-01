@@ -13,6 +13,12 @@ function subscribe(onChange: () => void) {
   return () => store?.removeEventListener("change", onChange);
 }
 
+const HOME: Record<string, { href: string; label: string }> = {
+  CUSTOMER: { href: "/hesabim", label: "Hesabım" },
+  COMPANY: { href: "/firma-paneli", label: "Firma paneli" },
+  ADMIN: { href: "/yonetim", label: "Yönetim" },
+};
+
 const readRole = () => document.cookie.match(/(?:^|;\s*)nk_rol=([^;]+)/)?.[1] ?? null;
 
 /**
@@ -30,13 +36,11 @@ export function AccountMenu() {
       </Link>
     );
   }
+  const home = HOME[role] ?? HOME.CUSTOMER;
   return (
     <div className="flex items-center gap-4 text-sm font-medium">
-      <Link
-        href={role === "COMPANY" ? "/firma-paneli" : "/hesabim"}
-        className="text-zinc-700 hover:text-zinc-950 dark:text-zinc-300"
-      >
-        {role === "COMPANY" ? "Firma paneli" : "Hesabım"}
+      <Link href={home.href} className="text-zinc-700 hover:text-zinc-950 dark:text-zinc-300">
+        {home.label}
       </Link>
       <form action={logout}>
         <button type="submit" className="text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
