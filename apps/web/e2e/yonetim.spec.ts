@@ -46,10 +46,16 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await page.getByLabel("Şifre").fill(PASSWORD);
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page).toHaveURL(/\/yonetim$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Özet" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pano" })).toBeVisible();
+  // Yönetim paneli tanıtım sitesinin menüsünü ve altbilgisini göstermez
+  await expect(page.getByRole("link", { name: "Teklif al" })).toHaveCount(0);
+  await expect(page.getByRole("contentinfo")).toHaveCount(0);
   await expectAccessible(page);
 
-  await page.getByRole("link", { name: "Firmalar", exact: true }).click();
+  await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Firmalar/ }).click();
+  await page.getByRole("search").getByRole("searchbox").fill(companyName);
+  await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
+  await expectAccessible(page);
   await page.getByRole("link", { name: companyName }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(companyName);
   await expect(page.getByText("K3.34.123456")).toBeVisible();
@@ -108,4 +114,53 @@ test("yönetici kullanıcının bilgilerini ve şifresini değiştirir", async (
 test("yönetim sayfaları girişsiz açılmaz", async ({ page }) => {
   await page.goto("/yonetim/firmalar");
   await expect(page).toHaveURL(/\/giris\?next=%2Fyonetim|\/giris\?next=\/yonetim/);
+});
+
+test("roller birbirinin ekranına girmez; açık oturumla giriş sayfası hesap değiştirtir", async ({ page, request }) => {
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  const companyPhone = `0534${uniqueDigits(7)}`;
+  const reg = await request.post(`${API}/auth/register`, {
+    data: { role: "COMPANY", fullName: "Firma Yetkilisi", phone: companyPhone, password: PASSWORD },
+  });
+  expect(reg.ok()).toBeTruthy();
+
+  // Firma numarası yöneticiye çevrilemez
+  expect(() =>
+    execFileSync("node", ["dist/create-admin.js"], {
+      cwd: path.resolve(__dirname, "../../api"),
+      env: { ...process.env, ADMIN_PHONE: companyPhone, ADMIN_PASSWORD: PASSWORD },
+      stdio: "pipe",
+    }),
+  ).toThrow(/firma hesabına ait/);
+
+  await page.goto("/giris");
+  await page.getByLabel("Cep telefonu").fill(adminPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/yonetim$/);
+
+  // Yönetici oturumu açıkken firma girişi/kaydı yönetim paneline götürmez
+  await page.goto("/giris");
+  await expect(page.getByRole("heading", { level: 1, name: "Zaten giriş yapmışsın" })).toBeVisible();
+  await expectAccessible(page);
+  await page.getByRole("button", { name: "Çıkış yap ve başka hesapla devam et" }).click();
+  await expect(page).toHaveURL(/\/giris$/);
+  await page.getByLabel("Cep telefonu").fill(companyPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/firma-paneli/);
+
+  // Firma hesabı yönetim ve müşteri ekranlarını açamaz
+  await page.goto("/yonetim");
+  await expect(page).toHaveURL(/\/firma-paneli/);
+  await page.goto("/hesabim");
+  await expect(page).toHaveURL(/\/firma-paneli/);
+  const api = await request.get(`${API}/admin/summary`, {
+    headers: { Authorization: `Bearer ${(await reg.json()).accessToken}` },
+  });
+  expect(api.status()).toBe(403);
 });

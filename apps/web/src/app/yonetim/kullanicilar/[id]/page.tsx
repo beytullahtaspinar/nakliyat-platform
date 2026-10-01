@@ -3,14 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
-import { ApiError, apiFetch, type AdminUserDetail, type UserRole } from "@/lib/api";
+import { ApiError, apiFetch, type AdminUserDetail } from "@/lib/api";
 import { formatDate } from "@/lib/format";
-import { VerificationBadge } from "../../admin-bits";
+import { PageHeader, ROLE_LABELS, VerificationBadge } from "../../admin-bits";
 import { PasswordForm, UserForm } from "./user-forms";
 
 export const metadata: Metadata = { title: "Kullanıcı" };
 
-const ROLE_LABELS: Record<UserRole, string> = { CUSTOMER: "Müşteri", COMPANY: "Firma", ADMIN: "Yönetici" };
 const ACTION_LABELS: Record<string, string> = {
   "user.update": "Bilgiler güncellendi",
   "user.password_set": "Yeni şifre belirlendi",
@@ -32,18 +31,18 @@ export default async function AdminUserPage({ params }: PageProps<"/yonetim/kull
 
   return (
     <>
-      <p className="text-sm">
-        <Link href="/yonetim/kullanicilar" className="font-medium text-brand-700 hover:underline">
-          ← Kullanıcılar
-        </Link>
-      </p>
-      <h1 className="mt-3 text-2xl font-bold tracking-tight">{u.fullName}</h1>
-      <p className="text-zinc-600">
-        {ROLE_LABELS[u.role]} · kayıt {formatDate(u.createdAt)}
-        {u.role === "CUSTOMER" ? ` · ${u.requestCount} talep` : ""}
-      </p>
+      <PageHeader
+        back={{ href: "/yonetim/kullanicilar", label: "Kullanıcılar" }}
+        title={u.fullName}
+        description={
+          <>
+            {ROLE_LABELS[u.role]} · kayıt {formatDate(u.createdAt)}
+            {u.role === "CUSTOMER" ? ` · ${u.requestCount} talep` : ""}
+          </>
+        }
+      />
       {u.company && (
-        <p className="mt-2 text-sm">
+        <p className="-mt-2 mb-4 text-sm">
           Firma:{" "}
           <Link href={`/yonetim/firmalar/${u.company.id}`} className="font-medium text-brand-700 hover:underline">
             {u.company.displayName}
@@ -52,7 +51,7 @@ export default async function AdminUserPage({ params }: PageProps<"/yonetim/kull
         </p>
       )}
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <Card className="p-5">
           <h2 className="font-semibold">Hesap bilgileri</h2>
           <div className="mt-3">

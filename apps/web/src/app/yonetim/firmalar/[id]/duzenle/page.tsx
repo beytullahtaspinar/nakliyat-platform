@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
 import { updateCompany } from "@/lib/actions/admin";
 import { ApiError, apiFetch, type AdminCompanyDetail } from "@/lib/api";
 import { cityOptions } from "@/lib/company";
-import { ProfileForm } from "@/app/firma-paneli/profile-form";
+import { PageHeader } from "../../../admin-bits";
+import { ProfileForm } from "@/app/(site)/firma-paneli/profile-form";
 
 export const metadata: Metadata = { title: "Firma bilgilerini düzenle" };
 
@@ -22,16 +22,12 @@ export default async function AdminCompanyEditPage({ params }: PageProps<"/yonet
 
   return (
     <>
-      <p className="text-sm">
-        <Link href={`/yonetim/firmalar/${company.id}`} className="font-medium text-brand-700 hover:underline">
-          ← {company.displayName}
-        </Link>
-      </p>
-      <h1 className="mt-3 text-2xl font-bold tracking-tight">Firma bilgilerini düzenle</h1>
-      <p className="mt-1 text-sm text-zinc-600">
-        Yönetimden yapılan değişiklikler firmanın doğrulama durumunu değiştirmez ve karar geçmişine yazılır.
-      </p>
-      <Card className="mt-6 p-6">
+      <PageHeader
+        back={{ href: `/yonetim/firmalar/${company.id}`, label: company.displayName }}
+        title="Firma bilgilerini düzenle"
+        description="Yönetimden yapılan değişiklikler firmanın doğrulama durumunu değiştirmez ve karar geçmişine yazılır."
+      />
+      <Card className="max-w-3xl p-6">
         <ProfileForm cities={cityOptions} profile={company} action={updateCompany.bind(null, company.id)} />
       </Card>
     </>

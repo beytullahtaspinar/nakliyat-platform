@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
 import { ApiError, apiFetch, type AdminCompanyDetail, type CompanyDocument } from "@/lib/api";
 import { formatDate, formatPhone } from "@/lib/format";
-import { VERIFICATION, VerificationBadge } from "../../admin-bits";
+import { PageHeader, VERIFICATION, VerificationBadge } from "../../admin-bits";
 import { CompanyDecision } from "./company-decision";
 
 export const metadata: Metadata = { title: "Firma inceleme" };
@@ -34,20 +34,14 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
 
   return (
     <>
-      <p className="text-sm">
-        <Link href="/yonetim/firmalar" className="font-medium text-brand-700 hover:underline">
-          ← Firmalar
-        </Link>
-      </p>
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{c.displayName}</h1>
-          <p className="text-zinc-600">{c.legalName}</p>
-        </div>
-        <VerificationBadge status={c.verificationStatus} />
-      </div>
+      <PageHeader
+        back={{ href: "/yonetim/firmalar", label: "Firmalar" }}
+        title={c.displayName}
+        description={c.legalName}
+        actions={<VerificationBadge status={c.verificationStatus} />}
+      />
 
-      <div className="mt-6 grid gap-4 md:grid-cols-[1fr_20rem]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-4">
           <Card className="p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">

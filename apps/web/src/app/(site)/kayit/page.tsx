@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getCurrentUser, homeFor, safeNext } from "@/lib/session";
+import { getCurrentUser, safeNext } from "@/lib/session";
+import { SignedInNotice } from "@/components/signed-in-notice";
 import { RegisterForm } from "./register-form";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default async function RegisterPage({ searchParams }: PageProps<"/kayit">
   const next = safeNext(params.next as string | undefined);
   const role = params.rol === "firma" ? "COMPANY" : "CUSTOMER";
   const user = await getCurrentUser();
-  if (user) redirect(next ?? homeFor(user.role));
+  if (user) return <SignedInNotice user={user} returnTo={role === "COMPANY" ? "/kayit?rol=firma" : "/kayit"} />;
 
   const tab = (active: boolean) =>
     `flex-1 rounded-md px-3 py-2 text-center text-sm font-medium ${

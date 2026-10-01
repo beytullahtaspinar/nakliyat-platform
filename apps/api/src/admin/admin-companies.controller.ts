@@ -17,10 +17,12 @@ import { Roles } from '../common/decorators/roles.decorator.js';
 import { toProfile, WITH_CITIES } from '../companies/companies.service.js';
 import { UpdateCompanyProfileDto } from '../companies/dto/company-profile.dto.js';
 import { assertCityCodes } from '../common/utils/locations.js';
+import type { Prisma } from '../generated/prisma/client.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { UserRole, VerificationStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
+import { phoneDigits } from './dto/admin-lists.dto.js';
 
 @ApiTags('Admin: firmalar')
 @ApiBearerAuth()
@@ -33,12 +35,27 @@ export class AdminCompaniesController {
   ) {}
 
   @Get()
-  async list(@Query() { status, page, limit }: ListCompaniesDto) {
-    const where = { deletedAt: null, ...(status && { verificationStatus: status }) };
+  async list(@Query() { status, q, page, limit }: ListCompaniesDto) {
+    const digits = phoneDigits(q);
+    const where: Prisma.CompanyWhereInput = {
+      deletedAt: null,
+      ...(status && { verificationStatus: status }),
+      ...(q && {
+        OR: [
+          { displayName: { contains: q } },
+          { legalName: { contains: q } },
+          { taxNumber: { contains: q } },
+          { k3LicenseNumber: { contains: q } },
+          { owner: { fullName: { contains: q } } },
+          ...(digits ? [{ owner: { phone: { contains: digits } } }] : []),
+        ],
+      }),
+    };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.company.findMany({
         where,
-        orderBy: { createdAt: 'asc' },
+        // Onay kuyruğunda en eski başvuru önce, diğer listelerde en yeni kayıt önce
+        orderBy: { createdAt: status === VerificationStatus.PENDING ? 'asc' : 'desc' },
         skip: (page - 1) * limit,
         take: limit,
         include: { ...WITH_CITIES, owner: { select: { fullName: true, phone: true, email: true } } },

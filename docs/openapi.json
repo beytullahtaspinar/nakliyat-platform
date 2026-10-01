@@ -872,6 +872,15 @@
                 "REJECTED"
               ]
             }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Firma adı, unvan, vergi no veya yetkili telefonunda arar",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1064,6 +1073,43 @@
                 "CANCELLED",
                 "EXPIRED"
               ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Müşteri adı veya telefonunda arar",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: talepler"
+        ]
+      }
+    },
+    "/v1/admin/requests/{id}": {
+      "get": {
+        "operationId": "AdminRequestsController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
             }
           }
         ],

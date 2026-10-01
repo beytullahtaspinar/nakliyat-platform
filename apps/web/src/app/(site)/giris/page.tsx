@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser, homeFor, safeNext } from "@/lib/session";
+import { SignedInNotice } from "@/components/signed-in-notice";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -11,7 +12,12 @@ export const metadata: Metadata = {
 export default async function LoginPage({ searchParams }: PageProps<"/giris">) {
   const next = safeNext((await searchParams).next as string | undefined);
   const user = await getCurrentUser();
-  if (user) redirect(next ?? homeFor(user.role));
+  if (user) {
+    // Yalnızca kişinin kendi alanına dönüş otomatik; başka rolün sayfası istenmişse hesap değişikliği sorulur
+    const home = homeFor(user.role);
+    if (next && (next === home || next.startsWith(`${home}/`))) redirect(next);
+    return <SignedInNotice user={user} returnTo={next ? `/giris?next=${encodeURIComponent(next)}` : "/giris"} />;
+  }
 
   return (
     <main className="mx-auto w-full max-w-sm flex-1 px-4 py-12">
