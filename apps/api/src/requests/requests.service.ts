@@ -50,7 +50,7 @@ export class RequestsService {
         expiresAt: new Date(Math.min(dto.moveDate.getTime(), now.getTime() + MAX_OPEN_DAYS * DAY_MS)),
       },
     });
-    return toResponse(request, 0);
+    return toRequestResponse(request, 0);
   }
 
   async list(customerId: string, { page, limit }: PaginationDto) {
@@ -66,7 +66,7 @@ export class RequestsService {
       this.prisma.movingRequest.count({ where }),
     ]);
     return {
-      items: items.map(({ _count, ...r }) => toResponse(r, _count.quotes)),
+      items: items.map(({ _count, ...r }) => toRequestResponse(r, _count.quotes)),
       total,
       page,
       limit,
@@ -75,7 +75,7 @@ export class RequestsService {
 
   async get(customerId: string, id: string) {
     const { _count, ...request } = await this.findOwned(customerId, id);
-    return toResponse(request, _count.quotes);
+    return toRequestResponse(request, _count.quotes);
   }
 
   async update(customerId: string, id: string, dto: UpdateRequestDto) {
@@ -99,7 +99,7 @@ export class RequestsService {
         ...estimateMove({ ...merged, distanceKm }),
       },
     });
-    return toResponse(request, 0);
+    return toRequestResponse(request, 0);
   }
 
   async cancel(customerId: string, id: string) {
@@ -111,7 +111,7 @@ export class RequestsService {
       where: { id },
       data: { status: RequestStatus.CANCELLED },
     });
-    return toResponse(request, _count.quotes);
+    return toRequestResponse(request, _count.quotes);
   }
 
   /** Başkasının talebi de "bulunamadı" döner; talep kimlikleri tahmin edilerek bilgi sızdırılamaz. */
@@ -149,7 +149,7 @@ export class RequestsService {
   }
 }
 
-function toResponse(request: MovingRequest, quoteCount: number) {
+export function toRequestResponse(request: MovingRequest, quoteCount: number) {
   const from = getCityByCode(request.fromCityCode);
   const to = getCityByCode(request.toCityCode);
   const { deletedAt: _deletedAt, ...rest } = request;

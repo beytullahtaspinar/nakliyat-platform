@@ -53,6 +53,6 @@ export function safeNext(value: FormDataEntryValue | string | null | undefined):
 
 export function homeFor(role: UserRole): string {
   if (role === "COMPANY") return "/firma-paneli";
-  if (role === "ADMIN") return "/";
+  if (role === "ADMIN") return "/yonetim";
   return "/hesabim";
 }

@@ -45,6 +45,36 @@ export class AdminCompaniesController {
     };
   }
 
+  /** İnceleme ekranı: firma, sahibi, belgeleri ve geçmiş doğrulama kararları */
+  @Get(':id')
+  async detail(@Param('id') id: string) {
+    const company = await this.prisma.company.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        ...WITH_CITIES,
+        owner: { select: { fullName: true, phone: true, email: true, createdAt: true } },
+        documents: { orderBy: { createdAt: 'desc' } },
+        _count: { select: { quotes: true, bookings: true } },
+      },
+    });
+    if (!company) throw new NotFoundException('Firma bulunamadı');
+    const history = await this.prisma.auditLog.findMany({
+      where: { entityType: 'Company', entityId: id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: { action: true, details: true, createdAt: true, actor: { select: { fullName: true } } },
+    });
+    const { owner, documents, _count, ...rest } = company;
+    return {
+      ...toProfile(rest),
+      owner,
+      documents,
+      quoteCount: _count.quotes,
+      bookingCount: _count.bookings,
+      history,
+    };
+  }
+
   @Post(':id/verify')
   @HttpCode(HttpStatus.OK)
   verify(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
