@@ -1,21 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card } from "@/components/ui/card";
+import { Badge, Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
-import { ApiError, apiFetch, type AdminCompanyDetail, type CompanyDocument } from "@/lib/api";
+import { ApiError, apiFetch, type AdminCompanyDetail } from "@/lib/api";
+import {
+  DOCUMENT_LABELS,
+  DOCUMENT_TYPES,
+  REQUIREMENT_STATES,
+  documentState,
+  formatBytes,
+  formatDay,
+} from "@/lib/company-documents";
 import { formatDate, formatPhone } from "@/lib/format";
 import { PageHeader, VERIFICATION, VerificationBadge } from "../../admin-bits";
 import { CompanyDecision } from "./company-decision";
+import { DocumentReview } from "./document-review";
 
 export const metadata: Metadata = { title: "Firma inceleme" };
 
-const DOCUMENT_LABELS: Record<CompanyDocument["type"], string> = {
-  K3_LICENSE: "K3 yetki belgesi",
-  TAX_CERTIFICATE: "Vergi levhası",
-  TRADE_REGISTRY: "Ticaret sicil gazetesi",
-  INSURANCE: "Sigorta poliçesi",
-  OTHER: "Diğer belge",
+const HISTORY_LABELS: Record<string, string> = {
+  "company.update": "Bilgiler yönetimden düzenlendi",
+  "company.document.approve": "Belge onaylandı",
+  "company.document.reject": "Belge reddedildi",
 };
 
 async function load(token: string, id: string) {
@@ -31,6 +38,7 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
   const { token } = await getAdminContext();
   const { id } = await params;
   const c = await load(token, id);
+  const missing = c.requirements.filter((r) => r.state !== "VERIFIED").map((r) => DOCUMENT_LABELS[r.type]);
 
   return (
     <>
@@ -67,24 +75,61 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
           </Card>
 
           <Card className="p-5">
-            <h2 className="font-semibold">Yüklenen belgeler</h2>
-            {c.documents.length === 0 ? (
-              <p className="mt-2 text-sm text-zinc-600">
-                Firma henüz belge yüklemedi. Belge yükleme özelliği gelene kadar K3 ve vergi numarasını resmî sorgu
-                sayfalarından kontrol edin.
-              </p>
-            ) : (
-              <ul className="mt-2 space-y-1 text-sm">
-                {c.documents.map((d) => (
-                  <li key={d.id} className="flex flex-wrap justify-between gap-2">
-                    <a href={d.fileUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-700 hover:underline">
-                      {DOCUMENT_LABELS[d.type]}
-                    </a>
-                    <span className="text-zinc-500">{formatDate(d.createdAt)}</span>
+            <h2 className="font-semibold">Belgeler</h2>
+            <p className="mt-1 text-sm text-zinc-600">
+              Her belgeyi açıp resmî kayıtla karşılaştırın. Zorunlu üç belge onaylanmadan firma onaylanamaz.
+            </p>
+            <ul className="mt-3 space-y-3">
+              {DOCUMENT_TYPES.map((spec) => {
+                const docs = c.documents.filter((d) => d.type === spec.type);
+                const requirement = c.requirements.find((r) => r.type === spec.type);
+                if (!requirement && docs.length === 0) return null;
+                return (
+                  <li key={spec.type} className="rounded-lg border border-zinc-200 p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm font-semibold">{spec.label}</h3>
+                      {requirement && (
+                        <Badge tone={REQUIREMENT_STATES[requirement.state].tone} className="ml-auto">
+                          {REQUIREMENT_STATES[requirement.state].label}
+                        </Badge>
+                      )}
+                    </div>
+                    {docs.length === 0 ? (
+                      <p className="mt-1 text-sm text-zinc-500">Yüklenmedi.</p>
+                    ) : (
+                      <ul className="mt-2 space-y-3">
+                        {docs.map((d) => {
+                          const state = REQUIREMENT_STATES[documentState(d)];
+                          return (
+                            <li key={d.id} className="space-y-2 border-t border-zinc-100 pt-2 text-sm first:border-0 first:pt-0">
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <a
+                                    href={d.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="break-all font-medium text-brand-700 hover:underline"
+                                  >
+                                    {d.fileName}
+                                  </a>
+                                  <p className="text-zinc-500">
+                                    {formatDate(d.createdAt)} · {formatBytes(d.sizeBytes)}
+                                    {d.validUntil && ` · Geçerlilik: ${formatDay(d.validUntil)}`}
+                                  </p>
+                                  {d.reviewNote && <p className="text-zinc-700">Ret gerekçesi: {d.reviewNote}</p>}
+                                </div>
+                                {(docs.length > 1 || !requirement) && <Badge tone={state.tone}>{state.label}</Badge>}
+                              </div>
+                              <DocumentReview companyId={c.id} documentId={d.id} status={d.status} />
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </li>
-                ))}
-              </ul>
-            )}
+                );
+              })}
+            </ul>
           </Card>
 
           {c.history.length > 0 && (
@@ -96,9 +141,8 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
                     <span className="font-medium">
                       {h.details?.to
                         ? VERIFICATION[h.details.to].label
-                        : h.action === "company.update"
-                          ? "Bilgiler yönetimden düzenlendi"
-                          : h.action}
+                        : (HISTORY_LABELS[h.action] ?? h.action)}
+                      {h.details?.type && `: ${DOCUMENT_LABELS[h.details.type]}`}
                     </span>{" "}
                     <span className="text-zinc-500">
                       · {h.actor.fullName} · {formatDate(h.createdAt)}
@@ -143,7 +187,7 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
               <p className="mt-2 text-sm text-zinc-700">Son ret gerekçesi: {c.verificationNote}</p>
             )}
             <div className="mt-3">
-              <CompanyDecision companyId={c.id} status={c.verificationStatus} />
+              <CompanyDecision companyId={c.id} status={c.verificationStatus} missing={missing} />
             </div>
           </Card>
         </div>

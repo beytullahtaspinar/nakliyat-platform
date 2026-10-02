@@ -8,7 +8,7 @@ export function Card({ className = "", ...props }: ComponentProps<"div">) {
   return <div {...props} className={`${cardClass} ${className}`} />;
 }
 
-type Tone = "neutral" | "brand" | "accent" | "success" | "warning";
+type Tone = "neutral" | "brand" | "accent" | "success" | "warning" | "danger";
 
 const tones: Record<Tone, string> = {
   neutral: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
@@ -16,6 +16,7 @@ const tones: Record<Tone, string> = {
   accent: "bg-accent-50 text-accent-800 dark:bg-accent-950 dark:text-accent-200",
   success: "bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200",
   warning: "bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
+  danger: "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200",
 };
 
 export function Badge({ tone = "neutral", className = "", ...props }: ComponentProps<"span"> & { tone?: Tone }) {

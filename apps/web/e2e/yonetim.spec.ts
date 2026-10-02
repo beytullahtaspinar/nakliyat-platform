@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { uploadRequiredDocuments } from "./belgeler";
 
 // Yönetim: bekleyen firmayı inceler ve onaylar. Admin hesabı, canlıdaki gibi komut satırından açılır.
 const API = `http://localhost:${process.env.API_PORT ?? 4000}/v1`;
@@ -40,6 +41,7 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
     },
   });
   expect(profile.ok()).toBeTruthy();
+  await uploadRequiredDocuments(request, accessToken);
 
   await page.goto("/giris");
   await page.getByLabel("Cep telefonu").fill(adminPhone);
@@ -60,6 +62,15 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(companyName);
   await expect(page.getByText("K3.34.123456")).toBeVisible();
   await expectAccessible(page);
+
+  // Zorunlu belgeler onaylanmadan firma onaylanamaz
+  await expect(page.getByRole("button", { name: "Firmayı onayla" })).toHaveCount(0);
+  await expect(page.getByText(/Onay için önce şu belgeler onaylanmalı/)).toBeVisible();
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole("button", { name: "Onayla", exact: true }).first().click();
+    await page.getByRole("button", { name: "Evet, onayla" }).click();
+    await expect(page.getByRole("button", { name: "Onayla", exact: true })).toHaveCount(2 - i);
+  }
 
   await page.getByRole("button", { name: "Firmayı onayla" }).click();
   await page.getByRole("button", { name: "Evet, onayla" }).click();

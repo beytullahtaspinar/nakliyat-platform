@@ -35,7 +35,8 @@ export async function saveCompanyProfile(
     return failure(err, "Firma bilgileri kaydedilemedi.");
   }
   revalidatePath("/firma-paneli", "layout");
-  if (isNew) redirect("/firma-paneli");
+  // Yeni firma doğrulama için belgelerini yüklesin
+  if (isNew) redirect("/firma-paneli/belgeler");
   return { saved: true };
 }
 
