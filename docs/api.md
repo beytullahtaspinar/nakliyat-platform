@@ -53,7 +53,7 @@ Talep ve firma kayıtlarında il **plaka koduyla** (`"34"`), ilçe **adres koduy
 
 | Durum | Yöntem | Yol | Kim | Açıklama |
 |---|---|---|---|---|
-| ✅ | POST | `/requests` | Müşteri | Talep oluştur. İl-ilçe uyumu ve tarih (en erken yarın, en geç 1 yıl) kontrol edilir. Sistem m³, ekip, süre tahmini ve şehirler arası ise karayolu mesafesi ekler. Teklif toplama süresi taşınma tarihine kadar, en fazla 30 gün. |
+| ✅ | POST | `/requests` | Müşteri | Talep oluştur. İl-ilçe uyumu ve tarih (en erken yarın, en geç 1 yıl) kontrol edilir. Sistem m³, ekip, süre tahmini ve şehirler arası ise karayolu mesafesi ekler. İsteğe bağlı `fromLat/fromLng/toLat/toLng` (haritadaki işaret, Türkiye içi) gelirse iki nokta arası kamyon yolu `routeKm/routeMinutes` bir kez hesaplanır (docs/harita.md). Teklif toplama süresi taşınma tarihine kadar, en fazla 30 gün. |
 | ✅ | GET | `/requests` | Müşteri | Kendi talepleri |
 | ✅ | GET | `/requests/:id` | Müşteri | Talep detayı |
 | ✅ | PATCH | `/requests/:id` | Müşteri | Teklif gelmeden önce düzenleme |

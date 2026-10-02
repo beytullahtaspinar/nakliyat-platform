@@ -2415,6 +2415,15 @@
           "fromHasElevator": {
             "type": "boolean"
           },
+          "fromLat": {
+            "type": "number",
+            "example": 40.9876,
+            "description": "Haritada işaretlenen çıkış noktası (enlem); boylamla birlikte gönderilir"
+          },
+          "fromLng": {
+            "type": "number",
+            "example": 29.0275
+          },
           "toCityCode": {
             "type": "string",
             "example": "06"
@@ -2433,6 +2442,14 @@
           },
           "toHasElevator": {
             "type": "boolean"
+          },
+          "toLat": {
+            "type": "number",
+            "example": 39.9208
+          },
+          "toLng": {
+            "type": "number",
+            "example": 32.8541
           },
           "homeType": {
             "type": "string",
@@ -2528,6 +2545,15 @@
           "fromHasElevator": {
             "type": "boolean"
           },
+          "fromLat": {
+            "type": "number",
+            "example": 40.9876,
+            "description": "Haritada işaretlenen çıkış noktası (enlem); boylamla birlikte gönderilir"
+          },
+          "fromLng": {
+            "type": "number",
+            "example": 29.0275
+          },
           "toCityCode": {
             "type": "string",
             "example": "06"
@@ -2546,6 +2572,14 @@
           },
           "toHasElevator": {
             "type": "boolean"
+          },
+          "toLat": {
+            "type": "number",
+            "example": 39.9208
+          },
+          "toLng": {
+            "type": "number",
+            "example": 32.8541
           },
           "homeType": {
             "type": "string",

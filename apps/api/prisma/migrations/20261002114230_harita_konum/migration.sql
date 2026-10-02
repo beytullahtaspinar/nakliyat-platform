@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE `MovingRequest` ADD COLUMN `fromLat` DOUBLE NULL,
+    ADD COLUMN `fromLng` DOUBLE NULL,
+    ADD COLUMN `routeKm` INTEGER NULL,
+    ADD COLUMN `routeMinutes` INTEGER NULL,
+    ADD COLUMN `toLat` DOUBLE NULL,
+    ADD COLUMN `toLng` DOUBLE NULL;

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Checkbox, Field, FormError, Input, SubmitButton, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
+import { LocationField } from "@/components/map/location-field";
 import { MediaPicker } from "@/components/media/media-picker";
 import { useMediaPicker } from "@/components/media/use-media-picker";
 import { createRequest } from "@/lib/actions/requests";
@@ -162,7 +163,9 @@ function AddressFields({
 }) {
   const [cityCode, setCityCode] = useState(initialCity);
   const [district, setDistrict] = useState(initialDistrict);
+  const [address, setAddress] = useState("");
   const city = cities.find((c) => c.code === cityCode);
+  const districtName = city?.districts.find((d) => d.slug === district)?.name;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -211,8 +214,23 @@ function AddressFields({
         hint="Mahalle, cadde/sokak, bina ve daire no."
         className="sm:col-span-2"
       >
-        <Input name={`${prefix}Address`} autoComplete={prefix === "from" ? "street-address" : "off"} minLength={5} maxLength={300} required />
+        <Input
+          name={`${prefix}Address`}
+          autoComplete={prefix === "from" ? "street-address" : "off"}
+          minLength={5}
+          maxLength={300}
+          required
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
       </Field>
+      <LocationField
+        // İl veya ilçe değişince eski işaret geçersiz: bileşen sıfırlanır
+        key={`${cityCode}-${district}`}
+        prefix={prefix}
+        address={address}
+        area={[districtName, city?.name].filter(Boolean).join(", ")}
+      />
       <Field label="Kat">
         <select name={`${prefix}Floor`} required defaultValue="" className={inputClass}>
           <option value="" disabled>
