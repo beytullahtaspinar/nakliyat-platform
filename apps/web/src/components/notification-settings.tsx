@@ -25,7 +25,7 @@ export function NotificationSettings({
     <form {...formProps} className="space-y-6">
       <Field
         label="Bildirim e-postası"
-        hint="Bildirimler bu adrese gider. Boş bırakırsan yalnızca hesabındaki bildirimleri görürsün."
+        hint="Bildirimler bu adrese gider. Adresi değiştirirsen yeni adresi doğrulaman gerekir."
       >
         <Input
           name="email"

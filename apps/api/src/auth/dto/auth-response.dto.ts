@@ -8,6 +8,9 @@ export class AuthUserDto {
   @ApiProperty() phone: string;
   @ApiPropertyOptional({ type: String, nullable: true }) email: string | null;
   @ApiProperty() phoneVerified: boolean;
+  @ApiProperty() emailVerified: boolean;
+  @ApiProperty({ description: 'Talep yayını, teklif verme ve teklif kabulü için gereken doğrulamalar tamam' })
+  verified: boolean;
 }
 
 export class AuthTokensDto {

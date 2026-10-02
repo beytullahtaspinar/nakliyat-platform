@@ -2,12 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type AuthResponse, type MovingRequest } from "@/lib/api";
-import { getAccessToken, getCurrentUser, saveSession } from "@/lib/session";
+import { getAccessToken, getCurrentUser, saveSession, verificationPath } from "@/lib/session";
 
 export type RequestFormState = {
   error?: string;
   /** Formda fotoğraf/video varsa yönlendirme yapılmaz; tarayıcı dosyaları bu talebe yükleyip kendisi yönlendirir */
   createdId?: string;
+  /** Hesap doğrulanmadığı için talep taslak kaldı; yüklemeden sonra doğrulama ekranına gidilir */
+  needsVerification?: boolean;
 };
 
 const text = (formData: FormData, name: string) => String(formData.get(name) ?? "").trim();
@@ -85,8 +87,10 @@ export async function createRequest(
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Talep oluşturulamadı, lütfen tekrar deneyin." };
   }
-  if (formData.get("withMedia") === "1") return { createdId: created.id };
-  redirect(`/hesabim?yeni=${created.id}`);
+  const needsVerification = created.status === "DRAFT";
+  if (formData.get("withMedia") === "1") return { createdId: created.id, needsVerification };
+  const done = `/hesabim?yeni=${created.id}`;
+  redirect(needsVerification ? verificationPath(done) : done);
 }
 
 async function customerToken(): Promise<string> {

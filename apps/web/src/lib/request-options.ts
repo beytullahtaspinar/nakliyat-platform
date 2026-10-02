@@ -34,7 +34,7 @@ export const VEHICLE_LABELS: Record<string, string> = {
 };
 
 export const REQUEST_STATUS: Record<RequestStatus, { label: string; className: string }> = {
-  DRAFT: { label: "Taslak", className: "bg-zinc-100 text-zinc-700" },
+  DRAFT: { label: "Doğrulama bekliyor", className: "bg-amber-50 text-amber-900" },
   OPEN: { label: "Teklif bekliyor", className: "bg-blue-50 text-blue-800" },
   BOOKED: { label: "Firma seçildi", className: "bg-green-50 text-green-800" },
   COMPLETED: { label: "Tamamlandı", className: "bg-green-50 text-green-800" },

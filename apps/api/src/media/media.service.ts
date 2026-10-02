@@ -148,7 +148,8 @@ export class MediaService {
       select: { status: true },
     });
     if (!request) throw new NotFoundException('Talep bulunamadı');
-    if (request.status !== RequestStatus.OPEN) {
+    // Taslak: hesap doğrulaması bekleyen talep (bkz. VerificationService)
+    if (request.status !== RequestStatus.OPEN && request.status !== RequestStatus.DRAFT) {
       throw new ConflictException('Yalnızca açık taleplere fotoğraf ve video eklenebilir');
     }
   }

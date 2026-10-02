@@ -3,6 +3,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -11,6 +12,7 @@ import type { User } from '../generated/prisma/client.js';
 import { UserRole, UserStatus } from '../generated/prisma/enums.js';
 import { normalizeTrMobile } from '../common/utils/phone.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { VerificationService } from '../verification/verification.service.js';
 import type { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
@@ -27,9 +29,12 @@ const hashToken = (token: string) => createHash('sha256').update(token).digest('
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly verification: VerificationService,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
@@ -57,7 +62,11 @@ export class AuthService {
         passwordHash: await bcrypt.hash(dto.password, BCRYPT_ROUNDS),
       },
     });
-    return { user: toAuthUser(user), ...(await this.issueTokens(user)) };
+    // İlk doğrulama kodu kayıtla birlikte gider; gönderilemezse kullanıcı doğrulama ekranından yeniden ister
+    if (email) {
+      await this.verification.sendEmailCode(user.id).catch(() => this.logger.warn('Kayıt sonrası e-posta kodu gönderilemedi'));
+    }
+    return { user: this.toAuthUser(user), ...(await this.issueTokens(user)) };
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
@@ -72,7 +81,7 @@ export class AuthService {
     if (user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('Hesabınız askıya alınmış');
     }
-    return { user: toAuthUser(user), ...(await this.issueTokens(user)) };
+    return { user: this.toAuthUser(user), ...(await this.issueTokens(user)) };
   }
 
   /** Yenileme anahtarını tek kullanımlık olarak döndürür (rotation). */
@@ -110,7 +119,7 @@ export class AuthService {
   async me(userId: string): Promise<AuthUserDto> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.deletedAt) throw new UnauthorizedException();
-    return toAuthUser(user);
+    return this.toAuthUser(user);
   }
 
   private async issueTokens(user: Pick<User, 'id' | 'role'>): Promise<AuthTokensDto> {
@@ -133,20 +142,22 @@ export class AuthService {
     });
   }
 
+  private toAuthUser(user: User): AuthUserDto {
+    return {
+      id: user.id,
+      role: user.role,
+      fullName: user.fullName,
+      phone: user.phone,
+      email: user.email,
+      phoneVerified: user.phoneVerifiedAt !== null,
+      emailVerified: user.emailVerifiedAt !== null,
+      verified: this.verification.isComplete(user),
+    };
+  }
+
   private requirePhone(input: string): string {
     const phone = normalizeTrMobile(input);
     if (!phone) throw new BadRequestException('Geçerli bir cep telefonu numarası girin');
     return phone;
   }
-}
-
-function toAuthUser(user: User): AuthUserDto {
-  return {
-    id: user.id,
-    role: user.role,
-    fullName: user.fullName,
-    phone: user.phone,
-    email: user.email,
-    phoneVerified: user.phoneVerifiedAt !== null,
-  };
 }

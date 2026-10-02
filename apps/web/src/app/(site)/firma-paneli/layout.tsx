@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Card } from "@/components/ui/card";
 import type { CompanyProfile } from "@/lib/api";
 import { cityOptions, getCompanyContext } from "@/lib/company";
+import { VerifyNotice } from "@/components/verify-notice";
 import { PanelNav } from "./panel-nav";
 import { ProfileForm } from "./profile-form";
 
@@ -36,6 +37,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
           <h1 className="text-2xl font-bold tracking-tight">{profile.displayName}</h1>
         </div>
       </div>
+      <VerifyNotice user={user} returnTo="/firma-paneli" />
       <VerificationBanner profile={profile} />
       <PanelNav />
       <div className="mt-6">{children}</div>

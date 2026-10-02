@@ -34,11 +34,11 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
     started.current = id;
     setUploadState("uploading");
     void picker.upload(id).then(({ failed, error }) => {
-      router.push(
-        failed || error ? `/hesabim/talepler/${encodeURIComponent(id)}?medya=eksik` : `/hesabim?yeni=${encodeURIComponent(id)}`,
-      );
+      const done =
+        failed || error ? `/hesabim/talepler/${encodeURIComponent(id)}?medya=eksik` : `/hesabim?yeni=${encodeURIComponent(id)}`;
+      router.push(state.needsVerification ? `/dogrulama?next=${encodeURIComponent(done)}` : done);
     });
-  }, [state.createdId, picker, router]);
+  }, [state.createdId, state.needsVerification, picker, router]);
 
   const busy = pending || uploadState === "uploading";
   return (
@@ -270,8 +270,8 @@ function AccountFields() {
       </Field>
       {account === "register" && (
         <>
-          <Field label="E-posta (isteğe bağlı)">
-            <Input name="email" type="email" autoComplete="email" />
+          <Field label="E-posta" hint="Talebini yayınlamadan önce bu adrese bir doğrulama kodu göndereceğiz.">
+            <Input name="email" type="email" autoComplete="email" maxLength={191} required />
           </Field>
           <Checkbox
             name="kvkk"
