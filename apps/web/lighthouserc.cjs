@@ -13,6 +13,9 @@ const PUBLIC_PAGES = [
   "/istanbul-evden-eve-nakliyat",
   "/istanbul-kadikoy-evden-eve-nakliyat",
   "/kvkk-aydinlatma-metni",
+  "/nasil-calisir",
+  "/firmalar-icin",
+  "/hakkimizda",
 ];
 const NOINDEX_PAGES = ["/talep-olustur", "/giris"];
 const BASE = "http://127.0.0.1:3000";
