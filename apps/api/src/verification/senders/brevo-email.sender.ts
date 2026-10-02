@@ -1,5 +1,5 @@
 import type { ConfigService } from '@nestjs/config';
-import { failure, formatCode, type CodeRecipient, type CodeSender } from './code-sender.js';
+import { failure, type CodeRecipient, type CodeSender } from './code-sender.js';
 
 const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
 const TIMEOUT_MS = 10_000;
@@ -8,14 +8,16 @@ const escape = (value: string) =>
   value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 /**
- * Kod e-postası. Konu satırında kod yer alır: Gmail ve iOS Mail bunu tanıyıp
- * "Kodu kopyala" düğmesini ve klavye önerisini kendileri gösterir.
+ * Kod e-postası. Kod boşluksuz yazılır: seçip kopyalayınca hane kaybolmaz. Konu satırında da
+ * kod var; Gmail ve iOS Mail bunu tanıyıp kendi "Kodu kopyala" düğmesini gösterir.
+ * E-postada JavaScript çalışmadığı için kopyalama düğmesi yerine kodu ekrana kendisi yazan
+ * bir bağlantı var (/dogrulama?kod=...).
  */
 export function renderCodeEmail(code: string, recipientName: string, webUrl: string) {
-  const pretty = formatCode(code);
   const firstName = recipientName.trim().split(/\s+/)[0] ?? '';
   const host = new URL(webUrl).host;
-  const subject = `Doğrulama kodun: ${pretty}`;
+  const fillLink = new URL(`/dogrulama?kod=${code}`, webUrl).toString();
+  const subject = `Doğrulama kodun: ${code}`;
   const html = `<!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(subject)}</title></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Inter,Arial,Helvetica,sans-serif;color:#18181b">
@@ -27,7 +29,8 @@ export function renderCodeEmail(code: string, recipientName: string, webUrl: str
 <p style="margin:0 0 8px;font-size:15px">Merhaba ${escape(firstName)},</p>
 <h1 style="margin:0 0 12px;font-size:20px;color:#10432f">Doğrulama kodu</h1>
 <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b">Bu kod 10 dakika geçerlidir ve yalnızca bir kez kullanılabilir. Kodu kimseyle paylaşma; ekibimiz kodu asla sormaz.</p>
-<p style="margin:0 0 28px;font-size:34px;font-weight:700;letter-spacing:4px;color:#18181b">${pretty}</p>
+<p style="margin:0 0 24px;font-size:34px;font-weight:700;letter-spacing:6px;color:#18181b;font-family:'Courier New',Courier,monospace;-webkit-user-select:all;user-select:all">${code}</p>
+<a href="${escape(fillLink)}" style="display:inline-block;margin:0 0 28px;background:#136544;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 22px;border-radius:8px">Kodu otomatik gir</a>
 </td></tr>
 <tr><td style="padding:20px 24px;border-top:1px solid #e4e4e7;font-size:12px;line-height:1.6;color:#71717a">
 Bu kodu sen istemediysen e-postayı yok sayabilirsin; hesabında bir değişiklik yapılmaz. ${escape(host)}
@@ -39,7 +42,9 @@ Bu kodu sen istemediysen e-postayı yok sayabilirsin; hesabında bir değişikli
   const text = [
     `Merhaba ${firstName},`,
     '',
-    `Doğrulama kodun: ${pretty}`,
+    `Doğrulama kodun: ${code}`,
+    '',
+    `Kodu otomatik girmek için: ${fillLink}`,
     '',
     'Bu kod 10 dakika geçerlidir ve yalnızca bir kez kullanılabilir. Kodu kimseyle paylaşma.',
     'Bu kodu sen istemediysen e-postayı yok sayabilirsin.',

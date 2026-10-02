@@ -25,7 +25,24 @@ test("yeni kullanıcı e-posta kodunu girer ve hesabına geçer", async ({ page 
   await page.getByLabel("Doğrulama kodu").fill(wrong);
   await expect(page.getByText("Kod hatalı. 4 deneme hakkın kaldı.")).toBeVisible();
 
-  await page.getByLabel("Doğrulama kodu").fill(TEST_CODE);
+  // E-postadan boşluklu kopyalanan kod da tam yapışır ("424 242")
+  await page.getByLabel("Doğrulama kodu").fill(`${TEST_CODE.slice(0, 3)} ${TEST_CODE.slice(3)}`);
   await expect(page).toHaveURL(/\/hesabim$/);
   await expect(page.getByText("hesabını doğrula", { exact: false })).toHaveCount(0);
+});
+
+// E-postadaki "Kodu otomatik gir" bağlantısı kodu yazıp kendiliğinden gönderir
+test("e-postadaki bağlantı kodu otomatik girer", async ({ page }) => {
+  const phone = `0537${String(Date.now()).slice(-7)}`;
+  await page.goto("/kayit");
+  await page.getByLabel("Ad soyad").fill("Bağlantı Deneme");
+  await page.getByLabel("Cep telefonu").fill(phone);
+  await page.getByLabel("E-posta").fill(`baglanti${phone}@test.local`);
+  await page.getByLabel("Şifre").fill("guvenli-sifre-123");
+  await page.getByLabel(/Kişisel verilerimin/).check();
+  await page.getByRole("button", { name: "Kayıt ol" }).click();
+  await expect(page).toHaveURL(/\/dogrulama/);
+
+  await page.goto(`/dogrulama?kod=${TEST_CODE}`);
+  await expect(page).toHaveURL(/\/hesabim$/);
 });
