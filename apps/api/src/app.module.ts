@@ -22,7 +22,9 @@ import { RequestsModule } from './requests/requests.module.js';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ObservabilityModule,
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }]),
+    // IP başına dakikada 120 istek. Tarayıcı testleri tüm istekleri tek IP'den yaptığı için RATE_LIMIT ile
+    // yükseltir; canlıda tanımlanmaz.
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: Number(process.env.RATE_LIMIT) || 120 }]),
     PrismaModule,
     EventsModule,
     AuthModule,

@@ -69,6 +69,8 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   for (let i = 0; i < 3; i++) {
     await page.getByRole("button", { name: "Onayla", exact: true }).first().click();
     await page.getByRole("button", { name: "Evet, onayla" }).click();
+    // Onay bitince belgenin onay formu kapanır; bir sonrakine ancak o zaman geçilir
+    await expect(page.getByRole("button", { name: "Evet, onayla" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Onayla", exact: true })).toHaveCount(2 - i);
   }
 
