@@ -11,7 +11,7 @@ test("Google ile ilk girişte telefon sorulur, sonraki girişte doğrudan hesaba
   await expect(page.getByText(email)).toBeVisible();
   await expect(page.getByLabel("Ad soyad")).toHaveValue("Test Kullanıcı");
   await page.getByLabel("Cep telefonu").fill(`0538${digits}`);
-  await page.getByLabel(/Kişisel verilerimin/).check();
+  await page.getByLabel(/Kullanım koşullarını kabul ediyorum/).check();
   await page.getByRole("button", { name: "Kaydı tamamla" }).click();
 
   // E-postayı sağlayıcı doğruladı: doğrulama ekranı atlanır

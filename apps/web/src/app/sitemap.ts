@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { HUB_PATH } from "@/lib/local-content";
+import { LEGAL_LINKS } from "@/lib/legal";
 import { getIndexableLocalPages } from "@/lib/local-seo";
 import { SITE_URL } from "@/lib/site";
 
@@ -13,5 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: page.kind === "city" ? 0.8 : page.kind === "district" ? 0.7 : 0.6,
     })),
+    ...LEGAL_LINKS.map((link) => ({ url: `${SITE_URL}${link.href}`, changeFrequency: "yearly" as const, priority: 0.2 })),
   ];
 }

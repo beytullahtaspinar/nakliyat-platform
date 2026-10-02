@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Checkbox, Field, FormError, Input, SubmitButton, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
+import { ConsentFields } from "@/components/legal/consent-fields";
 import { LocationField } from "@/components/map/location-field";
 import { MediaPicker } from "@/components/media/media-picker";
 import { useMediaPicker } from "@/components/media/use-media-picker";
@@ -291,11 +292,7 @@ function AccountFields() {
           <Field label="E-posta" hint="Talebini yayınlamadan önce bu adrese bir doğrulama kodu göndereceğiz.">
             <Input name="email" type="email" autoComplete="email" maxLength={191} required />
           </Field>
-          <Checkbox
-            name="kvkk"
-            required
-            label="Kişisel verilerimin, talebimin nakliyat firmalarına iletilmesi amacıyla işlenmesini kabul ediyorum."
-          />
+          <ConsentFields />
         </>
       )}
     </div>

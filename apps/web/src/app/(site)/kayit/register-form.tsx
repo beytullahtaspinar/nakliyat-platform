@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Checkbox, Field, FormError, Input, SubmitButton } from "@/components/forms/fields";
+import { Field, FormError, Input, SubmitButton } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
+import { ConsentFields } from "@/components/legal/consent-fields";
 import { register } from "@/lib/actions/auth";
 
 export function RegisterForm({ role, next }: { role: "CUSTOMER" | "COMPANY"; next?: string }) {
@@ -25,15 +26,7 @@ export function RegisterForm({ role, next }: { role: "CUSTOMER" | "COMPANY"; nex
       <Field label="Şifre" hint="En az 8 karakter.">
         <Input name="password" type="password" autoComplete="new-password" minLength={8} maxLength={72} required />
       </Field>
-      <Checkbox
-        name="kvkk"
-        required
-        label={
-          isCompany
-            ? "Firma bilgilerimin doğrulama ve teklif süreçleri için işlenmesini kabul ediyorum."
-            : "Kişisel verilerimin, taleplerimin nakliyat firmalarına iletilmesi amacıyla işlenmesini kabul ediyorum."
-        }
-      />
+      <ConsentFields />
       <FormError message={state.error} />
       <SubmitButton pending={pending}>{isCompany ? "Firma hesabı oluştur" : "Kayıt ol"}</SubmitButton>
       <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">

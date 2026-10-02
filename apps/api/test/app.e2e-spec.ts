@@ -72,6 +72,26 @@ describe('API (e2e)', () => {
       expect(res.body.accessToken).toEqual(expect.any(String));
     });
 
+    it('kayıtta kabul edilen koşul sürümü ve ileti izni saklanır', async () => {
+      await prisma.user.deleteMany({ where: { phone: '+905320000009' } });
+      await request(app.getHttpServer())
+        .post('/v1/auth/register')
+        .send({
+          role: 'CUSTOMER',
+          fullName: 'Onaylı Müşteri',
+          phone: '0532 000 00 09',
+          password: 'GucluSifre123',
+          termsVersion: '2026-10-02',
+          marketingConsent: true,
+        })
+        .expect(201);
+      const user = await prisma.user.findUniqueOrThrow({ where: { phone: '+905320000009' } });
+      expect(user.termsVersion).toBe('2026-10-02');
+      expect(user.termsAcceptedAt).toBeInstanceOf(Date);
+      expect(user.marketingConsentAt).toBeInstanceOf(Date);
+      await prisma.user.delete({ where: { id: user.id } });
+    });
+
     it('aynı telefonla ikinci kayıt 409 döner', () => {
       return request(app.getHttpServer())
         .post('/v1/auth/register')

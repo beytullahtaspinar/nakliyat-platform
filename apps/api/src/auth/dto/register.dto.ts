@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsIn, IsOptional, IsString, Length, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsIn, IsOptional, IsString, Length, MaxLength, MinLength } from 'class-validator';
 import { UserRole } from '../../generated/prisma/enums.js';
 
 const SELF_SIGNUP_ROLES = [UserRole.CUSTOMER, UserRole.COMPANY] as const;
@@ -28,4 +28,18 @@ export class RegisterDto {
   @MinLength(8)
   @MaxLength(72)
   password: string;
+
+  @ApiPropertyOptional({
+    example: '2026-10-02',
+    description: 'Kabul edilen kullanım koşulları / aydınlatma metni sürümü; kabul anıyla birlikte saklanır',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  termsVersion?: string;
+
+  @ApiPropertyOptional({ description: 'Kampanya ve duyurular için ticari elektronik ileti izni (isteğe bağlı)' })
+  @IsOptional()
+  @IsBoolean()
+  marketingConsent?: boolean;
 }

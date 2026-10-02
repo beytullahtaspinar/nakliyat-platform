@@ -69,7 +69,7 @@ test("müşteri adresini haritada işaretler; işaret talep sayfasında görün�
   await account.getByLabel("Cep telefonu").fill(phone);
   await account.getByLabel("E-posta").fill(`harita${phone}@test.local`);
   await account.getByLabel("Şifre").fill("guvenli-sifre-123");
-  await account.getByLabel(/Kişisel verilerimin/).check();
+  await account.getByLabel(/Kullanım koşullarını kabul ediyorum/).check();
   await page.getByRole("button", { name: "Ücretsiz teklif iste" }).click();
 
   await verifyEmail(page);

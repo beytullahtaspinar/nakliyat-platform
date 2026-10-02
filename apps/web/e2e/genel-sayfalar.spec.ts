@@ -50,6 +50,31 @@ test("giriş ve kayıt sayfaları erişilebilir", async ({ page }) => {
   }
 });
 
+test("yasal metinler açılır, altbilgiden ulaşılır ve erişilebilir", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto("/");
+  const legal = page.getByRole("navigation", { name: "Yasal metinler", exact: true });
+  for (const [name, heading] of [
+    ["Kullanım koşulları", "Kullanım Koşulları"],
+    ["KVKK aydınlatma metni", "KVKK Aydınlatma Metni"],
+    ["Gizlilik politikası", "Gizlilik Politikası"],
+    ["Çerez politikası", "Çerez Politikası"],
+    ["Açık rıza metni", "Açık Rıza Metni"],
+  ]) {
+    await legal.getByRole("link", { name, exact: true }).click();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
+    await expectAccessible(page);
+  }
+  expect(errors).toEqual([]);
+});
+
+test("kayıt formu koşulların kabulünü ister, ileti izni isteğe bağlıdır", async ({ page }) => {
+  await page.goto("/kayit");
+  await expect(page.getByLabel(/Kullanım koşullarını kabul ediyorum/)).toHaveAttribute("required", "");
+  await expect(page.getByLabel(/Kampanya ve duyurulardan/)).not.toHaveAttribute("required", "");
+  await expect(page.getByRole("link", { name: "KVKK aydınlatma metnini" })).toHaveAttribute("target", "_blank");
+});
+
 test("sağlık adresi çalışır", async ({ request }) => {
   const res = await request.get("/api/saglik");
   expect(res.ok()).toBe(true);
