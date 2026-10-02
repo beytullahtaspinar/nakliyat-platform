@@ -1,14 +1,16 @@
-import { createWriteStream } from 'node:fs';
 import { Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import {
+  BadGatewayException,
   BadRequestException,
   Controller,
   ForbiddenException,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Inject,
+  Logger,
   NotFoundException,
   Param,
   PayloadTooLargeException,
@@ -25,26 +27,26 @@ import { MIME_BY_EXTENSION } from './media-rules.js';
 import { FILE_STORAGE, type FileStorage } from './storage.js';
 
 /**
- * Yalnızca yerel disk sürücüsünde kullanılır (R2'de tarayıcı doğrudan R2'ye gider).
+ * Yükleme (her iki sürücüde) ve görüntüleme (yalnızca yerel diskte; R2'de görseller imzalı R2 adresinden gelir).
  * Yetki, MediaService'in verdiği imzalı ve süreli belirteçle sağlanır.
  */
 @ApiExcludeController()
 @Public()
 @Controller('files')
 export class FilesController {
+  private readonly logger = new Logger(FilesController.name);
+
   constructor(@Inject(FILE_STORAGE) private readonly storage: FileStorage) {}
 
   @Put('upload/:token')
   @HttpCode(HttpStatus.NO_CONTENT)
   async upload(@Param('token') token: string, @Req() req: Request) {
-    const local = this.local();
-    const grant = local.verify(token, 'put');
+    const grant = this.storage.tokens.verify(token, 'put');
     if (!grant) throw new ForbiddenException('Yükleme adresinin süresi dolmuş, tekrar deneyin');
     if (req.headers['content-type'] !== grant.t) throw new BadRequestException('Dosya türü uyuşmuyor');
     const declared = Number(req.headers['content-length']);
     if (declared !== grant.s) throw new BadRequestException('Dosya boyutu uyuşmuyor');
 
-    const write = await local.prepareWrite(grant.k);
     let received = 0;
     const limit = new Transform({
       transform(chunk: Buffer, _enc, done) {
@@ -53,12 +55,13 @@ export class FilesController {
       },
     });
     try {
-      await pipeline(req, limit, createWriteStream(write.temp));
-      if (received !== grant.s) throw new BadRequestException('Yükleme yarıda kaldı');
-      await write.commit();
+      await Promise.all([pipeline(req, limit), this.storage.write(grant.k, grant.t!, grant.s!, limit)]);
     } catch (err) {
-      await write.discard();
-      throw err;
+      limit.destroy();
+      if (err instanceof HttpException) throw err;
+      if (received !== grant.s) throw new BadRequestException('Yükleme yarıda kaldı');
+      this.logger.error(`Dosya kaydedilemedi (${this.storage.driver}): ${(err as Error).message}`);
+      throw new BadGatewayException('Dosya kaydedilemedi, biraz sonra tekrar deneyin');
     }
   }
 
@@ -66,7 +69,7 @@ export class FilesController {
   @SkipThrottle()
   show(@Param('token') token: string, @Res() res: Response) {
     const local = this.local();
-    const grant = local.verify(token, 'get');
+    const grant = local.tokens.verify(token, 'get');
     if (!grant) throw new NotFoundException();
     res.sendFile(local.path(grant.k), {
       headers: {
