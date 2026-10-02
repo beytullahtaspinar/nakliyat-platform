@@ -195,6 +195,141 @@
         ]
       }
     },
+    "/v1/auth/oauth/providers": {
+      "get": {
+        "operationId": "OAuthController_providers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Kimlik doğrulama"
+        ]
+      }
+    },
+    "/v1/auth/oauth/{provider}/start": {
+      "post": {
+        "operationId": "OAuthController_start",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthStartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Kimlik doğrulama"
+        ]
+      }
+    },
+    "/v1/auth/oauth/{provider}/callback": {
+      "post": {
+        "operationId": "OAuthController_callback",
+        "parameters": [
+          {
+            "name": "provider",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthCallbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Kimlik doğrulama"
+        ]
+      }
+    },
+    "/v1/auth/oauth/pending": {
+      "post": {
+        "operationId": "OAuthController_pending",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Kimlik doğrulama"
+        ]
+      }
+    },
+    "/v1/auth/oauth/complete": {
+      "post": {
+        "operationId": "OAuthController_complete",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthCompleteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Kimlik doğrulama"
+        ]
+      }
+    },
     "/v1/auth/verification": {
       "get": {
         "operationId": "VerificationController_status",
@@ -2086,6 +2221,95 @@
         "required": [
           "accessToken",
           "refreshToken"
+        ]
+      },
+      "OAuthStartDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "description": "Web tarafının ürettiği rastgele değer; dönüşte karşılaştırılır (CSRF)"
+          },
+          "nonce": {
+            "type": "string",
+            "description": "id_token içinde geri gelir (tekrar oynatmaya karşı)"
+          },
+          "codeChallenge": {
+            "type": "string",
+            "description": "PKCE S256: base64url(sha256(codeVerifier))"
+          },
+          "loginHint": {
+            "type": "string",
+            "description": "Önerilen hesap (e-posta)"
+          }
+        },
+        "required": [
+          "state",
+          "nonce",
+          "codeChallenge"
+        ]
+      },
+      "OAuthCallbackDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "codeVerifier": {
+            "type": "string"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "appleUser": {
+            "type": "string",
+            "description": "Apple ilk girişte gönderdiği \"user\" form alanı (ad)"
+          }
+        },
+        "required": [
+          "code",
+          "codeVerifier",
+          "nonce"
+        ]
+      },
+      "SignupTokenDto": {
+        "type": "object",
+        "properties": {
+          "signupToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "signupToken"
+        ]
+      },
+      "OAuthCompleteDto": {
+        "type": "object",
+        "properties": {
+          "signupToken": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "COMPANY"
+            ]
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Ayşe Yılmaz"
+          },
+          "phone": {
+            "type": "string",
+            "example": "0532 123 45 67"
+          }
+        },
+        "required": [
+          "signupToken",
+          "role",
+          "fullName",
+          "phone"
         ]
       },
       "VerificationStatusDto": {

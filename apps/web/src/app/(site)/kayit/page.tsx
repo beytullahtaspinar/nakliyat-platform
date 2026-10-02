@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getCurrentUser, safeNext } from "@/lib/session";
 import { SignedInNotice } from "@/components/signed-in-notice";
 import { RegisterForm } from "./register-form";
+import { SocialLogin } from "@/components/social-login";
+import { getOAuthProviders } from "@/lib/oauth";
 
 export const metadata: Metadata = {
   title: "Kayıt ol",
@@ -37,7 +39,8 @@ export default async function RegisterPage({ searchParams }: PageProps<"/kayit">
           ? "Firma hesabını aç, ardından K3 yetki belgeni ve firma bilgilerini gir. Doğrulamadan sonra bölgendeki taleplere teklif verebilirsin."
           : "Ücretsiz hesap aç, taşınma talebini oluştur, doğrulanmış firmalardan teklifleri karşılaştır."}
       </p>
-      <div className="mt-6">
+      <div className="mt-6 space-y-4">
+        <SocialLogin providers={await getOAuthProviders()} next={next} role={role} />
         <RegisterForm key={role} role={role} next={next} />
       </div>
     </main>

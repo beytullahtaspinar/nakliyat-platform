@@ -23,6 +23,8 @@ export interface AccessTokenPayload {
 }
 
 export const BCRYPT_ROUNDS = 12;
+/** Şifresi olmayan (yalnızca Google/Apple ile giren) hesaplar. Geçerli bir bcrypt özeti değildir. */
+export const OAUTH_ONLY_PASSWORD = '!';
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
@@ -66,6 +68,13 @@ export class AuthService {
     if (email) {
       await this.verification.sendEmailCode(user.id).catch(() => this.logger.warn('Kayıt sonrası e-posta kodu gönderilemedi'));
     }
+    return this.signIn(user);
+  }
+
+  /** Oturum açar: yeni erişim ve yenileme anahtarı (Google/Apple girişi de bunu kullanır) */
+  async signIn(user: User): Promise<AuthResponseDto> {
+    if (user.deletedAt) throw new UnauthorizedException('Bu hesap silinmiş');
+    if (user.status !== UserStatus.ACTIVE) throw new UnauthorizedException('Hesabınız askıya alınmış');
     return { user: this.toAuthUser(user), ...(await this.issueTokens(user)) };
   }
 
@@ -74,14 +83,14 @@ export class AuthService {
     const user = phone
       ? await this.prisma.user.findUnique({ where: { phone } })
       : null;
+    if (user && !user.deletedAt && user.passwordHash === OAUTH_ONLY_PASSWORD) {
+      throw new UnauthorizedException('Bu hesap Google veya Apple ile açıldı. Giriş sayfasındaki düğmeyle devam et.');
+    }
     const valid = user && !user.deletedAt && (await bcrypt.compare(dto.password, user.passwordHash));
     if (!user || !valid) {
       throw new UnauthorizedException('Telefon numarası veya şifre hatalı');
     }
-    if (user.status !== UserStatus.ACTIVE) {
-      throw new UnauthorizedException('Hesabınız askıya alınmış');
-    }
-    return { user: this.toAuthUser(user), ...(await this.issueTokens(user)) };
+    return this.signIn(user);
   }
 
   /** Yenileme anahtarını tek kullanımlık olarak döndürür (rotation). */

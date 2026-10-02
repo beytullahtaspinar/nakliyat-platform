@@ -37,7 +37,10 @@ export default defineConfig({
       reuseExistingServer: !CI,
       env: {
         PORT: String(API_PORT),
-        WEB_URL: `http://localhost:${WEB_PORT}`,
+        // Sayfalar 127.0.0.1'de açılır; Google/Apple dönüş adresi de aynı adreste olmalı (çerezler)
+        WEB_URL: `http://127.0.0.1:${WEB_PORT}`,
+        // Sahte "test" girişi (Google yerine); canlıda yok sayılır
+        OAUTH_TEST_PROVIDER: "1",
         AUTH_RATE_LIMIT: "1000",
         RATE_LIMIT: "5000",
         // Doğrulama kodları sabit (e2e/dogrulama.ts); NODE_ENV=production'da yok sayılır
