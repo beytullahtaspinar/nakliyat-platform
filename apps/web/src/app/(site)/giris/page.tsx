@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser, homeFor, safeNext } from "@/lib/session";
 import { SignedInNotice } from "@/components/signed-in-notice";
+import { SocialLogin } from "@/components/social-login";
+import { FormError } from "@/components/forms/fields";
+import { OAUTH_ERRORS, getOAuthProviders } from "@/lib/oauth";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
@@ -10,7 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/giris">) {
-  const next = safeNext((await searchParams).next as string | undefined);
+  const params = await searchParams;
+  const next = safeNext(params.next as string | undefined);
+  // Google / Apple girişi başarısız dönerse mesaj burada gösterilir
+  const error = typeof params.hata === "string" ? OAUTH_ERRORS[params.hata as keyof typeof OAUTH_ERRORS] : undefined;
   const user = await getCurrentUser();
   if (user) {
     // Yalnızca kişinin kendi alanına dönüş otomatik; başka rolün sayfası istenmişse hesap değişikliği sorulur
@@ -25,7 +31,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/giris">) {
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
         Taleplerini ve gelen teklifleri görmek için giriş yap.
       </p>
-      <div className="mt-8">
+      <div className="mt-8 space-y-4">
+        <FormError message={error} />
+        <SocialLogin providers={await getOAuthProviders()} next={next} />
         <LoginForm next={next} />
       </div>
     </main>

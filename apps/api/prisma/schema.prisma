@@ -46,6 +46,7 @@ model User {
   notificationPreferences NotificationPreference[]
   refreshTokens           RefreshToken[]
   verificationCodes       VerificationCode[]
+  identities              UserIdentity[]
   auditLogs     AuditLog[]
 }
 
@@ -59,6 +60,28 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+}
+
+enum IdentityProvider {
+  GOOGLE
+  APPLE
+}
+
+/// Google / Apple hesabı bağlantısı. Bu yolla açılan hesapların şifresi yoktur (passwordHash "!").
+model UserIdentity {
+  id        String           @id @default(cuid())
+  userId    String
+  provider  IdentityProvider
+  /// Sağlayıcının değişmeyen kullanıcı kimliği (id_token "sub")
+  subject   String           @db.VarChar(191)
+  /// Sağlayıcının bildirdiği e-posta (Apple'da gizli yönlendirme adresi olabilir)
+  email     String?          @db.VarChar(191)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
   @@index([userId])
 }
 
