@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { citySlug } from "@nakliyat/locations";
 import { LogoMark } from "@/components/ui/logo";
+import { LEGAL_LINKS } from "@/lib/legal";
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
 
@@ -57,9 +58,21 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-zinc-200 dark:border-zinc-800">
-        <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-zinc-500 sm:px-6">
-          © {new Date().getFullYear()} evdenevenakliyat.app
-        </p>
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>© {new Date().getFullYear()} evdenevenakliyat.app</p>
+          <nav aria-label="Yasal metinler">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  {/* py-1.5: dokunma hedefi en az 24 px (PageSpeed/WCAG 2.5.8) */}
+                  <Link href={link.href} className="inline-block py-1.5 hover:text-brand-700 hover:underline">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
       </div>
     </footer>
   );

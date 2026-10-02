@@ -7,7 +7,13 @@
  *
  * Yerelde: pnpm build && pnpm --filter @nakliyat/web lighthouse
  */
-const PUBLIC_PAGES = ["/", "/evden-eve-nakliyat", "/istanbul-evden-eve-nakliyat", "/istanbul-kadikoy-evden-eve-nakliyat"];
+const PUBLIC_PAGES = [
+  "/",
+  "/evden-eve-nakliyat",
+  "/istanbul-evden-eve-nakliyat",
+  "/istanbul-kadikoy-evden-eve-nakliyat",
+  "/kvkk-aydinlatma-metni",
+];
 const NOINDEX_PAGES = ["/talep-olustur", "/giris"];
 const BASE = "http://127.0.0.1:3000";
 

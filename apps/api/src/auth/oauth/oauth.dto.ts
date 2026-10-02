@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, Length, MaxLength } from 'class-validator';
 import { UserRole } from '../../generated/prisma/enums.js';
 
 export class OAuthStartDto {
@@ -70,4 +70,19 @@ export class OAuthCompleteDto extends SignupTokenDto {
   @ApiProperty({ example: '0532 123 45 67' })
   @IsString()
   phone: string;
+
+  @ApiPropertyOptional({
+    example: '2026-10-02',
+    description: 'Kabul edilen kullanım koşulları / aydınlatma metni sürümü; kabul anıyla birlikte saklanır',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  termsVersion?: string;
+
+  @ApiPropertyOptional({ description: 'Kampanya ve duyurular için ticari elektronik ileti izni (isteğe bağlı)' })
+  @IsOptional()
+  @IsBoolean()
+  marketingConsent?: boolean;
 }
+

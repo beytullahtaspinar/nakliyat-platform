@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
+import { consentPayload } from "@/lib/legal";
 import { clearSession, homeFor, safeNext, saveSession, verificationPath } from "@/lib/session";
 
 export type FormState = { error?: string };
@@ -24,7 +25,7 @@ export async function login(_prev: FormState, formData: FormData): Promise<FormS
 
 export async function register(_prev: FormState, formData: FormData): Promise<FormState> {
   if (formData.get("kvkk") !== "on") {
-    return { error: "Devam etmek için aydınlatma metnini onaylayın." };
+    return { error: "Devam etmek için kullanım koşullarını kabul edin." };
   }
   const role = formData.get("role") === "COMPANY" ? "COMPANY" : "CUSTOMER";
   const email = text(formData, "email");
@@ -38,6 +39,7 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
         phone: text(formData, "phone"),
         ...(email && { email }),
         password: String(formData.get("password") ?? ""),
+        ...consentPayload(formData),
       },
     });
   } catch (err) {

@@ -16,6 +16,7 @@ import { VerificationService } from '../verification/verification.service.js';
 import type { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
+import { consentData } from './dto/consent.js';
 
 export interface AccessTokenPayload {
   sub: string;
@@ -62,6 +63,7 @@ export class AuthService {
         phone,
         email,
         passwordHash: await bcrypt.hash(dto.password, BCRYPT_ROUNDS),
+        ...consentData(dto),
       },
     });
     // İlk doğrulama kodu kayıtla birlikte gider; gönderilemezse kullanıcı doğrulama ekranından yeniden ister

@@ -1,7 +1,8 @@
 "use client";
 
-import { Checkbox, Field, FormError, Input, SubmitButton } from "@/components/forms/fields";
+import { Field, FormError, Input, SubmitButton } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
+import { ConsentFields } from "@/components/legal/consent-fields";
 import { completeOAuthSignup } from "@/lib/actions/oauth";
 
 export function CompleteForm({ role, next, fullName }: { role: "CUSTOMER" | "COMPANY"; next?: string; fullName: string }) {
@@ -17,15 +18,7 @@ export function CompleteForm({ role, next, fullName }: { role: "CUSTOMER" | "COM
       <Field label="Cep telefonu" hint="Firmalar ve müşteriler seninle bu numaradan iletişime geçer.">
         <Input name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="05XX XXX XX XX" required />
       </Field>
-      <Checkbox
-        name="kvkk"
-        required
-        label={
-          isCompany
-            ? "Firma bilgilerimin doğrulama ve teklif süreçleri için işlenmesini kabul ediyorum."
-            : "Kişisel verilerimin, taleplerimin nakliyat firmalarına iletilmesi amacıyla işlenmesini kabul ediyorum."
-        }
-      />
+      <ConsentFields />
       <FormError message={state.error} />
       <SubmitButton pending={pending}>Kaydı tamamla</SubmitButton>
     </form>

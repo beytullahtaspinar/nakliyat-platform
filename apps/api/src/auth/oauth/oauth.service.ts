@@ -18,6 +18,7 @@ import { normalizeTrMobile } from '../../common/utils/phone.js';
 import { VerificationService } from '../../verification/verification.service.js';
 import { AuthService, OAUTH_ONLY_PASSWORD } from '../auth.service.js';
 import type { AuthResponseDto } from '../dto/auth-response.dto.js';
+import { consentData } from '../dto/consent.js';
 import type { OAuthCallbackDto, OAuthCompleteDto, OAuthStartDto } from './oauth.dto.js';
 import { OAUTH_PROVIDERS, type OAuthProfile, type OAuthProvider } from './provider.js';
 
@@ -150,6 +151,7 @@ export class OAuthService {
           email: claims.email,
           emailVerifiedAt: claims.email && claims.emailVerified ? new Date() : null,
           passwordHash: OAUTH_ONLY_PASSWORD,
+          ...consentData(dto),
           identities: { create: { provider: claims.provider, subject: claims.subject, email: claims.email } },
         },
       });

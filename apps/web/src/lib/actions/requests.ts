@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type AuthResponse, type MovingRequest } from "@/lib/api";
+import { consentPayload } from "@/lib/legal";
 import { getAccessToken, getCurrentUser, saveSession, verificationPath } from "@/lib/session";
 
 export type RequestFormState = {
@@ -53,12 +54,19 @@ async function authenticate(formData: FormData): Promise<string> {
     result = await apiFetch<AuthResponse>("/auth/login", { method: "POST", body: { phone, password } });
   } else {
     if (!flag(formData, "kvkk")) {
-      throw new ApiError(400, "Devam etmek için aydınlatma metnini onaylayın.");
+      throw new ApiError(400, "Devam etmek için kullanım koşullarını kabul edin.");
     }
     const email = text(formData, "email");
     result = await apiFetch<AuthResponse>("/auth/register", {
       method: "POST",
-      body: { role: "CUSTOMER", fullName: text(formData, "fullName"), phone, ...(email && { email }), password },
+      body: {
+        role: "CUSTOMER",
+        fullName: text(formData, "fullName"),
+        phone,
+        ...(email && { email }),
+        password,
+        ...consentPayload(formData),
+      },
     });
   }
   await saveSession(result, result.user.role);

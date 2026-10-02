@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
+import { consentPayload } from "@/lib/legal";
 import { SIGNUP_COOKIE } from "@/lib/oauth";
 import { homeFor, safeNext, saveSession, verificationPath } from "@/lib/session";
 
@@ -12,7 +13,7 @@ const text = (formData: FormData, name: string) => String(formData.get(name) ?? 
 
 /** Google / Apple ile gelen yeni kişi: telefon ve rol alınıp hesap açılır */
 export async function completeOAuthSignup(_prev: CompleteFormState, formData: FormData): Promise<CompleteFormState> {
-  if (formData.get("kvkk") !== "on") return { error: "Devam etmek için aydınlatma metnini onaylayın." };
+  if (formData.get("kvkk") !== "on") return { error: "Devam etmek için kullanım koşullarını kabul edin." };
   const store = await cookies();
   const signupToken = store.get(SIGNUP_COOKIE)?.value;
   if (!signupToken) return { error: "Kayıt süresi doldu. Google veya Apple ile yeniden devam et." };
@@ -26,6 +27,7 @@ export async function completeOAuthSignup(_prev: CompleteFormState, formData: Fo
         role: formData.get("role") === "COMPANY" ? "COMPANY" : "CUSTOMER",
         fullName: text(formData, "fullName"),
         phone: text(formData, "phone"),
+        ...consentPayload(formData),
       },
     });
   } catch (err) {

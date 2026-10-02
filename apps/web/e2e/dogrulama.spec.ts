@@ -12,7 +12,7 @@ test("yeni kullanıcı e-posta kodunu girer ve hesabına geçer", async ({ page 
   await page.getByLabel("Cep telefonu").fill(phone);
   await page.getByLabel("E-posta").fill(`kod${phone}@test.local`);
   await page.getByLabel("Şifre").fill("guvenli-sifre-123");
-  await page.getByLabel(/Kişisel verilerimin/).check();
+  await page.getByLabel(/Kullanım koşullarını kabul ediyorum/).check();
   await page.getByRole("button", { name: "Kayıt ol" }).click();
 
   await expect(page).toHaveURL(/\/dogrulama\?next=%2Fhesabim/);
@@ -39,7 +39,7 @@ test("e-postadaki bağlantı kodu otomatik girer", async ({ page }) => {
   await page.getByLabel("Cep telefonu").fill(phone);
   await page.getByLabel("E-posta").fill(`baglanti${phone}@test.local`);
   await page.getByLabel("Şifre").fill("guvenli-sifre-123");
-  await page.getByLabel(/Kişisel verilerimin/).check();
+  await page.getByLabel(/Kullanım koşullarını kabul ediyorum/).check();
   await page.getByRole("button", { name: "Kayıt ol" }).click();
   await expect(page).toHaveURL(/\/dogrulama/);
 

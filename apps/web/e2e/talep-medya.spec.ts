@@ -25,7 +25,7 @@ async function fillRequestForm(page: Page, phone: string) {
   await account.getByLabel("Cep telefonu").fill(phone);
   await account.getByLabel("E-posta").fill(`medya${phone}@test.local`);
   await account.getByLabel("Şifre").fill("guvenli-sifre-123");
-  await account.getByLabel(/Kişisel verilerimin/).check();
+  await account.getByLabel(/Kullanım koşullarını kabul ediyorum/).check();
 }
 
 // Fotoğraf tarayıcıda küçültülür (en uzun kenar 1600 px), talep oluşunca yüklenir ve talep sayfasında görünür.

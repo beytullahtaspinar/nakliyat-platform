@@ -2103,6 +2103,15 @@
             "type": "string",
             "example": "GucluSifre123",
             "minLength": 8
+          },
+          "termsVersion": {
+            "type": "string",
+            "example": "2026-10-02",
+            "description": "Kabul edilen kullanım koşulları / aydınlatma metni sürümü; kabul anıyla birlikte saklanır"
+          },
+          "marketingConsent": {
+            "type": "boolean",
+            "description": "Kampanya ve duyurular için ticari elektronik ileti izni (isteğe bağlı)"
           }
         },
         "required": [
@@ -2303,6 +2312,15 @@
           "phone": {
             "type": "string",
             "example": "0532 123 45 67"
+          },
+          "termsVersion": {
+            "type": "string",
+            "example": "2026-10-02",
+            "description": "Kabul edilen kullanım koşulları / aydınlatma metni sürümü; kabul anıyla birlikte saklanır"
+          },
+          "marketingConsent": {
+            "type": "boolean",
+            "description": "Kampanya ve duyurular için ticari elektronik ileti izni (isteğe bağlı)"
           }
         },
         "required": [
