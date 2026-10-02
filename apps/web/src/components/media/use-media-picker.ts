@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { attachMedia, prepareMediaUploads, type UploadTicket } from "@/lib/actions/media";
 import { compressImage, compressVideo, MediaError, type Compressed } from "@/lib/media/compress";
 import { MAX_PHOTOS, MAX_SOURCE_BYTES, MAX_VIDEOS, kindOf, type MediaKind } from "@/lib/media/rules";
+import { putFile } from "@/lib/media/upload";
 
 export type PickedItem = {
   id: string;
@@ -143,7 +144,7 @@ export function useMediaPicker({ existingPhotos = 0, existingVideos = 0 }: Optio
           const ticket = tickets.data[index]!;
           update(item.id, { status: "uploading", progress: 0, error: undefined });
           try {
-            await put(ticket, item.result!.blob, (progress) => update(item.id, { progress }));
+            await putFile(ticket, item.result!.blob, (progress) => update(item.id, { progress }));
             uploaded.push({ item, ticket });
           } catch {
             update(item.id, { status: "error", error: "Yüklenemedi, bağlantını kontrol edip tekrar dene." });
@@ -175,19 +176,6 @@ export function useMediaPicker({ existingPhotos = 0, existingVideos = 0 }: Optio
 }
 
 export type MediaPicker = ReturnType<typeof useMediaPicker>;
-
-/** İlerleme gösterebilmek için fetch yerine XMLHttpRequest */
-function put(ticket: UploadTicket, blob: Blob, onProgress: (ratio: number) => void) {
-  return new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(ticket.method, ticket.url);
-    for (const [name, value] of Object.entries(ticket.headers)) xhr.setRequestHeader(name, value);
-    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(String(xhr.status))));
-    xhr.onerror = () => reject(new Error("network"));
-    xhr.send(blob);
-  });
-}
 
 async function runLimited(tasks: (() => Promise<void>)[], limit: number) {
   const pending = [...tasks];

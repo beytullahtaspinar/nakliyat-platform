@@ -11,8 +11,10 @@ describe('doğrulama kodu sağlayıcıları', () => {
 
   it('e-posta konusu kodu içerir (Gmail "Kodu kopyala"), HTML kaçışı yapılır', () => {
     const { subject, html, text } = renderCodeEmail('513001', '<Ayşe> Yılmaz', 'https://evdenevenakliyat.app');
-    expect(subject).toBe('Doğrulama kodun: 513 001');
-    expect(html).toContain('513 001');
+    // Boşluksuz: seçip kopyalayınca hane kaybolmaz
+    expect(subject).toBe('Doğrulama kodun: 513001');
+    expect(html).toContain('>513001</p>');
+    expect(html).toContain('href="https://evdenevenakliyat.app/dogrulama?kod=513001"');
     expect(html).toContain('&lt;Ayşe&gt;');
     expect(text).toContain('10 dakika');
   });
@@ -25,7 +27,7 @@ describe('doğrulama kodu sağlayıcıları', () => {
     expect(url).toBe('https://api.brevo.com/v3/smtp/email');
     const body = JSON.parse(init.body);
     expect(body.to).toEqual([{ email: 'ayse@ornek.com', name: 'Ayşe Yılmaz' }]);
-    expect(body.subject).toBe('Doğrulama kodun: 042 917');
+    expect(body.subject).toBe('Doğrulama kodun: 042917');
     expect(body.tags).toEqual(['VERIFICATION_CODE']);
   });
 

@@ -2,6 +2,8 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { CompanyDocumentsController } from './company-documents.controller.js';
+import { CompanyDocumentsService } from './company-documents.service.js';
 import { FilesController } from './files.controller.js';
 import { LocalStorage } from './local-storage.js';
 import { MediaService } from './media.service.js';
@@ -38,11 +40,12 @@ export function createFileStorage(config: ConfigService): MediaStorage {
 }
 
 @Module({
-  controllers: [RequestMediaController, FilesController],
+  controllers: [RequestMediaController, CompanyDocumentsController, FilesController],
   providers: [
     MediaService,
+    CompanyDocumentsService,
     { provide: FILE_STORAGE, inject: [ConfigService], useFactory: createFileStorage },
   ],
-  exports: [MediaService],
+  exports: [MediaService, CompanyDocumentsService],
 })
 export class MediaModule {}

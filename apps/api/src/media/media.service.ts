@@ -17,6 +17,16 @@ import type { AttachMediaDto, CreateUploadsDto } from './dto/media.dto.js';
 import { EXTENSIONS, MEDIA_RULES, mediaTypeOf } from './media-rules.js';
 import { FILE_STORAGE, type MediaStorage } from './storage.js';
 
+/** R2'ye taşınabilecek dosya tablosu (talep dosyaları, firma belgeleri) */
+type MovableTable = {
+  pending: () => Promise<{ id: string; storageKey: string; mimeType: string; sizeBytes: number }[]>;
+  markMoved: (id: string) => Promise<{ count: number }>;
+  exists: (id: string) => Promise<boolean>;
+};
+
+/** Depodaki bir dosya: anahtarı ve nerede durduğu */
+export type StoredFile = { storageKey: string; storage: StorageLocation };
+
 const LIMIT_LABEL = { [MediaType.PHOTO]: 'fotoğraf', [MediaType.VIDEO]: 'video' } as const;
 const mb = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
 /** Diskte kalan dosyalar bu aralıkla R2'ye taşınmaya çalışılır */
@@ -64,7 +74,10 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
         throw new BadRequestException(`Dosya çok büyük: ${LIMIT_LABEL[mediaTypeOf(file.mimeType)]} en fazla ${mb(rule.maxBytes)} olabilir`);
       }
     }
-    await this.checkQuota(files.reduce((sum, f) => sum + f.sizeBytes, 0));
+    await this.checkQuota(
+      files.reduce((sum, f) => sum + f.sizeBytes, 0),
+      'Dosya yükleme şu an kullanılamıyor, talebini fotoğrafsız gönderebilirsin.',
+    );
 
     return {
       uploads: files.map((file) => {
@@ -82,45 +95,55 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Diskte kalan dosyaları R2'ye taşır (R2 kurulmadan ya da R2 hata verirken yüklenenler).
-   * Önce R2'ye kopyalanır, kayıt güncellenir, sonra diskteki silinir: arada görüntüleme bozulmaz.
+   * Diskte kalan dosyaları (talep fotoğrafları ve firma belgeleri) R2'ye taşır: R2 kurulmadan ya da
+   * R2 hata verirken yüklenenler. Önce R2'ye kopyalanır, kayıt güncellenir, sonra diskteki silinir;
+   * arada görüntüleme bozulmaz.
    */
   async moveLocalToR2() {
     if (this.moving || !this.storage.r2Ready()) return 0;
     this.moving = true;
     let moved = 0;
     try {
-      const items = await this.prisma.requestMedia.findMany({
-        where: { storage: StorageLocation.LOCAL },
-        orderBy: { createdAt: 'asc' },
-        take: MOVE_BATCH,
-      });
+      const local = { storage: StorageLocation.LOCAL };
+      const tables: MovableTable[] = [
+        {
+          pending: () => this.prisma.requestMedia.findMany({ where: local, orderBy: { createdAt: 'asc' }, take: MOVE_BATCH }),
+          markMoved: (id) =>
+            this.prisma.requestMedia.updateMany({ where: { id, ...local }, data: { storage: StorageLocation.R2 } }),
+          exists: async (id) => (await this.prisma.requestMedia.count({ where: { id } })) > 0,
+        },
+        {
+          pending: () => this.prisma.companyDocument.findMany({ where: local, orderBy: { createdAt: 'asc' }, take: MOVE_BATCH }),
+          markMoved: (id) =>
+            this.prisma.companyDocument.updateMany({ where: { id, ...local }, data: { storage: StorageLocation.R2 } }),
+          exists: async (id) => (await this.prisma.companyDocument.count({ where: { id } })) > 0,
+        },
+      ];
       let r2Used = (await this.usage())[StorageLocation.R2];
-      for (const item of items) {
-        if (r2Used + item.sizeBytes > this.storage.quotas.r2) break;
-        if (!(await this.storage.local.stat(item.storageKey))) {
-          this.logger.warn(`Diskte bulunamadı, taşınamadı: ${item.storageKey}`);
-          continue;
-        }
-        if (!(await this.storage.copyToR2(item.storageKey, item.mimeType, item.sizeBytes))) break;
-        const { count } = await this.prisma.requestMedia.updateMany({
-          where: { id: item.id, storage: StorageLocation.LOCAL },
-          data: { storage: StorageLocation.R2 },
-        });
-        if (count) {
-          await this.storage.delete(item.storageKey, StorageLocation.LOCAL);
-          moved += 1;
-          r2Used += item.sizeBytes;
-        } else if (!(await this.prisma.requestMedia.findUnique({ where: { id: item.id } }))) {
-          // Taşınırken silindi: R2'deki kopya da silinir (başka bir süreç taşıdıysa kayıt durur, dokunulmaz)
-          await this.storage.delete(item.storageKey, StorageLocation.R2);
+      for (const table of tables) {
+        for (const item of await table.pending()) {
+          if (r2Used + item.sizeBytes > this.storage.quotas.r2) return moved;
+          if (!(await this.storage.local.stat(item.storageKey))) {
+            this.logger.warn(`Diskte bulunamadı, taşınamadı: ${item.storageKey}`);
+            continue;
+          }
+          if (!(await this.storage.copyToR2(item.storageKey, item.mimeType, item.sizeBytes))) return moved;
+          const { count } = await table.markMoved(item.id);
+          if (count) {
+            await this.storage.delete(item.storageKey, StorageLocation.LOCAL);
+            moved += 1;
+            r2Used += item.sizeBytes;
+          } else if (!(await table.exists(item.id))) {
+            // Taşınırken silindi: R2'deki kopya da silinir (başka bir süreç taşıdıysa kayıt durur, dokunulmaz)
+            await this.storage.delete(item.storageKey, StorageLocation.R2);
+          }
         }
       }
-      if (moved) this.logger.log(`${moved} dosya sunucu diskinden R2'ye taşındı`);
     } catch (err) {
       this.logger.error(`Dosyalar R2'ye taşınamadı: ${(err as Error).message}`);
     } finally {
       this.moving = false;
+      if (moved) this.logger.log(`${moved} dosya sunucu diskinden R2'ye taşındı`);
     }
     return moved;
   }
@@ -207,7 +230,8 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     await this.deleteObjects(media);
   }
 
-  private async deleteObjects(items: Pick<RequestMedia, 'storageKey' | 'storage'>[]) {
+  /** Depodan dosya siler (kayıt önceden silinmiş olmalı); silinemeyenler loga düşer */
+  async deleteObjects(items: StoredFile[]) {
     const results = await Promise.allSettled(items.map((m) => this.storage.delete(m.storageKey, m.storage)));
     const failed = results.filter((r) => r.status === 'rejected').length;
     if (failed) this.logger.warn(`${failed} dosya depodan silinemedi`);
@@ -239,11 +263,14 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /** Depo başına kullanılan toplam boyut (bayt) */
+  /** Depo başına kullanılan toplam boyut (bayt). Talep dosyaları ve firma belgeleri aynı depoyu paylaşır. */
   private async usage() {
-    const groups = await this.prisma.requestMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } });
     const used = { [StorageLocation.LOCAL]: 0, [StorageLocation.R2]: 0 };
-    for (const g of groups) used[g.storage] = g._sum.sizeBytes ?? 0;
+    const [media, documents] = await Promise.all([
+      this.prisma.requestMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
+      this.prisma.companyDocument.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
+    ]);
+    for (const g of [...media, ...documents]) used[g.storage] += g._sum.sizeBytes ?? 0;
     return used;
   }
 
@@ -251,7 +278,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
    * Toplam boyut sınırı: R2 ücretsiz katmanı (10 GB) ya da sunucu diski (2 GB) dolmasın.
    * İkisinden birinde yer varsa yükleme kabul edilir.
    */
-  private async checkQuota(incomingBytes: number) {
+  async checkQuota(incomingBytes: number, message: string) {
     const used = await this.usage();
     const { quotas, r2 } = this.storage;
     const r2Room = r2 !== null && used[StorageLocation.R2] + incomingBytes <= quotas.r2;
@@ -262,6 +289,6 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
         ? 'R2 (R2_QUOTA_GB) ve sunucu diski (LOCAL_UPLOAD_QUOTA_MB) kotası doldu, yükleme durdu (docs/dosya-yukleme.md)'
         : 'Sunucu diski kotası doldu; R2 depolamaya geçilmeli (docs/dosya-yukleme.md)',
     );
-    throw new ConflictException('Dosya yükleme şu an kullanılamıyor, talebini fotoğrafsız gönderebilirsin.');
+    throw new ConflictException(message);
   }
 }

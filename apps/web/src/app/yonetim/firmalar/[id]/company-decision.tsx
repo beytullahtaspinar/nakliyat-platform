@@ -8,7 +8,16 @@ import { Button } from "@/components/ui/button";
 import { rejectCompany, verifyCompany, type AdminActionState } from "@/lib/actions/admin";
 import type { VerificationStatus } from "@/lib/api";
 
-export function CompanyDecision({ companyId, status }: { companyId: string; status: VerificationStatus }) {
+export function CompanyDecision({
+  companyId,
+  status,
+  missing,
+}: {
+  companyId: string;
+  status: VerificationStatus;
+  /** Onaylanmamış zorunlu belgeler; boş değilse firma onaylanamaz */
+  missing: string[];
+}) {
   const [rejecting, setRejecting] = useState(false);
   const [notice, setNotice] = useState<string>();
   const { state, pending, formProps } = useFormAction(rejectCompany.bind(null, companyId), {} as AdminActionState);
@@ -27,11 +36,16 @@ export function CompanyDecision({ companyId, status }: { companyId: string; stat
           {message}
         </p>
       )}
-      {status !== "VERIFIED" && (
+      {status !== "VERIFIED" && missing.length > 0 && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Onay için önce şu belgeler onaylanmalı: {missing.join(", ")}.
+        </p>
+      )}
+      {status !== "VERIFIED" && missing.length === 0 && (
         <ConfirmButton
           action={verify}
           label="Firmayı onayla"
-          confirmText="K3 belgesini ve vergi numarasını kontrol ettin mi? Onaylanan firma hizmet bölgesindeki taleplere teklif verebilir."
+          confirmText="Belgeler onaylı. Vergi numarası ve unvanı da kontrol ettin mi? Onaylanan firma hizmet bölgesindeki taleplere teklif verebilir."
           confirmLabel="Evet, onayla"
         />
       )}

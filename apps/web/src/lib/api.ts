@@ -285,20 +285,41 @@ export type AdminCompany = CompanyProfile & {
 export type CompanyDocument = {
   id: string;
   type: "K3_LICENSE" | "TAX_CERTIFICATE" | "TRADE_REGISTRY" | "INSURANCE" | "OTHER";
-  fileUrl: string;
   status: VerificationStatus;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  /** YYYY-AA-GG */
+  validUntil: string | null;
+  expired: boolean;
   reviewNote: string | null;
   createdAt: string;
+  reviewedAt: string | null;
+  /** Kısa süreli imzalı görüntüleme adresi */
+  url: string;
 };
 
-export type AdminCompanyDetail = AdminCompany & {
+export type DocumentRequirement = {
+  type: CompanyDocument["type"];
+  state: "VERIFIED" | "PENDING" | "REJECTED" | "EXPIRED" | "MISSING";
+};
+
+/** GET /company/documents: belgeler ve zorunlu belgelerin durumu */
+export type CompanyDocumentSummary = { documents: CompanyDocument[]; requirements: DocumentRequirement[] };
+
+export type AdminCompanyDetail = AdminCompany &
+  CompanyDocumentSummary & {
   owner: CompanyOwner & { id: string; createdAt: string };
-  documents: CompanyDocument[];
   quoteCount: number;
   bookingCount: number;
   history: {
     action: string;
-    details: { from?: VerificationStatus; to?: VerificationStatus; note?: string | null } | null;
+    details: {
+      from?: VerificationStatus;
+      to?: VerificationStatus;
+      note?: string | null;
+      type?: CompanyDocument["type"];
+    } | null;
     createdAt: string;
     actor: { fullName: string };
   }[];

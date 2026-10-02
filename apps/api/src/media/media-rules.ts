@@ -12,22 +12,29 @@ export const MEDIA_RULES = {
 
 export const MAX_VIDEO_SECONDS = 60;
 
+/** Depoda tutulan tüm dosya türleri (talep medyası ve firma belgeleri) */
 export const EXTENSIONS: Record<string, string> = {
   'image/webp': 'webp',
   'image/jpeg': 'jpg',
   'video/mp4': 'mp4',
   // H.264 kodlayamayan tarayıcılar VP9/VP8 WebM üretir
   'video/webm': 'webm',
+  'image/png': 'png',
+  'application/pdf': 'pdf',
 };
 
 export const MIME_BY_EXTENSION: Record<string, string> = Object.fromEntries(
   Object.entries(EXTENSIONS).map(([mime, ext]) => [ext, mime]),
 );
 
-export const ALL_MIME_TYPES = Object.keys(EXTENSIONS);
+/** Talebe eklenebilen türler (tarayıcıda küçültülmüş fotoğraf ve video) */
+export const REQUEST_MIME_TYPES = ['image/webp', 'image/jpeg', 'video/mp4', 'video/webm'];
 
-/** talepler/<talepId>/<32 hex>.<uzantı> — yol geçişine (../) izin vermeyen tek biçim */
-export const STORAGE_KEY_PATTERN = /^talepler\/[a-z0-9]{10,40}\/[a-f0-9]{32}\.(webp|jpg|mp4|webm)$/;
+/**
+ * talepler/<talepId>/<32 hex>.<uzantı> ya da firmalar/<firmaId>/<32 hex>.<uzantı>.
+ * Yol geçişine (../) izin vermeyen tek biçim.
+ */
+export const STORAGE_KEY_PATTERN = /^(talepler|firmalar)\/[a-z0-9]{10,40}\/[a-f0-9]{32}\.(webp|jpg|png|pdf|mp4|webm)$/;
 
 export const mediaTypeOf = (mimeType: string) =>
   mimeType.startsWith('video/') ? MediaType.VIDEO : MediaType.PHOTO;

@@ -11,7 +11,16 @@ import type { ContactVerification } from "@/lib/api";
 /** +905321234567 → 0532 *** ** 67 */
 const maskPhone = (phone: string) => `0${phone.slice(3, 6)} *** ** ${phone.slice(-2)}`;
 
-export function VerificationSteps({ status, next }: { status: ContactVerification; next: string }) {
+export function VerificationSteps({
+  status,
+  next,
+  emailCode,
+}: {
+  status: ContactVerification;
+  next: string;
+  /** E-postadaki "Kodu otomatik gir" bağlantısından gelen kod */
+  emailCode?: string;
+}) {
   const phoneLabel = status.phoneChannel === "whatsapp" ? "WhatsApp" : "SMS";
   return (
     <div className="mt-6 space-y-4">
@@ -21,7 +30,7 @@ export function VerificationSteps({ status, next }: { status: ContactVerificatio
         done={status.emailVerified}
         doneText={`${status.email} doğrulandı`}
       >
-        <EmailStep status={status} next={next} />
+        <EmailStep status={status} next={next} initialCode={emailCode} />
       </Step>
       {status.phoneRequired && (
         <Step
@@ -68,7 +77,7 @@ function Step({
   );
 }
 
-function EmailStep({ status, next }: { status: ContactVerification; next: string }) {
+function EmailStep({ status, next, initialCode }: { status: ContactVerification; next: string; initialCode?: string }) {
   const [changing, setChanging] = useState(false);
   const sentTo = status.emailCodeSentTo;
   if (!sentTo || changing) {
@@ -79,7 +88,7 @@ function EmailStep({ status, next }: { status: ContactVerification; next: string
       <p className="text-sm text-zinc-700">
         <strong>{sentTo}</strong> adresine 6 haneli bir kod gönderdik. Gelen kutunu ve spam klasörünü kontrol et.
       </p>
-      <CodeForm intent="email-confirm" next={next} />
+      <CodeForm intent="email-confirm" next={next} initialCode={initialCode} />
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <ResendForm intent="email-send" resendAt={status.emailResendAt} />
         <button type="button" onClick={() => setChanging(true)} className="text-sm font-medium text-brand-700 hover:underline">
@@ -163,16 +172,35 @@ function SendForm({
  * Tek alanlı kod girişi: telefonun klavye önerisi (one-time-code), yapıştırma ve ekran okuyucu
  * için kutu kutu alanlardan daha sorunsuz. 6 hane girilince form kendiliğinden gönderilir.
  */
-function CodeForm({ intent, next, listenSms }: { intent: "email-confirm" | "phone-confirm"; next: string; listenSms?: boolean }) {
+function CodeForm({
+  intent,
+  next,
+  listenSms,
+  initialCode,
+}: {
+  intent: "email-confirm" | "phone-confirm";
+  next: string;
+  listenSms?: boolean;
+  initialCode?: string;
+}) {
   const { state, pending, formProps } = useStep();
   const formRef = useRef<HTMLFormElement>(null);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialCode ?? "");
 
   const update = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 6);
     setCode(digits);
     if (digits.length === 6) queueMicrotask(() => formRef.current?.requestSubmit());
   };
+
+  // E-postadaki bağlantıdan gelindiyse kod hazır: bir kez kendiliğinden gönder
+  const autoSubmitted = useRef(false);
+  useEffect(() => {
+    if (initialCode?.length === 6 && !autoSubmitted.current) {
+      autoSubmitted.current = true;
+      formRef.current?.requestSubmit();
+    }
+  }, [initialCode]);
 
   // Android Chrome: SMS'teki "@alan-adı #kod" satırını okuyup alanı kendisi doldurur (WebOTP)
   useEffect(() => {
@@ -201,7 +229,8 @@ function CodeForm({ intent, next, listenSms }: { intent: "email-confirm" | "phon
           inputMode="numeric"
           autoComplete="one-time-code"
           pattern="\d{6}"
-          maxLength={6}
+          // maxLength yok: boşluklu ya da tireli yapıştırılan kod ("513 001") önce kesilip hane kaybediyordu;
+          // rakam dışı karakterler update() içinde atılır ve 6 haneye kısaltılır
           required
           autoFocus
           placeholder="______"

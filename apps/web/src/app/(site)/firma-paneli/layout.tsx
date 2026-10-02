@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import type { CompanyProfile } from "@/lib/api";
 import { cityOptions, getCompanyContext } from "@/lib/company";
@@ -20,7 +21,8 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
         <h1 className="text-2xl font-bold tracking-tight">Firma bilgilerini gir</h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
           Hoş geldin {user.fullName}. Taleplere teklif verebilmek için önce firmanı tanıt. Ekibimiz vergi
-          numaranı ve K3 yetki belgeni kontrol ettikten sonra firman doğrulanır.
+          numaranı ve belgelerini (K3 yetki belgesi, vergi levhası, ticaret sicil) kontrol ettikten sonra firman
+          doğrulanır. Belgeleri bir sonraki adımda yükleyeceksin.
         </p>
         <Card className="mt-8 p-6">
           <ProfileForm cities={cityOptions} />
@@ -61,12 +63,19 @@ function VerificationBanner({ profile }: { profile: CompanyProfile }) {
         <>
           <strong>Firma doğrulaması reddedildi.</strong>{" "}
           {profile.verificationNote ? `Gerekçe: ${profile.verificationNote}. ` : ""}
-          Bilgilerini firma profilinden düzeltip kaydettiğinde yeniden incelenir.
+          Bilgilerini firma profilinden düzeltip kaydettiğinde ya da{" "}
+          <Link href="/firma-paneli/belgeler" className="font-semibold underline">
+            yeni belge yüklediğinde
+          </Link>{" "}
+          yeniden incelenir.
         </>
       ) : (
         <>
-          <strong>Firman doğrulama bekliyor.</strong> Bölgendeki talepleri şimdiden görebilirsin; doğrulama
-          tamamlanınca teklif verebileceksin.
+          <strong>Firman doğrulama bekliyor.</strong> K3 yetki belgesi, vergi levhası ve ticaret sicil belgeni{" "}
+          <Link href="/firma-paneli/belgeler" className="font-semibold underline">
+            Belgeler
+          </Link>{" "}
+          sayfasından yükle. Bölgendeki talepleri şimdiden görebilirsin; doğrulama tamamlanınca teklif verebileceksin.
         </>
       )}
     </div>

@@ -20,6 +20,7 @@ import { assertCityCodes } from '../common/utils/locations.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { UserRole, VerificationStatus } from '../generated/prisma/enums.js';
+import { CompanyDocumentsService } from '../media/company-documents.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
 import { phoneDigits } from './dto/admin-lists.dto.js';
@@ -32,6 +33,7 @@ export class AdminCompaniesController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: DomainEvents,
+    private readonly documents: CompanyDocumentsService,
   ) {}
 
   @Get()
@@ -78,7 +80,6 @@ export class AdminCompaniesController {
       include: {
         ...WITH_CITIES,
         owner: { select: { id: true, fullName: true, phone: true, email: true, createdAt: true } },
-        documents: { orderBy: { createdAt: 'desc' } },
         _count: { select: { quotes: true, bookings: true } },
       },
     });
@@ -89,11 +90,11 @@ export class AdminCompaniesController {
       take: 20,
       select: { action: true, details: true, createdAt: true, actor: { select: { fullName: true } } },
     });
-    const { owner, documents, _count, ...rest } = company;
+    const { owner, _count, ...rest } = company;
     return {
       ...toProfile(rest),
       owner,
-      documents,
+      ...(await this.documents.summary(id)),
       quoteCount: _count.quotes,
       bookingCount: _count.bookings,
       history,
@@ -149,9 +150,14 @@ export class AdminCompaniesController {
     return toProfile(updated);
   }
 
+  /** Zorunlu belgelerin (K3, vergi levhası, ticaret sicil) her biri onaylanmış ve süresi geçerli olmalı */
   @Post(':id/verify')
   @HttpCode(HttpStatus.OK)
-  verify(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
+  async verify(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
+    const missing = await this.documents.missingForVerification(id);
+    if (missing.length) {
+      throw new ConflictException(`Firma onaylanamaz, şu belgeler onaylanmadı: ${missing.join(', ')}`);
+    }
     return this.setStatus(admin, id, VerificationStatus.VERIFIED);
   }
 
@@ -159,6 +165,24 @@ export class AdminCompaniesController {
   @HttpCode(HttpStatus.OK)
   reject(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: RejectCompanyDto) {
     return this.setStatus(admin, id, VerificationStatus.REJECTED, dto.reason);
+  }
+
+  @Post(':id/documents/:documentId/approve')
+  @HttpCode(HttpStatus.OK)
+  approveDocument(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Param('documentId') documentId: string) {
+    return this.documents.review(admin.id, id, documentId, VerificationStatus.VERIFIED);
+  }
+
+  /** Gerekçe firma panelinde belgenin yanında gösterilir */
+  @Post(':id/documents/:documentId/reject')
+  @HttpCode(HttpStatus.OK)
+  rejectDocument(
+    @CurrentUser() admin: AuthUser,
+    @Param('id') id: string,
+    @Param('documentId') documentId: string,
+    @Body() dto: RejectCompanyDto,
+  ) {
+    return this.documents.review(admin.id, id, documentId, VerificationStatus.REJECTED, dto.reason);
   }
 
   private async setStatus(admin: AuthUser, id: string, status: VerificationStatus, note?: string) {

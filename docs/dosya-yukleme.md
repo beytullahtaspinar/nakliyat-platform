@@ -1,4 +1,4 @@
-# Talep fotoğraf ve videoları
+# Talep fotoğraf ve videoları, firma belgeleri
 
 Müşteri talep açarken (ve sonra talep sayfasından) eşyalarının fotoğrafını veya videosunu ekler. Firmalar bunları talep ayrıntısında görür; adres ve iletişim bilgisi yine gizlidir.
 
@@ -16,7 +16,7 @@ Müşteri talep açarken (ve sonra talep sayfasından) eşyalarının fotoğraf�
 
 ## Depolama: hibrit (Cloudflare R2 + sunucu diski)
 
-Her dosyanın nerede durduğu veritabanında tutulur (`RequestMedia.storage`: `R2` ya da `LOCAL`).
+Her dosyanın nerede durduğu veritabanında tutulur (`RequestMedia.storage`, `CompanyDocument.storage`: `R2` ya da `LOCAL`). Talep dosyaları ve firma belgeleri aynı şekilde çalışır.
 
 1. Gelen dosya önce sunucu diskine geçici olarak yazılır, sonra R2'ye aktarılır ve geçici dosya silinir.
 2. **R2 kullanılamazsa dosya sunucu diskinde kalır** (`~/yuklemeler`): R2 ayarlı değilse, hata verirse (ör. `403 NotEntitled`), 60 sn içinde cevap vermezse ya da R2 kotası dolduysa. Müşteri farkı görmez. R2 hata verince 10 dakika denenmez (her yükleme beklemesin), loga ve Sentry'ye `R2'ye yazılamadı ...` düşer.
@@ -42,3 +42,17 @@ Geçişten önce diske yüklenmiş dosyalar R2 çalışınca otomatik taşınır
 
 - API: `apps/api/test/media.e2e-spec.ts` (yerel disk sürücüsüyle yükleme, imza, sınırlar, yetki), `src/media/s3-presign.spec.ts` (R2 imzası, AWS örnek değerleriyle), `src/media/storage.spec.ts` (R2'ye aktarım ve hibrit depo, sahte sunucuyla), `test/media-hybrid.e2e-spec.ts` (R2 hata verirken diske kayıt, R2 düzelince taşıma).
 - Tarayıcı: `apps/web/e2e/talep-medya.spec.ts` (fotoğraf küçültme + yükleme + silme, video küçültme + yükleme).
+
+## Firma belgeleri
+
+Firmalar doğrulama için belge yükler (firma paneli → Belgeler). Aynı depo ve aynı yükleme akışı kullanılır,
+dosyalar `firmalar/<firmaId>/` altında durur ve toplam boyut sınırına (kota) talep dosyalarıyla birlikte sayılır.
+
+- Zorunlu: K3 yetki belgesi (geçerlilik bitiş tarihiyle), vergi levhası, ticaret sicil gazetesi / faaliyet belgesi.
+  İsteğe bağlı: sigorta poliçesi, en fazla 5 ek belge.
+- PDF, JPG, PNG ya da WebP; en fazla 10 MB. Belgeler küçültülmez.
+- Belgeleri yalnızca firma sahibi ve yönetici kısa süreli imzalı adresle görür.
+- Yönetici her belgeyi ayrı onaylar ya da gerekçeyle reddeder. Zorunlu belgelerin hepsi onaylı ve süresi geçerli
+  olmadan firma onaylanamaz.
+- Onaylı K3'ün süresi dolarsa firma teklif veremez; yeni K3 yüklenip onaylanınca devam eder.
+- Hesap silinince belgeler depodan da silinir.
