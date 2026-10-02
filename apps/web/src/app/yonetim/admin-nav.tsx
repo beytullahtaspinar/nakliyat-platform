@@ -2,16 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BuildingIcon, ClipboardIcon, GridIcon, UsersIcon } from "@/components/ui/icons";
+import { BuildingIcon, ClipboardIcon, GridIcon, ShieldCheckIcon, UsersIcon } from "@/components/ui/icons";
 
 const ITEMS = [
   { href: "/yonetim", label: "Pano", icon: GridIcon, exact: true },
   { href: "/yonetim/firmalar", label: "Firmalar", icon: BuildingIcon },
+  { href: "/yonetim/belgeler", label: "Belgeler", icon: ShieldCheckIcon },
   { href: "/yonetim/talepler", label: "Talepler", icon: ClipboardIcon },
   { href: "/yonetim/kullanicilar", label: "Kullanıcılar", icon: UsersIcon },
 ];
 
-export function AdminNav({ pendingCompanies }: { pendingCompanies: number }) {
+export function AdminNav({ pendingCompanies, pendingDocuments }: { pendingCompanies: number; pendingDocuments: number }) {
+  const badges: Record<string, { count: number; label: string }> = {
+    "/yonetim/firmalar": { count: pendingCompanies, label: "onay bekleyen firma" },
+    "/yonetim/belgeler": { count: pendingDocuments, label: "onay bekleyen belge" },
+  };
   const pathname = usePathname();
   return (
     <nav aria-label="Yönetim" className="overflow-x-auto px-2 pb-2 lg:px-3 lg:pb-0">
@@ -29,13 +34,13 @@ export function AdminNav({ pendingCompanies }: { pendingCompanies: number }) {
               >
                 <Icon className="h-5 w-5 shrink-0" />
                 {label}
-                {href === "/yonetim/firmalar" && pendingCompanies > 0 && (
+                {(badges[href]?.count ?? 0) > 0 && (
                   <span
                     className="ml-auto rounded-full bg-accent-100 px-2 py-0.5 text-xs font-semibold text-accent-800"
-                    title="Onay bekleyen firma"
+                    title={badges[href]!.label}
                   >
-                    {pendingCompanies}
-                    <span className="sr-only"> onay bekleyen</span>
+                    {badges[href]!.count}
+                    <span className="sr-only"> {badges[href]!.label}</span>
                   </span>
                 )}
               </Link>

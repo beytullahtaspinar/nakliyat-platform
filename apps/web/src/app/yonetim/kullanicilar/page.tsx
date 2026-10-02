@@ -81,7 +81,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
               </td>
               <td className={td}>{ROLE_LABELS[u.role]}</td>
               <td className={`${td} whitespace-nowrap`}>{formatPhone(u.phone)}</td>
-              <td className={td}>{u.email ?? <span className="text-slate-400">Yok</span>}</td>
+              <td className={td}>{u.email ?? <span className="text-slate-500">Yok</span>}</td>
               <td className={td}>
                 {u.company ? (
                   <span className="flex flex-wrap items-center gap-1.5">

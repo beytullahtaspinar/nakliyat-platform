@@ -1648,6 +1648,75 @@
         ]
       }
     },
+    "/v1/admin/documents": {
+      "get": {
+        "operationId": "AdminDocumentsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "VERIFIED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Firma adı, unvan, vergi no veya yetkili telefonunda arar",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
     "/v1/admin/requests": {
       "get": {
         "operationId": "AdminRequestsController_list",

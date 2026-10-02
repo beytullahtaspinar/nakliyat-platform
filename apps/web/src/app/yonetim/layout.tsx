@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/yonetim">)
             </button>
           </form>
         </div>
-        <AdminNav pendingCompanies={summary.companies.pending} />
+        <AdminNav pendingCompanies={summary.companies.pending} pendingDocuments={summary.documents.pending} />
         <div className="mt-auto hidden border-t border-slate-200 px-4 py-4 lg:block">
           <p className="truncate text-sm font-medium text-slate-900">{user.fullName}</p>
           <p className="text-xs text-slate-500">Yönetici</p>

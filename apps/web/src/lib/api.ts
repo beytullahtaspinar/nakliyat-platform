@@ -290,6 +290,7 @@ export type AdminSummary = {
   requests: { open: number; booked: number; total: number };
   users: { customers: number; companies: number; total: number };
   bookings: { scheduled: number };
+  documents: { pending: number };
 };
 
 type CompanyOwner = { fullName: string; phone: string; email: string | null };
@@ -322,6 +323,13 @@ export type CompanyDocument = {
 export type DocumentRequirement = {
   type: CompanyDocument["type"];
   state: "VERIFIED" | "PENDING" | "REJECTED" | "EXPIRED" | "MISSING";
+};
+
+/** GET /admin/documents: belge ve ait olduğu firma */
+export type AdminDocument = CompanyDocument & {
+  company: { id: string; displayName: string; legalName: string; verificationStatus: VerificationStatus };
+  /** Aynı türden onaylı eski belgesi var: onaylı firmanın güncellemesi */
+  replacesVerified: boolean;
 };
 
 /** GET /company/documents: belgeler ve zorunlu belgelerin durumu */

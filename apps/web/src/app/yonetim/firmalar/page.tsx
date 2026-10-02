@@ -68,7 +68,7 @@ export default async function AdminCompaniesPage({ searchParams }: PageProps<"/y
                 <div className="text-xs text-slate-500">{c.legalName}</div>
               </td>
               <td className={`${td} font-mono text-xs`}>{c.taxNumber}</td>
-              <td className={`${td} font-mono text-xs`}>{c.k3LicenseNumber ?? <span className="font-sans text-slate-400">Yok</span>}</td>
+              <td className={`${td} font-mono text-xs`}>{c.k3LicenseNumber ?? <span className="font-sans text-slate-500">Yok</span>}</td>
               <td className={td}>{c.cityName ?? c.cityCode}</td>
               <td className={td}>
                 {c.owner.fullName}

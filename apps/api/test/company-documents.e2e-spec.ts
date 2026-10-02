@@ -219,6 +219,21 @@ describe('Firma belgeleri (e2e)', () => {
     expect(k3s.map((d) => d.status)).toEqual(['PENDING', 'VERIFIED']);
     expect(state(renewed, 'K3_LICENSE')).toBe('VERIFIED');
 
+    // Onaylı firmanın güncellemesi yönetimdeki "onay bekleyen belgeler" listesinde ve sayaçta görünür
+    const queue = await http().get('/v1/admin/documents?status=PENDING&q=6600000001').set(auth('admin')).expect(200);
+    expect(queue.body.items).toEqual([
+      expect.objectContaining({
+        id: k3s[0]!.id,
+        type: 'K3_LICENSE',
+        replacesVerified: true,
+        company: expect.objectContaining({ id: companyId, verificationStatus: 'VERIFIED' }),
+      }),
+    ]);
+    const summary = await http().get('/v1/admin/summary').set(auth('admin')).expect(200);
+    expect(summary.body.documents.pending).toBeGreaterThanOrEqual(1);
+    await http().get('/v1/admin/documents').set(auth('company')).expect(403);
+    expect(await prisma.auditLog.count({ where: { entityId: companyId, action: 'company.document.upload' } })).toBeGreaterThanOrEqual(5);
+
     const approved = (await review(k3s[0]!.id, 'approve')).body as Summary;
     expect(ofType(approved, 'K3_LICENSE')).toEqual([expect.objectContaining({ status: 'VERIFIED', validUntil: inDays(1500) })]);
     await http().get(pathOf(k3s[1]!.url)).expect(404);

@@ -104,6 +104,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |
 | ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle). Onay için zorunlu belgelerin her biri onaylı ve süresi geçerli olmalı. |
 | ✅ | POST | `/admin/companies/:id/documents/:documentId/approve` · `/reject` | Belgeyi onayla veya reddet (gerekçe firma panelinde görünür) |
+| ✅ | GET | `/admin/documents?status=&q=` | Firma belgeleri; varsayılan onay bekleyenler (en eski önce). Onaylı firmanın yeni eklediği/yenilediği belge `replacesVerified` ile işaretli. Sayaç: `/admin/summary` → `documents.pending` |
 | ✅ | GET | `/admin/requests?status=&q=` | Tüm talepler, müşteri iletişimiyle; müşteri adı/telefonunda arama |
 | ✅ | GET | `/admin/requests/:id` | Talep kaydı: müşteri, tüm teklifler (fiyata göre), iş |
 | ✅ | GET | `/admin/users?role=&q=` | Kullanıcılar; ad, telefon veya e-postada arama |

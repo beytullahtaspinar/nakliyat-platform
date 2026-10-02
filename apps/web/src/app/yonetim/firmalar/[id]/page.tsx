@@ -22,6 +22,7 @@ export const metadata: Metadata = { title: "Firma inceleme" };
 
 const HISTORY_LABELS: Record<string, string> = {
   "company.update": "Bilgiler yönetimden düzenlendi",
+  "company.document.upload": "Firma belge yükledi",
   "company.document.approve": "Belge onaylandı",
   "company.document.reject": "Belge reddedildi",
   "company.impersonate": "Firma paneline geçildi",
