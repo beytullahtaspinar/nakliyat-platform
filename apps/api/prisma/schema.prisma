@@ -37,14 +37,14 @@ model User {
   updatedAt       DateTime   @updatedAt
   deletedAt       DateTime?
 
-  company       Company?
-  requests      MovingRequest[]
-  reviews       Review[]
-  sentMessages  Message[]
+  company                 Company?
+  requests                MovingRequest[]
+  reviews                 Review[]
+  sentMessages            Message[]
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
   refreshTokens           RefreshToken[]
-  auditLogs     AuditLog[]
+  auditLogs               AuditLog[]
 }
 
 model RefreshToken {
@@ -230,24 +230,32 @@ enum MediaType {
   VIDEO
 }
 
-/// Talebe eklenen fotoğraf ve videolar. Dosyalar tarayıcıda küçültülüp doğrudan depolamaya
-/// (Cloudflare R2 ya da sunucu diski) yüklenir; burada yalnızca anahtar ve özellikleri tutulur.
+/// Dosyanın durduğu yer. R2 kullanılamazsa dosya sunucu diskine kaydedilir, R2 düzelince taşınır.
+enum StorageLocation {
+  LOCAL
+  R2
+}
+
+/// Talebe eklenen fotoğraf ve videolar. Dosyalar tarayıcıda küçültülür, API üzerinden
+/// Cloudflare R2'ye (olmazsa sunucu diskine) kaydedilir; burada yalnızca anahtar ve özellikleri tutulur.
 model RequestMedia {
-  id          String    @id @default(cuid())
+  id          String          @id @default(cuid())
   requestId   String
   type        MediaType
   /// Depolamadaki anahtar: talepler/<talepId>/<rastgele>.<uzantı>
-  storageKey  String    @unique @db.VarChar(300)
-  mimeType    String    @db.VarChar(100)
+  storageKey  String          @unique @db.VarChar(300)
+  storage     StorageLocation @default(LOCAL)
+  mimeType    String          @db.VarChar(100)
   sizeBytes   Int
   width       Int?
   height      Int?
   durationSec Int?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime        @default(now())
 
   request MovingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@index([requestId])
+  @@index([storage])
 }
 
 // ─── Teklifler ──────────────────────────────────────────────────

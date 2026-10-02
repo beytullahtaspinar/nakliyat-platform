@@ -6,31 +6,50 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  type OnModuleDestroy,
+  type OnModuleInit,
 } from '@nestjs/common';
+import type { Readable } from 'node:stream';
 import type { RequestMedia } from '../generated/prisma/client.js';
-import { MediaType, RequestStatus } from '../generated/prisma/enums.js';
+import { MediaType, RequestStatus, StorageLocation } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AttachMediaDto, CreateUploadsDto } from './dto/media.dto.js';
 import { EXTENSIONS, MEDIA_RULES, mediaTypeOf } from './media-rules.js';
-import { FILE_STORAGE, type FileStorage } from './storage.js';
+import { FILE_STORAGE, type MediaStorage } from './storage.js';
 
 const LIMIT_LABEL = { [MediaType.PHOTO]: 'fotoğraf', [MediaType.VIDEO]: 'video' } as const;
 const mb = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
+/** Diskte kalan dosyalar bu aralıkla R2'ye taşınmaya çalışılır */
+const MOVE_INTERVAL_MS = 10 * 60 * 1000;
+const MOVE_BATCH = 20;
 
 /**
  * Talep fotoğraf/videoları. Akış:
  * 1. createUploads: müşteri dosya türü ve boyutunu bildirir, her dosya için kısa süreli yükleme adresi alır.
- * 2. Tarayıcı küçültülmüş dosyayı doğrudan depoya yükler (API'den geçmez; yerel sürücüde API'ye yazılır).
+ * 2. receive: tarayıcı küçültülmüş dosyayı API'ye yükler; dosya R2'ye, olmazsa sunucu diskine kaydedilir.
  * 3. attach: yüklenen dosyalar depoda doğrulanıp talebe bağlanır.
+ * Diskte kalan dosyalar R2 çalışınca arka planda R2'ye taşınır (moveLocalToR2).
  */
 @Injectable()
-export class MediaService {
+export class MediaService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(MediaService.name);
+  private moveTimer?: NodeJS.Timeout;
+  private moving = false;
 
   constructor(
     private readonly prisma: PrismaService,
-    @Inject(FILE_STORAGE) private readonly storage: FileStorage,
+    @Inject(FILE_STORAGE) private readonly storage: MediaStorage,
   ) {}
+
+  onModuleInit() {
+    if (!this.storage.r2) return;
+    this.moveTimer = setInterval(() => void this.moveLocalToR2(), MOVE_INTERVAL_MS);
+    this.moveTimer.unref();
+  }
+
+  onModuleDestroy() {
+    clearInterval(this.moveTimer);
+  }
 
   async createUploads(customerId: string, requestId: string, { files }: CreateUploadsDto) {
     await this.requireEditable(customerId, requestId);
@@ -53,6 +72,57 @@ export class MediaService {
         return { key, ...this.storage.createUpload(key, file.mimeType, file.sizeBytes) };
       }),
     };
+  }
+
+  /** Yüklenen dosyayı kaydeder: R2'de yer varsa ve R2 çalışıyorsa R2'ye, değilse sunucu diskine */
+  async receive(key: string, mimeType: string, sizeBytes: number, body: Readable) {
+    const usage = await this.usage();
+    const useR2 = usage[StorageLocation.R2] + sizeBytes <= this.storage.quotas.r2;
+    return this.storage.write(key, mimeType, sizeBytes, body, useR2);
+  }
+
+  /**
+   * Diskte kalan dosyaları R2'ye taşır (R2 kurulmadan ya da R2 hata verirken yüklenenler).
+   * Önce R2'ye kopyalanır, kayıt güncellenir, sonra diskteki silinir: arada görüntüleme bozulmaz.
+   */
+  async moveLocalToR2() {
+    if (this.moving || !this.storage.r2Ready()) return 0;
+    this.moving = true;
+    let moved = 0;
+    try {
+      const items = await this.prisma.requestMedia.findMany({
+        where: { storage: StorageLocation.LOCAL },
+        orderBy: { createdAt: 'asc' },
+        take: MOVE_BATCH,
+      });
+      let r2Used = (await this.usage())[StorageLocation.R2];
+      for (const item of items) {
+        if (r2Used + item.sizeBytes > this.storage.quotas.r2) break;
+        if (!(await this.storage.local.stat(item.storageKey))) {
+          this.logger.warn(`Diskte bulunamadı, taşınamadı: ${item.storageKey}`);
+          continue;
+        }
+        if (!(await this.storage.copyToR2(item.storageKey, item.mimeType, item.sizeBytes))) break;
+        const { count } = await this.prisma.requestMedia.updateMany({
+          where: { id: item.id, storage: StorageLocation.LOCAL },
+          data: { storage: StorageLocation.R2 },
+        });
+        if (count) {
+          await this.storage.delete(item.storageKey, StorageLocation.LOCAL);
+          moved += 1;
+          r2Used += item.sizeBytes;
+        } else if (!(await this.prisma.requestMedia.findUnique({ where: { id: item.id } }))) {
+          // Taşınırken silindi: R2'deki kopya da silinir (başka bir süreç taşıdıysa kayıt durur, dokunulmaz)
+          await this.storage.delete(item.storageKey, StorageLocation.R2);
+        }
+      }
+      if (moved) this.logger.log(`${moved} dosya sunucu diskinden R2'ye taşındı`);
+    } catch (err) {
+      this.logger.error(`Dosyalar R2'ye taşınamadı: ${(err as Error).message}`);
+    } finally {
+      this.moving = false;
+    }
+    return moved;
   }
 
   async attach(customerId: string, requestId: string, { items }: AttachMediaDto) {
@@ -81,6 +151,7 @@ export class MediaService {
         requestId,
         type,
         storageKey: item.key,
+        storage: object.location,
         mimeType: object.mimeType,
         sizeBytes: object.sizeBytes,
         width: item.width ?? null,
@@ -102,7 +173,7 @@ export class MediaService {
     const media = await this.prisma.requestMedia.findFirst({ where: { id: mediaId, requestId } });
     if (!media) throw new NotFoundException('Dosya bulunamadı');
     await this.prisma.requestMedia.delete({ where: { id: media.id } });
-    await this.deleteObjects([media.storageKey]);
+    await this.deleteObjects([media]);
   }
 
   /** Talebin dosyaları, kısa süreli görüntüleme adresleriyle */
@@ -120,7 +191,7 @@ export class MediaService {
       width: media.width,
       height: media.height,
       durationSec: media.durationSec,
-      url: this.storage.viewUrl(media.storageKey),
+      url: this.storage.viewUrl(media.storageKey, media.storage),
       createdAt: media.createdAt,
     };
   }
@@ -129,15 +200,15 @@ export class MediaService {
   async deleteForCustomer(customerId: string) {
     const media = await this.prisma.requestMedia.findMany({
       where: { request: { customerId } },
-      select: { storageKey: true },
+      select: { storageKey: true, storage: true },
     });
     if (!media.length) return;
     await this.prisma.requestMedia.deleteMany({ where: { request: { customerId } } });
-    await this.deleteObjects(media.map((m) => m.storageKey));
+    await this.deleteObjects(media);
   }
 
-  private async deleteObjects(keys: string[]) {
-    const results = await Promise.allSettled(keys.map((key) => this.storage.delete(key)));
+  private async deleteObjects(items: Pick<RequestMedia, 'storageKey' | 'storage'>[]) {
+    const results = await Promise.allSettled(items.map((m) => this.storage.delete(m.storageKey, m.storage)));
     const failed = results.filter((r) => r.status === 'rejected').length;
     if (failed) this.logger.warn(`${failed} dosya depodan silinemedi`);
   }
@@ -167,16 +238,29 @@ export class MediaService {
     }
   }
 
-  /** Toplam boyut sınırı: sunucu diski (2 GB) ya da R2 ücretsiz katmanı (10 GB) dolmasın */
+  /** Depo başına kullanılan toplam boyut (bayt) */
+  private async usage() {
+    const groups = await this.prisma.requestMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } });
+    const used = { [StorageLocation.LOCAL]: 0, [StorageLocation.R2]: 0 };
+    for (const g of groups) used[g.storage] = g._sum.sizeBytes ?? 0;
+    return used;
+  }
+
+  /**
+   * Toplam boyut sınırı: R2 ücretsiz katmanı (10 GB) ya da sunucu diski (2 GB) dolmasın.
+   * İkisinden birinde yer varsa yükleme kabul edilir.
+   */
   private async checkQuota(incomingBytes: number) {
-    const { _sum } = await this.prisma.requestMedia.aggregate({ _sum: { sizeBytes: true } });
-    if ((_sum.sizeBytes ?? 0) + incomingBytes > this.storage.quotaBytes) {
-      this.logger.error(
-        this.storage.driver === 'r2'
-          ? 'R2 dosya kotası (R2_QUOTA_GB) doldu, yükleme durdu (docs/dosya-yukleme.md)'
-          : 'Yerel dosya kotası doldu; R2 depolamaya geçilmeli (docs/dosya-yukleme.md)',
-      );
-      throw new ConflictException('Dosya yükleme şu an kullanılamıyor, talebini fotoğrafsız gönderebilirsin.');
-    }
+    const used = await this.usage();
+    const { quotas, r2 } = this.storage;
+    const r2Room = r2 !== null && used[StorageLocation.R2] + incomingBytes <= quotas.r2;
+    const localRoom = used[StorageLocation.LOCAL] + incomingBytes <= quotas.local;
+    if (r2Room || localRoom) return;
+    this.logger.error(
+      r2
+        ? 'R2 (R2_QUOTA_GB) ve sunucu diski (LOCAL_UPLOAD_QUOTA_MB) kotası doldu, yükleme durdu (docs/dosya-yukleme.md)'
+        : 'Sunucu diski kotası doldu; R2 depolamaya geçilmeli (docs/dosya-yukleme.md)',
+    );
+    throw new ConflictException('Dosya yükleme şu an kullanılamıyor, talebini fotoğrafsız gönderebilirsin.');
   }
 }
