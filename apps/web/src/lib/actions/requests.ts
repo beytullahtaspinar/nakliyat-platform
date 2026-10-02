@@ -15,6 +15,13 @@ export type RequestFormState = {
 const text = (formData: FormData, name: string) => String(formData.get(name) ?? "").trim();
 const flag = (formData: FormData, name: string) => formData.get(name) === "on";
 
+/** Haritada işaretlenmişse { fromLat, fromLng } gibi; işaret yoksa boş */
+function pin(formData: FormData, prefix: "from" | "to") {
+  const lat = Number(formData.get(`${prefix}Lat`) || NaN);
+  const lng = Number(formData.get(`${prefix}Lng`) || NaN);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { [`${prefix}Lat`]: lat, [`${prefix}Lng`]: lng } : {};
+}
+
 function requestBody(formData: FormData) {
   const specialItems = text(formData, "specialItems")
     .split(/[,\n]/)
@@ -28,11 +35,13 @@ function requestBody(formData: FormData) {
     fromAddress: text(formData, "fromAddress"),
     fromFloor: Number(formData.get("fromFloor")),
     fromHasElevator: flag(formData, "fromHasElevator"),
+    ...pin(formData, "from"),
     toCityCode: text(formData, "toCityCode"),
     toDistrict: text(formData, "toDistrict"),
     toAddress: text(formData, "toAddress"),
     toFloor: Number(formData.get("toFloor")),
     toHasElevator: flag(formData, "toHasElevator"),
+    ...pin(formData, "to"),
     homeType: text(formData, "homeType"),
     moveDate: text(formData, "moveDate"),
     isDateFlexible: flag(formData, "isDateFlexible"),
