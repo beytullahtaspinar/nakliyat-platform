@@ -160,7 +160,7 @@ describe('Firma belgeleri (e2e)', () => {
   });
 
   it('desteklenmeyen tür, 10 MB üstü ve başka firmanın dosyası reddedilir', async () => {
-    const send = (body: unknown) => http().post('/v1/company/documents/uploads').set(auth('company')).send(body);
+    const send = (body: object) => http().post('/v1/company/documents/uploads').set(auth('company')).send(body);
     await send({ mimeType: 'image/svg+xml', sizeBytes: 100 }).expect(400);
     await send({ mimeType: 'text/html', sizeBytes: 100 }).expect(400);
     await send({ mimeType: 'application/pdf', sizeBytes: 11 * 1024 * 1024 }).expect(400);
