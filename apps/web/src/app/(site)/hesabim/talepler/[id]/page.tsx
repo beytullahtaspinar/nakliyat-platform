@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import {
   ApiError,
   apiFetch,
+  type Conversation as ConversationData,
   type CustomerBooking,
   type CustomerQuote,
   type MovingRequestDetail,
@@ -15,6 +16,7 @@ import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/f
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib/session";
 import { ConfirmButton } from "@/components/forms/confirm-button";
+import { Conversation } from "@/components/messages/conversation";
 import { RequestMediaManager } from "@/components/media/request-media-manager";
 import { RouteOverview } from "@/components/map/route-overview";
 import { routeText } from "@/lib/geo";
@@ -52,6 +54,10 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
           (b) => b.requestId === request.id,
         )
       : undefined;
+
+  const conversation = booking
+    ? await apiFetch<ConversationData>(`/bookings/${encodeURIComponent(booking.id)}/messages`, { token })
+    : undefined;
 
   const acceptable = request.status === "OPEN";
   // Hesap doğrulanınca yayına girecek taslak: düzenlenebilir ama teklif alamaz
@@ -97,6 +103,15 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
       )}
 
       {booking && <BookingCard booking={booking} justAccepted={kabul === "1"} />}
+
+      {conversation && (
+        <section id="mesajlar" className="mt-10 scroll-mt-20">
+          <h2 className="text-xl font-semibold">{conversation.counterpart} ile mesajlar</h2>
+          <div className="mt-4">
+            <Conversation initial={conversation} />
+          </div>
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold">Teklifler</h2>
@@ -281,7 +296,7 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
       </p>
       <p className="mt-3 text-sm">
         Firma da senin iletişim bilgilerini ve açık adresini artık görebiliyor. Taşınma gününü ve
-        detayları doğrudan firmayla netleştirebilirsin.
+        detayları aşağıdaki mesajlardan ya da telefonla firmayla netleştirebilirsin.
       </p>
     </section>
   );

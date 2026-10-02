@@ -217,6 +217,8 @@ export class AdminUsersController {
       this.prisma.refreshToken.deleteMany({ where: { userId: id } }),
       // Google/Apple bağlantısı kişisel veridir; silinen hesaba o yolla yeniden girilemez
       this.prisma.userIdentity.deleteMany({ where: { userId: id } }),
+      // Yazdığı mesajlar da kişisel veri: konuşmada yerleri kalır, içerikleri silinir
+      this.prisma.message.updateMany({ where: { senderId: id }, data: { body: '' } }),
       this.prisma.movingRequest.updateMany({
         where: { customerId: id, status: { in: [RequestStatus.DRAFT, RequestStatus.OPEN] } },
         data: { status: RequestStatus.CANCELLED },

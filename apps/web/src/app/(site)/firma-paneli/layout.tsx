@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import type { CompanyProfile } from "@/lib/api";
+import { apiFetch, type CompanyProfile, type UnreadMessages } from "@/lib/api";
 import { cityOptions, getCompanyContext } from "@/lib/company";
 import { isImpersonating } from "@/lib/session";
 import { VerifyNotice } from "@/components/verify-notice";
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CompanyPanelLayout({ children }: LayoutProps<"/firma-paneli">) {
-  const { user, profile } = await getCompanyContext();
+  const { user, token, profile } = await getCompanyContext();
   const banner = (await isImpersonating()) && (
     <ImpersonationBanner companyId={profile?.id} companyName={profile?.displayName ?? user.fullName} />
   );
@@ -37,6 +37,9 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
     );
   }
 
+  // Rozet yüklenemezse panel yine açılsın
+  const unread = await apiFetch<UnreadMessages>("/messages/unread", { token }).catch(() => null);
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
       {banner}
@@ -48,7 +51,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
       </div>
       <VerifyNotice user={user} returnTo="/firma-paneli" />
       <VerificationBanner profile={profile} />
-      <PanelNav />
+      <PanelNav unreadMessages={unread?.total} />
       <div className="mt-6">{children}</div>
     </main>
   );

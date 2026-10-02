@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { apiFetch, type MovingRequest, type Paginated } from "@/lib/api";
+import { apiFetch, type MovingRequest, type Paginated, type UnreadMessages } from "@/lib/api";
 import { formatDate, place } from "@/lib/format";
 import { REQUEST_STATUS, homeTypeLabel } from "@/lib/request-options";
 import { VerifyNotice } from "@/components/verify-notice";
@@ -20,7 +20,11 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
 
   const { yeni } = await searchParams;
   const token = (await getAccessToken())!;
-  const { items } = await apiFetch<Paginated<MovingRequest>>("/requests?limit=50", { token });
+  const [{ items }, unread] = await Promise.all([
+    apiFetch<Paginated<MovingRequest>>("/requests?limit=50", { token }),
+    apiFetch<UnreadMessages>("/messages/unread", { token }),
+  ]);
+  const unreadFor = (requestId: string) => unread.items.find((u) => u.requestId === requestId)?.count ?? 0;
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
@@ -91,6 +95,14 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
                     </Link>
                   ) : (
                     <span className="text-zinc-500">Henüz teklif yok</span>
+                  )}
+                  {unreadFor(r.id) > 0 && (
+                    <Link
+                      href={`/hesabim/talepler/${r.id}#mesajlar`}
+                      className="ml-3 inline-flex rounded-full bg-accent-100 px-2.5 py-0.5 text-xs font-semibold text-accent-900 hover:underline"
+                    >
+                      {unreadFor(r.id)} yeni mesaj
+                    </Link>
                   )}
                 </p>
               </li>

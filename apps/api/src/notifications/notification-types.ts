@@ -20,6 +20,11 @@ export const NOTIFICATION_TYPES = {
     description: 'Bir teklif kabul edilip iş kesinleştiğinde',
     roles: [UserRole.CUSTOMER, UserRole.COMPANY],
   },
+  NEW_MESSAGE: {
+    label: 'Yeni mesaj',
+    description: 'Anlaştığın firma ya da müşteri sana mesaj yazdığında',
+    roles: [UserRole.CUSTOMER, UserRole.COMPANY],
+  },
   COMPANY_VERIFICATION: {
     label: 'Firma hesabı onayı',
     description: 'Firma hesabın onaylandığında veya reddedildiğinde',

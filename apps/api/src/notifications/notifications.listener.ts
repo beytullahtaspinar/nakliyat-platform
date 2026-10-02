@@ -43,6 +43,7 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('request.created', ({ requestId }) => this.onRequestCreated(requestId));
     this.events.on('quote.created', ({ quoteId }) => this.onQuoteCreated(quoteId));
     this.events.on('quote.accepted', ({ quoteId }) => this.onQuoteAccepted(quoteId));
+    this.events.on('message.sent', ({ messageId }) => this.onMessageSent(messageId));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
   }
 
@@ -99,6 +100,42 @@ export class NotificationsListener implements OnModuleInit {
       templates.quoteAcceptedForCustomer({ ...common, requestId: quote.requestId, companyName: quote.company.displayName }),
     );
     await this.notifications.notify(quote.company.ownerId, templates.quoteAcceptedForCompany(common));
+  }
+
+  /**
+   * Karşı tarafa yeni mesaj bildirimi. Okunmamış mesajı zaten bekleyen kişiye her mesajda yeniden
+   * e-posta gitmez: yalnızca okunmamışların ilki bildirilir, okuyunca sıradaki yeni mesaj yine bildirilir.
+   */
+  async onMessageSent(messageId: string) {
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+      include: {
+        booking: {
+          select: {
+            id: true,
+            requestId: true,
+            request: { select: { customerId: true, customer: { select: { fullName: true } } } },
+            company: { select: { ownerId: true, displayName: true } },
+          },
+        },
+      },
+    });
+    if (!message?.booking || message.readAt) return;
+    const { booking } = message;
+    const earlierUnread = await this.prisma.message.count({
+      where: { bookingId: booking.id, senderId: message.senderId, readAt: null, createdAt: { lt: message.createdAt } },
+    });
+    if (earlierUnread > 0) return;
+
+    const fromCustomer = message.senderId === booking.request.customerId;
+    await this.notifications.notify(
+      fromCustomer ? booking.company.ownerId : booking.request.customerId,
+      templates.newMessage({
+        senderName: fromCustomer ? booking.request.customer.fullName : booking.company.displayName,
+        body: message.body,
+        path: fromCustomer ? `/firma-paneli/isler/${booking.id}` : `/hesabim/talepler/${booking.requestId}#mesajlar`,
+      }),
+    );
   }
 
   async onVerificationChanged(companyId: string) {

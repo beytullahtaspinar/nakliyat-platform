@@ -12,7 +12,8 @@ const TABS = [
   { href: "/firma-paneli/bildirimler", label: "Bildirimler" },
 ];
 
-export function PanelNav() {
+/** unreadMessages: okunmamış mesaj sayısı, İşlerim sekmesinde gösterilir */
+export function PanelNav({ unreadMessages = 0 }: { unreadMessages?: number }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Firma paneli" className="mt-6 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800">
@@ -31,6 +32,13 @@ export function PanelNav() {
                 }`}
               >
                 {tab.label}
+                {tab.href === "/firma-paneli/isler" && unreadMessages > 0 && " "}
+                {tab.href === "/firma-paneli/isler" && unreadMessages > 0 && (
+                  <span className="ml-0.5 rounded-full bg-accent-100 px-1.5 py-0.5 text-xs font-semibold text-accent-900">
+                    {unreadMessages}
+                    <span className="sr-only"> yeni mesaj</span>
+                  </span>
+                )}
               </Link>
             </li>
           );
