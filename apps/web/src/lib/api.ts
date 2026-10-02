@@ -339,6 +339,8 @@ export type AdminCompanyDetail = AdminCompany &
       to?: VerificationStatus;
       note?: string | null;
       type?: CompanyDocument["type"];
+      method?: string;
+      path?: string;
     } | null;
     createdAt: string;
     actor: { fullName: string };

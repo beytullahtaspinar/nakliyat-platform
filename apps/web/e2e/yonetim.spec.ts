@@ -55,6 +55,8 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await expectAccessible(page);
 
   await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Firmalar/ }).click();
+  // İlk ve varsayılan sekme "Tümü"
+  await expect(page.getByRole("navigation", { name: "Firma durumu" }).getByRole("link", { name: "Tümü" })).toHaveAttribute("aria-current", "page");
   await page.getByRole("search").getByRole("searchbox").fill(companyName);
   await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
   await expectAccessible(page);
@@ -79,6 +81,23 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await expect(page.getByRole("status")).toContainText("Firma onaylandı");
   await expect(page.getByRole("heading", { name: "Karar geçmişi" })).toBeVisible();
   await expect(page.getByText("Onaylı", { exact: true }).first()).toBeVisible();
+  const companyUrl = page.url();
+
+  // Firma paneline şifresiz geçer; yönetimin diğer sayfalarında yine kendisidir
+  await page.getByRole("button", { name: "Firma paneline geç" }).click();
+  await expect(page).toHaveURL(/\/firma-paneli$/);
+  const banner = page.getByRole("region", { name: "Yönetici görünümü" });
+  await expect(banner).toContainText(`Yönetici olarak ${companyName} firmasının panelini görüntülüyorsun`);
+  await expect(page.getByRole("heading", { level: 1, name: companyName })).toBeVisible();
+  await expectAccessible(page);
+  await page.goto("/yonetim");
+  await expect(page.getByRole("heading", { level: 1, name: "Pano" })).toBeVisible();
+  await page.goto("/firma-paneli");
+  await banner.getByRole("button", { name: "Yönetime dön" }).click();
+  await expect(page).toHaveURL(companyUrl);
+  await expect(page.getByText("Firma paneline geçildi")).toBeVisible();
+  await page.goto("/firma-paneli");
+  await expect(page).toHaveURL(/\/yonetim$/);
 });
 
 test("yönetici kullanıcının bilgilerini ve şifresini değiştirir", async ({ page, request, browser }) => {

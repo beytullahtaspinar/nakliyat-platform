@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 import type { AccessTokenPayload } from '../../auth/auth.service.js';
-import { UserStatus } from '../../generated/prisma/enums.js';
+import { UserRole, UserStatus } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 @Injectable()
@@ -42,7 +42,17 @@ export class JwtAuthGuard implements CanActivate {
     if (!user || user.deletedAt || user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException('Oturum süresi dolmuş veya geçersiz');
     }
-    request.user = { id: payload.sub, role: user.role };
+    if (payload.imp) {
+      // Firma görüntüleme anahtarı: yönetici o arada yetkisini kaybettiyse anahtar da geçersiz
+      const admin = await this.prisma.user.findUnique({
+        where: { id: payload.imp },
+        select: { role: true, status: true, deletedAt: true },
+      });
+      if (!admin || admin.deletedAt || admin.status !== UserStatus.ACTIVE || admin.role !== UserRole.ADMIN) {
+        throw new UnauthorizedException('Oturum süresi dolmuş veya geçersiz');
+      }
+    }
+    request.user = { id: payload.sub, role: user.role, ...(payload.imp && { impersonatorId: payload.imp }) };
     return true;
   }
 }

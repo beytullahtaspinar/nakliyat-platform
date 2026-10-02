@@ -373,4 +373,35 @@ describe('Pazaryeri akışı (e2e)', () => {
     expect(log?.details).toEqual({ role: 'COMPANY' });
   });
 
+  it('yönetici firma paneline geçer: firmanın gözünden çalışır, her değişiklik kaydedilir', async () => {
+    const res = await http().post(`/v1/admin/companies/${companyIds.companyC}/impersonate`).set(auth('admin')).expect(200);
+    expect(res.body).toMatchObject({ expiresIn: 1800, company: { id: companyIds.companyC } });
+    const asCompany = { Authorization: `Bearer ${res.body.accessToken}` };
+
+    const profile = await http().get('/v1/company/profile').set(asCompany).expect(200);
+    expect(profile.body.id).toBe(companyIds.companyC);
+    await http().patch('/v1/company/profile').set(asCompany).send({ description: 'Yönetici düzeltti' }).expect(200);
+    // Görüntüleme anahtarı firma yetkisindedir, yönetim uçlarını açmaz
+    await http().get('/v1/admin/summary').set(asCompany).expect(403);
+
+    const adminId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.admin } })).id;
+    const logs = await prisma.auditLog.findMany({
+      where: { entityType: 'Company', entityId: companyIds.companyC, action: { startsWith: 'company.impersonate' } },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(logs.map((l) => [l.action, l.actorId])).toEqual([
+      ['company.impersonate', adminId],
+      ['company.impersonate.action', adminId],
+    ]);
+    expect(logs[1].details).toEqual({ method: 'PATCH', path: '/v1/company/profile' });
+
+    // Yönetici yetkisini kaybedince anahtar da geçersiz olur
+    await prisma.user.update({ where: { id: adminId }, data: { status: 'SUSPENDED' } });
+    await http().get('/v1/company/profile').set(asCompany).expect(401);
+    await prisma.user.update({ where: { id: adminId }, data: { status: 'ACTIVE' } });
+
+    await http().post(`/v1/admin/companies/${companyIds.companyC}/impersonate`).set(auth('companyA')).expect(403);
+    await http().post('/v1/admin/companies/yok/impersonate').set(auth('admin')).expect(404);
+  });
+
 });

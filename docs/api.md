@@ -111,6 +111,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | POST | `/admin/users/:id/password` | Yeni şifre belirle; mevcut şifre hiç gösterilmez, tüm oturumlar kapanır |
 | ✅ | DELETE | `/admin/users/:id` | Hesabı sil: ad, telefon, e-posta, şifre silinir; açık talepler iptal, firma listeden kalkar, bekleyen teklifler geri çekilir. Kayıtlar isimsiz kalır. Planlanmış işi olan hesap ve yönetici hesapları silinmez |
 | ✅ | PATCH | `/admin/companies/:id` | Firma bilgilerini düzelt (doğrulama durumu korunur) |
+| ✅ | POST | `/admin/companies/:id/impersonate` | Firma panelini firmanın gözünden aç: 30 dk geçerli, yenilenmeyen firma anahtarı. Geçiş ve bu anahtarla yapılan her değişiklik yönetici adına firmanın geçmişine yazılır; yönetici yetkisini kaybedince anahtar geçersiz olur |
 | ⏳ | GET | `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
 | ⏳ | PATCH | `/admin/reviews/:id` | Uygunsuz yorumu yayından kaldır |
 | ⏳ | GET | `/admin/stats` | Dönüşüm oranları, zamana göre grafikler |

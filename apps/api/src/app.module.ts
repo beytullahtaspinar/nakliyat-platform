@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -9,6 +9,7 @@ import { CompaniesModule } from './companies/companies.module.js';
 import { EventsModule } from './events/domain-events.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
+import { ImpersonationAuditInterceptor } from './common/interceptors/impersonation-audit.interceptor.js';
 import { HealthController } from './health/health.controller.js';
 import { LocationsController } from './locations/locations.controller.js';
 import { MediaModule } from './media/media.module.js';
@@ -42,6 +43,7 @@ import { RequestsModule } from './requests/requests.module.js';
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_INTERCEPTOR, useClass: ImpersonationAuditInterceptor },
   ],
 })
 export class AppModule {}

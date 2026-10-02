@@ -1339,6 +1339,34 @@
         ]
       }
     },
+    "/v1/admin/companies/{id}/impersonate": {
+      "post": {
+        "operationId": "AdminCompaniesController_impersonate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
     "/v1/admin/companies": {
       "get": {
         "operationId": "AdminCompaniesController_list",
