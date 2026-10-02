@@ -1,7 +1,6 @@
 import { Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import {
-  BadGatewayException,
   BadRequestException,
   Controller,
   ForbiddenException,
@@ -9,6 +8,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
   Inject,
   Logger,
   NotFoundException,
@@ -22,12 +22,13 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { Public } from '../common/decorators/public.decorator.js';
-import { LocalStorage } from './local-storage.js';
 import { MIME_BY_EXTENSION } from './media-rules.js';
-import { FILE_STORAGE, type FileStorage } from './storage.js';
+import { MediaService } from './media.service.js';
+import { FILE_STORAGE, type MediaStorage } from './storage.js';
 
 /**
- * Yükleme (her iki sürücüde) ve görüntüleme (yalnızca yerel diskte; R2'de görseller imzalı R2 adresinden gelir).
+ * Yükleme (dosya buradan R2'ye ya da diske gider) ve diskteki dosyaların görüntülenmesi
+ * (R2'deki dosyalar imzalı R2 adresinden gelir).
  * Yetki, MediaService'in verdiği imzalı ve süreli belirteçle sağlanır.
  */
 @ApiExcludeController()
@@ -36,7 +37,10 @@ import { FILE_STORAGE, type FileStorage } from './storage.js';
 export class FilesController {
   private readonly logger = new Logger(FilesController.name);
 
-  constructor(@Inject(FILE_STORAGE) private readonly storage: FileStorage) {}
+  constructor(
+    @Inject(FILE_STORAGE) private readonly storage: MediaStorage,
+    private readonly media: MediaService,
+  ) {}
 
   @Put('upload/:token')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -55,20 +59,20 @@ export class FilesController {
       },
     });
     try {
-      await Promise.all([pipeline(req, limit), this.storage.write(grant.k, grant.t!, grant.s!, limit)]);
+      await Promise.all([pipeline(req, limit), this.media.receive(grant.k, grant.t!, grant.s!, limit)]);
     } catch (err) {
       limit.destroy();
       if (err instanceof HttpException) throw err;
       if (received !== grant.s) throw new BadRequestException('Yükleme yarıda kaldı');
-      this.logger.error(`Dosya kaydedilemedi (${this.storage.driver}): ${(err as Error).message}`);
-      throw new BadGatewayException('Dosya kaydedilemedi, biraz sonra tekrar deneyin');
+      this.logger.error(`Dosya kaydedilemedi: ${(err as Error).message}`);
+      throw new InternalServerErrorException('Dosya kaydedilemedi, biraz sonra tekrar deneyin');
     }
   }
 
   @Get(':token')
   @SkipThrottle()
   show(@Param('token') token: string, @Res() res: Response) {
-    const local = this.local();
+    const { local } = this.storage;
     const grant = local.tokens.verify(token, 'get');
     if (!grant) throw new NotFoundException();
     res.sendFile(local.path(grant.k), {
@@ -89,10 +93,5 @@ export class FilesController {
     }, (err) => {
       if (err && !res.headersSent) res.status(404).end();
     });
-  }
-
-  private local(): LocalStorage {
-    if (!(this.storage instanceof LocalStorage)) throw new NotFoundException();
-    return this.storage;
   }
 }

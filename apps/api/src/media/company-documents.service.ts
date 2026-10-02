@@ -22,7 +22,7 @@ import {
 import type { AttachDocumentDto, CreateDocumentUploadDto } from './dto/company-documents.dto.js';
 import { EXTENSIONS } from './media-rules.js';
 import { MediaService } from './media.service.js';
-import { FILE_STORAGE, type FileStorage } from './storage.js';
+import { FILE_STORAGE, type MediaStorage } from './storage.js';
 
 /** Zorunlu belgenin durumu: onaylı, incelemede, reddedildi, süresi dolmuş ya da hiç yüklenmemiş */
 export type RequirementState = 'VERIFIED' | 'PENDING' | 'REJECTED' | 'EXPIRED' | 'MISSING';
@@ -30,7 +30,7 @@ export type RequirementState = 'VERIFIED' | 'PENDING' | 'REJECTED' | 'EXPIRED' |
 /**
  * Firma doğrulama belgeleri (K3, vergi levhası, ticaret sicil...). Akış talep medyasıyla aynı:
  * 1. createUpload: firma dosya türü ve boyutunu bildirir, kısa süreli yükleme adresi alır.
- * 2. Tarayıcı dosyayı yükler (API üzerinden R2'ye ya da yerel diske).
+ * 2. Tarayıcı dosyayı API'ye yükler; R2'ye, olmazsa sunucu diskine kaydedilir (MediaStorage).
  * 3. attach: dosya depoda doğrulanır, belge türü ve geçerlilik tarihiyle kaydedilir; yönetici inceler.
  *
  * Her türden bir güncel belge tutulur ("Diğer" hariç): yeni yüklenen belge, onaylanmamış eskisinin yerini
@@ -42,7 +42,7 @@ export class CompanyDocumentsService {
     private readonly prisma: PrismaService,
     private readonly companies: CompaniesService,
     private readonly media: MediaService,
-    @Inject(FILE_STORAGE) private readonly storage: FileStorage,
+    @Inject(FILE_STORAGE) private readonly storage: MediaStorage,
   ) {}
 
   async listOwn(ownerId: string) {
@@ -81,7 +81,7 @@ export class CompanyDocumentsService {
     const object = await this.storage.stat(dto.key);
     if (!object) throw new BadRequestException('Dosya yüklenmemiş ya da yükleme yarıda kalmış, tekrar deneyin');
     if (!(DOCUMENT_RULES.mimeTypes as readonly string[]).includes(object.mimeType) || object.sizeBytes > DOCUMENT_RULES.maxBytes) {
-      await this.media.deleteObjects([dto.key]);
+      await this.media.deleteObjects([{ storageKey: dto.key, storage: object.location }]);
       throw new BadRequestException('Dosya türü veya boyutu uygun değil');
     }
 
@@ -99,6 +99,7 @@ export class CompanyDocumentsService {
           companyId: company.id,
           type: dto.type,
           storageKey: dto.key,
+          storage: object.location,
           mimeType: object.mimeType,
           sizeBytes: object.sizeBytes,
           fileName: dto.fileName,
@@ -116,7 +117,7 @@ export class CompanyDocumentsService {
           ]
         : []),
     ]);
-    await this.media.deleteObjects(replaced.map((d) => d.storageKey));
+    await this.media.deleteObjects(replaced);
     return this.summary(company.id);
   }
 
@@ -128,7 +129,7 @@ export class CompanyDocumentsService {
       throw new ConflictException('Onaylanmış belge silinemez. Yenisini yükleyin; onaylanınca eskisinin yerini alır.');
     }
     await this.prisma.companyDocument.delete({ where: { id: document.id } });
-    await this.media.deleteObjects([document.storageKey]);
+    await this.media.deleteObjects([document]);
   }
 
   /** Belgeler (görüntüleme adresleriyle) ve zorunlu belgelerin durumu */
@@ -181,16 +182,19 @@ export class CompanyDocumentsService {
         },
       }),
     ]);
-    await this.media.deleteObjects(older.map((d) => d.storageKey));
+    await this.media.deleteObjects(older);
     return this.summary(companyId);
   }
 
   /** Hesap silinirken firmanın belgeleri kalıcı olarak silinir (KVKK) */
   async deleteForCompany(companyId: string) {
-    const documents = await this.prisma.companyDocument.findMany({ where: { companyId }, select: { storageKey: true } });
+    const documents = await this.prisma.companyDocument.findMany({
+      where: { companyId },
+      select: { storageKey: true, storage: true },
+    });
     if (!documents.length) return;
     await this.prisma.companyDocument.deleteMany({ where: { companyId } });
-    await this.media.deleteObjects(documents.map((d) => d.storageKey));
+    await this.media.deleteObjects(documents);
   }
 
   toView(document: CompanyDocument) {
@@ -206,7 +210,7 @@ export class CompanyDocumentsService {
       reviewNote: document.reviewNote,
       createdAt: document.createdAt,
       reviewedAt: document.reviewedAt,
-      url: this.storage.viewUrl(document.storageKey),
+      url: this.storage.viewUrl(document.storageKey, document.storage),
     };
   }
 

@@ -1,13 +1,16 @@
+import { createReadStream } from 'node:fs';
 import type { Readable } from 'node:stream';
-import type { FileTokens } from './file-tokens.js';
+import { Logger } from '@nestjs/common';
+import { StorageLocation } from '../generated/prisma/enums.js';
+import type { LocalStorage } from './local-storage.js';
+import type { R2Storage } from './r2-storage.js';
 
 /**
- * Dosya deposu. İki sürücü var:
- * - R2 (Cloudflare, S3 uyumlu): R2_* ortam değişkenleri varsa. Dosya sunucunun diskine yazılmaz,
- *   API onu akış halinde R2'ye aktarır (tarayıcıdan doğrudan R2'ye yükleme R2'nin CORS kontrolüne takıldı).
- *   Canlı için önerilen.
- * - Yerel disk: R2 ayarlı değilse. Dosyalar UPLOAD_DIR klasörüne (canlıda ~/yuklemeler) yazılır,
- *   toplam boyut LOCAL_UPLOAD_QUOTA_MB ile sınırlanır. Geliştirme, test ve R2 kurulana kadar.
+ * Hibrit dosya deposu (docs/dosya-yukleme.md):
+ * - Tarayıcı küçültülmüş dosyayı API'ye yükler (PUT /v1/files/upload/:token).
+ * - API dosyayı önce sunucu diskine geçici olarak yazar, sonra Cloudflare R2'ye aktarır ve geçici dosyayı siler.
+ * - R2 ayarlı değilse, hata verirse ya da kotası dolduysa dosya sunucu diskinde (canlıda ~/yuklemeler) kalır.
+ *   Hata sonrası R2 bir süre denenmez; MediaService diskte kalan dosyaları R2 düzelince oraya taşır.
  */
 export type UploadTarget = {
   url: string;
@@ -18,25 +21,105 @@ export type UploadTarget = {
 
 export type StoredObject = { sizeBytes: number; mimeType: string };
 
-export interface FileStorage {
-  readonly driver: 'r2' | 'local';
-  /** Toplam boyut sınırı (bayt). Dolunca yeni yükleme kabul edilmez, talep fotoğrafsız açılabilir. */
-  readonly quotaBytes: number;
-  /** Yükleme ve görüntüleme belirteçlerini imzalar */
-  readonly tokens: FileTokens;
-  createUpload(key: string, mimeType: string, sizeBytes: number): UploadTarget;
-  /** PUT /v1/files/upload/:token ile gelen dosyayı kaydeder; boyut tutmazsa hata verir */
-  write(key: string, mimeType: string, sizeBytes: number, body: Readable): Promise<void>;
-  stat(key: string): Promise<StoredObject | null>;
-  viewUrl(key: string): string;
-  delete(key: string): Promise<void>;
-}
+export type StorageQuotas = {
+  /** Sunucu diski için toplam sınır (bayt): paketin diski 2 GB */
+  local: number;
+  /** R2 için toplam sınır (bayt): ücretsiz katman (10 GB) aşılmasın */
+  r2: number;
+};
 
 export const FILE_STORAGE = Symbol('FILE_STORAGE');
 
 /** Yükleme adresleri bu kadar süre geçerli */
 export const UPLOAD_TTL_SEC = 30 * 60;
+/** R2 hata verince bu süre boyunca denenmez, dosyalar diske yazılır */
+export const R2_COOLDOWN_MS = 10 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
+
+export class MediaStorage {
+  private readonly logger = new Logger('MediaStorage');
+  private r2PausedUntil = 0;
+
+  constructor(
+    readonly local: LocalStorage,
+    readonly r2: R2Storage | null,
+    readonly quotas: StorageQuotas,
+  ) {}
+
+  get tokens() {
+    return this.local.tokens;
+  }
+
+  /** R2 ayarlı ve son hatadan bu yana bekleme süresi dolmuş mu */
+  r2Ready(now = Date.now()) {
+    return this.r2 !== null && now >= this.r2PausedUntil;
+  }
+
+  createUpload(key: string, mimeType: string, sizeBytes: number): UploadTarget {
+    return this.local.uploadTarget(key, mimeType, sizeBytes);
+  }
+
+  /**
+   * Gelen dosyayı kaydeder ve nereye kaydettiğini döner. Boyut tutmazsa hata verir.
+   * useR2: R2 kotasında yer var mı (MediaService veritabanından hesaplar).
+   */
+  async write(key: string, mimeType: string, sizeBytes: number, body: Readable, useR2: boolean) {
+    const temp = await this.local.writeTemp(key, sizeBytes, body);
+    try {
+      if (useR2 && this.r2Ready()) {
+        try {
+          await this.r2!.write(key, mimeType, sizeBytes, createReadStream(temp));
+          await this.local.discard(temp);
+          return StorageLocation.R2;
+        } catch (err) {
+          this.r2Failed(err);
+        }
+      }
+      await this.local.commit(temp, key);
+      return StorageLocation.LOCAL;
+    } catch (err) {
+      await this.local.discard(temp);
+      throw err;
+    }
+  }
+
+  /** Dosya nerede ve özellikleri ne; yoksa null */
+  async stat(key: string): Promise<(StoredObject & { location: StorageLocation }) | null> {
+    const local = await this.local.stat(key);
+    if (local) return { ...local, location: StorageLocation.LOCAL };
+    const remote = this.r2 ? await this.r2.stat(key) : null;
+    return remote ? { ...remote, location: StorageLocation.R2 } : null;
+  }
+
+  viewUrl(key: string, location: StorageLocation) {
+    return location === StorageLocation.R2 && this.r2 ? this.r2.viewUrl(key) : this.local.viewUrl(key);
+  }
+
+  async delete(key: string, location: StorageLocation) {
+    if (location === StorageLocation.R2) await this.r2?.delete(key);
+    else await this.local.delete(key);
+  }
+
+  /** Diskteki dosyayı R2'ye kopyalar (disktekini silmez). Başarısızsa R2 bir süre denenmez. */
+  async copyToR2(key: string, mimeType: string, sizeBytes: number): Promise<boolean> {
+    if (!this.r2Ready()) return false;
+    try {
+      await this.r2!.write(key, mimeType, sizeBytes, createReadStream(this.local.path(key)));
+      this.r2PausedUntil = 0;
+      return true;
+    } catch (err) {
+      this.r2Failed(err);
+      return false;
+    }
+  }
+
+  private r2Failed(err: unknown) {
+    this.r2PausedUntil = Date.now() + R2_COOLDOWN_MS;
+    this.logger.error(
+      `R2'ye yazılamadı, dosyalar ${R2_COOLDOWN_MS / 60000} dakika sunucu diskine kaydedilecek: ${(err as Error).message}`,
+    );
+  }
+}
 
 /**
  * Görüntüleme adresi saat başına sabitlenir (aynı saat içinde aynı adres), böylece tarayıcı
@@ -45,20 +128,4 @@ const HOUR_MS = 60 * 60 * 1000;
 export function viewWindow(now = Date.now()) {
   const start = Math.floor(now / HOUR_MS) * HOUR_MS;
   return { start: new Date(start), expiresAt: start + 2 * HOUR_MS, expiresInSec: 2 * 60 * 60 };
-}
-
-/** Tarayıcı dosyayı API'ye yükler: PUT <api>/v1/files/upload/<imzalı belirteç> */
-export function apiUploadTarget(
-  publicUrl: string,
-  tokens: FileTokens,
-  key: string,
-  mimeType: string,
-  sizeBytes: number,
-): UploadTarget {
-  const token = tokens.sign({ k: key, m: 'put', t: mimeType, s: sizeBytes, e: Date.now() + UPLOAD_TTL_SEC * 1000 });
-  return { method: 'PUT', headers: { 'Content-Type': mimeType }, url: `${apiBase(publicUrl)}/files/upload/${token}` };
-}
-
-export function apiBase(publicUrl: string) {
-  return `${publicUrl.replace(/\/$/, '')}/v1`;
 }
