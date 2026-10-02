@@ -50,9 +50,24 @@ test("müşteri talebe fotoğraf ekler, sonradan silebilir", async ({ page }) =>
   });
   expect(size).toEqual({ w: 1600, h: 1200 });
 
-  await page.getByRole("button", { name: "Sil", exact: true }).click();
-  await page.getByRole("button", { name: "Sil", exact: true }).click();
-  await expect(gallery).toHaveCount(0);
+  // İkinci fotoğraf talep sayfasından eklenir; ikisi slider'da gezilir
+  await page.getByLabel("Fotoğraf veya video seç").setInputFiles(fixture("oda.jpg"));
+  await page.getByRole("button", { name: "Talebe ekle" }).click();
+  const slider = page.getByRole("region", { name: "Eşya fotoğrafları ve videoları" });
+  await expect(slider.getByText("1 / 2")).toBeVisible();
+  await slider.getByRole("button", { name: "Sonraki" }).click();
+  await expect(slider.getByText("2 / 2")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Eşya fotoğrafı 2" })).toBeInViewport();
+  await page.getByRole("button", { name: "1. dosyayı göster" }).click();
+  await expect(slider.getByText("1 / 2")).toBeVisible();
+  await expect(gallery).toBeInViewport();
+
+  // Sil, görünen dosyayı siler
+  for (const remaining of [1, 0]) {
+    await page.getByRole("button", { name: "Sil", exact: true }).click();
+    await page.getByRole("button", { name: "Sil", exact: true }).click();
+    await expect(page.getByRole("img", { name: /Eşya fotoğrafı/ })).toHaveCount(remaining);
+  }
 });
 
 // Test videosu WebM: testlerdeki açık kaynak Chromium H.264 çözemiyor (Chrome ve Safari çözer).

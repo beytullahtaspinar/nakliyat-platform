@@ -258,6 +258,13 @@ model MovingRequest {
   toFloor         Int
   toHasElevator   Boolean
 
+  // Müşterinin haritada işaretlediği nokta (isteğe bağlı). Açık adres gibi kişisel veridir:
+  // firmaya ancak teklif kabul edilip iş oluşunca gösterilir.
+  fromLat Float?
+  fromLng Float?
+  toLat   Float?
+  toLng   Float?
+
   homeType       HomeType
   moveDate       DateTime
   isDateFlexible Boolean  @default(false)
@@ -273,6 +280,9 @@ model MovingRequest {
   estimatedCrew     Int?
   estimatedHours    Int?
   distanceKm        Int?
+  /// İki işaret arası kamyon yolu (OpenRouteService), talep açılırken bir kez hesaplanır
+  routeKm           Int?
+  routeMinutes      Int?
 
   expiresAt DateTime
   createdAt DateTime  @default(now())

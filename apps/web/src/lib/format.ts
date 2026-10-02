@@ -7,6 +7,18 @@ const dateFormat = new Intl.DateTimeFormat("tr-TR", {
 
 export const formatDate = (iso: string) => dateFormat.format(new Date(iso));
 
+const dateTimeFormat = new Intl.DateTimeFormat("tr-TR", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Istanbul",
+});
+
+/** Türkiye saatiyle tarih ve saat: "2 Ekim 2026 14:40" */
+export const formatDateTime = (iso: string) => dateTimeFormat.format(new Date(iso));
+
 const moneyFormat = new Intl.NumberFormat("tr-TR", {
   style: "currency",
   currency: "TRY",

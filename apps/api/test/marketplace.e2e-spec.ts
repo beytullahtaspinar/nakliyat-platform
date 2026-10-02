@@ -103,11 +103,14 @@ describe('Pazaryeri akışı (e2e)', () => {
       .set(auth('customer'))
       .send({
         fromCityCode: '34', fromDistrict: 'kadikoy', fromAddress: 'Moda Cad. No:1 D:5', fromFloor: 3, fromHasElevator: false,
+        fromLat: 40.9862, fromLng: 29.0254,
         toCityCode: '06', toDistrict: 'cankaya', toAddress: 'Atatürk Blv. No:10 D:2', toFloor: 2, toHasElevator: true,
+        toLat: 39.9208, toLng: 32.8541,
         homeType: 'TWO_PLUS_ONE', moveDate: inDays(20),
       })
       .expect(201);
     requestId = res.body.id;
+    expect(res.body).toMatchObject({ fromLat: 40.9862, toLng: 32.8541 });
   });
 
   it('firmalar profil oluşturur; aynı vergi no ikinci kez kullanılamaz', async () => {
@@ -143,6 +146,11 @@ describe('Pazaryeri akışı (e2e)', () => {
     expect(item).toMatchObject({ fromDistrictName: 'Kadıköy', toCityName: 'Ankara', myQuote: null });
     expect(item.fromAddress).toBeUndefined();
     expect(item.customerId).toBeUndefined();
+    // Haritadaki işaret de açık adres kadar gizli
+    expect(item.fromLat).toBeUndefined();
+    expect(item.toLng).toBeUndefined();
+    const detail = await http().get(`/v1/company/requests/${requestId}`).set(auth('companyA')).expect(200);
+    expect(JSON.stringify(detail.body)).not.toMatch(/40\.9862|29\.0254|39\.9208|32\.8541/);
   });
 
   it('hizmet bölgesi dışındaki firma talebi göremez ve teklif veremez', async () => {
@@ -202,7 +210,10 @@ describe('Pazaryeri akışı (e2e)', () => {
     expect(company.body.items[0]).toMatchObject({
       priceTry: '19000',
       customer: { phone: phones.customer },
-      request: { from: { address: 'Moda Cad. No:1 D:5', districtName: 'Kadıköy' } },
+      request: {
+        from: { address: 'Moda Cad. No:1 D:5', districtName: 'Kadıköy', location: { lat: 40.9862, lng: 29.0254 } },
+        to: { location: { lat: 39.9208, lng: 32.8541 } },
+      },
     });
     const customer = await http().get('/v1/bookings').set(auth('customer')).expect(200);
     expect(customer.body.items[0].company.contactPhone).toBe(phones.companyA);
@@ -360,6 +371,37 @@ describe('Pazaryeri akışı (e2e)', () => {
     await http().get(`/v1/admin/companies/${companyIds.companyB}`).set(auth('admin')).expect(404);
     const log = await prisma.auditLog.findFirst({ where: { entityId: companyBId, action: 'user.delete' } });
     expect(log?.details).toEqual({ role: 'COMPANY' });
+  });
+
+  it('yönetici firma paneline geçer: firmanın gözünden çalışır, her değişiklik kaydedilir', async () => {
+    const res = await http().post(`/v1/admin/companies/${companyIds.companyC}/impersonate`).set(auth('admin')).expect(200);
+    expect(res.body).toMatchObject({ expiresIn: 1800, company: { id: companyIds.companyC } });
+    const asCompany = { Authorization: `Bearer ${res.body.accessToken}` };
+
+    const profile = await http().get('/v1/company/profile').set(asCompany).expect(200);
+    expect(profile.body.id).toBe(companyIds.companyC);
+    await http().patch('/v1/company/profile').set(asCompany).send({ description: 'Yönetici düzeltti' }).expect(200);
+    // Görüntüleme anahtarı firma yetkisindedir, yönetim uçlarını açmaz
+    await http().get('/v1/admin/summary').set(asCompany).expect(403);
+
+    const adminId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.admin } })).id;
+    const logs = await prisma.auditLog.findMany({
+      where: { entityType: 'Company', entityId: companyIds.companyC, action: { startsWith: 'company.impersonate' } },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(logs.map((l) => [l.action, l.actorId])).toEqual([
+      ['company.impersonate', adminId],
+      ['company.impersonate.action', adminId],
+    ]);
+    expect(logs[1].details).toEqual({ method: 'PATCH', path: '/v1/company/profile' });
+
+    // Yönetici yetkisini kaybedince anahtar da geçersiz olur
+    await prisma.user.update({ where: { id: adminId }, data: { status: 'SUSPENDED' } });
+    await http().get('/v1/company/profile').set(asCompany).expect(401);
+    await prisma.user.update({ where: { id: adminId }, data: { status: 'ACTIVE' } });
+
+    await http().post(`/v1/admin/companies/${companyIds.companyC}/impersonate`).set(auth('companyA')).expect(403);
+    await http().post('/v1/admin/companies/yok/impersonate').set(auth('admin')).expect(404);
   });
 
 });

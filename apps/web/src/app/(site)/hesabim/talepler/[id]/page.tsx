@@ -16,6 +16,8 @@ import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-opt
 import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib/session";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { RequestMediaManager } from "@/components/media/request-media-manager";
+import { RouteOverview } from "@/components/map/route-overview";
+import { routeText } from "@/lib/geo";
 
 export const metadata: Metadata = {
   title: "Talep ve teklifler",
@@ -74,7 +76,7 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
         {homeTypeLabel(request.homeType)} · {formatDate(request.moveDate)}
         {request.isDateFlexible && " (esnek)"}
-        {request.distanceKm ? ` · ${request.distanceKm} km` : ""}
+        {routeText(request) ? ` · ${routeText(request)}` : request.distanceKm ? ` · ${request.distanceKm} km` : ""}
         {request.estimatedVolumeM3 ? ` · yaklaşık ${request.estimatedVolumeM3} m³` : ""}
       </p>
 
@@ -285,6 +287,12 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
   );
 }
 
+const pinOf = (r: MovingRequestDetail, side: "from" | "to") => {
+  const lat = r[`${side}Lat`];
+  const lng = r[`${side}Lng`];
+  return lat != null && lng != null ? { lat, lng } : null;
+};
+
 function RequestDetails({ request }: { request: MovingRequestDetail }) {
   const services = [
     request.needsPacking && "Paketleme",
@@ -304,12 +312,22 @@ function RequestDetails({ request }: { request: MovingRequestDetail }) {
       <dl className="mt-3 divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
         {row("Çıkış adresi", `${request.fromAddress} · ${floorLabel(request.fromFloor)}, ${elevator(request.fromHasElevator)}`)}
         {row("Varış adresi", `${request.toAddress} · ${floorLabel(request.toFloor)}, ${elevator(request.toHasElevator)}`)}
+        {request.routeKm != null && row("Yol", `${routeText(request)} (haritadaki işaretlerine göre, kamyonla)`)}
         {row("Ek hizmetler", services.length > 0 ? services.join(", ") : "Yok")}
         {request.specialItems.length > 0 && row("Özel eşyalar", request.specialItems.join(", "))}
         {request.notes && row("Notun", request.notes)}
       </dl>
+      {(pinOf(request, "from") || pinOf(request, "to")) && (
+        <div className="mt-3">
+          <RouteOverview
+            from={{ location: pinOf(request, "from"), text: request.fromAddress }}
+            to={{ location: pinOf(request, "to"), text: request.toAddress }}
+            directions={false}
+          />
+        </div>
+      )}
       <p className="mt-2 text-xs text-zinc-500">
-        Açık adresin yalnızca teklifini kabul ettiğin firmayla paylaşılır.
+        Açık adresin ve haritadaki işaretin yalnızca teklifini kabul ettiğin firmayla paylaşılır.
       </p>
     </section>
   );

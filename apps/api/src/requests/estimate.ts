@@ -30,6 +30,8 @@ export interface EstimateInput {
   needsAssembly: boolean;
   /** Şehirler arası ise karayolu mesafesi, şehir içi ise undefined */
   distanceKm?: number;
+  /** Haritadaki iki nokta arası gerçek kamyon yolu süresi; varsa mesafe tahmininin yerine geçer */
+  routeMinutes?: number;
 }
 
 export interface Estimate {
@@ -50,7 +52,11 @@ export function estimateMove(input: EstimateInput): Estimate {
   const unloading = handlingHours * stairsFactor(input.toFloor, input.toHasElevator);
   const packing = input.needsPacking ? handlingHours * 0.5 : 0;
   const assembly = input.needsAssembly ? 1.5 : 0;
-  const road = input.distanceKm ? input.distanceKm / AVERAGE_ROAD_SPEED_KMH : 1;
+  const road = input.routeMinutes
+    ? Math.max(1, input.routeMinutes / 60)
+    : input.distanceKm
+      ? input.distanceKm / AVERAGE_ROAD_SPEED_KMH
+      : 1;
 
   return {
     estimatedVolumeM3: volume,

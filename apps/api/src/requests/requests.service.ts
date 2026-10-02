@@ -15,6 +15,7 @@ import type { PaginationDto } from './dto/list-requests.dto.js';
 import type { UpdateRequestDto } from './dto/update-request.dto.js';
 import { VerificationService } from '../verification/verification.service.js';
 import { estimateMove } from './estimate.js';
+import { RouteService, type Point, type Route } from './route-service.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Teklif toplama süresi: taşınma tarihine kadar, en fazla 30 gün */
@@ -32,6 +33,20 @@ type LocationFields = Pick<
   'fromCityCode' | 'fromDistrict' | 'toCityCode' | 'toDistrict'
 >;
 
+type PinFields = { fromLat?: number | null; fromLng?: number | null; toLat?: number | null; toLng?: number | null };
+
+/** Enlem ve boylam birlikte gelmeli; ikisi de yoksa nokta işaretlenmemiştir. */
+function pin(lat: number | null | undefined, lng: number | null | undefined, label: string): Point | undefined {
+  if (lat == null && lng == null) return undefined;
+  if (lat == null || lng == null) throw new BadRequestException(`${label} konumu için enlem ve boylam birlikte gönderilmeli`);
+  return { lat, lng };
+}
+
+const pins = (dto: PinFields) => ({ from: pin(dto.fromLat, dto.fromLng, 'Çıkış'), to: pin(dto.toLat, dto.toLng, 'Varış') });
+
+/** Tahmini sürede kullanılacak yol: gerçek güzergâh varsa o, yoksa il merkezleri arası */
+const routeFields = (route: Route | null) => ({ routeKm: route?.km ?? null, routeMinutes: route?.minutes ?? null });
+
 @Injectable()
 export class RequestsService {
   constructor(
@@ -39,12 +54,14 @@ export class RequestsService {
     private readonly events: DomainEvents,
     private readonly media: MediaService,
     private readonly verification: VerificationService,
+    private readonly routes: RouteService,
   ) {}
 
   async create(customerId: string, dto: CreateRequestDto) {
     const now = new Date();
     const { distanceKm } = this.validateLocations(dto);
     this.validateMoveDate(dto.moveDate, now);
+    const route = await this.computeRoute(pins(dto));
     // Doğrulanmamış hesabın talebi taslak kalır; doğrulama bitince yayına alınır (VerificationService)
     const verified = await this.verification.isUserComplete(customerId);
 
@@ -55,11 +72,13 @@ export class RequestsService {
         specialItems: dto.specialItems ?? [],
         customerId,
         distanceKm: distanceKm ?? null,
+        ...routeFields(route),
         ...estimateMove({
           ...dto,
           needsPacking: dto.needsPacking ?? false,
           needsAssembly: dto.needsAssembly ?? false,
           distanceKm,
+          routeMinutes: route?.minutes,
         }),
         expiresAt: new Date(Math.min(dto.moveDate.getTime(), now.getTime() + MAX_OPEN_DAYS * DAY_MS)),
       },
@@ -102,16 +121,35 @@ export class RequestsService {
       throw new ConflictException('Teklif gelmiş bir talep düzenlenemez; iptal edip yeni talep oluşturun');
     }
 
-    const merged = { ...current, ...dto };
+    // Adres değişip yeni işaret gelmediyse eski işaret artık o adresi göstermez
+    const pinData: PinFields = {};
+    for (const side of ['from', 'to'] as const) {
+      const moved = (['CityCode', 'District', 'Address'] as const).some((f) => dto[`${side}${f}`] !== undefined);
+      if (moved && dto[`${side}Lat`] === undefined && dto[`${side}Lng`] === undefined) {
+        pinData[`${side}Lat`] = null;
+        pinData[`${side}Lng`] = null;
+      }
+    }
+    const merged = { ...current, ...dto, ...pinData };
     const { distanceKm } = this.validateLocations(merged);
     if (dto.moveDate) this.validateMoveDate(dto.moveDate, new Date());
+
+    const nextPins = pins(merged);
+    const pinsChanged = (['fromLat', 'fromLng', 'toLat', 'toLng'] as const).some((f) => merged[f] !== current[f]);
+    const route = pinsChanged
+      ? await this.computeRoute(nextPins)
+      : current.routeKm != null && current.routeMinutes != null
+        ? { km: current.routeKm, minutes: current.routeMinutes }
+        : null;
 
     const request = await this.prisma.movingRequest.update({
       where: { id },
       data: {
         ...dto,
+        ...pinData,
         distanceKm: distanceKm ?? null,
-        ...estimateMove({ ...merged, distanceKm }),
+        ...routeFields(route),
+        ...estimateMove({ ...merged, distanceKm, routeMinutes: route?.minutes }),
       },
     });
     return toRequestResponse(request, 0);
@@ -137,6 +175,11 @@ export class RequestsService {
     });
     if (!request) throw new NotFoundException('Talep bulunamadı');
     return request;
+  }
+
+  /** Yalnızca iki uç da işaretliyse hesaplanır; servis yoksa ya da yanıt vermezse null */
+  private computeRoute({ from, to }: { from?: Point; to?: Point }) {
+    return from && to ? this.routes.route(from, to) : Promise.resolve(null);
   }
 
   private validateLocations(dto: LocationFields): { distanceKm?: number } {

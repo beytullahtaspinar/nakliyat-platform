@@ -43,6 +43,11 @@ const COOKIES = [
     purpose: "Google/Apple ile kayıtta, kaydı tamamlayana kadar geçici kimlik",
     duration: "20 dakika",
   },
+  {
+    name: "nk_firma_gorunum",
+    purpose: "Yalnızca platform yöneticileri: destek için firma panelini firmanın gözünden görüntüleme",
+    duration: "En fazla 30 dakika",
+  },
 ];
 
 export default function CookiePolicyPage() {

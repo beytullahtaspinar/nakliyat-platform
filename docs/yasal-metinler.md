@@ -53,7 +53,7 @@ o zamana kadar izin yalnızca kaydedilir, ileti gönderilmez).
 
 ## Çerezler
 
-Yalnızca zorunlu, birinci taraf çerezler var (`nk_at`, `nk_rt`, `nk_rol`, `nk_oauth`, `nk_kayit`) ve bir
+Yalnızca zorunlu, birinci taraf çerezler var (`nk_at`, `nk_rt`, `nk_rol`, `nk_oauth`, `nk_kayit`, yöneticiler için `nk_firma_gorunum`) ve bir
 sessionStorage anahtarı (`nk_surum_yenileme`). Analiz/reklam çerezi olmadığı için çerez onay bandı yok
 (PageSpeed'e de yük getirmez). Analiz veya reklam aracı eklenirse önce onay bandı eklenmeli ve çerez politikası
 güncellenmeli. Yeni çerez eklendiğinde çerez politikasındaki tablo güncellenmeli.

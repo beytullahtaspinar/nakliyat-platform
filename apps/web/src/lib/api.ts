@@ -108,6 +108,9 @@ export type MovingRequest = {
   moveDate: string;
   estimatedVolumeM3: number | null;
   distanceKm: number | null;
+  /** Haritadaki iki işaret arası kamyon yolu; işaret yoksa ya da hesaplanamadıysa null */
+  routeKm: number | null;
+  routeMinutes: number | null;
   expiresAt: string;
   createdAt: string;
   quoteCount: number;
@@ -131,6 +134,10 @@ export type MovingRequestDetail = MovingRequest & {
   fromFloor: number;
   fromHasElevator: boolean;
   toAddress: string;
+  fromLat: number | null;
+  fromLng: number | null;
+  toLat: number | null;
+  toLng: number | null;
   toFloor: number;
   toHasElevator: boolean;
   isDateFlexible: boolean;
@@ -232,6 +239,8 @@ export type CompanyRequestView = {
   estimatedCrew: number | null;
   estimatedHours: number | null;
   distanceKm: number | null;
+  routeKm: number | null;
+  routeMinutes: number | null;
   expiresAt: string;
   createdAt: string;
 };
@@ -251,6 +260,8 @@ type BookingPlace = {
   address: string;
   floor: number;
   hasElevator: boolean;
+  /** Müşterinin haritada işaretlediği nokta */
+  location: { lat: number; lng: number } | null;
 };
 
 export type CompanyBooking = {
@@ -259,7 +270,16 @@ export type CompanyBooking = {
   status: CustomerBooking["status"];
   scheduledAt: string;
   priceTry: string;
-  request: { id: string; from: BookingPlace; to: BookingPlace; homeType: string; moveDate: string; notes: string | null };
+  request: {
+    id: string;
+    from: BookingPlace;
+    to: BookingPlace;
+    routeKm: number | null;
+    routeMinutes: number | null;
+    homeType: string;
+    moveDate: string;
+    notes: string | null;
+  };
   customer: { fullName: string; phone: string };
 };
 
@@ -319,6 +339,8 @@ export type AdminCompanyDetail = AdminCompany &
       to?: VerificationStatus;
       note?: string | null;
       type?: CompanyDocument["type"];
+      method?: string;
+      path?: string;
     } | null;
     createdAt: string;
     actor: { fullName: string };

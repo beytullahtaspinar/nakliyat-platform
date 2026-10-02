@@ -7,6 +7,8 @@ import {
   IsDate,
   IsEnum,
   IsInt,
+  IsLatitude,
+  IsLongitude,
   IsOptional,
   IsString,
   Length,
@@ -16,6 +18,9 @@ import {
   Min,
 } from 'class-validator';
 import { HomeType } from '../../generated/prisma/enums.js';
+
+/** Türkiye'yi kapsayan kutu; dışındaki işaretler reddedilir */
+export const TURKEY_BOUNDS = { minLat: 35.8, maxLat: 42.2, minLng: 25.6, maxLng: 44.9 };
 
 export class CreateRequestDto {
   @ApiProperty({ example: '34', description: 'Çıkış ili plaka kodu' })
@@ -41,6 +46,20 @@ export class CreateRequestDto {
   @IsBoolean()
   fromHasElevator: boolean;
 
+  @ApiPropertyOptional({ example: 40.9876, description: 'Haritada işaretlenen çıkış noktası (enlem); boylamla birlikte gönderilir' })
+  @IsOptional()
+  @IsLatitude()
+  @Min(TURKEY_BOUNDS.minLat)
+  @Max(TURKEY_BOUNDS.maxLat)
+  fromLat?: number;
+
+  @ApiPropertyOptional({ example: 29.0275 })
+  @IsOptional()
+  @IsLongitude()
+  @Min(TURKEY_BOUNDS.minLng)
+  @Max(TURKEY_BOUNDS.maxLng)
+  fromLng?: number;
+
   @ApiProperty({ example: '06' })
   @Matches(/^\d{2}$/)
   toCityCode: string;
@@ -63,6 +82,20 @@ export class CreateRequestDto {
   @ApiProperty()
   @IsBoolean()
   toHasElevator: boolean;
+
+  @ApiPropertyOptional({ example: 39.9208 })
+  @IsOptional()
+  @IsLatitude()
+  @Min(TURKEY_BOUNDS.minLat)
+  @Max(TURKEY_BOUNDS.maxLat)
+  toLat?: number;
+
+  @ApiPropertyOptional({ example: 32.8541 })
+  @IsOptional()
+  @IsLongitude()
+  @Min(TURKEY_BOUNDS.minLng)
+  @Max(TURKEY_BOUNDS.maxLng)
+  toLng?: number;
 
   @ApiProperty({ enum: HomeType, example: HomeType.TWO_PLUS_ONE })
   @IsEnum(HomeType)

@@ -53,7 +53,7 @@ Talep ve firma kayıtlarında il **plaka koduyla** (`"34"`), ilçe **adres koduy
 
 | Durum | Yöntem | Yol | Kim | Açıklama |
 |---|---|---|---|---|
-| ✅ | POST | `/requests` | Müşteri | Talep oluştur. İl-ilçe uyumu ve tarih (en erken yarın, en geç 1 yıl) kontrol edilir. Sistem m³, ekip, süre tahmini ve şehirler arası ise karayolu mesafesi ekler. Teklif toplama süresi taşınma tarihine kadar, en fazla 30 gün. |
+| ✅ | POST | `/requests` | Müşteri | Talep oluştur. İl-ilçe uyumu ve tarih (en erken yarın, en geç 1 yıl) kontrol edilir. Sistem m³, ekip, süre tahmini ve şehirler arası ise karayolu mesafesi ekler. İsteğe bağlı `fromLat/fromLng/toLat/toLng` (haritadaki işaret, Türkiye içi) gelirse iki nokta arası kamyon yolu `routeKm/routeMinutes` bir kez hesaplanır (docs/harita.md). Teklif toplama süresi taşınma tarihine kadar, en fazla 30 gün. |
 | ✅ | GET | `/requests` | Müşteri | Kendi talepleri |
 | ✅ | GET | `/requests/:id` | Müşteri | Talep detayı |
 | ✅ | PATCH | `/requests/:id` | Müşteri | Teklif gelmeden önce düzenleme |
@@ -111,6 +111,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | POST | `/admin/users/:id/password` | Yeni şifre belirle; mevcut şifre hiç gösterilmez, tüm oturumlar kapanır |
 | ✅ | DELETE | `/admin/users/:id` | Hesabı sil: ad, telefon, e-posta, şifre silinir; açık talepler iptal, firma listeden kalkar, bekleyen teklifler geri çekilir. Kayıtlar isimsiz kalır. Planlanmış işi olan hesap ve yönetici hesapları silinmez |
 | ✅ | PATCH | `/admin/companies/:id` | Firma bilgilerini düzelt (doğrulama durumu korunur) |
+| ✅ | POST | `/admin/companies/:id/impersonate` | Firma panelini firmanın gözünden aç: 30 dk geçerli, yenilenmeyen firma anahtarı. Geçiş ve bu anahtarla yapılan her değişiklik yönetici adına firmanın geçmişine yazılır; yönetici yetkisini kaybedince anahtar geçersiz olur |
 | ⏳ | GET | `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
 | ⏳ | PATCH | `/admin/reviews/:id` | Uygunsuz yorumu yayından kaldır |
 | ⏳ | GET | `/admin/stats` | Dönüşüm oranları, zamana göre grafikler |
