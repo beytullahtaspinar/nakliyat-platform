@@ -9,6 +9,7 @@ import { NOTIFICATION_CHANNELS, type ChannelProvider, type Recipient } from './.
 import type { NotificationContent } from './../src/notifications/templates.js';
 import { NotificationsService } from './../src/notifications/notifications.service.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { markVerified } from './helpers.js';
 
 /** Gerçek e-posta göndermeyen sahte kanal: gönderilenleri kaydeder, istenirse hata verir. */
 class FakeEmail implements ChannelProvider {
@@ -75,6 +76,7 @@ describe('Bildirimler (e2e)', () => {
         .expect(201);
       tokens[who] = res.body.accessToken;
     }
+    await markVerified(prisma, [phones.customer, phones.company]);
     await prisma.user.create({
       data: { role: 'ADMIN', fullName: 'Admin', phone: phones.admin, passwordHash: await bcrypt.hash('GucluSifre123', 4) },
     });
@@ -122,6 +124,10 @@ describe('Bildirimler (e2e)', () => {
     expect(after.body.email).toBe(emails.customer);
     expect(after.body.items[1]).toMatchObject({ type: 'QUOTE_ACCEPTED', channels: { EMAIL: false } });
     expect(await prisma.notificationPreference.count({ where: { userId: await userId('customer') } })).toBe(1);
+    // Adres değişince yeniden doğrulanmalı
+    const customer = await prisma.user.findUniqueOrThrow({ where: { phone: phones.customer } });
+    expect(customer.emailVerifiedAt).toBeNull();
+    await markVerified(prisma, [phones.customer]);
   });
 
   it('bölgedeki talep firmaya, açık adres olmadan bildirilir', async () => {

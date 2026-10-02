@@ -19,8 +19,8 @@ export function RegisterForm({ role, next }: { role: "CUSTOMER" | "COMPANY"; nex
       <Field label="Cep telefonu" hint="Giriş yaparken bu numarayı kullanacaksın.">
         <Input name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="05XX XXX XX XX" required />
       </Field>
-      <Field label="E-posta (isteğe bağlı)">
-        <Input name="email" type="email" autoComplete="email" />
+      <Field label="E-posta" hint="Hesabını doğrulamak için bu adrese 6 haneli bir kod göndereceğiz.">
+        <Input name="email" type="email" autoComplete="email" maxLength={191} required />
       </Field>
       <Field label="Şifre" hint="En az 8 karakter.">
         <Input name="password" type="password" autoComplete="new-password" minLength={8} maxLength={72} required />

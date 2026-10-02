@@ -71,6 +71,25 @@ export type AuthUser = {
   phone: string;
   email: string | null;
   phoneVerified: boolean;
+  emailVerified: boolean;
+  /** Talep yayını, teklif verme ve teklif kabulü için gereken doğrulamalar tamam */
+  verified: boolean;
+};
+
+export type ContactVerification = {
+  email: string | null;
+  emailVerified: boolean;
+  /** Geçerli kodun gönderildiği e-posta */
+  emailCodeSentTo: string | null;
+  emailResendAt: string | null;
+  phone: string;
+  phoneVerified: boolean;
+  /** SMS/WhatsApp sağlayıcısı bağlıysa telefon doğrulaması zorunlu */
+  phoneRequired: boolean;
+  phoneChannel: "sms" | "whatsapp" | null;
+  phoneCodeSent: boolean;
+  phoneResendAt: string | null;
+  complete: boolean;
 };
 
 export type AuthTokens = { accessToken: string; refreshToken: string };

@@ -51,6 +51,11 @@ export function safeNext(value: FormDataEntryValue | string | null | undefined):
     : undefined;
 }
 
+/** Kayıttan sonra ya da doğrulanmamış hesapla korumalı bir işe girişince gidilen sayfa */
+export function verificationPath(next?: string): string {
+  return next ? `/dogrulama?next=${encodeURIComponent(next)}` : "/dogrulama";
+}
+
 export function homeFor(role: UserRole): string {
   if (role === "COMPANY") return "/firma-paneli";
   if (role === "ADMIN") return "/yonetim";

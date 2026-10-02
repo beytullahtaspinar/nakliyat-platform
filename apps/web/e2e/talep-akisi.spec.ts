@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { verifyEmail } from "./dogrulama";
 
 // Kritik akış: yeni bir müşteri formu doldurur, hesabı aynı adımda açılır ve talebi panelinde görür.
 test("müşteri talep oluşturur ve hesabında görür", async ({ page }) => {
@@ -27,12 +28,17 @@ test("müşteri talep oluşturur ve hesabında görür", async ({ page }) => {
   const account = page.getByRole("group", { name: /Teklifleri nereden takip edeceksin/ });
   await account.getByLabel("Ad soyad").fill("Deneme Müşteri");
   await account.getByLabel("Cep telefonu").fill(phone);
+  await account.getByLabel("E-posta").fill(`musteri${phone}@test.local`);
   await account.getByLabel("Şifre").fill("guvenli-sifre-123");
   await account.getByLabel(/Kişisel verilerimin/).check();
 
   await page.getByRole("button", { name: "Ücretsiz teklif iste" }).click();
 
-  await expect(page).toHaveURL(/\/hesabim/);
+  // Hesap doğrulanana kadar talep taslak kalır; kod girilince yayına alınır
+  await verifyEmail(page);
+  await expect(page).toHaveURL(/\/hesabim\?yeni=/);
+  await expect(page.getByText("Talebin alındı.", { exact: false })).toBeVisible();
+  await expect(page.getByText("Teklif bekliyor")).toBeVisible();
   await expect(page.getByText(/Kadıköy/).first()).toBeVisible();
   await expect(page.getByText(/Çankaya/).first()).toBeVisible();
 

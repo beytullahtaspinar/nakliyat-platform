@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
+import { verifyEmail } from "./dogrulama";
 
 const fixture = (name: string) => path.join(__dirname, "fixtures", name);
 
@@ -22,6 +23,7 @@ async function fillRequestForm(page: Page, phone: string) {
   const account = page.getByRole("group", { name: /Teklifleri nereden takip edeceksin/ });
   await account.getByLabel("Ad soyad").fill("Fotoğraflı Müşteri");
   await account.getByLabel("Cep telefonu").fill(phone);
+  await account.getByLabel("E-posta").fill(`medya${phone}@test.local`);
   await account.getByLabel("Şifre").fill("guvenli-sifre-123");
   await account.getByLabel(/Kişisel verilerimin/).check();
 }
@@ -34,6 +36,7 @@ test("müşteri talebe fotoğraf ekler, sonradan silebilir", async ({ page }) =>
   await page.getByLabel("Fotoğraf veya video seç").setInputFiles(fixture("esya.jpg"));
   await expect(page.getByText(/Yüklenecek: \d+ KB/)).toBeVisible();
   await page.getByRole("button", { name: "Ücretsiz teklif iste" }).click();
+  await verifyEmail(page);
   await expect(page).toHaveURL(/\/hesabim\?yeni=/);
 
   await page.getByRole("link", { name: /Kadıköy/ }).first().click();
@@ -70,6 +73,7 @@ test("video tarayıcıda 720p'ye küçültülüp eklenir", async ({ page }) => {
   await page.getByLabel("Fotoğraf veya video seç").setInputFiles(fixture("oda.webm"));
   await expect(page.getByText(/Yüklenecek:/)).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Ücretsiz teklif iste" }).click();
+  await verifyEmail(page);
   await expect(page).toHaveURL(/\/hesabim\?yeni=/);
   await page.getByRole("link", { name: /Kadıköy/ }).first().click();
   await expect(page.getByText(/^Video · 0:02$/)).toBeVisible();
