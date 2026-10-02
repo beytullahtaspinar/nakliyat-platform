@@ -25,7 +25,7 @@ test("uygulama bildirimi ve simgeler sunulur", async ({ request }) => {
   expect(start.headers().location).toBe("/");
 });
 
-/** Tarayıcının push servisi yerine sahte abonelik: test push servisine bağlanmaz. */
+/** Tarayıcının push servisi ve bildirim izni yerine sahtesi: test push servisine bağlanmaz. */
 async function fakePushService(page: Page) {
   await page.addInitScript(() => {
     let current: unknown = null;
@@ -43,6 +43,9 @@ async function fakePushService(page: Page) {
       };
       return sub;
     };
+    // Başsız Chromium izin verilse de Notification.permission'ı "denied" gösterebiliyor
+    Object.defineProperty(Notification, "permission", { get: () => "granted" });
+    Notification.requestPermission = async () => "granted";
     PushManager.prototype.getSubscription = async () => current as PushSubscription | null;
     PushManager.prototype.subscribe = async (options?: PushSubscriptionOptionsInit) => {
       const key = options?.applicationServerKey as Uint8Array;
