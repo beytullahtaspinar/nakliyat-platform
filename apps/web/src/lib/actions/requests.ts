@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type AuthResponse, type MovingRequest } from "@/lib/api";
 import { getAccessToken, getCurrentUser, saveSession } from "@/lib/session";
 
-export type RequestFormState = { error?: string };
+export type RequestFormState = {
+  error?: string;
+  /** Formda fotoğraf/video varsa yönlendirme yapılmaz; tarayıcı dosyaları bu talebe yükleyip kendisi yönlendirir */
+  createdId?: string;
+};
 
 const text = (formData: FormData, name: string) => String(formData.get(name) ?? "").trim();
 const flag = (formData: FormData, name: string) => formData.get(name) === "on";
@@ -81,6 +85,7 @@ export async function createRequest(
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Talep oluşturulamadı, lütfen tekrar deneyin." };
   }
+  if (formData.get("withMedia") === "1") return { createdId: created.id };
   redirect(`/hesabim?yeni=${created.id}`);
 }
 

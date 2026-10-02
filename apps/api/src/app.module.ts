@@ -11,6 +11,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { HealthController } from './health/health.controller.js';
 import { LocationsController } from './locations/locations.controller.js';
+import { MediaModule } from './media/media.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { ObservabilityModule } from './observability/observability.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -26,6 +27,7 @@ import { RequestsModule } from './requests/requests.module.js';
     EventsModule,
     AuthModule,
     RequestsModule,
+    MediaModule,
     CompaniesModule,
     QuotesModule,
     BookingsModule,

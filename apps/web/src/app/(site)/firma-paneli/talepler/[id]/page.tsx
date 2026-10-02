@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { Card } from "@/components/ui/card";
 import { withdrawQuote } from "@/lib/actions/company";
-import { ApiError, apiFetch, type CompanyRequest } from "@/lib/api";
+import { ApiError, apiFetch, type CompanyRequestDetail } from "@/lib/api";
+import { MediaGallery } from "@/components/media/media-gallery";
 import { getCompanyContext } from "@/lib/company";
 import { formatDate, formatMoney } from "@/lib/format";
 import { VEHICLE_LABELS, turkeyDate } from "@/lib/request-options";
@@ -18,9 +19,9 @@ export default async function CompanyRequestPage({ params }: PageProps<"/firma-p
   const { token, profile } = await getCompanyContext();
   if (!profile) return null;
 
-  let request: CompanyRequest;
+  let request: CompanyRequestDetail;
   try {
-    request = await apiFetch<CompanyRequest>(`/company/requests/${encodeURIComponent(id)}`, { token });
+    request = await apiFetch<CompanyRequestDetail>(`/company/requests/${encodeURIComponent(id)}`, { token });
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
@@ -54,6 +55,12 @@ export default async function CompanyRequestPage({ params }: PageProps<"/firma-p
           {row("Teklif sayısı", `${request.quoteCount} firma teklif verdi`)}
           {row("Son teklif günü", formatDate(request.expiresAt))}
         </dl>
+        {request.media.length > 0 && (
+          <div className="mt-6">
+            <h3 className="mb-2 font-semibold">Müşterinin eklediği fotoğraf ve videolar</h3>
+            <MediaGallery media={request.media} />
+          </div>
+        )}
         <p className="mt-2 text-xs text-zinc-500">
           Müşterinin adı, telefonu ve açık adresi teklifini kabul ettiğinde &quot;İşlerim&quot; sekmesinde açılır.
         </p>

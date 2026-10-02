@@ -14,6 +14,7 @@ import {
   type CompanyWithCities,
 } from '../companies/companies.service.js';
 import { DomainEvents } from '../events/domain-events.js';
+import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { PaginationDto } from '../requests/dto/list-requests.dto.js';
 import type { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto.js';
@@ -24,6 +25,7 @@ export class QuotesService {
     private readonly prisma: PrismaService,
     private readonly companies: CompaniesService,
     private readonly events: DomainEvents,
+    private readonly media: MediaService,
   ) {}
 
   // ─── Firma tarafı ─────────────────────────────────────────────
@@ -78,7 +80,12 @@ export class QuotesService {
     });
     if (!request) throw new NotFoundException('Talep bulunamadı');
     const { quotes, _count, ...r } = request;
-    return { ...toCompanyRequestView(r), quoteCount: _count.quotes, myQuote: quotes[0] ?? null };
+    return {
+      ...toCompanyRequestView(r),
+      quoteCount: _count.quotes,
+      myQuote: quotes[0] ?? null,
+      media: await this.media.listForRequest(r.id),
+    };
   }
 
   async createQuote(ownerId: string, requestId: string, dto: CreateQuoteDto) {

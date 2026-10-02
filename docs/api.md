@@ -60,7 +60,8 @@ Talep ve firma kayıtlarında il **plaka koduyla** (`"34"`), ilçe **adres koduy
 | ✅ | POST | `/requests/:id/cancel` | Müşteri | Açık talebi iptal et |
 
 Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle bilgi sızmaz). Teklif gelmiş talep düzenlenemez (409).
-| ⏳ | POST | `/requests/:id/photos` | Müşteri | Fotoğraf yükleme adresi al (S3 imzalı URL) |
+| ✅ | POST | `/requests/:id/media/uploads` | Müşteri | Küçültülmüş fotoğraf/video için kısa süreli yükleme adresleri ([dosya-yukleme.md](dosya-yukleme.md)) |
+| ✅ | POST · DELETE | `/requests/:id/media`, `/requests/:id/media/:mediaId` | Müşteri | Yüklenen dosyaları talebe bağla / sil (yalnızca açık talep) |
 | ✅ | GET | `/requests/:id/quotes` | Müşteri | Gelen teklifler (firma puanı, tamamlanan iş, doğrulama rozeti ile) |
 | ✅ | POST | `/quotes/:id/accept` | Müşteri | Teklifi kabul et → iş (booking) oluşur, diğer teklifler reddedilir, firmanın iletişim bilgisi açılır. Aynı anda iki kabul engellenir. |
 

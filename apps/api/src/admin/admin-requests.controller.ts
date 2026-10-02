@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { UserRole } from '../generated/prisma/enums.js';
+import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { toRequestResponse } from '../requests/requests.service.js';
 import { AdminListRequestsDto, phoneDigits } from './dto/admin-lists.dto.js';
@@ -14,7 +15,10 @@ const CUSTOMER = { select: { id: true, fullName: true, phone: true, email: true 
 @Roles(UserRole.ADMIN)
 @Controller('admin/requests')
 export class AdminRequestsController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly media: MediaService,
+  ) {}
 
   /** Tüm taşıma talepleri, en yenisi önce; müşteri iletişim bilgisiyle */
   @Get()
@@ -67,6 +71,7 @@ export class AdminRequestsController {
       ...toRequestResponse(r, quotes.length),
       customer,
       booking,
+      media: await this.media.listForRequest(r.id),
       quotes: quotes.map((q) => ({
         id: q.id,
         status: q.status,

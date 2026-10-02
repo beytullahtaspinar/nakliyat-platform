@@ -94,6 +94,19 @@ export type MovingRequest = {
   quoteCount: number;
 };
 
+export type RequestMedia = {
+  id: string;
+  type: "PHOTO" | "VIDEO";
+  mimeType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  durationSec: number | null;
+  /** Kısa süreli (1-2 saat) imzalı görüntüleme adresi */
+  url: string;
+  createdAt: string;
+};
+
 export type MovingRequestDetail = MovingRequest & {
   fromAddress: string;
   fromFloor: number;
@@ -109,6 +122,7 @@ export type MovingRequestDetail = MovingRequest & {
   notes: string | null;
   estimatedCrew: number | null;
   estimatedHours: number | null;
+  media: RequestMedia[];
 };
 
 export type PublicCompany = {
@@ -206,6 +220,9 @@ export type CompanyRequestView = {
 export type OwnQuote = Omit<CustomerQuote, "company" | "isExpired"> & { createdAt: string };
 
 export type CompanyRequest = CompanyRequestView & { quoteCount: number; myQuote: OwnQuote | null };
+
+/** Firma talep ayrıntısı: müşterinin eklediği fotoğraf ve videolarla */
+export type CompanyRequestDetail = CompanyRequest & { media: RequestMedia[] };
 
 export type CompanyQuote = OwnQuote & { request: CompanyRequestView };
 

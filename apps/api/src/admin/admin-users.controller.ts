@@ -21,6 +21,7 @@ import { Roles } from '../common/decorators/roles.decorator.js';
 import { normalizeTrMobile } from '../common/utils/phone.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { BookingStatus, QuoteStatus, RequestStatus, UserRole, UserStatus } from '../generated/prisma/enums.js';
+import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   AdminListUsersDto,
@@ -51,7 +52,10 @@ const toUser = ({ _count, ...u }: UserRow) => ({ ...u, requestCount: _count.requ
 @Roles(UserRole.ADMIN)
 @Controller('admin/users')
 export class AdminUsersController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly media: MediaService,
+  ) {}
 
   /** Kullanıcılar, en yenisi önce. */
   @Get()
@@ -167,7 +171,7 @@ export class AdminUsersController {
   /**
    * Hesabı siler. Talep, teklif, iş ve karar geçmişi kayıtları bozulmasın diye satır silinmez;
    * ad, telefon, e-posta ve şifre geri dönülemez şekilde silinir, hesap bir daha açılamaz.
-   * Açık talepler iptal edilir, firmanın bekleyen teklifleri geri çekilir ve firma listelerden kalkar.
+   * Açık talepler iptal edilir, talep fotoğraf/videoları silinir, firmanın bekleyen teklifleri geri çekilir ve firma listelerden kalkar.
    * Planlanmış işi olan hesap silinmez (karşı taraf ortada kalmasın); o sürede askıya alınabilir.
    */
   @Delete(':id')
@@ -229,6 +233,8 @@ export class AdminUsersController {
         data: { actorId: admin.id, action: 'user.delete', entityType: 'User', entityId: id, details: { role: user.role } },
       }),
     ]);
+    // Talep fotoğraf/videoları da kişisel veri: kayıt silindikten sonra depodan da kaldırılır
+    await this.media.deleteForCustomer(id);
   }
 
   private async requireUser(id: string) {
