@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Checkbox, Field, FormError, Input, SubmitButton, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
+import { MediaPicker } from "@/components/media/media-picker";
+import { useMediaPicker } from "@/components/media/use-media-picker";
 import { createRequest } from "@/lib/actions/requests";
 import { FLOORS, HOME_TYPES } from "@/lib/request-options";
 
@@ -18,8 +21,29 @@ type Props = {
 
 export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Props) {
   const { state, pending, formProps } = useFormAction(createRequest, {});
+  const picker = useMediaPicker();
+  const router = useRouter();
+  const [uploadState, setUploadState] = useState<"idle" | "uploading">("idle");
+  const started = useRef<string>(undefined);
+
+  // Talep oluştu: küçültülmüş dosyaları yükle, sonra hesabıma geç. Yükleme aksarsa talep yine de oluşmuştur;
+  // müşteri talep sayfasından tekrar ekleyebilir.
+  useEffect(() => {
+    const id = state.createdId;
+    if (!id || started.current === id) return;
+    started.current = id;
+    setUploadState("uploading");
+    void picker.upload(id).then(({ failed, error }) => {
+      router.push(
+        failed || error ? `/hesabim/talepler/${encodeURIComponent(id)}?medya=eksik` : `/hesabim?yeni=${encodeURIComponent(id)}`,
+      );
+    });
+  }, [state.createdId, picker, router]);
+
+  const busy = pending || uploadState === "uploading";
   return (
     <form {...formProps} className="space-y-8">
+      <input type="hidden" name="withMedia" value={picker.readyCount > 0 ? "1" : ""} />
       <Section title="Nereden taşınıyorsun?" step={1}>
         <AddressFields prefix="from" cities={cities} cityCode={defaults.fromCityCode} district={defaults.fromDistrict} />
       </Section>
@@ -58,6 +82,14 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
           <Checkbox name="needsStorage" label="Eşyalarımın bir süre depoda kalması gerekiyor" />
         </div>
         <div className="mt-4 grid gap-4">
+          <div>
+            <p className="text-sm font-medium text-zinc-800">Eşyalarının fotoğrafı veya videosu (isteğe bağlı)</p>
+            <p className="mb-2 mt-0.5 text-xs text-zinc-500">
+              Firmalar eşyaları görünce daha doğru fiyat verir. Odaları gezerek kısa bir video çekmen yeterli.
+              Adres veya kapı numarası görünmemesine dikkat et.
+            </p>
+            <MediaPicker picker={picker} disabled={busy} />
+          </div>
           <Field label="Özel eşyalar (isteğe bağlı)" hint="Virgülle ayırın. Örnek: piyano, antika vitrin, kasa">
             <Input name="specialItems" maxLength={1000} />
           </Field>
@@ -85,7 +117,16 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
 
       <div className="space-y-3">
         <FormError message={state.error} />
-        <SubmitButton pending={pending}>Ücretsiz teklif iste</SubmitButton>
+        {uploadState === "uploading" ? (
+          <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-center text-sm text-brand-900">
+            Talebin oluşturuldu, fotoğraf ve videolar yükleniyor…
+          </p>
+        ) : picker.processing ? (
+          <p role="status" className="text-center text-sm text-zinc-600">
+            Fotoğraf ve videolar küçültülüyor, birazdan gönderebilirsin.
+          </p>
+        ) : null}
+        <SubmitButton pending={busy || picker.processing}>Ücretsiz teklif iste</SubmitButton>
         <p className="text-center text-xs text-zinc-500">
           Açık adresin ve telefonun yalnızca teklifini kabul ettiğin firmayla paylaşılır.
         </p>

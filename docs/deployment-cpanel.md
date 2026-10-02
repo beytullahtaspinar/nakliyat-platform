@@ -34,7 +34,7 @@ Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-releas
    - Node.js version: 22, Application mode: Production
    - Application root: `nakliyat-api`, Application URL: `api.evdenevenakliyat.app`
    - Application startup file: `app.cjs`
-   - Environment variables: `NODE_ENV=production`, `WEB_URL=https://evdenevenakliyat.app`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI`, `JWT_ACCESS_SECRET` (uzun, rastgele), isteğe bağlı `SENTRY_DSN` ([izleme.md](izleme.md)), e-posta bildirimleri için `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` ([bildirimler.md](bildirimler.md))
+   - Environment variables: `NODE_ENV=production`, `WEB_URL=https://evdenevenakliyat.app`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI`, `JWT_ACCESS_SECRET` (uzun, rastgele), isteğe bağlı `SENTRY_DSN` ([izleme.md](izleme.md)), talep fotoğraf/videoları için `R2_*` ([dosya-yukleme.md](dosya-yukleme.md)), e-posta bildirimleri için `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` ([bildirimler.md](bildirimler.md))
    - **Run NPM Install**'a basma; bağımlılıkları deploy getirir.
 4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`, isteğe bağlı `SENTRY_DSN`.
 5. **GitHub:** Repo → Settings → Environments → `production` → Variable `NEXT_PUBLIC_API_URL` = `https://api.evdenevenakliyat.app`.

@@ -7,6 +7,7 @@ import { ApiError, apiFetch, type AdminRequestDetail } from "@/lib/api";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { DataTable, EmptyRow, PageHeader, VerificationBadge, td, th } from "../../admin-bits";
+import { MediaGallery } from "@/components/media/media-gallery";
 
 export const metadata: Metadata = { title: "Talep" };
 
@@ -57,6 +58,13 @@ export default async function AdminRequestPage({ params }: PageProps<"/yonetim/t
             </dl>
             {r.notes && <p className="mt-4 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{r.notes}</p>}
           </Card>
+
+          {r.media.length > 0 && (
+            <Card className="p-5">
+              <h2 className="mb-3 font-semibold">Fotoğraf ve videolar ({r.media.length})</h2>
+              <MediaGallery media={r.media} />
+            </Card>
+          )}
 
           <section aria-labelledby="teklifler">
             <h2 id="teklifler" className="mb-2 font-semibold text-slate-900">

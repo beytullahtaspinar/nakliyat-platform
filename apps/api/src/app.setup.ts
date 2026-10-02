@@ -22,7 +22,11 @@ export function configureApp(app: INestApplication) {
   app.use(requestIdMiddleware);
   app.use(helmet());
   app.enableCors({
-    origin: process.env.WEB_URL ?? 'http://localhost:3000',
+    // CORS_EXTRA_ORIGINS: virgülle ayrılmış ek adresler (ör. testte http://127.0.0.1:3000)
+    origin: [
+      process.env.WEB_URL ?? 'http://localhost:3000',
+      ...(process.env.CORS_EXTRA_ORIGINS?.split(',').map((o) => o.trim()).filter(Boolean) ?? []),
+    ],
     exposedHeaders: ['X-Request-Id'],
   });
   app.useGlobalPipes(

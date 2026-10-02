@@ -15,6 +15,7 @@ import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/f
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { getAccessToken, getCurrentUser, homeFor } from "@/lib/session";
 import { ConfirmButton } from "@/components/forms/confirm-button";
+import { RequestMediaManager } from "@/components/media/request-media-manager";
 
 export const metadata: Metadata = {
   title: "Talep ve teklifler",
@@ -41,7 +42,7 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
 
   const token = (await getAccessToken())!;
   const [request, quotes] = await load(id, token);
-  const { kabul } = await searchParams;
+  const { kabul, medya } = await searchParams;
 
   const booking =
     request.status === "BOOKED" || request.status === "COMPLETED"
@@ -74,6 +75,13 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
         {request.distanceKm ? ` · ${request.distanceKm} km` : ""}
         {request.estimatedVolumeM3 ? ` · yaklaşık ${request.estimatedVolumeM3} m³` : ""}
       </p>
+
+      {medya === "eksik" && (
+        <p role="status" className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Talebin oluşturuldu ve firmalara iletildi, ancak bazı fotoğraf veya videolar yüklenemedi. Aşağıdan tekrar
+          ekleyebilirsin.
+        </p>
+      )}
 
       {booking && <BookingCard booking={booking} justAccepted={kabul === "1"} />}
 
@@ -109,6 +117,21 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
       </section>
 
       <RequestDetails request={request} />
+
+      {(acceptable || request.media.length > 0) && (
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold">Fotoğraf ve videolar</h2>
+          {acceptable && (
+            <p className="mt-1 text-sm text-zinc-600">
+              Eşyalarını görmek firmaların daha doğru fiyat vermesini sağlar. Firmalar yalnızca bu dosyaları görür,
+              adres ve iletişim bilgilerini görmez.
+            </p>
+          )}
+          <div className="mt-4">
+            <RequestMediaManager requestId={request.id} media={request.media} editable={acceptable} />
+          </div>
+        </section>
+      )}
 
       {acceptable && (
         <div className="mt-8">

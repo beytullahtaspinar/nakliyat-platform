@@ -35,7 +35,14 @@ export default defineConfig({
       cwd: "../api",
       url: `http://localhost:${API_PORT}/v1/health`,
       reuseExistingServer: !CI,
-      env: { PORT: String(API_PORT), WEB_URL: `http://localhost:${WEB_PORT}`, AUTH_RATE_LIMIT: "1000" },
+      env: {
+        PORT: String(API_PORT),
+        WEB_URL: `http://localhost:${WEB_PORT}`,
+        AUTH_RATE_LIMIT: "1000",
+        // Tarayıcı dosyayı doğrudan API'ye yükler (yerel disk sürücüsü); sayfa 127.0.0.1'de açıldığı için
+        CORS_EXTRA_ORIGINS: `http://127.0.0.1:${WEB_PORT}`,
+        API_PUBLIC_URL: `http://127.0.0.1:${API_PORT}`,
+      },
       timeout: 60_000,
     },
     {

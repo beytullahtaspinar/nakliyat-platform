@@ -216,7 +216,7 @@ model MovingRequest {
   deletedAt DateTime?
 
   customer User           @relation(fields: [customerId], references: [id])
-  photos   RequestPhoto[]
+  media    RequestMedia[]
   quotes   Quote[]
   booking  Booking?
 
@@ -225,12 +225,25 @@ model MovingRequest {
   @@index([customerId])
 }
 
-model RequestPhoto {
-  id        String   @id @default(cuid())
-  requestId String
-  fileUrl   String   @db.VarChar(1000)
-  caption   String?
-  createdAt DateTime @default(now())
+enum MediaType {
+  PHOTO
+  VIDEO
+}
+
+/// Talebe eklenen fotoğraf ve videolar. Dosyalar tarayıcıda küçültülüp doğrudan depolamaya
+/// (Cloudflare R2 ya da sunucu diski) yüklenir; burada yalnızca anahtar ve özellikleri tutulur.
+model RequestMedia {
+  id          String    @id @default(cuid())
+  requestId   String
+  type        MediaType
+  /// Depolamadaki anahtar: talepler/<talepId>/<rastgele>.<uzantı>
+  storageKey  String    @unique @db.VarChar(300)
+  mimeType    String    @db.VarChar(100)
+  sizeBytes   Int
+  width       Int?
+  height      Int?
+  durationSec Int?
+  createdAt   DateTime  @default(now())
 
   request MovingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 

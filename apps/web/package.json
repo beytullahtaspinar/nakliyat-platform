@@ -12,13 +12,17 @@
     "lighthouse": "lhci autorun"
   },
   "dependencies": {
+    "@nakliyat/locations": "workspace:*",
+    "@nakliyat/monitoring": "workspace:*",
+    "mediabunny": "^1.61.0",
     "next": "16.3.7",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "@nakliyat/locations": "workspace:*",
-    "@nakliyat/monitoring": "workspace:*"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -26,10 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "@playwright/test": "^1.63.0",
-    "@axe-core/playwright": "^4.13.0",
-    "@lhci/cli": "^0.15.1"
+    "typescript": "^5"
   },
   "packageManager": "pnpm@10.33.0"
 }

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { getCityByCode, getDistanceKm, getDistrict } from '@nakliyat/locations';
 import type { MovingRequest } from '../generated/prisma/client.js';
+import { MediaService } from '../media/media.service.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { RequestStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -32,6 +33,7 @@ export class RequestsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: DomainEvents,
+    private readonly media: MediaService,
   ) {}
 
   async create(customerId: string, dto: CreateRequestDto) {
@@ -80,7 +82,7 @@ export class RequestsService {
 
   async get(customerId: string, id: string) {
     const { _count, ...request } = await this.findOwned(customerId, id);
-    return toRequestResponse(request, _count.quotes);
+    return { ...toRequestResponse(request, _count.quotes), media: await this.media.listForRequest(id) };
   }
 
   async update(customerId: string, id: string, dto: UpdateRequestDto) {

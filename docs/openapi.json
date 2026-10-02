@@ -361,6 +361,118 @@
         ]
       }
     },
+    "/v1/requests/{id}/media/uploads": {
+      "post": {
+        "operationId": "RequestMediaController_createUploads",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      }
+    },
+    "/v1/requests/{id}/media": {
+      "post": {
+        "operationId": "RequestMediaController_attach",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachMediaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      }
+    },
+    "/v1/requests/{id}/media/{mediaId}": {
+      "delete": {
+        "operationId": "RequestMediaController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Taşıma talepleri (müşteri)"
+        ]
+      }
+    },
     "/v1/company/profile": {
       "post": {
         "operationId": "CompanyProfileController_create",
@@ -1829,6 +1941,78 @@
             "example": "Sokak dar, kamyon girmiyor."
           }
         }
+      },
+      "UploadFileDto": {
+        "type": "object",
+        "properties": {
+          "mimeType": {
+            "type": "string",
+            "enum": [
+              "image/webp",
+              "image/jpeg",
+              "video/mp4",
+              "video/webm"
+            ]
+          },
+          "sizeBytes": {
+            "type": "number",
+            "description": "Küçültülmüş dosyanın boyutu (bayt)"
+          }
+        },
+        "required": [
+          "mimeType",
+          "sizeBytes"
+        ]
+      },
+      "CreateUploadsDto": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadFileDto"
+            }
+          }
+        },
+        "required": [
+          "files"
+        ]
+      },
+      "AttachMediaItemDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Yükleme adresiyle birlikte verilen anahtar"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "durationSec": {
+            "type": "number",
+            "description": "Video süresi (sn)"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "AttachMediaDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttachMediaItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
       },
       "CreateCompanyProfileDto": {
         "type": "object",
