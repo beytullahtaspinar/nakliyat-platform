@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CompaniesService } from '../companies/companies.service.js';
-import type { CompanyDocument } from '../generated/prisma/client.js';
+import type { CompanyDocument, Prisma } from '../generated/prisma/client.js';
 import { CompanyDocumentType, VerificationStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -107,6 +107,16 @@ export class CompanyDocumentsService {
         },
       }),
       this.prisma.companyDocument.deleteMany({ where: { id: { in: replaced.map((d) => d.id) } } }),
+      // Firma inceleme ekranının karar geçmişinde görünür
+      this.prisma.auditLog.create({
+        data: {
+          actorId: ownerId,
+          action: 'company.document.upload',
+          entityType: 'Company',
+          entityId: company.id,
+          details: { type: dto.type, fileName: dto.fileName },
+        },
+      }),
       // Reddedilmiş firma yeni belge yüklediğinde yeniden incelemeye girer
       ...(company.verificationStatus === VerificationStatus.REJECTED
         ? [
@@ -141,6 +151,51 @@ export class CompanyDocumentsService {
     return {
       documents: documents.map((d) => this.toView(d)),
       requirements: REQUIRED_DOCUMENT_TYPES.map((type) => ({ type, state: requirementState(documents, type) })),
+    };
+  }
+
+  /**
+   * Yönetimdeki belge listesi (varsayılan: onay bekleyenler, en eski önce). Onaylı firmanın yüklediği
+   * güncelleme de burada görünür; aynı türden onaylı eski belgesi olanlar `replacesVerified` ile işaretlenir.
+   */
+  async listForAdmin({ status, q, page, limit }: { status?: VerificationStatus; q?: string; page: number; limit: number }) {
+    const where: Prisma.CompanyDocumentWhereInput = {
+      company: {
+        deletedAt: null,
+        ...(q && { OR: [{ displayName: { contains: q } }, { legalName: { contains: q } }, { taxNumber: { contains: q } }] }),
+      },
+      ...(status && { status }),
+    };
+    const [rows, total] = await this.prisma.$transaction([
+      this.prisma.companyDocument.findMany({
+        where,
+        orderBy: { createdAt: status === VerificationStatus.PENDING ? 'asc' : 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: { company: { select: { id: true, displayName: true, legalName: true, verificationStatus: true } } },
+      }),
+      this.prisma.companyDocument.count({ where }),
+    ]);
+    const verified = rows.length
+      ? await this.prisma.companyDocument.findMany({
+          where: {
+            status: VerificationStatus.VERIFIED,
+            OR: rows.map((d) => ({ companyId: d.companyId, type: d.type, id: { not: d.id } })),
+          },
+          select: { companyId: true, type: true },
+        })
+      : [];
+    return {
+      items: rows.map(({ company, ...d }) => ({
+        ...this.toView(d),
+        company,
+        replacesVerified:
+          d.type !== CompanyDocumentType.OTHER &&
+          verified.some((v) => v.companyId === d.companyId && v.type === d.type),
+      })),
+      total,
+      page,
+      limit,
     };
   }
 

@@ -54,6 +54,15 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
   await expectAccessible(page);
 
+  // Onay bekleyen belgeler ayrı listede, firmaya göre aranır
+  await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Belgeler/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Belgeler" })).toBeVisible();
+  await page.getByRole("search").getByRole("searchbox").fill(companyName);
+  await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
+  await expect(page.getByRole("link", { name: companyName, exact: true })).toHaveCount(3);
+  await expect(page.getByText("Yeni belge")).toHaveCount(3);
+  await expectAccessible(page);
+
   await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Firmalar/ }).click();
   await page.getByRole("search").getByRole("searchbox").fill(companyName);
   await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
