@@ -13,6 +13,7 @@ import { ImpersonationAuditInterceptor } from './common/interceptors/impersonati
 import { HealthController } from './health/health.controller.js';
 import { LocationsController } from './locations/locations.controller.js';
 import { MediaModule } from './media/media.module.js';
+import { MessagesModule } from './messages/messages.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { ObservabilityModule } from './observability/observability.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -34,6 +35,7 @@ import { RequestsModule } from './requests/requests.module.js';
     CompaniesModule,
     QuotesModule,
     BookingsModule,
+    MessagesModule,
     AdminModule,
     NotificationsModule,
   ],

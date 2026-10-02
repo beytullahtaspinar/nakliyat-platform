@@ -283,6 +283,31 @@ export type CompanyBooking = {
   customer: { fullName: string; phone: string };
 };
 
+// ─── Mesajlaşma ────────────────────────────────────────────────
+
+export type BookingMessage = {
+  id: string;
+  /** Hesabı silinen kullanıcının mesajı boş döner */
+  body: string;
+  mine: boolean;
+  createdAt: string;
+  readAt: string | null;
+};
+
+/** GET /bookings/:id/messages: işin konuşması (eskiden yeniye) */
+export type Conversation = {
+  bookingId: string;
+  requestId: string;
+  /** Karşı taraf: müşteriye firma adı, firmaya müşteri adı */
+  counterpart: string;
+  /** İptal edilen işte ya da karşı taraf hesabını kapattıysa false */
+  canSend: boolean;
+  items: BookingMessage[];
+};
+
+/** GET /messages/unread */
+export type UnreadMessages = { total: number; items: { bookingId: string; requestId: string; count: number }[] };
+
 // ─── Yönetim ───────────────────────────────────────────────────
 
 export type AdminSummary = {

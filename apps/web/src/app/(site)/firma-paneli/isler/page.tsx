@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Badge, Card } from "@/components/ui/card";
-import { apiFetch, type CompanyBooking, type Paginated } from "@/lib/api";
+import { apiFetch, type CompanyBooking, type Paginated, type UnreadMessages } from "@/lib/api";
 import { getCompanyContext } from "@/lib/company";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { homeTypeLabel } from "@/lib/request-options";
@@ -27,7 +28,11 @@ const directionsStop = (s: Stop) => ({
 export default async function CompanyBookingsPage() {
   const { token, profile } = await getCompanyContext();
   if (!profile) return null;
-  const { items } = await apiFetch<Paginated<CompanyBooking>>("/company/bookings?limit=50", { token });
+  const [{ items }, unread] = await Promise.all([
+    apiFetch<Paginated<CompanyBooking>>("/company/bookings?limit=50", { token }),
+    apiFetch<UnreadMessages>("/messages/unread", { token }),
+  ]);
+  const unreadFor = (bookingId: string) => unread.items.find((u) => u.bookingId === bookingId)?.count ?? 0;
 
   if (items.length === 0) {
     return (
@@ -82,6 +87,16 @@ export default async function CompanyBookingsPage() {
                   </div>
                 )}
               </dl>
+              <p className="mt-4 text-sm">
+                <Link href={`/firma-paneli/isler/${b.id}`} className="font-semibold text-brand-700 underline">
+                  Müşteriyle mesajlaş
+                </Link>
+                {unreadFor(b.id) > 0 && (
+                  <Badge tone="accent" className="ml-2">
+                    {unreadFor(b.id)} yeni mesaj
+                  </Badge>
+                )}
+              </p>
               {b.status === "SCHEDULED" && (
                 <div className="mt-4">
                   <RouteOverview from={directionsStop(b.request.from)} to={directionsStop(b.request.to)} />

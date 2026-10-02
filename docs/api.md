@@ -89,8 +89,8 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | GET | `/bookings` | Müşteri | Anlaşılan işler, firmanın iletişim bilgisiyle |
 | ⏳ | GET | `/bookings/:id` | Taraflar | İş detayı |
 | ⏳ | POST | `/bookings/:id/review` | Müşteri | Tamamlanan işe puan ve yorum |
-| ⏳ | GET · POST | `/quotes/:id/messages` | Taraflar | Teklif üzerinden yazışma |
-| ⏳ | GET · POST | `/bookings/:id/messages` | Taraflar | İş üzerinden yazışma |
+| ✅ | GET · POST | `/bookings/:id/messages` | Taraflar | İş üzerinden yazışma (teklif kabulünden sonra). GET karşı tarafın mesajlarını okundu sayar (yönetici firma görünümünde saymaz). Mesaj 1-2000 karakter; iptal edilen işte salt okunur. Karşı tarafa okunmamışların ilki için `NEW_MESSAGE` bildirimi gider. |
+| ✅ | GET | `/messages/unread` | Müşteri, Firma | Okunmamış mesajlar: `{ total, items: [{ bookingId, requestId, count }] }` |
 | ✅ | GET | `/notifications` | Giriş yapmış | Uygulama içi bildirimler, okunmamış sayısıyla (`unread`) |
 | ✅ | POST | `/notifications/:id/read` · `/notifications/read-all` | Giriş yapmış | Okundu işaretle |
 | ✅ | GET · PATCH | `/notifications/preferences` | Giriş yapmış | Bildirim e-postası ve tür/kanal bazında aç-kapa ([bildirimler.md](bildirimler.md)) |

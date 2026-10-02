@@ -73,6 +73,17 @@ export const templates = {
     };
   },
 
+  newMessage(p: { senderName: string; body: string; path: string }): NotificationContent {
+    const excerpt = p.body.length > 300 ? `${p.body.slice(0, 300).trimEnd()}…` : p.body;
+    return {
+      type: 'NEW_MESSAGE',
+      title: `${p.senderName} sana mesaj yazdı`,
+      body: excerpt,
+      path: p.path,
+      actionLabel: 'Mesajı oku ve yanıtla',
+    };
+  },
+
   companyVerified(p: { companyName: string }): NotificationContent {
     return {
       type: 'COMPANY_VERIFICATION',
