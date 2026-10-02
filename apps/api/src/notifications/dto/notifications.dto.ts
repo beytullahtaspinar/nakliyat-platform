@@ -6,7 +6,9 @@ import {
   IsBoolean,
   IsEmail,
   IsIn,
+  IsObject,
   IsOptional,
+  IsString,
   MaxLength,
   ValidateIf,
   ValidateNested,
@@ -49,4 +51,37 @@ export class UpdatePreferencesDto {
   @ValidateNested({ each: true })
   @Type(() => PreferenceItemDto)
   items?: PreferenceItemDto[];
+}
+
+export class PushKeysDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(255)
+  p256dh: string;
+
+  @ApiProperty()
+  @IsString()
+  @MaxLength(255)
+  auth: string;
+}
+
+/** Tarayıcının PushSubscription.toJSON() çıktısı */
+export class PushSubscriptionDto {
+  @ApiProperty({ example: 'https://fcm.googleapis.com/fcm/send/…' })
+  @IsString()
+  @MaxLength(2000)
+  endpoint: string;
+
+  @ApiProperty({ type: PushKeysDto })
+  @IsObject()
+  @ValidateNested()
+  @Type(() => PushKeysDto)
+  keys: PushKeysDto;
+}
+
+export class PushEndpointDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(2000)
+  endpoint: string;
 }

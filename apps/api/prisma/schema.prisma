@@ -25,23 +25,23 @@ enum UserStatus {
 }
 
 model User {
-  id              String     @id @default(cuid())
-  role            UserRole
-  status          UserStatus @default(ACTIVE)
-  fullName        String
-  email           String?    @unique
-  phone           String     @unique
-  phoneVerifiedAt DateTime?
-  emailVerifiedAt DateTime?
-  passwordHash    String
+  id                 String     @id @default(cuid())
+  role               UserRole
+  status             UserStatus @default(ACTIVE)
+  fullName           String
+  email              String?    @unique
+  phone              String     @unique
+  phoneVerifiedAt    DateTime?
+  emailVerifiedAt    DateTime?
+  passwordHash       String
   /// Kullanım koşullarının ve KVKK aydınlatma metninin kabul edildiği an ve metin sürümü (ispat kaydı)
-  termsAcceptedAt DateTime?
-  termsVersion    String?    @db.VarChar(20)
+  termsAcceptedAt    DateTime?
+  termsVersion       String?    @db.VarChar(20)
   /// Ticari elektronik ileti (kampanya/duyuru) için verilen isteğe bağlı açık rıza; yoksa ileti gönderilmez
   marketingConsentAt DateTime?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  deletedAt       DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  deletedAt          DateTime?
 
   company                 Company?
   requests                MovingRequest[]
@@ -49,6 +49,7 @@ model User {
   sentMessages            Message[]
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
+  pushSubscriptions       PushSubscription[]
   refreshTokens           RefreshToken[]
   verificationCodes       VerificationCode[]
   identities              UserIdentity[]
@@ -508,6 +509,25 @@ model NotificationPreference {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, type, channel])
+}
+
+/// Tarayıcı/telefon anlık bildirim (Web Push) aboneliği. Her cihaz ayrı satır.
+/// Aynı cihazda başka hesapla abone olunursa satır o hesaba geçer (endpoint tekil).
+model PushSubscription {
+  id           String    @id @default(cuid())
+  userId       String
+  /// Endpoint uzun olabildiği için tekilliği SHA-256 özeti üzerinden
+  endpointHash String    @unique @db.Char(64)
+  endpoint     String    @db.Text
+  p256dh       String    @db.VarChar(255)
+  auth         String    @db.VarChar(255)
+  userAgent    String?   @db.VarChar(255)
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // ─── Yönetim ────────────────────────────────────────────────────

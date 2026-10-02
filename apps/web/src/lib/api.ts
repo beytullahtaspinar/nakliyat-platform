@@ -497,6 +497,8 @@ export type NotificationChannel = "EMAIL" | "SMS" | "PUSH";
 export type NotificationPreferences = {
   email: string | null;
   channels: NotificationChannel[];
+  /** Anlık bildirim: publicKey null ise sunucuda kapalı; devices = bildirimi açık cihaz sayısı */
+  push?: { publicKey: string | null; devices: number };
   items: {
     type: string;
     label: string;

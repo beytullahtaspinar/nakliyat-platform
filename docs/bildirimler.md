@@ -72,15 +72,45 @@ FROM Notification WHERE channel = 'EMAIL' ORDER BY createdAt DESC LIMIT 20;
 Brevo panelindeki *Transactional → Logs* ekranı da her e-postanın teslim, açılma ve geri dönme
 (bounce) durumunu gösterir. E-postalar türüne göre etiketlenir (`NEW_QUOTE` vb.).
 
-## Yeni kanal eklemek (SMS, push)
+## Anlık bildirim (telefona kurulum + Web Push)
+
+Site telefona "uygulama gibi" kurulabilir (PWA: `apps/web/src/app/manifest.ts`, simgeler
+`apps/web/public/simgeler/`, servis işçisi `apps/web/public/sw.js`). Ana ekrandan açılınca
+`/uygulama` kişiyi kendi paneline götürür. Bağlantı yoksa `cevrimdisi.html` gösterilir.
+
+Anlık bildirim standart Web Push (VAPID) ile gönderilir; ücretli servis gerekmez. Chrome/Android,
+Edge, Firefox, Samsung Internet ve **ana ekrana eklenmiş** iPhone (iOS 16.4+) desteklenir.
+Kullanıcı *Bildirim ayarları* sayfasında "Bu cihazda bildirimleri aç" der; her cihaz
+`PushSubscription` tablosunda bir satırdır. Tür bazında e-posta ve anlık bildirim ayrı ayrı
+kapatılabilir. Çıkış yapınca o cihazın kaydı silinir; kaldırılan uygulamaların kayıtları ilk
+gönderimde (410) kendiliğinden temizlenir. Bildirimi açık cihazı olmayan kullanıcı için
+gönderim satırı açılmaz.
+
+### VAPID anahtarları (bir kez)
+
+1. cPanel Terminal'de API uygulamasının klasöründe (Setup Node.js App sayfasının üstündeki
+   "source …/activate" komutunu çalıştırdıktan sonra):
+   `node -e "console.log(require('web-push').generateVAPIDKeys())"`
+2. cPanel → Setup Node.js App → API uygulaması → Environment variables:
+   - `VAPID_PUBLIC_KEY` = çıktıdaki Public Key
+   - `VAPID_PRIVATE_KEY` = çıktıdaki Private Key (gizli, kimseyle paylaşma)
+   - `VAPID_SUBJECT` = `mailto:destek@evdenevenakliyat.app` (isteğe bağlı)
+3. API uygulamasını **Restart** et.
+
+Anahtarlar tanımlı değilse anlık bildirim seçeneği ekranda görünmez, gönderim yapılmaz.
+Anahtarları değiştirmek mevcut abonelikleri geçersiz kılar: kullanıcılar bildirimi yeniden açmalı.
+
+Gönderim durumu: `SELECT createdAt, type, status, lastError FROM Notification WHERE channel = 'PUSH' ORDER BY createdAt DESC LIMIT 20;`
+
+## Yeni kanal eklemek (SMS)
 
 1. `src/notifications/channels/` altına `ChannelProvider` arayüzünü uygulayan bir sınıf yaz
    (`send()` geçici hatada hata fırlatır, adres yoksa `SKIPPED` döner).
 2. `notifications.module.ts` içindeki `NOTIFICATION_CHANNELS` listesine ekle.
 3. `notification-types.ts` içindeki `OPTIONAL_CHANNELS` listesine kanalı ekle; tercih ekranı
    kendiliğinden yeni bir onay kutusu gösterir.
-4. Push için cihaz anahtarlarını saklayan bir tablo (`PushDevice`) ve kayıt ucu gerekir; mobil
-   uygulama (veya PWA) geldiğinde eklenecek.
+4. Alıcının o kanala ulaşılabilir olup olmadığı ucuzca bilinebiliyorsa `isAvailable()` yaz
+   (bkz. `web-push.channel.ts`).
 
 ## Yeni bildirim türü eklemek
 

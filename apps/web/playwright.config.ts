@@ -1,3 +1,4 @@
+import { generateKeyPairSync } from "node:crypto";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
@@ -9,6 +10,10 @@ import { defineConfig, devices } from "@playwright/test";
 const WEB_PORT = 3000;
 const API_PORT = 4000;
 const CI = Boolean(process.env.CI);
+
+// Anlık bildirim için her çalıştırmada yeni VAPID anahtarı (push servisine gerçek istek atılmaz)
+const vapid = generateKeyPairSync("ec", { namedCurve: "P-256" }).privateKey.export({ format: "jwk" });
+const vapidPublicKey = Buffer.concat([Buffer.from([4]), Buffer.from(vapid.x!, "base64url"), Buffer.from(vapid.y!, "base64url")]).toString("base64url");
 
 export default defineConfig({
   testDir: "./e2e",
@@ -48,6 +53,8 @@ export default defineConfig({
         // Tarayıcı dosyayı doğrudan API'ye yükler (yerel disk sürücüsü); sayfa 127.0.0.1'de açıldığı için
         CORS_EXTRA_ORIGINS: `http://127.0.0.1:${WEB_PORT}`,
         API_PUBLIC_URL: `http://127.0.0.1:${API_PORT}`,
+        VAPID_PUBLIC_KEY: vapidPublicKey,
+        VAPID_PRIVATE_KEY: vapid.d!,
       },
       timeout: 60_000,
     },

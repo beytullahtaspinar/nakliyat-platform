@@ -8,7 +8,7 @@ import type { NotificationChannel, NotificationPreferences } from "@/lib/api";
 const CHANNEL_LABELS: Record<NotificationChannel, string> = {
   EMAIL: "E-posta",
   SMS: "SMS",
-  PUSH: "Uygulama bildirimi",
+  PUSH: "Anlık bildirim",
 };
 
 export function NotificationSettings({

@@ -21,6 +21,8 @@ export type DeliveryResult =
 export interface ChannelProvider {
   readonly channel: NotificationChannel;
   send(recipient: Recipient, content: NotificationContent): Promise<DeliveryResult>;
+  /** false dönerse bu alıcı için gönderim kaydı hiç açılmaz (ör. bildirim açılmış cihaz yok) */
+  isAvailable?(recipient: Recipient): Promise<boolean>;
 }
 
 export const NOTIFICATION_CHANNELS = Symbol('NOTIFICATION_CHANNELS');
