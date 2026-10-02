@@ -3,13 +3,22 @@ import { cache } from "react";
 import { ApiError, apiFetch, type AuthTokens, type AuthUser, type UserRole } from "@/lib/api";
 import {
   ACCESS_COOKIE,
+  IMPERSONATION_COOKIE,
+  IMPERSONATION_PATH,
   REFRESH_COOKIE,
   SESSION_COOKIE_NAMES,
   sessionCookies,
 } from "@/lib/session-cookies";
 
 export async function getAccessToken(): Promise<string | undefined> {
-  return (await cookies()).get(ACCESS_COOKIE)?.value;
+  const store = await cookies();
+  // Firma paneli görüntüleme çerezi yalnızca /firma-paneli isteklerinde gelir
+  return store.get(IMPERSONATION_COOKIE)?.value ?? store.get(ACCESS_COOKIE)?.value;
+}
+
+/** Yönetici firma panelini firmanın gözünden mi görüntülüyor? */
+export async function isImpersonating(): Promise<boolean> {
+  return (await cookies()).has(IMPERSONATION_COOKIE);
 }
 
 /**
@@ -33,6 +42,7 @@ export async function saveSession(tokens: AuthTokens, role: UserRole) {
   for (const [name, value, options] of sessionCookies(tokens, role)) {
     store.set(name, value, options);
   }
+  store.delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
 }
 
 /** Yalnızca Server Action içinde çağrılabilir. */
@@ -40,6 +50,8 @@ export async function clearSession(): Promise<string | undefined> {
   const store = await cookies();
   const refreshToken = store.get(REFRESH_COOKIE)?.value;
   for (const name of SESSION_COOKIE_NAMES) store.delete(name);
+  // Çıkış yapan yönetici firma görüntüleme anahtarını da bırakmaz
+  store.delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
   return refreshToken;
 }
 

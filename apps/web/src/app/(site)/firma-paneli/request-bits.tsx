@@ -1,6 +1,7 @@
 import type { CompanyRequestView, OwnQuote } from "@/lib/api";
 import { Badge } from "@/components/ui/card";
 import { floorLabel, formatDate, formatMoney, place } from "@/lib/format";
+import { routeText } from "@/lib/geo";
 import { homeTypeLabel } from "@/lib/request-options";
 
 export const route = (r: Pick<CompanyRequestView, "fromCityName" | "fromDistrictName" | "toCityName" | "toDistrictName">) =>
@@ -10,7 +11,7 @@ export function requestFacts(r: CompanyRequestView): string {
   return [
     homeTypeLabel(r.homeType),
     `${formatDate(r.moveDate)}${r.isDateFlexible ? " (esnek)" : ""}`,
-    r.distanceKm ? `${r.distanceKm} km` : "Şehir içi",
+    routeText(r) ?? (r.distanceKm ? `${r.distanceKm} km` : "Şehir içi"),
     r.estimatedVolumeM3 ? `~${r.estimatedVolumeM3} m³` : null,
   ]
     .filter(Boolean)

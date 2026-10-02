@@ -20,6 +20,8 @@ import type { RegisterDto } from './dto/register.dto.js';
 export interface AccessTokenPayload {
   sub: string;
   role: UserRole;
+  /** Yönetici firmanın panelini görüntülüyorsa yöneticinin kimliği */
+  imp?: string;
 }
 
 export const BCRYPT_ROUNDS = 12;

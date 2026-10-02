@@ -8,10 +8,10 @@ import { DataTable, EmptyRow, FilterTabs, PageHeader, Pager, SearchForm, Verific
 export const metadata: Metadata = { title: "Firmalar" };
 
 const FILTERS: { value: string; label: string; status?: VerificationStatus }[] = [
+  { value: "tumu", label: "Tümü" },
   { value: "bekleyen", label: "Onay bekleyen", status: "PENDING" },
   { value: "onayli", label: "Onaylı", status: "VERIFIED" },
   { value: "reddedilen", label: "Reddedilen", status: "REJECTED" },
-  { value: "tumu", label: "Tümü" },
 ];
 const LIMIT = 25;
 
@@ -19,16 +19,14 @@ export default async function AdminCompaniesPage({ searchParams }: PageProps<"/y
   const { token } = await getAdminContext();
   const params = await searchParams;
   const q = oneParam(params.ara)?.trim().slice(0, 100) || undefined;
-  // Arama yapılınca varsayılan süzgeç "Tümü" olur; aranan firma hangi durumda olursa bulunur
-  const filter =
-    FILTERS.find((f) => f.value === oneParam(params.durum)) ?? (q ? FILTERS[3] : FILTERS[0]);
+  const filter = FILTERS.find((f) => f.value === oneParam(params.durum)) ?? FILTERS[0];
   const page = pageParam(params.sayfa);
   const { items, total } = await apiFetch<Paginated<AdminCompany>>(
     `/admin/companies${query({ status: filter.status, q, page, limit: LIMIT })}`,
     { token },
   );
   const href = (durum: string, sayfa = 1) =>
-    `/yonetim/firmalar${query({ durum: durum === "bekleyen" && !q ? undefined : durum, ara: q, sayfa })}`;
+    `/yonetim/firmalar${query({ durum: durum === "tumu" ? undefined : durum, ara: q, sayfa })}`;
 
   return (
     <>

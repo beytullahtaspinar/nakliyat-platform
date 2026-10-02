@@ -308,6 +308,9 @@ function toCompanyRequestView(request: MovingRequest) {
     estimatedCrew: request.estimatedCrew,
     estimatedHours: request.estimatedHours,
     distanceKm: request.distanceKm,
+    // Haritadaki işaretler (enlem/boylam) açık adres gibi gizli; yalnızca yol uzunluğu paylaşılır
+    routeKm: request.routeKm,
+    routeMinutes: request.routeMinutes,
     expiresAt: request.expiresAt,
     createdAt: request.createdAt,
   };

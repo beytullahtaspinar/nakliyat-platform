@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
 import { ApiError, apiFetch, type AdminRequestDetail } from "@/lib/api";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
+import { routeText } from "@/lib/geo";
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { DataTable, EmptyRow, PageHeader, VerificationBadge, td, th } from "../../admin-bits";
 import { MediaGallery } from "@/components/media/media-gallery";
@@ -48,7 +49,11 @@ export default async function AdminRequestPage({ params }: PageProps<"/yonetim/t
               <Row label="Nereye" value={`${r.toAddress}, ${place(r.toCityName, r.toDistrictName)}`} sub={`${floorLabel(r.toFloor)}, ${r.toHasElevator ? "asansörlü" : "asansörsüz"}`} />
               <Row label="Ev tipi" value={homeTypeLabel(r.homeType)} />
               <Row label="Taşınma tarihi" value={`${formatDate(r.moveDate)}${r.isDateFlexible ? " (esnek)" : ""}`} />
-              <Row label="Mesafe" value={r.distanceKm ? `${r.distanceKm} km` : "Şehir içi"} />
+              <Row
+                label="Mesafe"
+                value={routeText(r) ?? (r.distanceKm ? `${r.distanceKm} km` : "Şehir içi")}
+                sub={r.routeKm != null ? "Haritadaki işaretler arası yol" : r.distanceKm ? "İl merkezleri arası" : undefined}
+              />
               <Row
                 label="Tahmin"
                 value={[r.estimatedVolumeM3 && `~${r.estimatedVolumeM3} m³`, r.estimatedCrew && `${r.estimatedCrew} kişi`, r.estimatedHours && `${r.estimatedHours} saat`].filter(Boolean).join(" · ") || "—"}

@@ -15,10 +15,25 @@ const place = (cityCode: string, districtSlug: string) => {
 };
 
 /** Anlaşma sonrası taraflar birbirinin iletişim ve adres bilgisini görür. */
+const point = (lat: number | null, lng: number | null) => (lat != null && lng != null ? { lat, lng } : null);
 const fullRequest = (r: MovingRequest) => ({
   id: r.id,
-  from: { ...place(r.fromCityCode, r.fromDistrict), address: r.fromAddress, floor: r.fromFloor, hasElevator: r.fromHasElevator },
-  to: { ...place(r.toCityCode, r.toDistrict), address: r.toAddress, floor: r.toFloor, hasElevator: r.toHasElevator },
+  from: {
+    ...place(r.fromCityCode, r.fromDistrict),
+    address: r.fromAddress,
+    floor: r.fromFloor,
+    hasElevator: r.fromHasElevator,
+    location: point(r.fromLat, r.fromLng),
+  },
+  to: {
+    ...place(r.toCityCode, r.toDistrict),
+    address: r.toAddress,
+    floor: r.toFloor,
+    hasElevator: r.toHasElevator,
+    location: point(r.toLat, r.toLng),
+  },
+  routeKm: r.routeKm,
+  routeMinutes: r.routeMinutes,
   homeType: r.homeType,
   moveDate: r.moveDate,
   notes: r.notes,

@@ -17,7 +17,7 @@ export default async function AdminHomePage() {
   ]);
 
   const stats = [
-    { label: "Onay bekleyen firma", value: summary.companies.pending, href: "/yonetim/firmalar", highlight: summary.companies.pending > 0 },
+    { label: "Onay bekleyen firma", value: summary.companies.pending, href: "/yonetim/firmalar?durum=bekleyen", highlight: summary.companies.pending > 0 },
     { label: "Onay bekleyen belge", value: summary.documents.pending, href: "/yonetim/belgeler", highlight: summary.documents.pending > 0 },
     { label: "Onaylı firma", value: summary.companies.verified, href: "/yonetim/firmalar?durum=onayli" },
     { label: "Teklif bekleyen talep", value: summary.requests.open, href: "/yonetim/talepler?durum=acik" },
@@ -49,7 +49,7 @@ export default async function AdminHomePage() {
         <section aria-labelledby="bekleyen">
           <div className="mb-2 flex items-baseline justify-between gap-2">
             <h2 id="bekleyen" className="font-semibold text-slate-900">Onay bekleyen firmalar</h2>
-            <Link href="/yonetim/firmalar" className="text-sm font-medium text-brand-700 hover:underline">
+            <Link href="/yonetim/firmalar?durum=bekleyen" className="text-sm font-medium text-brand-700 hover:underline">
               Tümü ({pending.total})
             </Link>
           </div>

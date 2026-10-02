@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import type { CompanyProfile } from "@/lib/api";
 import { cityOptions, getCompanyContext } from "@/lib/company";
+import { isImpersonating } from "@/lib/session";
 import { VerifyNotice } from "@/components/verify-notice";
+import { ImpersonationBanner } from "./impersonation-banner";
 import { PanelNav } from "./panel-nav";
 import { ProfileForm } from "./profile-form";
 
@@ -14,10 +16,14 @@ export const metadata: Metadata = {
 
 export default async function CompanyPanelLayout({ children }: LayoutProps<"/firma-paneli">) {
   const { user, profile } = await getCompanyContext();
+  const banner = (await isImpersonating()) && (
+    <ImpersonationBanner companyId={profile?.id} companyName={profile?.displayName ?? user.fullName} />
+  );
 
   if (!profile) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
+        {banner}
         <h1 className="text-2xl font-bold tracking-tight">Firma bilgilerini gir</h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
           Hoş geldin {user.fullName}. Taleplere teklif verebilmek için önce firmanı tanıt. Ekibimiz vergi
@@ -33,6 +39,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+      {banner}
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="text-sm text-zinc-500">Firma paneli</p>

@@ -6,6 +6,12 @@ export const ACCESS_COOKIE = "nk_at";
 export const REFRESH_COOKIE = "nk_rt";
 /** Yalnızca arayüz için: başlıkta "Hesabım" göstermek. Yetki kararı buna göre verilmez. */
 export const ROLE_COOKIE = "nk_rol";
+/**
+ * Yöneticinin firma panelini firmanın gözünden görüntülediği kısa ömürlü anahtar. Yalnızca
+ * /firma-paneli altına gönderilir; yönetici kendi oturumunu kaybetmez, diğer sayfalarda kendisidir.
+ */
+export const IMPERSONATION_COOKIE = "nk_firma_gorunum";
+export const IMPERSONATION_PATH = "/firma-paneli";
 
 const ACCESS_MAX_AGE = 14 * 60;
 const REFRESH_MAX_AGE = 30 * 24 * 60 * 60;
