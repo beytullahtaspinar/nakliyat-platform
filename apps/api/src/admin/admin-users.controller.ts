@@ -219,6 +219,8 @@ export class AdminUsersController {
       this.prisma.userIdentity.deleteMany({ where: { userId: id } }),
       // Yazdığı mesajlar da kişisel veri: konuşmada yerleri kalır, içerikleri silinir
       this.prisma.message.updateMany({ where: { senderId: id }, data: { body: '' } }),
+      // Yorum metni de kişisel veri olabilir: puan firmanın ortalamasında kalır, metin silinir
+      this.prisma.review.updateMany({ where: { customerId: id }, data: { comment: null } }),
       this.prisma.movingRequest.updateMany({
         where: { customerId: id, status: { in: [RequestStatus.DRAFT, RequestStatus.OPEN] } },
         data: { status: RequestStatus.CANCELLED },

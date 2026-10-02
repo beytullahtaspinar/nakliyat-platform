@@ -20,6 +20,10 @@ export interface DomainEventMap {
   'company.verification_changed': { companyId: string };
   /** Müşteri veya firma işin konuşmasına mesaj yazdı */
   'message.sent': { messageId: string };
+  /** Müşteri ya da firma işi tamamlandı olarak işaretledi */
+  'booking.completed': { bookingId: string; completedBy: 'CUSTOMER' | 'COMPANY' };
+  /** Müşteri tamamlanan işin firmasını değerlendirdi */
+  'review.created': { reviewId: string };
 }
 
 export type DomainEventName = keyof DomainEventMap;

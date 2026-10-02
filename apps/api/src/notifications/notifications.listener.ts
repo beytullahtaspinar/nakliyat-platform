@@ -44,6 +44,8 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('quote.created', ({ quoteId }) => this.onQuoteCreated(quoteId));
     this.events.on('quote.accepted', ({ quoteId }) => this.onQuoteAccepted(quoteId));
     this.events.on('message.sent', ({ messageId }) => this.onMessageSent(messageId));
+    this.events.on('booking.completed', (p) => this.onBookingCompleted(p.bookingId, p.completedBy));
+    this.events.on('review.created', ({ reviewId }) => this.onReviewCreated(reviewId));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
   }
 
@@ -136,6 +138,29 @@ export class NotificationsListener implements OnModuleInit {
         path: fromCustomer ? `/firma-paneli/isler/${booking.id}` : `/hesabim/talepler/${booking.requestId}#mesajlar`,
       }),
     );
+  }
+
+  /** Firma işi tamamladıysa müşteriden değerlendirme iste; müşteri kendisi tamamladıysa formu zaten görüyor. */
+  async onBookingCompleted(bookingId: string, completedBy: 'CUSTOMER' | 'COMPANY') {
+    if (completedBy !== 'COMPANY') return;
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { requestId: true, request: { select: { customerId: true } }, company: { select: { displayName: true } } },
+    });
+    if (!booking) return;
+    await this.notifications.notify(
+      booking.request.customerId,
+      templates.reviewRequest({ companyName: booking.company.displayName, requestId: booking.requestId }),
+    );
+  }
+
+  async onReviewCreated(reviewId: string) {
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+      select: { rating: true, comment: true, company: { select: { ownerId: true } } },
+    });
+    if (!review) return;
+    await this.notifications.notify(review.company.ownerId, templates.newReview(review));
   }
 
   async onVerificationChanged(companyId: string) {

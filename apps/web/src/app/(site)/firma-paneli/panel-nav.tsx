@@ -7,6 +7,7 @@ const TABS = [
   { href: "/firma-paneli", label: "Gelen talepler", match: (p: string) => p === "/firma-paneli" || p.startsWith("/firma-paneli/talepler") },
   { href: "/firma-paneli/teklifler", label: "Tekliflerim" },
   { href: "/firma-paneli/isler", label: "İşlerim" },
+  { href: "/firma-paneli/degerlendirmeler", label: "Değerlendirmeler" },
   { href: "/firma-paneli/profil", label: "Firma profili" },
   { href: "/firma-paneli/belgeler", label: "Belgeler" },
   { href: "/firma-paneli/bildirimler", label: "Bildirimler" },

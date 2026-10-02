@@ -25,6 +25,16 @@ export const NOTIFICATION_TYPES = {
     description: 'Anlaştığın firma ya da müşteri sana mesaj yazdığında',
     roles: [UserRole.CUSTOMER, UserRole.COMPANY],
   },
+  REVIEW_REQUEST: {
+    label: 'Değerlendirme hatırlatması',
+    description: 'Taşınman tamamlandığında firmayı değerlendirmen için',
+    roles: [UserRole.CUSTOMER],
+  },
+  NEW_REVIEW: {
+    label: 'Yeni değerlendirme',
+    description: 'Bir müşteri firmanı puanlayıp yorum yazdığında',
+    roles: [UserRole.COMPANY],
+  },
   COMPANY_VERIFICATION: {
     label: 'Firma hesabı onayı',
     description: 'Firma hesabın onaylandığında veya reddedildiğinde',

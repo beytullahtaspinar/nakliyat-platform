@@ -28,6 +28,8 @@ Teklif modülü ──emit('quote.created')──▶ DomainEvents ──▶ Noti
 | `NEW_REQUEST` | Firma | Çıkış veya varış ili, firmanın hizmet bölgesindeyse ve firma doğrulanmışsa |
 | `NEW_QUOTE` | Müşteri | Talebine teklif geldiğinde |
 | `QUOTE_ACCEPTED` | Müşteri ve firma | Teklif kabul edilip iş oluştuğunda |
+| `REVIEW_REQUEST` | Müşteri | Firma işi tamamlandı olarak işaretlediğinde (firmayı değerlendirme daveti) |
+| `NEW_REVIEW` | Firma | Müşteri puan/yorum verdiğinde |
 | `COMPANY_VERIFICATION` | Firma | Yönetici firmayı onayladığında veya reddettiğinde |
 
 Kullanıcılar `/hesabim/bildirimler` ve `/firma-paneli/bildirimler` sayfalarından bildirim e-postasını

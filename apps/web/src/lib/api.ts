@@ -21,9 +21,13 @@ type ApiOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   body?: unknown;
   token?: string;
+  /** Herkese açık sayfalar için: yanıt bu kadar saniye önbellekte tutulur (varsayılan: önbellek yok) */
+  revalidate?: number;
+  /** Önbellek etiketleri: sunucu eylemi updateTag ile süresini hemen bitirebilir */
+  tags?: string[];
 };
 
-export async function apiFetch<T>(path: string, { method = "GET", body, token }: ApiOptions = {}): Promise<T> {
+export async function apiFetch<T>(path: string, { method = "GET", body, token, revalidate, tags }: ApiOptions = {}): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API_BASE}${path}`, {
@@ -34,7 +38,7 @@ export async function apiFetch<T>(path: string, { method = "GET", body, token }:
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
-      cache: "no-store",
+      ...(revalidate && !token ? { next: { revalidate, tags } } : { cache: "no-store" as const }),
     });
   } catch {
     throw new ApiError(503, "Sunucuya şu an ulaşılamıyor, lütfen biraz sonra tekrar deneyin.");
@@ -183,7 +187,28 @@ export type CustomerQuote = {
   company: PublicCompany;
 };
 
-export type CustomerBooking = {
+/** Müşterinin ve firmanın kendi ekranında gördüğü değerlendirme */
+export type OwnReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  companyReply: string | null;
+  companyReplyAt: string | null;
+  /** Yönetici gizlediyse false; gizli yorum firma sayfasında ve ortalamada yok */
+  isPublished: boolean;
+  hiddenReason: string | null;
+  createdAt: string;
+};
+
+/** Değerlendirme ve "iş tamamlandı" düğmesi için iş alanları */
+type BookingReviewState = {
+  completedAt: string | null;
+  /** Planlanmış ve taşınma günü gelmiş: tamamlandı olarak işaretlenebilir */
+  canComplete: boolean;
+  review: OwnReview | null;
+};
+
+export type CustomerBooking = BookingReviewState & {
   id: string;
   requestId: string;
   quoteId: string;
@@ -191,6 +216,43 @@ export type CustomerBooking = {
   scheduledAt: string;
   priceTry: string;
   company: CompanyContact;
+};
+
+/** "5" → kaç yorum (yayındakiler) */
+export type RatingDistribution = Record<"1" | "2" | "3" | "4" | "5", number>;
+
+/** GET /companies/:id: herkese açık firma profili */
+export type PublicCompanyProfile = PublicCompany & {
+  cityCode: string;
+  description: string | null;
+  serviceCities: { code: string; name: string | null }[];
+  verifiedAt: string | null;
+  memberSince: string;
+  updatedAt: string;
+  ratingDistribution: RatingDistribution;
+};
+
+/** GET /companies/:id/reviews: müşteri adı kısaltılmış ("Ayşe Y.") */
+export type PublicReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  authorName: string;
+  /** "İzmir → Ankara" ya da "İzmir içi" */
+  route: string;
+  createdAt: string;
+  companyReply: string | null;
+  companyReplyAt: string | null;
+};
+
+/** GET /companies: site haritası ve listeler için */
+export type PublicCompanyListItem = {
+  id: string;
+  displayName: string;
+  cityName: string | null;
+  ratingAverage: string;
+  ratingCount: number;
+  updatedAt: string;
 };
 
 export type Paginated<T> = { items: T[]; total: number; page: number; limit: number };
@@ -264,7 +326,7 @@ type BookingPlace = {
   location: { lat: number; lng: number } | null;
 };
 
-export type CompanyBooking = {
+export type CompanyBooking = BookingReviewState & {
   id: string;
   requestId: string;
   status: CustomerBooking["status"];
@@ -282,6 +344,11 @@ export type CompanyBooking = {
   };
   customer: { fullName: string; phone: string };
 };
+
+/** GET /company/reviews */
+export type CompanyReviews = Paginated<
+  OwnReview & { customerName: string; bookingId: string; route: string; moveDate: string }
+> & { summary: { ratingAverage: string; ratingCount: number; distribution: RatingDistribution } };
 
 // ─── Mesajlaşma ────────────────────────────────────────────────
 
@@ -398,6 +465,14 @@ export type AdminRequestDetail = MovingRequestDetail & {
     cancelledAt: string | null;
     cancelReason: string | null;
   } | null;
+};
+
+export type AdminReview = OwnReview & {
+  hiddenAt: string | null;
+  company: { id: string; displayName: string };
+  customer: { id: string; fullName: string };
+  requestId: string;
+  route: string;
 };
 
 export type AdminUser = {

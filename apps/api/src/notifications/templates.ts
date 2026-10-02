@@ -84,6 +84,27 @@ export const templates = {
     };
   },
 
+  reviewRequest(p: { companyName: string; requestId: string }): NotificationContent {
+    return {
+      type: 'REVIEW_REQUEST',
+      title: `Taşınman tamamlandı: ${p.companyName} firmasını değerlendir`,
+      body: `${p.companyName} işi tamamlandı olarak işaretledi. Puanın ve yorumun, taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder.`,
+      path: `/hesabim/talepler/${p.requestId}#degerlendirme`,
+      actionLabel: 'Firmayı değerlendir',
+    };
+  },
+
+  newReview(p: { rating: number; comment: string | null }): NotificationContent {
+    const excerpt = p.comment && p.comment.length > 300 ? `${p.comment.slice(0, 300).trimEnd()}…` : p.comment;
+    return {
+      type: 'NEW_REVIEW',
+      title: `Yeni değerlendirme: ${p.rating} yıldız`,
+      body: excerpt ?? 'Müşterin yorum yazmadan puan verdi.',
+      path: '/firma-paneli/degerlendirmeler',
+      actionLabel: excerpt ? 'Yorumu oku ve yanıtla' : 'Değerlendirmelerini gör',
+    };
+  },
+
   companyVerified(p: { companyName: string }): NotificationContent {
     return {
       type: 'COMPANY_VERIFICATION',
