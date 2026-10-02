@@ -145,11 +145,19 @@ enum CompanyDocumentType {
   OTHER
 }
 
+/// Firmanın doğrulama belgeleri. Dosya depoda (R2 ya da yerel disk) firmalar/<firmaId>/ altında durur,
+/// yalnızca firma sahibi ve yönetici kısa süreli adresle görür.
 model CompanyDocument {
   id         String              @id @default(cuid())
   companyId  String
   type       CompanyDocumentType
-  fileUrl    String              @db.VarChar(1000)
+  storageKey String              @unique @db.VarChar(300)
+  mimeType   String              @db.VarChar(100)
+  sizeBytes  Int
+  /// Firmanın yüklediği dosyanın adı (yalnızca gösterim için)
+  fileName   String              @db.VarChar(200)
+  /// Belgenin geçerlilik bitişi (K3 için zorunlu)
+  validUntil DateTime?           @db.Date
   status     VerificationStatus  @default(PENDING)
   reviewNote String?             @db.VarChar(500)
   createdAt  DateTime            @default(now())
@@ -157,7 +165,7 @@ model CompanyDocument {
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  @@index([companyId])
+  @@index([companyId, type])
 }
 
 enum VehicleType {

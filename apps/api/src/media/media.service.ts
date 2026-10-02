@@ -45,7 +45,10 @@ export class MediaService {
         throw new BadRequestException(`Dosya çok büyük: ${LIMIT_LABEL[mediaTypeOf(file.mimeType)]} en fazla ${mb(rule.maxBytes)} olabilir`);
       }
     }
-    await this.checkQuota(files.reduce((sum, f) => sum + f.sizeBytes, 0));
+    await this.checkQuota(
+      files.reduce((sum, f) => sum + f.sizeBytes, 0),
+      'Dosya yükleme şu an kullanılamıyor, talebini fotoğrafsız gönderebilirsin.',
+    );
 
     return {
       uploads: files.map((file) => {
@@ -136,7 +139,7 @@ export class MediaService {
     await this.deleteObjects(media.map((m) => m.storageKey));
   }
 
-  private async deleteObjects(keys: string[]) {
+  async deleteObjects(keys: string[]) {
     const results = await Promise.allSettled(keys.map((key) => this.storage.delete(key)));
     const failed = results.filter((r) => r.status === 'rejected').length;
     if (failed) this.logger.warn(`${failed} dosya depodan silinemedi`);
@@ -168,16 +171,23 @@ export class MediaService {
     }
   }
 
-  /** Toplam boyut sınırı: sunucu diski (2 GB) ya da R2 ücretsiz katmanı (10 GB) dolmasın */
-  private async checkQuota(incomingBytes: number) {
-    const { _sum } = await this.prisma.requestMedia.aggregate({ _sum: { sizeBytes: true } });
-    if ((_sum.sizeBytes ?? 0) + incomingBytes > this.storage.quotaBytes) {
+  /**
+   * Toplam boyut sınırı: sunucu diski (2 GB) ya da R2 ücretsiz katmanı (10 GB) dolmasın.
+   * Talep dosyaları ve firma belgeleri aynı depoyu paylaşır.
+   */
+  async checkQuota(incomingBytes: number, message: string) {
+    const [media, documents] = await Promise.all([
+      this.prisma.requestMedia.aggregate({ _sum: { sizeBytes: true } }),
+      this.prisma.companyDocument.aggregate({ _sum: { sizeBytes: true } }),
+    ]);
+    const used = (media._sum.sizeBytes ?? 0) + (documents._sum.sizeBytes ?? 0);
+    if (used + incomingBytes > this.storage.quotaBytes) {
       this.logger.error(
         this.storage.driver === 'r2'
           ? 'R2 dosya kotası (R2_QUOTA_GB) doldu, yükleme durdu (docs/dosya-yukleme.md)'
           : 'Yerel dosya kotası doldu; R2 depolamaya geçilmeli (docs/dosya-yukleme.md)',
       );
-      throw new ConflictException('Dosya yükleme şu an kullanılamıyor, talebini fotoğrafsız gönderebilirsin.');
+      throw new ConflictException(message);
     }
   }
 }

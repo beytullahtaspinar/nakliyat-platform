@@ -71,7 +71,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 |---|---|---|---|---|
 | ✅ | POST · GET | `/company/profile` | Firma | Firma profilini oluştur / görüntüle (vergi no benzersiz) |
 | ✅ | PATCH | `/company/profile` | Firma | Profili güncelle. Unvan, vergi no veya K3 no değişirse firma yeniden doğrulamaya düşer. |
-| ⏳ | POST | `/company/documents` | Firma | K3, vergi levhası vb. belge yükle |
+| ✅ | GET · POST · DELETE | `/company/documents`, `/company/documents/uploads` | Firma | Doğrulama belgeleri: K3 (geçerlilik tarihiyle), vergi levhası, ticaret sicil zorunlu; sigorta ve ek belge isteğe bağlı. PDF/JPG/PNG/WebP, en fazla 10 MB. Yükleme akışı talep medyasıyla aynı (docs/dosya-yukleme.md). Onaylı belge silinmez, yenisi onaylanınca yerini alır. |
 | ✅ | GET · GET | `/company/requests`, `/company/requests/:id` | Firma | Hizmet bölgesindeki açık talepler. Müşteri adı ve açık adres gizli. |
 | ✅ | POST | `/company/requests/:id/quotes` | Doğrulanmış firma | Teklif ver (talep başına bir teklif, yalnızca hizmet bölgesindeki taleplere) |
 | ✅ | PATCH | `/company/quotes/:id` | Firma | Bekleyen teklifi güncelle. Her fiyat değişikliği geçmişe kaydedilir. |
@@ -102,8 +102,8 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | GET | `/admin/summary` | Yönetim özeti: bekleyen firma, açık talep, kullanıcı, planlanmış iş sayıları |
 | ✅ | GET | `/admin/companies?status=&q=` | Firmalar; ad, unvan, vergi no, K3 veya sahip adı/telefonunda arama |
 | ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |
-| ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle) |
-| ⏳ | PATCH | `/admin/documents/:id` | Belgeyi onayla/reddet |
+| ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle). Onay için zorunlu belgelerin her biri onaylı ve süresi geçerli olmalı. |
+| ✅ | POST | `/admin/companies/:id/documents/:documentId/approve` · `/reject` | Belgeyi onayla veya reddet (gerekçe firma panelinde görünür) |
 | ✅ | GET | `/admin/requests?status=&q=` | Tüm talepler, müşteri iletişimiyle; müşteri adı/telefonunda arama |
 | ✅ | GET | `/admin/requests/:id` | Talep kaydı: müşteri, tüm teklifler (fiyata göre), iş |
 | ✅ | GET | `/admin/users?role=&q=` | Kullanıcılar; ad, telefon veya e-postada arama |
