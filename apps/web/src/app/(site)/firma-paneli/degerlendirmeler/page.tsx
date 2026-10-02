@@ -1,0 +1,92 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Card } from "@/components/ui/card";
+import { ReplyForm } from "@/components/reviews/reply-form";
+import { ReviewCard } from "@/components/reviews/review-card";
+import { RatingSummary } from "@/components/reviews/rating-summary";
+import { apiFetch, type CompanyReviews } from "@/lib/api";
+import { getCompanyContext } from "@/lib/company";
+import { formatDate } from "@/lib/format";
+import { companyPath } from "@/lib/reviews";
+
+export const metadata: Metadata = { title: "Değerlendirmeler" };
+
+const LIMIT = 20;
+
+/** Firmanın aldığı puan ve yorumlar; her yoruma bir kez yanıt verilebilir. */
+export default async function CompanyReviewsPage({ searchParams }: PageProps<"/firma-paneli/degerlendirmeler">) {
+  const { token, profile } = await getCompanyContext();
+  if (!profile) return null;
+  const sayfa = Number((await searchParams).sayfa);
+  const page = Number.isInteger(sayfa) && sayfa > 0 ? sayfa : 1;
+  const { items, total, summary } = await apiFetch<CompanyReviews>(`/company/reviews?page=${page}&limit=${LIMIT}`, { token });
+  const verified = profile.verificationStatus === "VERIFIED";
+
+  return (
+    <div>
+      <Card className="p-5">
+        <RatingSummary average={summary.ratingAverage} count={summary.ratingCount} distribution={summary.distribution} />
+        <p className="mt-4 text-sm text-zinc-600">
+          Müşterin, iş tamamlandı olarak işaretlendikten sonra firmanı 1-5 yıldızla değerlendirebilir. Taşıma günü
+          geldiğinde İşlerim sayfasından işi tamamlaman müşteriye değerlendirme hatırlatması gönderir.
+          {verified && (
+            <>
+              {" "}
+              <Link href={companyPath(profile)} className="font-semibold text-brand-700 underline">
+                Firma sayfanı gör
+              </Link>
+            </>
+          )}
+        </p>
+      </Card>
+
+      {items.length === 0 ? (
+        <p className="mt-6 text-zinc-600">Henüz değerlendirme almadın.</p>
+      ) : (
+        <ul className="mt-6 space-y-3">
+          {items.map((r) => (
+            <ReviewCard
+              key={r.id}
+              as="li"
+              review={r}
+              companyName={profile.displayName}
+              author={
+                <>
+                  {r.customerName} · {r.route} · taşınma {formatDate(r.moveDate)} ·{" "}
+                  <Link href={`/firma-paneli/isler/${r.bookingId}`} className="text-brand-700 underline">
+                    İşe git
+                  </Link>
+                </>
+              }
+            >
+              {!r.isPublished && (
+                <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  Bu yorum yönetim tarafından yayından kaldırıldı ve puan ortalamana girmiyor.
+                  {r.hiddenReason && ` Gerekçe: ${r.hiddenReason}`}
+                </p>
+              )}
+              {!r.companyReply && <ReplyForm reviewId={r.id} />}
+            </ReviewCard>
+          ))}
+        </ul>
+      )}
+
+      {total > LIMIT && (
+        <nav aria-label="Sayfalar" className="mt-6 flex justify-between text-sm">
+          {page > 1 ? (
+            <Link href={`/firma-paneli/degerlendirmeler?sayfa=${page - 1}`} className="font-semibold text-brand-700 underline">
+              ← Daha yeni
+            </Link>
+          ) : (
+            <span />
+          )}
+          {page * LIMIT < total && (
+            <Link href={`/firma-paneli/degerlendirmeler?sayfa=${page + 1}`} className="font-semibold text-brand-700 underline">
+              Daha eski →
+            </Link>
+          )}
+        </nav>
+      )}
+    </div>
+  );
+}

@@ -12,11 +12,15 @@ import {
   type PublicCompany,
 } from "@/lib/api";
 import { acceptQuote, cancelRequest } from "@/lib/actions/requests";
+import { completeBooking } from "@/lib/actions/reviews";
+import { companyPath, formatRating } from "@/lib/reviews";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib/session";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { Conversation } from "@/components/messages/conversation";
+import { ReviewCard } from "@/components/reviews/review-card";
+import { ReviewForm } from "@/components/reviews/review-form";
 import { RequestMediaManager } from "@/components/media/request-media-manager";
 import { RouteOverview } from "@/components/map/route-overview";
 import { routeText } from "@/lib/geo";
@@ -104,6 +108,8 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
 
       {booking && <BookingCard booking={booking} justAccepted={kabul === "1"} />}
 
+      {booking?.status === "COMPLETED" && <ReviewSection booking={booking} />}
+
       {conversation && (
         <section id="mesajlar" className="mt-10 scroll-mt-20">
           <h2 className="text-xl font-semibold">{conversation.counterpart} ile mesajlar</h2>
@@ -181,7 +187,13 @@ function CompanyLine({ company }: { company: PublicCompany }) {
   return (
     <div>
       <p className="flex flex-wrap items-center gap-2 font-semibold">
-        {company.displayName}
+        {company.verified ? (
+          <Link href={companyPath(company)} className="hover:underline">
+            {company.displayName}
+          </Link>
+        ) : (
+          company.displayName
+        )}
         {company.verified && (
           <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800">
             ✓ Doğrulanmış firma
@@ -190,7 +202,7 @@ function CompanyLine({ company }: { company: PublicCompany }) {
       </p>
       <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
         {company.cityName}
-        {company.ratingCount > 0 ? ` · ★ ${rating.toFixed(1)} (${company.ratingCount} yorum)` : " · Henüz yorum yok"}
+        {company.ratingCount > 0 ? ` · ★ ${formatRating(rating)} (${company.ratingCount} yorum)` : " · Henüz yorum yok"}
         {company.completedJobs > 0 && ` · ${company.completedJobs} tamamlanan iş`}
       </p>
     </div>
@@ -278,10 +290,11 @@ function QuoteCard({
 }
 
 function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; justAccepted: boolean }) {
+  const completed = booking.status === "COMPLETED";
   return (
     <section className="mt-6 rounded-xl border border-green-300 bg-green-50 p-5 text-green-950 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
       <h2 className="text-lg font-semibold">
-        {justAccepted ? "Teklifi kabul ettin, taşıman planlandı" : "Taşıman planlandı"}
+        {completed ? "Taşıman tamamlandı" : justAccepted ? "Teklifi kabul ettin, taşıman planlandı" : "Taşıman planlandı"}
       </h2>
       <p className="mt-1 text-sm">
         {booking.company.displayName} · {formatMoney(booking.priceTry)} · {formatDate(booking.scheduledAt)}
@@ -294,10 +307,64 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
           {formatPhone(booking.company.contactPhone)}
         </a>
       </p>
-      <p className="mt-3 text-sm">
-        Firma da senin iletişim bilgilerini ve açık adresini artık görebiliyor. Taşınma gününü ve
-        detayları aşağıdaki mesajlardan ya da telefonla firmayla netleştirebilirsin.
-      </p>
+      {booking.status === "SCHEDULED" && (
+        <p className="mt-3 text-sm">
+          Firma da senin iletişim bilgilerini ve açık adresini artık görebiliyor. Taşınma gününü ve
+          detayları aşağıdaki mesajlardan ya da telefonla firmayla netleştirebilirsin.
+          {!booking.canComplete && " Taşınma günü geldiğinde işi tamamlandı olarak işaretleyip firmayı değerlendirebileceksin."}
+        </p>
+      )}
+      {booking.canComplete && (
+        <div className="mt-4">
+          <ConfirmButton
+            action={completeBooking.bind(null, booking.id, `/hesabim/talepler/${booking.requestId}`)}
+            label="Taşınma tamamlandı"
+            confirmText={`${booking.company.displayName} taşımanı bitirdi mi? Onaylarsan iş tamamlandı olarak kapanır ve firmayı değerlendirebilirsin.`}
+            confirmLabel="Evet, tamamlandı"
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Tamamlanan işte değerlendirme formu ya da yapılmış değerlendirme */
+function ReviewSection({ booking }: { booking: CustomerBooking }) {
+  const { review, company } = booking;
+  return (
+    <section id="degerlendirme" className="mt-10 scroll-mt-20">
+      <h2 className="text-xl font-semibold">{review ? "Değerlendirmen" : `${company.displayName} firmasını değerlendir`}</h2>
+      {review ? (
+        <div className="mt-4">
+          <ReviewCard review={review} companyName={company.displayName}>
+            {!review.isPublished && (
+              <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Yorumun site kurallarına uymadığı için yayından kaldırıldı.
+                {review.hiddenReason && ` Gerekçe: ${review.hiddenReason}`}
+              </p>
+            )}
+          </ReviewCard>
+          {review.isPublished && company.verified && (
+            <p className="mt-2 text-sm text-zinc-600">
+              Yorumun{" "}
+              <Link href={`${companyPath(company)}#yorumlar`} className="font-medium text-brand-700 underline">
+                firma sayfasında
+              </Link>{" "}
+              yayında.
+            </p>
+          )}
+        </div>
+      ) : (
+        <>
+          <p className="mt-1 text-sm text-zinc-600">
+            Puanın firmanın ortalamasına eklenir ve taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder.
+            Değerlendirme bir kez yapılır, sonradan değiştirilemez.
+          </p>
+          <div className="mt-4">
+            <ReviewForm bookingId={booking.id} pagePath={`/hesabim/talepler/${booking.requestId}`} companyName={company.displayName} />
+          </div>
+        </>
+      )}
     </section>
   );
 }

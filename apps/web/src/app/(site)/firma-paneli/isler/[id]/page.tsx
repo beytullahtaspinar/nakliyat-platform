@@ -6,6 +6,10 @@ import { getCompanyContext } from "@/lib/company";
 import { formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { homeTypeLabel } from "@/lib/request-options";
 import { Conversation } from "@/components/messages/conversation";
+import { ConfirmButton } from "@/components/forms/confirm-button";
+import { ReplyForm } from "@/components/reviews/reply-form";
+import { ReviewCard } from "@/components/reviews/review-card";
+import { completeBooking } from "@/lib/actions/reviews";
 
 export const metadata: Metadata = { title: "Müşteriyle mesajlar" };
 
@@ -39,6 +43,38 @@ export default async function CompanyBookingMessagesPage({ params }: PageProps<"
             {formatPhone(booking.customer.phone)}
           </a>
         </p>
+      )}
+      {booking?.canComplete && (
+        <div className="mt-4">
+          <ConfirmButton
+            action={completeBooking.bind(null, booking.id, `/firma-paneli/isler/${booking.id}`)}
+            label="İş tamamlandı"
+            confirmText={`${booking.customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`}
+            confirmLabel="Evet, tamamlandı"
+          />
+        </div>
+      )}
+      {booking?.status === "COMPLETED" && (
+        <section id="degerlendirme" className="mt-6 scroll-mt-20">
+          <h3 className="text-lg font-semibold">Müşterinin değerlendirmesi</h3>
+          {booking.review ? (
+            <div className="mt-3">
+              <ReviewCard review={booking.review} companyName={profile.displayName}>
+                {!booking.review.isPublished && (
+                  <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    Bu yorum yönetim tarafından yayından kaldırıldı ve puan ortalamana girmiyor.
+                    {booking.review.hiddenReason && ` Gerekçe: ${booking.review.hiddenReason}`}
+                  </p>
+                )}
+                {!booking.review.companyReply && <ReplyForm reviewId={booking.review.id} />}
+              </ReviewCard>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-zinc-600">
+              İş tamamlandı. Müşteri henüz değerlendirme yapmadı; yaptığında burada ve Değerlendirmeler sayfasında görünür.
+            </p>
+          )}
+        </section>
       )}
       <div className="mt-4">
         <Conversation initial={conversation} refreshBadges />

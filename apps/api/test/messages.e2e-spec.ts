@@ -26,11 +26,11 @@ describe('Mesajlaşma (e2e)', () => {
   let events: DomainEvents;
   const email = new FakeEmail();
   const phones = {
-    customer: '+905320000401',
-    company: '+905320000402',
-    other: '+905320000403',
-    otherCompany: '+905320000404',
-    admin: '+905320000405',
+    customer: '+905320000601',
+    company: '+905320000602',
+    other: '+905320000603',
+    otherCompany: '+905320000604',
+    admin: '+905320000605',
   };
   const emails = { customer: 'musteri-mesaj@test.local', company: 'firma-mesaj@test.local' };
   const tokens: Record<string, string> = {};

@@ -19,6 +19,7 @@ import { ObservabilityModule } from './observability/observability.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QuotesModule } from './quotes/quotes.module.js';
 import { RequestsModule } from './requests/requests.module.js';
+import { ReviewsModule } from './reviews/reviews.module.js';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { RequestsModule } from './requests/requests.module.js';
     QuotesModule,
     BookingsModule,
     MessagesModule,
+    ReviewsModule,
     AdminModule,
     NotificationsModule,
   ],

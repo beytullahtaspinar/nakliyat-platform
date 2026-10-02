@@ -411,23 +411,30 @@ model Booking {
   @@index([companyId, status])
 }
 
+/// Müşterinin tamamlanan iş için firmaya verdiği puan ve yorum (iş başına bir tane).
+/// Firma tek bir yanıt yazabilir. Yönetici gerekçeyle gizleyebilir; gizli yorum puan ortalamasına girmez.
+/// Ayrıntı: docs/degerlendirmeler.md
 model Review {
-  id           String   @id @default(cuid())
-  bookingId    String   @unique
-  companyId    String
-  customerId   String
-  rating       Int // 1-5
-  comment      String?  @db.Text
-  companyReply String?  @db.Text
-  isPublished  Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String    @id @default(cuid())
+  bookingId      String    @unique
+  companyId      String
+  customerId     String
+  rating         Int // 1-5
+  comment        String?   @db.Text
+  companyReply   String?   @db.Text
+  companyReplyAt DateTime?
+  isPublished    Boolean   @default(true)
+  /// Yöneticinin gizleme gerekçesi; firma panelinde de gösterilir
+  hiddenReason   String?   @db.VarChar(500)
+  hiddenAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   booking  Booking @relation(fields: [bookingId], references: [id])
   company  Company @relation(fields: [companyId], references: [id])
   customer User    @relation(fields: [customerId], references: [id])
 
-  @@index([companyId])
+  @@index([companyId, isPublished, createdAt])
 }
 
 // ─── Mesajlaşma ve bildirimler ──────────────────────────────────

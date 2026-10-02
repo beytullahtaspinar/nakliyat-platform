@@ -4,10 +4,12 @@ import { getCityByCode, getDistrict } from '@nakliyat/locations';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { CompaniesService, toPublicCompany } from '../companies/companies.service.js';
-import type { MovingRequest } from '../generated/prisma/client.js';
-import { UserRole } from '../generated/prisma/enums.js';
+import type { MovingRequest, Review } from '../generated/prisma/client.js';
+import { BookingStatus, UserRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PaginationDto } from '../requests/dto/list-requests.dto.js';
+import { moveDayReached } from '../reviews/review-rules.js';
+import { toReviewView } from '../reviews/reviews.service.js';
 
 const place = (cityCode: string, districtSlug: string) => {
   const city = getCityByCode(cityCode);
@@ -16,6 +18,12 @@ const place = (cityCode: string, districtSlug: string) => {
 
 /** Anlaşma sonrası taraflar birbirinin iletişim ve adres bilgisini görür. */
 const point = (lat: number | null, lng: number | null) => (lat != null && lng != null ? { lat, lng } : null);
+/** Değerlendirme ve "iş tamamlandı" düğmesi için ortak alanlar */
+const reviewState = (b: { status: BookingStatus; scheduledAt: Date; review: Review | null }) => ({
+  canComplete: b.status === BookingStatus.SCHEDULED && moveDayReached(b.scheduledAt),
+  review: b.review && toReviewView(b.review),
+});
+
 const fullRequest = (r: MovingRequest) => ({
   id: r.id,
   from: {
@@ -59,13 +67,14 @@ export class BookingsController {
         orderBy: { scheduledAt: 'asc' },
         skip: (page - 1) * limit,
         take: limit,
-        include: { quote: true, request: { include: { customer: true } } },
+        include: { quote: true, review: true, request: { include: { customer: true } } },
       }),
       this.prisma.booking.count({ where }),
     ]);
     return {
-      items: items.map(({ request, quote, ...b }) => ({
+      items: items.map(({ request, quote, review, ...b }) => ({
         ...b,
+        ...reviewState({ ...b, review }),
         priceTry: quote.priceTry,
         request: fullRequest(request),
         customer: { fullName: request.customer.fullName, phone: request.customer.phone },
@@ -86,13 +95,14 @@ export class BookingsController {
         orderBy: { scheduledAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
-        include: { quote: true, request: true, company: { include: { owner: true } } },
+        include: { quote: true, review: true, request: true, company: { include: { owner: true } } },
       }),
       this.prisma.booking.count({ where }),
     ]);
     return {
-      items: items.map(({ request, quote, company, ...b }) => ({
+      items: items.map(({ request, quote, company, review, ...b }) => ({
         ...b,
+        ...reviewState({ ...b, review }),
         priceTry: quote.priceTry,
         request: fullRequest(request),
         company: {

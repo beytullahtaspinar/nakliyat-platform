@@ -78,17 +78,19 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | POST | `/company/quotes/:id/withdraw` | Firma | Teklifi geri çek |
 | ✅ | GET | `/company/quotes` | Firma | Verdiği teklifler |
 | ✅ | GET | `/company/bookings` | Firma | Kazandığı işler (müşteri iletişim bilgisi ve açık adres burada açılır) |
-| ⏳ | POST | `/company/bookings/:id/complete` | Firma | İşi tamamlandı olarak işaretle |
-| ⏳ | POST | `/company/reviews/:id/reply` | Firma | Yoruma yanıt ver |
+| ✅ | GET | `/company/reviews` | Firma | Aldığı değerlendirmeler (gizlenenler gerekçesiyle) ve puan özeti `{ summary: { ratingAverage, ratingCount, distribution } }` |
+| ✅ | POST | `/company/reviews/:id/reply` | Firma | Yoruma bir kez yanıt (2-1000 karakter); yorumun altında herkese açık görünür |
 
 ### Ortak
 
 | Durum | Yöntem | Yol | Kim | Açıklama |
 |---|---|---|---|---|
-| ⏳ | GET | `/companies/:id` | Herkes | Firmanın herkese açık profili ve yorumları |
+| ✅ | GET | `/companies?reviewed=true` | Herkes | Doğrulanmış firmalar, en çok yorum alan önce (site haritası) |
+| ✅ | GET | `/companies/:id` · `/companies/:id/reviews` | Herkes | Firmanın herkese açık profili, puan dağılımı ve yayındaki yorumlar (müşteri adı "Ayşe Y." biçiminde). Yalnızca doğrulanmış, etkin firmalar. |
 | ✅ | GET | `/bookings` | Müşteri | Anlaşılan işler, firmanın iletişim bilgisiyle |
 | ⏳ | GET | `/bookings/:id` | Taraflar | İş detayı |
-| ⏳ | POST | `/bookings/:id/review` | Müşteri | Tamamlanan işe puan ve yorum |
+| ✅ | POST | `/bookings/:id/complete` | Taraflar | İşi tamamlandı olarak işaretle; taşınma günü gelmeden yapılamaz. Talep de tamamlanır. Firma tamamlarsa müşteriye `REVIEW_REQUEST` gider. |
+| ✅ | POST | `/bookings/:id/review` | Müşteri | Tamamlanan işe 1-5 puan ve isteğe bağlı yorum (10-2000 karakter); iş başına bir kez, değiştirilemez. Firmaya `NEW_REVIEW` gider. ([degerlendirmeler.md](degerlendirmeler.md)) |
 | ✅ | GET · POST | `/bookings/:id/messages` | Taraflar | İş üzerinden yazışma (teklif kabulünden sonra). GET karşı tarafın mesajlarını okundu sayar (yönetici firma görünümünde saymaz). Mesaj 1-2000 karakter; iptal edilen işte salt okunur. Karşı tarafa okunmamışların ilki için `NEW_MESSAGE` bildirimi gider. |
 | ✅ | GET | `/messages/unread` | Müşteri, Firma | Okunmamış mesajlar: `{ total, items: [{ bookingId, requestId, count }] }` |
 | ✅ | GET | `/notifications` | Giriş yapmış | Uygulama içi bildirimler, okunmamış sayısıyla (`unread`) |
@@ -114,7 +116,8 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | PATCH | `/admin/companies/:id` | Firma bilgilerini düzelt (doğrulama durumu korunur) |
 | ✅ | POST | `/admin/companies/:id/impersonate` | Firma panelini firmanın gözünden aç: 30 dk geçerli, yenilenmeyen firma anahtarı. Geçiş ve bu anahtarla yapılan her değişiklik yönetici adına firmanın geçmişine yazılır; yönetici yetkisini kaybedince anahtar geçersiz olur |
 | ⏳ | GET | `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
-| ⏳ | PATCH | `/admin/reviews/:id` | Uygunsuz yorumu yayından kaldır |
+| ✅ | GET | `/admin/reviews?status=visible\|hidden&rating=&q=` | Değerlendirmeler; firma adı veya yorum metninde arama |
+| ✅ | POST | `/admin/reviews/:id/hide` · `/show` | Yorumu gerekçeyle gizle (sayfadan ve ortalamadan çıkar) ya da yeniden yayına al; karar geçmişine yazılır |
 | ⏳ | GET | `/admin/stats` | Dönüşüm oranları, zamana göre grafikler |
 
 Tüm admin işlemleri `AuditLog` tablosuna kaydedilir. İlk admin hesabı sunucuda oluşturulur (dışarıdan kayıtla açılamaz):

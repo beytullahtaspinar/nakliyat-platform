@@ -6,6 +6,9 @@ import { getCompanyContext } from "@/lib/company";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { homeTypeLabel } from "@/lib/request-options";
 import { RouteOverview } from "@/components/map/route-overview";
+import { ConfirmButton } from "@/components/forms/confirm-button";
+import { Stars } from "@/components/reviews/stars";
+import { completeBooking } from "@/lib/actions/reviews";
 import { routeText } from "@/lib/geo";
 
 export const metadata: Metadata = { title: "İşlerim" };
@@ -97,6 +100,26 @@ export default async function CompanyBookingsPage() {
                   </Badge>
                 )}
               </p>
+              {b.review && (
+                <p className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                  <span className="text-zinc-500">Müşterinin değerlendirmesi:</span>
+                  <Stars value={b.review.rating} />
+                  <Link href={`/firma-paneli/isler/${b.id}#degerlendirme`} className="font-semibold text-brand-700 underline">
+                    {b.review.companyReply ? "Yorumu gör" : "Yorumu gör ve yanıtla"}
+                  </Link>
+                </p>
+              )}
+              {b.canComplete && (
+                <div className="mt-4">
+                  <ConfirmButton
+                    action={completeBooking.bind(null, b.id, "/firma-paneli/isler")}
+                    label="İş tamamlandı"
+                    confirmText={`${b.customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`}
+                    confirmLabel="Evet, tamamlandı"
+                    variant="quiet"
+                  />
+                </div>
+              )}
               {b.status === "SCHEDULED" && (
                 <div className="mt-4">
                   <RouteOverview from={directionsStop(b.request.from)} to={directionsStop(b.request.to)} />
