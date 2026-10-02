@@ -167,12 +167,15 @@ export class MediaService {
     }
   }
 
-  /** Yerel diskte toplam boyut sınırı: sunucu diski (2 GB) dolmasın */
+  /** Toplam boyut sınırı: sunucu diski (2 GB) ya da R2 ücretsiz katmanı (10 GB) dolmasın */
   private async checkQuota(incomingBytes: number) {
-    if (!this.storage.quotaBytes) return;
     const { _sum } = await this.prisma.requestMedia.aggregate({ _sum: { sizeBytes: true } });
     if ((_sum.sizeBytes ?? 0) + incomingBytes > this.storage.quotaBytes) {
-      this.logger.error('Yerel dosya kotası doldu; R2 depolamaya geçilmeli (docs/dosya-yukleme.md)');
+      this.logger.error(
+        this.storage.driver === 'r2'
+          ? 'R2 dosya kotası (R2_QUOTA_GB) doldu, yükleme durdu (docs/dosya-yukleme.md)'
+          : 'Yerel dosya kotası doldu; R2 depolamaya geçilmeli (docs/dosya-yukleme.md)',
+      );
       throw new ConflictException('Dosya yükleme şu an kullanılamıyor, talebini fotoğrafsız gönderebilirsin.');
     }
   }

@@ -73,20 +73,21 @@ describe('Talep fotoğraf ve videoları (e2e)', () => {
       cityCode,
       serviceCityCodes: [cityCode],
     });
-    await http().post('/v1/company/profile').set(auth('company')).send(profile('34', '8800000001')).expect(201);
-    await http().post('/v1/company/profile').set(auth('farCompany')).send(profile('35', '8800000002')).expect(201);
+    await http().post('/v1/company/profile').set(auth('company')).send(profile('07', '8800000001')).expect(201);
+    await http().post('/v1/company/profile').set(auth('farCompany')).send(profile('42', '8800000002')).expect(201);
 
     const created = await http()
       .post('/v1/requests')
       .set(auth('customer'))
       .send({
-        fromCityCode: '34',
-        fromDistrict: 'kadikoy',
+        // Antalya: diğer e2e testlerinin şehirleriyle çakışmasın (firma talep listeleri paralel çalışıyor)
+        fromCityCode: '07',
+        fromDistrict: 'muratpasa',
         fromAddress: 'Caferağa Mah. Moda Cad. No:1 D:5',
         fromFloor: 3,
         fromHasElevator: false,
-        toCityCode: '34',
-        toDistrict: 'besiktas',
+        toCityCode: '07',
+        toDistrict: 'konyaalti',
         toAddress: 'Sinanpaşa Mah. No:10 D:2',
         toFloor: 2,
         toHasElevator: true,
@@ -163,6 +164,17 @@ describe('Talep fotoğraf ve videoları (e2e)', () => {
     await send([{ mimeType: 'image/svg+xml', sizeBytes: 100 }]).expect(400);
     await send([{ mimeType: 'image/webp', sizeBytes: 4 * 1024 * 1024 }]).expect(400);
     await send([{ mimeType: 'video/mp4', sizeBytes: 31 * 1024 * 1024 }]).expect(400);
+  });
+
+  it('toplam boyut sınırı dolunca yükleme durur', async () => {
+    // Testte sınır 50 MB: iki 29 MB video sığmaz
+    const video = { mimeType: 'video/mp4', sizeBytes: 29 * 1024 * 1024 };
+    const res = await http()
+      .post(`/v1/requests/${requestId}/media/uploads`)
+      .set(auth('customer'))
+      .send({ files: [video, video] })
+      .expect(409);
+    expect(res.body.message).toContain('fotoğrafsız');
   });
 
   it('en fazla 2 video eklenebilir', async () => {

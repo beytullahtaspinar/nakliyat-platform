@@ -16,8 +16,8 @@ export type StoredObject = { sizeBytes: number; mimeType: string };
 
 export interface FileStorage {
   readonly driver: 'r2' | 'local';
-  /** Yerel diskte toplam kota (bayt); R2'de sınır yok */
-  readonly quotaBytes?: number;
+  /** Toplam boyut sınırı (bayt). Dolunca yeni yükleme kabul edilmez, talep fotoğrafsız açılabilir. */
+  readonly quotaBytes: number;
   createUpload(key: string, mimeType: string, sizeBytes: number): UploadTarget;
   stat(key: string): Promise<StoredObject | null>;
   viewUrl(key: string): string;

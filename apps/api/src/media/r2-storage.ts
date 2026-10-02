@@ -9,12 +9,17 @@ export type R2Config = {
   bucket: string;
   /** Test için; boşsa https://<accountId>.r2.cloudflarestorage.com */
   endpoint?: string;
+  /** Toplam boyut sınırı (bayt): ücretsiz katman (10 GB) aşılmasın diye */
+  quotaBytes: number;
 };
 
 export class R2Storage implements FileStorage {
   readonly driver = 'r2' as const;
+  readonly quotaBytes: number;
 
-  constructor(private readonly config: R2Config) {}
+  constructor(private readonly config: R2Config) {
+    this.quotaBytes = config.quotaBytes;
+  }
 
   createUpload(key: string, mimeType: string, sizeBytes: number): UploadTarget {
     const headers = { 'Content-Type': mimeType };
