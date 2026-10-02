@@ -1,4 +1,4 @@
-# Talep fotoğraf ve videoları
+# Talep fotoğraf ve videoları, firma belgeleri
 
 Müşteri talep açarken (ve sonra talep sayfasından) eşyalarının fotoğrafını veya videosunu ekler. Firmalar bunları talep ayrıntısında görür; adres ve iletişim bilgisi yine gizlidir.
 
@@ -36,3 +36,17 @@ Geçişten önce diske yüklenmiş dosyalar R2'ye otomatik taşınmaz; canlıda 
 
 - API: `apps/api/test/media.e2e-spec.ts` (yerel disk sürücüsüyle yükleme, imza, sınırlar, yetki), `src/media/s3-presign.spec.ts` (R2 imzası, AWS örnek değerleriyle), `src/media/r2-storage.spec.ts` (R2'ye aktarım, sahte sunucuyla).
 - Tarayıcı: `apps/web/e2e/talep-medya.spec.ts` (fotoğraf küçültme + yükleme + silme, video küçültme + yükleme).
+
+## Firma belgeleri
+
+Firmalar doğrulama için belge yükler (firma paneli → Belgeler). Aynı depo ve aynı yükleme akışı kullanılır,
+dosyalar `firmalar/<firmaId>/` altında durur ve toplam boyut sınırına (kota) talep dosyalarıyla birlikte sayılır.
+
+- Zorunlu: K3 yetki belgesi (geçerlilik bitiş tarihiyle), vergi levhası, ticaret sicil gazetesi / faaliyet belgesi.
+  İsteğe bağlı: sigorta poliçesi, en fazla 5 ek belge.
+- PDF, JPG, PNG ya da WebP; en fazla 10 MB. Belgeler küçültülmez.
+- Belgeleri yalnızca firma sahibi ve yönetici kısa süreli imzalı adresle görür.
+- Yönetici her belgeyi ayrı onaylar ya da gerekçeyle reddeder. Zorunlu belgelerin hepsi onaylı ve süresi geçerli
+  olmadan firma onaylanamaz.
+- Onaylı K3'ün süresi dolarsa firma teklif veremez; yeni K3 yüklenip onaylanınca devam eder.
+- Hesap silinince belgeler depodan da silinir.

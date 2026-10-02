@@ -39,6 +39,7 @@ export default defineConfig({
         PORT: String(API_PORT),
         WEB_URL: `http://localhost:${WEB_PORT}`,
         AUTH_RATE_LIMIT: "1000",
+        RATE_LIMIT: "5000",
         // Doğrulama kodları sabit (e2e/dogrulama.ts); NODE_ENV=production'da yok sayılır
         VERIFICATION_TEST_CODE: "424242",
         // Tarayıcı dosyayı doğrudan API'ye yükler (yerel disk sürücüsü); sayfa 127.0.0.1'de açıldığı için

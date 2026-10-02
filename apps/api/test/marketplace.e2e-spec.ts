@@ -6,7 +6,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified } from './helpers.js';
 
 // Talep → teklif → karşılaştırma → kabul akışının tamamı. Çalışan bir MariaDB/MySQL gerektirir.
 describe('Pazaryeri akışı (e2e)', () => {
@@ -59,6 +59,7 @@ describe('Pazaryeri akışı (e2e)', () => {
       .expect(201);
     companyIds[who] = res.body.id;
     expect(res.body.verificationStatus).toBe('PENDING');
+    await addApprovedDocuments(prisma, [res.body.id]);
   };
 
   const quoteBody = (priceTry: number) => ({ priceTry, crewSize: 3, vehicleType: 'KAMYON', includesPacking: true });
@@ -237,8 +238,13 @@ describe('Pazaryeri akışı (e2e)', () => {
       verificationStatus: 'REJECTED',
       verificationNote: 'K3 belgesi geçersiz',
       owner: { phone: phones.companyC },
-      documents: [],
+      requirements: [
+        { type: 'K3_LICENSE', state: 'VERIFIED' },
+        { type: 'TAX_CERTIFICATE', state: 'VERIFIED' },
+        { type: 'TRADE_REGISTRY', state: 'VERIFIED' },
+      ],
     });
+    expect(res.body.documents).toHaveLength(3);
     expect(res.body.history.map((h: { action: string }) => h.action)).toEqual(['company.reject', 'company.verify']);
     await http().post(`/v1/admin/companies/${companyIds.companyC}/verify`).set(auth('admin')).expect(200);
     await http().get('/v1/admin/companies/yok').set(auth('admin')).expect(404);

@@ -633,6 +633,109 @@
         ]
       }
     },
+    "/v1/company/documents": {
+      "get": {
+        "operationId": "CompanyDocumentsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: belgeler"
+        ]
+      },
+      "post": {
+        "operationId": "CompanyDocumentsController_attach",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: belgeler"
+        ]
+      }
+    },
+    "/v1/company/documents/uploads": {
+      "post": {
+        "operationId": "CompanyDocumentsController_createUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDocumentUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: belgeler"
+        ]
+      }
+    },
+    "/v1/company/documents/{documentId}": {
+      "delete": {
+        "operationId": "CompanyDocumentsController_remove",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: belgeler"
+        ]
+      }
+    },
     "/v1/company/profile": {
       "post": {
         "operationId": "CompanyProfileController_create",
@@ -1268,6 +1371,88 @@
         "parameters": [
           {
             "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/companies/{id}/documents/{documentId}/approve": {
+      "post": {
+        "operationId": "AdminCompaniesController_approveDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/companies/{id}/documents/{documentId}/reject": {
+      "post": {
+        "operationId": "AdminCompaniesController_rejectDocument",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
             "required": true,
             "in": "path",
             "schema": {
@@ -2259,6 +2444,61 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "CreateDocumentUploadDto": {
+        "type": "object",
+        "properties": {
+          "mimeType": {
+            "type": "string",
+            "enum": [
+              "application/pdf",
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          },
+          "sizeBytes": {
+            "type": "number",
+            "description": "Dosya boyutu (bayt)"
+          }
+        },
+        "required": [
+          "mimeType",
+          "sizeBytes"
+        ]
+      },
+      "AttachDocumentDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "K3_LICENSE",
+              "TAX_CERTIFICATE",
+              "TRADE_REGISTRY",
+              "INSURANCE",
+              "OTHER"
+            ]
+          },
+          "key": {
+            "type": "string",
+            "description": "Yükleme adresiyle birlikte verilen anahtar"
+          },
+          "fileName": {
+            "type": "string",
+            "example": "k3-yetki-belgesi.pdf"
+          },
+          "validUntil": {
+            "type": "string",
+            "example": "2029-05-31",
+            "description": "Geçerlilik bitişi (K3 için zorunlu)"
+          }
+        },
+        "required": [
+          "type",
+          "key",
+          "fileName"
         ]
       },
       "CreateCompanyProfileDto": {

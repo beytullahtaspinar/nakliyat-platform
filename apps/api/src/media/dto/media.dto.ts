@@ -12,11 +12,11 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { ALL_MIME_TYPES, MAX_VIDEO_SECONDS, STORAGE_KEY_PATTERN } from '../media-rules.js';
+import { REQUEST_MIME_TYPES, MAX_VIDEO_SECONDS, STORAGE_KEY_PATTERN } from '../media-rules.js';
 
 export class UploadFileDto {
-  @ApiProperty({ enum: ALL_MIME_TYPES })
-  @IsIn(ALL_MIME_TYPES, { message: 'Yalnızca fotoğraf (WebP/JPEG) ve MP4/WebM video yüklenebilir' })
+  @ApiProperty({ enum: REQUEST_MIME_TYPES })
+  @IsIn(REQUEST_MIME_TYPES, { message: 'Yalnızca fotoğraf (WebP/JPEG) ve MP4/WebM video yüklenebilir' })
   mimeType!: string;
 
   @ApiProperty({ description: 'Küçültülmüş dosyanın boyutu (bayt)' })

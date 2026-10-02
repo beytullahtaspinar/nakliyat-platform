@@ -53,6 +53,39 @@ export async function rejectCompany(
   return { notice: "Firma reddedildi; gerekçe firma panelinde gösterilir." };
 }
 
+export async function approveDocument(companyId: string, documentId: string): Promise<AdminActionState> {
+  try {
+    await apiFetch(
+      `/admin/companies/${encodeURIComponent(companyId)}/documents/${encodeURIComponent(documentId)}/approve`,
+      { method: "POST", token: await adminToken() },
+    );
+  } catch (err) {
+    return failure(err, "Belge onaylanamadı.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Belge onaylandı." };
+}
+
+export async function rejectDocument(
+  companyId: string,
+  documentId: string,
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length < 5) return { error: "Firmanın neyi düzelteceğini anlayacağı bir gerekçe yazın." };
+  try {
+    await apiFetch(
+      `/admin/companies/${encodeURIComponent(companyId)}/documents/${encodeURIComponent(documentId)}/reject`,
+      { method: "POST", token: await adminToken(), body: { reason } },
+    );
+  } catch (err) {
+    return failure(err, "Belge reddedilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Belge reddedildi; gerekçe firma panelinde gösterilir." };
+}
+
 export async function updateCompany(
   companyId: string,
   _prev: AdminActionState & { saved?: boolean },

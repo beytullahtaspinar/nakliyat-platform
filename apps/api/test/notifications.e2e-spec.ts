@@ -9,7 +9,7 @@ import { NOTIFICATION_CHANNELS, type ChannelProvider, type Recipient } from './.
 import type { NotificationContent } from './../src/notifications/templates.js';
 import { NotificationsService } from './../src/notifications/notifications.service.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified } from './helpers.js';
 
 /** Gerçek e-posta göndermeyen sahte kanal: gönderilenleri kaydeder, istenirse hata verir. */
 class FakeEmail implements ChannelProvider {
@@ -88,6 +88,7 @@ describe('Bildirimler (e2e)', () => {
       .send({ legalName: 'Bildirim Nakliyat Ltd.', displayName: 'Bildirim Nakliyat', taxNumber: '7777777301', cityCode: '16', serviceCityCodes: ['16'] })
       .expect(201);
     companyId = profile.body.id;
+    await addApprovedDocuments(prisma, [companyId]);
   });
 
   afterAll(async () => {

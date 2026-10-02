@@ -5,7 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Company, Prisma } from '../generated/prisma/client.js';
-import { VerificationStatus } from '../generated/prisma/enums.js';
+import { CompanyDocumentType, VerificationStatus } from '../generated/prisma/enums.js';
+import { isExpired } from '../media/company-document-rules.js';
 import { assertCityCodes, cityName } from '../common/utils/locations.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
@@ -92,6 +93,15 @@ export class CompaniesService {
     const company = await this.requireCompany(ownerId);
     if (company.verificationStatus !== VerificationStatus.VERIFIED) {
       throw new ForbiddenException('Teklif verebilmek için firmanızın doğrulanması gerekiyor');
+    }
+    // Onaylı K3 belgelerinin hepsinin süresi dolduysa teklif verilemez (belge yüklemeden önce
+    // onaylanmış firmaların K3 kaydı yok; onlar yönetimden yeniden incelenene kadar etkilenmez)
+    const k3 = await this.prisma.companyDocument.findMany({
+      where: { companyId: company.id, type: CompanyDocumentType.K3_LICENSE, status: VerificationStatus.VERIFIED },
+      select: { validUntil: true },
+    });
+    if (k3.length && k3.every((d) => isExpired(d.validUntil))) {
+      throw new ForbiddenException('K3 yetki belgenizin süresi dolmuş. Güncel belgeyi Belgeler sayfasından yükleyin.');
     }
     return company;
   }
