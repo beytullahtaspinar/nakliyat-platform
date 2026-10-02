@@ -16,7 +16,15 @@ export function createFileStorage(config: ConfigService): FileStorage {
   const secretAccessKey = config.get<string>('R2_SECRET_ACCESS_KEY');
   const bucket = config.get<string>('R2_BUCKET');
   if (accountId && accessKeyId && secretAccessKey && bucket) {
-    return new R2Storage({ accountId, accessKeyId, secretAccessKey, bucket, endpoint: config.get('R2_ENDPOINT') });
+    return new R2Storage({
+      accountId,
+      accessKeyId,
+      secretAccessKey,
+      bucket,
+      endpoint: config.get('R2_ENDPOINT'),
+      // Varsayılan 9,5 GB: R2 ücretsiz katmanı 10 GB, dolmadan yükleme durur
+      quotaBytes: Math.round(Number(config.get('R2_QUOTA_GB') ?? 9.5) * 1024 ** 3),
+    });
   }
 
   const production = config.get('NODE_ENV') === 'production';

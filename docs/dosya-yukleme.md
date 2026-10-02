@@ -17,6 +17,8 @@ Müşteri talep açarken (ve sonra talep sayfasından) eşyalarının fotoğraf�
 
 API açılırken `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` dördü de doluysa R2 kullanılır, değilse sunucu diski.
 
+**Ücret güvencesi:** R2'de toplam boyut 9,5 GB'a ulaşınca yeni yükleme durur (ücretsiz katman 10 GB). Müşteri talebini yine fotoğrafsız açabilir, loga ve Sentry'ye hata düşer. Sınır `R2_QUOTA_GB` ile değiştirilebilir. Cloudflare'in kendisinde harcama tavanı yok; sınırı bu kod uygular.
+
 **Sunucu diski** (R2 kurulana kadar): dosyalar `~/yuklemeler` klasörüne yazılır (uygulama klasörünün dışında, sürüm kurulumunda silinmez). Paketin diski 2 GB olduğu için toplam boyut `LOCAL_UPLOAD_QUOTA_MB` (varsayılan 400 MB) ile sınırlı; dolunca yükleme kapanır, talep yine fotoğrafsız açılabilir ve loga uyarı düşer. Bu klasör veritabanı yedeğine dahil değildir.
 
 **Cloudflare R2'ye geçiş** (ücretsiz katman: 10 GB depolama, indirme ücreti yok):
