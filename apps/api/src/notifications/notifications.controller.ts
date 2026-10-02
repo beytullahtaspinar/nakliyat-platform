@@ -96,7 +96,11 @@ export class NotificationsController {
         const taken = await this.prisma.user.findFirst({ where: { email, id: { not: user.id } }, select: { id: true } });
         if (taken) throw new ConflictException('Bu e-posta adresi başka bir hesapta kayıtlı');
       }
-      await this.prisma.user.update({ where: { id: user.id }, data: { email } });
+      const current = await this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { email: true } });
+      // Adres değişirse yeniden doğrulanmalı (bkz. verification modülü)
+      if (email !== current.email) {
+        await this.prisma.user.update({ where: { id: user.id }, data: { email, emailVerifiedAt: null } });
+      }
     }
 
     await this.prisma.$transaction(

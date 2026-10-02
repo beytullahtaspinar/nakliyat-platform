@@ -16,6 +16,7 @@ import {
 import { DomainEvents } from '../events/domain-events.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { VerificationService } from '../verification/verification.service.js';
 import type { PaginationDto } from '../requests/dto/list-requests.dto.js';
 import type { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto.js';
 
@@ -26,6 +27,7 @@ export class QuotesService {
     private readonly companies: CompaniesService,
     private readonly events: DomainEvents,
     private readonly media: MediaService,
+    private readonly verification: VerificationService,
   ) {}
 
   // ─── Firma tarafı ─────────────────────────────────────────────
@@ -90,6 +92,7 @@ export class QuotesService {
 
   async createQuote(ownerId: string, requestId: string, dto: CreateQuoteDto) {
     const company = await this.companies.requireVerifiedCompany(ownerId);
+    await this.verification.assertComplete(ownerId);
     const request = await this.prisma.movingRequest.findFirst({
       where: {
         id: requestId,
@@ -200,6 +203,7 @@ export class QuotesService {
    * Aynı anda iki teklifin kabulü, talep durumunun koşullu güncellenmesiyle engellenir.
    */
   async acceptQuote(customerId: string, quoteId: string) {
+    await this.verification.assertComplete(customerId);
     const quote = await this.prisma.quote.findFirst({
       where: { id: quoteId, request: { customerId, deletedAt: null } },
       include: { request: true, company: { include: { owner: true } } },

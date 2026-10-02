@@ -13,7 +13,7 @@ import {
 import { acceptQuote, cancelRequest } from "@/lib/actions/requests";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
-import { getAccessToken, getCurrentUser, homeFor } from "@/lib/session";
+import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib/session";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { RequestMediaManager } from "@/components/media/request-media-manager";
 
@@ -52,6 +52,8 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
       : undefined;
 
   const acceptable = request.status === "OPEN";
+  // Hesap doğrulanınca yayına girecek taslak: düzenlenebilir ama teklif alamaz
+  const draft = request.status === "DRAFT";
   const pending = quotes.filter((q) => q.status === "PENDING" && !q.isExpired);
   const prices = pending.map((q) => Number(q.priceTry));
   const cheapest = prices.length > 1 ? Math.min(...prices) : undefined;
@@ -76,9 +78,18 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
         {request.estimatedVolumeM3 ? ` · yaklaşık ${request.estimatedVolumeM3} m³` : ""}
       </p>
 
+      {draft && (
+        <p role="status" className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Talebin hazır, ancak firmalara iletilmesi için hesabını doğrulaman gerekiyor.{" "}
+          <Link href={verificationPath(`/hesabim/talepler/${request.id}`)} className="font-semibold underline">
+            Şimdi doğrula
+          </Link>
+        </p>
+      )}
+
       {medya === "eksik" && (
         <p role="status" className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Talebin oluşturuldu ve firmalara iletildi, ancak bazı fotoğraf veya videolar yüklenemedi. Aşağıdan tekrar
+          Talebin oluşturuldu, ancak bazı fotoğraf veya videolar yüklenemedi. Aşağıdan tekrar
           ekleyebilirsin.
         </p>
       )}
@@ -118,22 +129,22 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
 
       <RequestDetails request={request} />
 
-      {(acceptable || request.media.length > 0) && (
+      {(acceptable || draft || request.media.length > 0) && (
         <section className="mt-10">
           <h2 className="text-xl font-semibold">Fotoğraf ve videolar</h2>
-          {acceptable && (
+          {(acceptable || draft) && (
             <p className="mt-1 text-sm text-zinc-600">
               Eşyalarını görmek firmaların daha doğru fiyat vermesini sağlar. Firmalar yalnızca bu dosyaları görür,
               adres ve iletişim bilgilerini görmez.
             </p>
           )}
           <div className="mt-4">
-            <RequestMediaManager requestId={request.id} media={request.media} editable={acceptable} />
+            <RequestMediaManager requestId={request.id} media={request.media} editable={acceptable || draft} />
           </div>
         </section>
       )}
 
-      {acceptable && (
+      {(acceptable || draft) && (
         <div className="mt-8">
           <ConfirmButton
             action={cancelRequest.bind(null, request.id)}

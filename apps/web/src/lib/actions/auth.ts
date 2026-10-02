@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
-import { clearSession, homeFor, safeNext, saveSession } from "@/lib/session";
+import { clearSession, homeFor, safeNext, saveSession, verificationPath } from "@/lib/session";
 
 export type FormState = { error?: string };
 
@@ -44,7 +44,8 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
     return { error: err instanceof ApiError ? err.message : "Kayıt tamamlanamadı." };
   }
   await saveSession(result, result.user.role);
-  redirect(safeNext(formData.get("next")) ?? homeFor(result.user.role));
+  // E-posta kodu kayıtla birlikte gitti; doğrulama ekranından sonra asıl hedefe geçilir
+  redirect(verificationPath(safeNext(formData.get("next")) ?? homeFor(result.user.role)));
 }
 
 export async function logout(formData?: FormData) {

@@ -126,12 +126,13 @@ export class AdminUsersController {
         if (email && (await this.prisma.user.findUnique({ where: { email } }))) {
           throw new ConflictException('Bu e-posta adresiyle kayıtlı başka bir hesap var');
         }
-        data.email = email;
+        // Yeni adres henüz doğrulanmadı
+        Object.assign(data, { email, emailVerifiedAt: null });
       }
     }
     if (dto.status !== undefined && dto.status !== user.status) data.status = dto.status;
 
-    const changed = Object.keys(data).filter((k) => k !== 'phoneVerifiedAt');
+    const changed = Object.keys(data).filter((k) => k !== 'phoneVerifiedAt' && k !== 'emailVerifiedAt');
     if (changed.length === 0) return this.detail(id);
 
     await this.prisma.$transaction([

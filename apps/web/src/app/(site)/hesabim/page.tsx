@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { apiFetch, type MovingRequest, type Paginated } from "@/lib/api";
 import { formatDate, place } from "@/lib/format";
 import { REQUEST_STATUS, homeTypeLabel } from "@/lib/request-options";
+import { VerifyNotice } from "@/components/verify-notice";
 import { getAccessToken, getCurrentUser, homeFor } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -41,7 +42,9 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
         </div>
       </div>
 
-      {yeni && (
+      <VerifyNotice user={user} returnTo="/hesabim" />
+
+      {yeni && user.verified && (
         <p
           role="status"
           className="mt-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-200"

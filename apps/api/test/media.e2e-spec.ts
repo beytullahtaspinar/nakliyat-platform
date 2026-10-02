@@ -8,6 +8,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { markVerified } from './helpers.js';
 
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL). Dosyalar geçici klasöre (yerel sürücü) yazılır.
 describe('Talep fotoğraf ve videoları (e2e)', () => {
@@ -66,6 +67,7 @@ describe('Talep fotoğraf ve videoları (e2e)', () => {
     tokens.other = await register(phones[1]!, 'CUSTOMER');
     tokens.company = await register(phones[2]!, 'COMPANY');
     tokens.farCompany = await register(phones[3]!, 'COMPANY');
+    await markVerified(prisma, phones);
     const profile = (cityCode: string, taxNumber: string) => ({
       legalName: 'Medya Nakliyat Ltd.',
       displayName: 'Medya Nakliyat',

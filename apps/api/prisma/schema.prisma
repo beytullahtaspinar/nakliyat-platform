@@ -32,6 +32,7 @@ model User {
   email           String?    @unique
   phone           String     @unique
   phoneVerifiedAt DateTime?
+  emailVerifiedAt DateTime?
   passwordHash    String
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -44,6 +45,7 @@ model User {
   notifications           Notification[]
   notificationPreferences NotificationPreference[]
   refreshTokens           RefreshToken[]
+  verificationCodes       VerificationCode[]
   auditLogs               AuditLog[]
 }
 
@@ -58,6 +60,30 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+enum VerificationChannel {
+  EMAIL
+  PHONE
+}
+
+/// E-posta veya telefon doğrulaması için gönderilen 6 haneli kodlar. Kodun kendisi saklanmaz,
+/// yalnızca HMAC özeti tutulur. Ayrıntı: docs/dogrulama.md
+model VerificationCode {
+  id         String              @id @default(cuid())
+  userId     String
+  channel    VerificationChannel
+  /// Kodun gönderildiği adres (e-posta ya da +90 telefon). E-posta değişikliğinde yeni adres burada bekler.
+  target     String              @db.VarChar(254)
+  codeHash   String              @db.Char(64)
+  attempts   Int                 @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, channel, createdAt])
 }
 
 // ─── Nakliyat firmaları ─────────────────────────────────────────

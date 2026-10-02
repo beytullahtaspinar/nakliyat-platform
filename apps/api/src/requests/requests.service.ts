@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { CreateRequestDto } from './dto/create-request.dto.js';
 import type { PaginationDto } from './dto/list-requests.dto.js';
 import type { UpdateRequestDto } from './dto/update-request.dto.js';
+import { VerificationService } from '../verification/verification.service.js';
 import { estimateMove } from './estimate.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -22,6 +23,9 @@ const MAX_OPEN_DAYS = 30;
 /** Türkiye saatine göre bugünün tarihi, YYYY-MM-DD */
 const todayInTurkey = (now: Date) =>
   new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul' }).format(now);
+
+/** Açık talep ya da doğrulama bekleyen taslak */
+const isEditable = (status: RequestStatus) => status === RequestStatus.OPEN || status === RequestStatus.DRAFT;
 
 type LocationFields = Pick<
   CreateRequestDto,
@@ -34,16 +38,20 @@ export class RequestsService {
     private readonly prisma: PrismaService,
     private readonly events: DomainEvents,
     private readonly media: MediaService,
+    private readonly verification: VerificationService,
   ) {}
 
   async create(customerId: string, dto: CreateRequestDto) {
     const now = new Date();
     const { distanceKm } = this.validateLocations(dto);
     this.validateMoveDate(dto.moveDate, now);
+    // Doğrulanmamış hesabın talebi taslak kalır; doğrulama bitince yayına alınır (VerificationService)
+    const verified = await this.verification.isUserComplete(customerId);
 
     const request = await this.prisma.movingRequest.create({
       data: {
         ...dto,
+        status: verified ? RequestStatus.OPEN : RequestStatus.DRAFT,
         specialItems: dto.specialItems ?? [],
         customerId,
         distanceKm: distanceKm ?? null,
@@ -56,7 +64,7 @@ export class RequestsService {
         expiresAt: new Date(Math.min(dto.moveDate.getTime(), now.getTime() + MAX_OPEN_DAYS * DAY_MS)),
       },
     });
-    this.events.emit('request.created', { requestId: request.id });
+    if (verified) this.events.emit('request.created', { requestId: request.id });
     return toRequestResponse(request, 0);
   }
 
@@ -87,7 +95,7 @@ export class RequestsService {
 
   async update(customerId: string, id: string, dto: UpdateRequestDto) {
     const { _count, ...current } = await this.findOwned(customerId, id);
-    if (current.status !== RequestStatus.OPEN) {
+    if (!isEditable(current.status)) {
       throw new ConflictException('Yalnızca açık talepler düzenlenebilir');
     }
     if (_count.quotes > 0) {
@@ -111,7 +119,7 @@ export class RequestsService {
 
   async cancel(customerId: string, id: string) {
     const { _count, ...current } = await this.findOwned(customerId, id);
-    if (current.status !== RequestStatus.OPEN) {
+    if (!isEditable(current.status)) {
       throw new ConflictException('Yalnızca açık talepler iptal edilebilir');
     }
     const request = await this.prisma.movingRequest.update({
