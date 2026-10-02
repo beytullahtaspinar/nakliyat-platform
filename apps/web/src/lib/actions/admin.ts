@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { companyProfileBody } from "@/lib/company-form";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
+import { IMPERSONATION_COOKIE, IMPERSONATION_PATH } from "@/lib/session-cookies";
 
 export type AdminActionState = { error?: string; notice?: string };
 
@@ -147,4 +149,33 @@ export async function deleteUser(userId: string): Promise<AdminActionState> {
   }
   revalidatePath("/yonetim", "layout");
   redirect("/yonetim/kullanicilar?silindi=1");
+}
+
+/** Firma panelini firmanın gözünden açar; yöneticinin kendi oturumu olduğu gibi kalır. */
+export async function impersonateCompany(companyId: string): Promise<AdminActionState> {
+  let result: { accessToken: string; expiresIn: number };
+  try {
+    result = await apiFetch(`/admin/companies/${encodeURIComponent(companyId)}/impersonate`, {
+      method: "POST",
+      token: await adminToken(),
+    });
+  } catch (err) {
+    return failure(err, "Firma paneline geçilemedi.");
+  }
+  (await cookies()).set(IMPERSONATION_COOKIE, result.accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: IMPERSONATION_PATH,
+    // Anahtarın süresi dolmadan çerez düşer; yönetici kendi oturumuna döner
+    maxAge: result.expiresIn - 60,
+  });
+  redirect(IMPERSONATION_PATH);
+}
+
+/** Firma panelinden yönetime döner. */
+export async function stopImpersonating(formData: FormData) {
+  (await cookies()).delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
+  const companyId = String(formData.get("companyId") ?? "");
+  redirect(/^[\w-]+$/.test(companyId) ? `/yonetim/firmalar/${companyId}` : "/yonetim/firmalar");
 }

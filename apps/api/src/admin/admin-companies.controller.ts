@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   ConflictException,
   Controller,
@@ -11,7 +12,9 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { AccessTokenPayload } from '../auth/auth.service.js';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { toProfile, WITH_CITIES } from '../companies/companies.service.js';
@@ -19,11 +22,14 @@ import { UpdateCompanyProfileDto } from '../companies/dto/company-profile.dto.js
 import { assertCityCodes } from '../common/utils/locations.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { DomainEvents } from '../events/domain-events.js';
-import { UserRole, VerificationStatus } from '../generated/prisma/enums.js';
+import { UserRole, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
 import { CompanyDocumentsService } from '../media/company-documents.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
 import { phoneDigits } from './dto/admin-lists.dto.js';
+
+/** Firma paneli görüntüleme süresi: 30 dk, sonra yönetici kendi oturumuna döner */
+const IMPERSONATION_TTL_SECONDS = 30 * 60;
 
 @ApiTags('Admin: firmalar')
 @ApiBearerAuth()
@@ -34,7 +40,39 @@ export class AdminCompaniesController {
     private readonly prisma: PrismaService,
     private readonly events: DomainEvents,
     private readonly documents: CompanyDocumentsService,
+    private readonly jwt: JwtService,
   ) {}
+
+  /**
+   * Yönetici firmanın panelini firmanın gözünden açar; firmanın şifresi gerekmez.
+   * Yalnızca kısa ömürlü bir erişim anahtarı verilir (yenileme anahtarı yok). Geçiş ve bu anahtarla
+   * yapılan her değişiklik, yönetici adına firmanın geçmişine yazılır.
+   */
+  @Post(':id/impersonate')
+  @HttpCode(HttpStatus.OK)
+  async impersonate(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
+    const company = await this.prisma.company.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true, displayName: true, owner: { select: { id: true, role: true, status: true, deletedAt: true } } },
+    });
+    if (!company) throw new NotFoundException('Firma bulunamadı');
+    const { owner } = company;
+    if (owner.deletedAt || owner.role !== UserRole.COMPANY) throw new NotFoundException('Firma bulunamadı');
+    if (owner.status !== UserStatus.ACTIVE) {
+      throw new BadRequestException('Firmanın hesabı askıya alınmış. Paneline geçmek için önce hesabı etkinleştirin.');
+    }
+
+    const payload: AccessTokenPayload = { sub: owner.id, role: owner.role, imp: admin.id };
+    const accessToken = await this.jwt.signAsync(payload, { expiresIn: IMPERSONATION_TTL_SECONDS });
+    await this.prisma.auditLog.create({
+      data: { actorId: admin.id, action: 'company.impersonate', entityType: 'Company', entityId: id },
+    });
+    return {
+      accessToken,
+      expiresIn: IMPERSONATION_TTL_SECONDS,
+      company: { id: company.id, displayName: company.displayName },
+    };
+  }
 
   @Get()
   async list(@Query() { status, q, page, limit }: ListCompaniesDto) {

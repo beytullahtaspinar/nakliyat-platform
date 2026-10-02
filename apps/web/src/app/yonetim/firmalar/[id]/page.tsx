@@ -12,10 +12,11 @@ import {
   formatBytes,
   formatDay,
 } from "@/lib/company-documents";
-import { formatDate, formatPhone } from "@/lib/format";
+import { formatDate, formatDateTime, formatPhone } from "@/lib/format";
 import { PageHeader, VERIFICATION, VerificationBadge } from "../../admin-bits";
 import { CompanyDecision } from "./company-decision";
 import { DocumentReview } from "./document-review";
+import { ImpersonateButton } from "./impersonate-button";
 
 export const metadata: Metadata = { title: "Firma inceleme" };
 
@@ -23,7 +24,21 @@ const HISTORY_LABELS: Record<string, string> = {
   "company.update": "Bilgiler yönetimden düzenlendi",
   "company.document.approve": "Belge onaylandı",
   "company.document.reject": "Belge reddedildi",
+  "company.impersonate": "Firma paneline geçildi",
+  "company.impersonate.action": "Firma panelinde değişiklik",
 };
+
+/** Firma panelinde yapılan değişikliğin hangi bölüme ait olduğu (API yolundan) */
+function panelArea(path?: string): string | undefined {
+  if (!path) return undefined;
+  if (path.includes("/company/profile")) return "firma bilgileri";
+  if (path.includes("/company/documents")) return "belgeler";
+  if (path.includes("/quotes")) return "teklifler";
+  if (path.includes("/bookings")) return "işler";
+  if (path.includes("/notifications")) return "bildirimler";
+  if (path.includes("/media")) return "dosyalar";
+  return undefined;
+}
 
 async function load(token: string, id: string) {
   try {
@@ -46,7 +61,12 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
         back={{ href: "/yonetim/firmalar", label: "Firmalar" }}
         title={c.displayName}
         description={c.legalName}
-        actions={<VerificationBadge status={c.verificationStatus} />}
+        actions={
+          <div className="flex items-center gap-3">
+            <VerificationBadge status={c.verificationStatus} />
+            <ImpersonateButton companyId={c.id} />
+          </div>
+        }
       />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
@@ -143,9 +163,11 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
                         ? VERIFICATION[h.details.to].label
                         : (HISTORY_LABELS[h.action] ?? h.action)}
                       {h.details?.type && `: ${DOCUMENT_LABELS[h.details.type]}`}
+                      {panelArea(h.details?.path) && ` (${panelArea(h.details?.path)})`}
                     </span>{" "}
                     <span className="text-zinc-500">
-                      · {h.actor.fullName} · {formatDate(h.createdAt)}
+                      · {h.actor.fullName} ·{" "}
+                      {h.action.startsWith("company.impersonate") ? formatDateTime(h.createdAt) : formatDate(h.createdAt)}
                     </span>
                     {h.details?.note && <p className="text-zinc-700">Gerekçe: {h.details.note}</p>}
                   </li>
