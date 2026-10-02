@@ -20,9 +20,6 @@ export const EMAIL_CODE_SENDER = Symbol('EMAIL_CODE_SENDER');
 /** Yapılandırılmış telefon göndericisi; yoksa null (telefon doğrulaması zorunlu tutulmaz) */
 export const PHONE_CODE_SENDER = Symbol('PHONE_CODE_SENDER');
 
-/** "513001" → "513 001" */
-export const formatCode = (code: string) => `${code.slice(0, 3)} ${code.slice(3)}`;
-
 /** Hata mesajına sağlayıcının yanıtından kısa bir parça koyar (anahtar içermez). */
 export async function failure(provider: string, res: Response): Promise<Error> {
   const detail = (await res.text().catch(() => '')).slice(0, 300);
