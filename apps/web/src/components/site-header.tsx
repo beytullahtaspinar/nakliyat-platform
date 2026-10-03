@@ -3,11 +3,12 @@ import { AccountMenu } from "@/components/account-menu";
 import { ButtonLink } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { HUB_PATH } from "@/lib/local-content";
+import { MARKETING_PAGES } from "@/lib/marketing";
 
 const NAV = [
-  { href: "/#nasil-calisir", label: "Nasıl çalışır?" },
+  MARKETING_PAGES.howItWorks,
   { href: HUB_PATH, label: "İller" },
-  { href: "/kayit?rol=firma", label: "Firmalar için" },
+  MARKETING_PAGES.forCompanies,
 ];
 
 export function SiteHeader() {

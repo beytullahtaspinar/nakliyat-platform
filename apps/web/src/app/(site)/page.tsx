@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/icons";
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
+import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
 
 const selectClass =
   "mt-1.5 block w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-base text-zinc-900 " +
@@ -178,9 +179,12 @@ export default function Home() {
               </li>
             ))}
           </ol>
-          <div className="mt-10 text-center">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <ButtonLink href="/talep-olustur" size="lg">
               Hemen talep oluştur <ArrowRightIcon className="h-5 w-5" />
+            </ButtonLink>
+            <ButtonLink href={MARKETING_PAGES.howItWorks.href} size="lg" variant="ghost">
+              Adım adım nasıl çalışır?
             </ButtonLink>
           </div>
         </div>
@@ -258,9 +262,14 @@ export default function Home() {
               Bölgendeki gerçek taşınma taleplerine teklif ver, iyi hizmetini puanlarla görünür kıl.
             </p>
           </div>
-          <ButtonLink href="/kayit?rol=firma" variant="secondary">
-            <StarIcon className="h-5 w-5 text-accent-700" /> Firma olarak katıl
-          </ButtonLink>
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink href={COMPANY_SIGNUP_PATH} variant="secondary">
+              <StarIcon className="h-5 w-5 text-accent-700" /> Firma olarak katıl
+            </ButtonLink>
+            <ButtonLink href={MARKETING_PAGES.forCompanies.href} variant="ghost">
+              Ayrıntılar
+            </ButtonLink>
+          </div>
         </div>
       </section>
     </main>

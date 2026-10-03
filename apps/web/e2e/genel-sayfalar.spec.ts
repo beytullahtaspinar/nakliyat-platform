@@ -8,6 +8,12 @@ async function expectAccessible(page: Page) {
   expect(summary, "Erişilebilirlik ihlalleri").toEqual([]);
 }
 
+/** Sayfadaki schema.org türleri (JSON-LD) */
+async function jsonLdTypes(page: Page) {
+  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  return blocks.flatMap((text) => [JSON.parse(text)].flat().map((item: { "@type": string }) => item["@type"]));
+}
+
 /** Tarayıcı konsolunda hata olmamalı (PageSpeed "En İyi Uygulamalar" da bunu ölçer) */
 function collectConsoleErrors(page: Page) {
   const errors: string[] = [];
@@ -79,4 +85,37 @@ test("sağlık adresi çalışır", async ({ request }) => {
   const res = await request.get("/api/saglik");
   expect(res.ok()).toBe(true);
   expect(await res.json()).toMatchObject({ status: "ok" });
+});
+
+test("tanıtım sayfaları menüden ve altbilgiden açılır, yapısal veri içerir ve erişilebilir", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto("/");
+  // Üst menü mobilde gizli: bağlantıları adresinden, gezinmeyi altbilgiden doğrula
+  for (const href of ["/nasil-calisir", "/firmalar-icin"]) {
+    await expect(page.locator(`header nav a[href="${href}"]`)).toHaveCount(1);
+  }
+  const footer = page.getByRole("contentinfo");
+
+  await footer.getByRole("link", { name: "Nasıl çalışır?" }).click();
+  await expect(page).toHaveURL(/\/nasil-calisir$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  expect(await jsonLdTypes(page)).toEqual(expect.arrayContaining(["HowTo", "FAQPage", "BreadcrumbList"]));
+  await expectAccessible(page);
+
+  await footer.getByRole("link", { name: "Neden katılmalı?" }).click();
+  await expect(page).toHaveURL(/\/firmalar-icin$/);
+  await expect(page.getByRole("heading", { name: "K3 yetki belgesi", exact: true })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /Firma olarak katıl/ }).first()).toHaveAttribute(
+    "href",
+    "/kayit?rol=firma",
+  );
+  await expectAccessible(page);
+
+  await footer.getByRole("link", { name: "Hakkımızda" }).click();
+  await expect(page).toHaveURL(/\/hakkimizda$/);
+  expect(await jsonLdTypes(page)).toContain("AboutPage");
+  // Şirket bilgileri girilmeden yer tutucular gösterilmez
+  await expect(page.getByText("[Şirket unvanı]")).toHaveCount(0);
+  await expectAccessible(page);
+  expect(errors).toEqual([]);
 });

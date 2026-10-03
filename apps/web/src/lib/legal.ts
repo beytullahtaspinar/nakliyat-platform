@@ -25,6 +25,9 @@ export const COMPANY = {
   site: "evdenevenakliyat.app",
 } as const;
 
+/** Şirket bilgileri girildi mi? Yer tutucular tanıtım sayfalarında gösterilmez. */
+export const COMPANY_INFO_READY = !COMPANY.title.startsWith("[");
+
 export const LEGAL_LINKS = [
   { href: "/kullanim-kosullari", label: "Kullanım koşulları" },
   { href: "/kvkk-aydinlatma-metni", label: "KVKK aydınlatma metni" },
