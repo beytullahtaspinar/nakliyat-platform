@@ -15,6 +15,7 @@ const TABS = [
   { href: "/firma-paneli/takvim", label: "Takvim" },
   { href: "/firma-paneli/degerlendirmeler", label: "Değerlendirmeler" },
   { href: "/firma-paneli/profil", label: "Firma profili" },
+  { href: "/firma-paneli/tanitim", label: "Tanıtım sayfası" },
   { href: "/firma-paneli/belgeler", label: "Belgeler" },
   { href: "/firma-paneli/bildirimler", label: "Bildirimler" },
 ];

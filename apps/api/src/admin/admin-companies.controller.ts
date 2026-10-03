@@ -24,6 +24,9 @@ import type { Prisma } from '../generated/prisma/client.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { UserRole, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
 import { CompanyDocumentsService } from '../media/company-documents.service.js';
+import { CompanyShowcaseService } from '../media/company-showcase.service.js';
+import { HideShowcaseMediaDto } from '../media/dto/company-showcase.dto.js';
+import { CompaniesService } from '../companies/companies.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
 import { phoneDigits } from './dto/admin-lists.dto.js';
@@ -40,6 +43,8 @@ export class AdminCompaniesController {
     private readonly prisma: PrismaService,
     private readonly events: DomainEvents,
     private readonly documents: CompanyDocumentsService,
+    private readonly showcase: CompanyShowcaseService,
+    private readonly companies: CompaniesService,
     private readonly jwt: JwtService,
   ) {}
 
@@ -133,6 +138,7 @@ export class AdminCompaniesController {
       ...toProfile(rest),
       owner,
       ...(await this.documents.summary(id)),
+      media: await this.showcase.listForAdmin(id),
       quoteCount: _count.quotes,
       bookingCount: _count.bookings,
       history,
@@ -185,7 +191,26 @@ export class AdminCompaniesController {
         },
       }),
     ]);
+    if (changed.includes('description')) await this.companies.refreshShowcaseComplete(id);
     return toProfile(updated);
+  }
+
+  /** Uygunsuz logo/fotoğrafı herkese açık sayfadan kaldırır; gerekçe firma panelinde görünür */
+  @Post(':id/media/:mediaId/hide')
+  @HttpCode(HttpStatus.OK)
+  hideMedia(
+    @CurrentUser() admin: AuthUser,
+    @Param('id') id: string,
+    @Param('mediaId') mediaId: string,
+    @Body() dto: HideShowcaseMediaDto,
+  ) {
+    return this.showcase.setHidden(admin.id, id, mediaId, dto.reason);
+  }
+
+  @Post(':id/media/:mediaId/unhide')
+  @HttpCode(HttpStatus.OK)
+  unhideMedia(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Param('mediaId') mediaId: string) {
+    return this.showcase.setHidden(admin.id, id, mediaId, null);
   }
 
   /** Zorunlu belgelerin (K3, vergi levhası, ticaret sicil) her biri onaylanmış ve süresi geçerli olmalı */

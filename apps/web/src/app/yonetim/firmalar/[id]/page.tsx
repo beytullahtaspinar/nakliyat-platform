@@ -17,6 +17,8 @@ import { PageHeader, VERIFICATION, VerificationBadge } from "../../admin-bits";
 import { CompanyDecision } from "./company-decision";
 import { DocumentReview } from "./document-review";
 import { ImpersonateButton } from "./impersonate-button";
+import { MediaModeration } from "./media-moderation";
+import { companyPath } from "@/lib/reviews";
 
 export const metadata: Metadata = { title: "Firma inceleme" };
 
@@ -27,6 +29,8 @@ const HISTORY_LABELS: Record<string, string> = {
   "company.document.reject": "Belge reddedildi",
   "company.impersonate": "Firma paneline geçildi",
   "company.impersonate.action": "Firma panelinde değişiklik",
+  "company.media.hide": "Tanıtım görseli gizlendi",
+  "company.media.unhide": "Tanıtım görseli yeniden yayınlandı",
 };
 
 /** Firma panelinde yapılan değişikliğin hangi bölüme ait olduğu (API yolundan) */
@@ -34,6 +38,7 @@ function panelArea(path?: string): string | undefined {
   if (!path) return undefined;
   if (path.includes("/company/profile")) return "firma bilgileri";
   if (path.includes("/company/documents")) return "belgeler";
+  if (path.includes("/company/showcase")) return "tanıtım sayfası";
   if (path.includes("/quotes")) return "teklifler";
   if (path.includes("/bookings")) return "işler";
   if (path.includes("/notifications")) return "bildirimler";
@@ -152,6 +157,43 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
               })}
             </ul>
           </Card>
+
+          {c.media.length > 0 && (
+            <Card className="p-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="font-semibold">Tanıtım görselleri</h2>
+                {c.verificationStatus === "VERIFIED" && (
+                  <Link href={companyPath(c)} className="text-sm font-semibold text-brand-700 hover:underline">
+                    Firma sayfası
+                  </Link>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-zinc-600">
+                Onaysız yayınlanır. Başka firmaya ait, iletişim bilgisi içeren ya da uygunsuz görseli gerekçeyle kaldırın.
+              </p>
+              <ul className="mt-3 grid gap-4 sm:grid-cols-2">
+                {c.media.map((m) => (
+                  <li key={m.id} className="space-y-2 text-sm">
+                    <a href={m.fullUrl} target="_blank" rel="noopener noreferrer" className="block">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- imzalı, süreli depo adresi */}
+                      <img
+                        src={m.previewUrl}
+                        alt={m.caption ?? (m.kind === "LOGO" ? "Logo" : "Fotoğraf")}
+                        loading="lazy"
+                        className={`aspect-[4/3] w-full rounded-lg bg-zinc-100 ${m.kind === "LOGO" ? "object-contain p-4" : "object-cover"} ${m.hidden ? "opacity-50" : ""}`}
+                      />
+                    </a>
+                    <p className="text-zinc-700">
+                      {m.kind === "LOGO" ? "Logo" : "Fotoğraf"}
+                      {m.caption && ` · ${m.caption}`} · {formatDate(m.createdAt)}
+                    </p>
+                    {m.hidden && <p className="text-red-800">Gizli: {m.hiddenReason}</p>}
+                    <MediaModeration companyId={c.id} mediaId={m.id} hidden={m.hidden} />
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           {c.history.length > 0 && (
             <Card className="p-5">

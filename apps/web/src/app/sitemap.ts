@@ -11,10 +11,10 @@ import { SITE_URL } from "@/lib/site";
 // Firma listesi saatte bir yenilenir
 export const revalidate = 3600;
 
-/** Yorumu olan doğrulanmış firmalar (yorumsuz firma sayfaları noindex). API'ye ulaşılamazsa boş. */
-async function reviewedCompanies(): Promise<PublicCompanyListItem[]> {
+/** Arama motoruna açık firma sayfaları (yorumu olan ya da tanıtımı dolu). API'ye ulaşılamazsa boş. */
+async function indexableCompanies(): Promise<PublicCompanyListItem[]> {
   try {
-    const { items } = await apiFetch<Paginated<PublicCompanyListItem>>("/companies?reviewed=true&limit=1000", {
+    const { items } = await apiFetch<Paginated<PublicCompanyListItem>>("/companies?indexable=true&limit=1000", {
       revalidate,
       tags: [COMPANY_CACHE_TAG],
     });
@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: page.kind === "city" ? 0.8 : page.kind === "district" ? 0.7 : 0.6,
     })),
-    ...(await reviewedCompanies()).map((company) => ({
+    ...(await indexableCompanies()).map((company) => ({
       url: `${SITE_URL}${companyPath(company)}`,
       lastModified: company.updatedAt,
       changeFrequency: "weekly" as const,

@@ -36,5 +36,8 @@ export const REQUEST_MIME_TYPES = ['image/webp', 'image/jpeg', 'video/mp4', 'vid
  */
 export const STORAGE_KEY_PATTERN = /^(talepler|firmalar)\/[a-z0-9]{10,40}\/[a-f0-9]{32}\.(webp|jpg|png|pdf|mp4|webm)$/;
 
+/** Firma tanıtım görselinin herkese açık adresi (web sitesi API'den aktarır): /medya/firmalar/<firmaId>/<dosya> */
+export const publicMediaPath = (key: string) => `/medya/${key}`;
+
 export const mediaTypeOf = (mimeType: string) =>
   mimeType.startsWith('video/') ? MediaType.VIDEO : MediaType.PHOTO;

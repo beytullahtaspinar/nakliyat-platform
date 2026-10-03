@@ -1,6 +1,7 @@
 import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
-import type { Readable } from 'node:stream';
+import { Readable } from 'node:stream';
+import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import { EXTENSIONS } from './media-rules.js';
 import { presignUrl } from './s3-presign.js';
 import { viewWindow, type StoredObject } from './storage.js';
@@ -58,6 +59,17 @@ export class R2Storage {
       sizeBytes: Number(res.headers.get('content-length') ?? 0),
       // Uzantıyla uyuşmayan tür kabul edilmez
       mimeType: EXTENSIONS[mimeType] === ext ? mimeType : '',
+    };
+  }
+
+  /** Dosyanın içeriği (herkese açık firma görselleri API üzerinden aktarılır); yoksa null */
+  async read(key: string): Promise<{ body: Readable; sizeBytes: number } | null> {
+    const res = await fetch(this.sign('GET', key, 60, new Date()), { signal: AbortSignal.timeout(30_000) });
+    if (res.status === 404) return null;
+    if (!res.ok || !res.body) throw new Error(`R2 GET ${res.status}`);
+    return {
+      body: Readable.fromWeb(res.body as WebReadableStream<Uint8Array>),
+      sizeBytes: Number(res.headers.get('content-length') ?? 0),
     };
   }
 

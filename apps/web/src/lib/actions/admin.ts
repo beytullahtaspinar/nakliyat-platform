@@ -7,6 +7,7 @@ import { PRICING_SETTING_SPECS, type PricingSettingKey } from "@nakliyat/pricing
 import { ApiError, apiFetch } from "@/lib/api";
 import { companyProfileBody } from "@/lib/company-form";
 import { PRICING_CACHE_TAG } from "@/lib/pricing";
+import { COMPANY_CACHE_TAG } from "@/lib/reviews";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 import { IMPERSONATION_COOKIE, IMPERSONATION_PATH } from "@/lib/session-cookies";
 
@@ -105,7 +106,34 @@ export async function updateCompany(
     return failure(err, "Firma bilgileri kaydedilemedi.");
   }
   revalidatePath("/yonetim", "layout");
+  // Ad ya da tanıtım yazısı herkese açık firma sayfasında da hemen değişsin
+  updateTag(COMPANY_CACHE_TAG);
   return { saved: true };
+}
+
+/** Firma görselini herkese açık sayfadan kaldırır (gerekçe firma panelinde görünür) ya da geri yayınlar */
+export async function setCompanyMediaHidden(
+  companyId: string,
+  mediaId: string,
+  hide: boolean,
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (hide && reason.length < 3) return { error: "Firmanın anlayacağı kısa bir gerekçe yazın." };
+  const base = `/admin/companies/${encodeURIComponent(companyId)}/media/${encodeURIComponent(mediaId)}`;
+  try {
+    await apiFetch(`${base}/${hide ? "hide" : "unhide"}`, {
+      method: "POST",
+      token: await adminToken(),
+      ...(hide && { body: { reason } }),
+    });
+  } catch (err) {
+    return failure(err, "Görsel güncellenemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  updateTag(COMPANY_CACHE_TAG);
+  return { notice: hide ? "Görsel sayfadan kaldırıldı." : "Görsel yeniden yayında." };
 }
 
 export async function updateUser(userId: string, _prev: AdminActionState, formData: FormData): Promise<AdminActionState> {

@@ -12,6 +12,7 @@ export function companyProfileBody(formData: FormData, isNew: boolean) {
     serviceCityCodes: [...new Set([cityCode, ...formData.getAll("serviceCityCodes").map(String)])],
     // Güncellemede boş bırakılan alan silinmez; yeni profilde hiç gönderilmez
     ...(k3 ? { k3LicenseNumber: k3 } : {}),
-    ...(description || !isNew ? { description } : {}),
+    // Firma panelinde tanıtım yazısı ayrı sekmede; alan yalnızca yönetimin formunda var
+    ...(formData.has("description") && (description || !isNew) ? { description } : {}),
   };
 }

@@ -3,10 +3,13 @@ import { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CompanyDocumentsController } from './company-documents.controller.js';
+import { CompanyShowcaseController } from './company-showcase.controller.js';
+import { CompanyShowcaseService } from './company-showcase.service.js';
 import { CompanyDocumentsService } from './company-documents.service.js';
 import { FilesController } from './files.controller.js';
 import { LocalStorage } from './local-storage.js';
 import { MediaService } from './media.service.js';
+import { PublicMediaController } from './public-media.controller.js';
 import { R2Storage } from './r2-storage.js';
 import { RequestMediaController } from './request-media.controller.js';
 import { FILE_STORAGE, MediaStorage } from './storage.js';
@@ -40,12 +43,19 @@ export function createFileStorage(config: ConfigService): MediaStorage {
 }
 
 @Module({
-  controllers: [RequestMediaController, CompanyDocumentsController, FilesController],
+  controllers: [
+    RequestMediaController,
+    CompanyDocumentsController,
+    CompanyShowcaseController,
+    PublicMediaController,
+    FilesController,
+  ],
   providers: [
     MediaService,
     CompanyDocumentsService,
+    CompanyShowcaseService,
     { provide: FILE_STORAGE, inject: [ConfigService], useFactory: createFileStorage },
   ],
-  exports: [MediaService, CompanyDocumentsService],
+  exports: [MediaService, CompanyDocumentsService, CompanyShowcaseService],
 })
 export class MediaModule {}

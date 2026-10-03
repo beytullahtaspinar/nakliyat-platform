@@ -224,9 +224,26 @@ export type CustomerBooking = BookingReviewState & {
 export type RatingDistribution = Record<"1" | "2" | "3" | "4" | "5", number>;
 
 /** GET /companies/:id: herkese açık firma profili */
+export type PublicCompanyPhoto = {
+  id: string;
+  /** Sitedeki kalıcı adres: /medya/firmalar/<firmaId>/<dosya> */
+  url: string;
+  thumbUrl: string;
+  width: number | null;
+  height: number | null;
+  caption: string | null;
+};
+
 export type PublicCompanyProfile = PublicCompany & {
   cityCode: string;
   description: string | null;
+  services: string[];
+  foundedYear: number | null;
+  fleetSize: number | null;
+  staffSize: number | null;
+  photos: PublicCompanyPhoto[];
+  /** Yorumu var ya da tanıtımı yeterince dolu: arama motoruna açık */
+  indexable: boolean;
   serviceCities: { code: string; name: string | null }[];
   verifiedAt: string | null;
   memberSince: string;
@@ -252,9 +269,13 @@ export type PublicCompanyListItem = {
   id: string;
   displayName: string;
   cityName: string | null;
+  logoUrl: string | null;
   ratingAverage: string;
   ratingCount: number;
+  completedJobs: number;
   updatedAt: string;
+  /** Hizmet verdiği iller (merkez il dahil) */
+  serviceCityCodes: string[];
 };
 
 export type Paginated<T> = { items: T[]; total: number; page: number; limit: number };
@@ -291,6 +312,41 @@ export type CompanyProfile = {
   verificationStatus: VerificationStatus;
   verificationNote: string | null;
   serviceCityCodes: string[];
+};
+
+/** Firma panelinde/yönetimde görsel: önizleme imzalı kısa süreli adresten */
+export type ShowcaseMedia = {
+  id: string;
+  kind: "LOGO" | "PHOTO";
+  previewUrl: string;
+  fullUrl: string;
+  publicUrl: string;
+  width: number | null;
+  height: number | null;
+  caption: string | null;
+  hidden: boolean;
+  hiddenReason: string | null;
+  createdAt: string;
+};
+
+/** GET /company/showcase: firmanın tanıtım sayfası */
+export type CompanyShowcase = {
+  description: string | null;
+  services: string[];
+  foundedYear: number | null;
+  fleetSize: number | null;
+  staffSize: number | null;
+  logo: ShowcaseMedia | null;
+  photos: ShowcaseMedia[];
+  indexing: {
+    descriptionLength: number;
+    minDescription: number;
+    visiblePhotos: number;
+    minPhotos: number;
+    complete: boolean;
+    hasReviews: boolean;
+  };
+  limits: { maxPhotos: number; captionMax: number };
 };
 
 /** Firmaya gösterilen talep: müşteri adı ve açık adres yok */
@@ -477,6 +533,8 @@ export type CompanyDocumentSummary = { documents: CompanyDocument[]; requirement
 export type AdminCompanyDetail = AdminCompany &
   CompanyDocumentSummary & {
   owner: CompanyOwner & { id: string; createdAt: string };
+  /** Tanıtım sayfası görselleri (gizlenenler dahil) */
+  media: ShowcaseMedia[];
   quoteCount: number;
   bookingCount: number;
   history: {

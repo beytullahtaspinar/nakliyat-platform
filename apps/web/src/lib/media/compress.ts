@@ -45,12 +45,34 @@ const toBlob = (canvas: HTMLCanvasElement, type: string, quality: number) =>
   new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
 
 /**
- * Fotoğrafı en uzun kenarı 1600 px olacak şekilde küçültüp WebP'ye (desteklenmezse JPEG) çevirir.
+ * Fotoğrafı en uzun kenarı 1600 px (ya da maxSide) olacak şekilde küçültüp WebP'ye (desteklenmezse JPEG) çevirir.
  * Yeniden kodlama, konum (GPS) dahil tüm EXIF bilgisini de siler.
  */
-export async function compressImage(file: File): Promise<Compressed> {
+export async function compressImage(file: File, maxSide = PHOTO_MAX_SIDE): Promise<Compressed> {
   const source = await decodeImage(file);
-  const { width, height } = fit(source.width, source.height, PHOTO_MAX_SIDE);
+  return encodeImage(source, maxSide);
+}
+
+/**
+ * Aynı fotoğrafın birden çok boyutu (ör. firma sayfası: büyük + küçük önizleme). Dosya bir kez açılır.
+ */
+export async function compressImageSizes(file: File, maxSides: number[]): Promise<Compressed[]> {
+  const source = await decodeImage(file);
+  try {
+    const out: Compressed[] = [];
+    for (const side of maxSides) out.push(await encodeImage(source, side, false));
+    return out;
+  } finally {
+    if ("close" in source && typeof source.close === "function") source.close();
+  }
+}
+
+async function encodeImage(
+  source: CanvasImageSource & { width: number; height: number },
+  maxSide: number,
+  release = true,
+): Promise<Compressed> {
+  const { width, height } = fit(source.width, source.height, maxSide);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -60,7 +82,7 @@ export async function compressImage(file: File): Promise<Compressed> {
   ctx.fillRect(0, 0, width, height);
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(source, 0, 0, width, height);
-  if ("close" in source && typeof source.close === "function") source.close();
+  if (release && "close" in source && typeof source.close === "function") source.close();
 
   let blob = await toBlob(canvas, "image/webp", 0.8);
   // Eski Safari WebP kodlayamaz, sessizce PNG döner: o durumda JPEG

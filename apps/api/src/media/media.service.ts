@@ -95,7 +95,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Diskte kalan dosyaları (talep fotoğrafları ve firma belgeleri) R2'ye taşır: R2 kurulmadan ya da
+   * Diskte kalan dosyaları (talep fotoğrafları, firma belgeleri ve görselleri) R2'ye taşır: R2 kurulmadan ya da
    * R2 hata verirken yüklenenler. Önce R2'ye kopyalanır, kayıt güncellenir, sonra diskteki silinir;
    * arada görüntüleme bozulmaz.
    */
@@ -118,16 +118,41 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
             this.prisma.companyDocument.updateMany({ where: { id, ...local }, data: { storage: StorageLocation.R2 } }),
           exists: async (id) => (await this.prisma.companyDocument.count({ where: { id } })) > 0,
         },
+        {
+          pending: () => this.prisma.companyMedia.findMany({ where: local, orderBy: { createdAt: 'asc' }, take: MOVE_BATCH }),
+          markMoved: (id) =>
+            this.prisma.companyMedia.updateMany({ where: { id, ...local }, data: { storage: StorageLocation.R2 } }),
+          exists: async (id) => (await this.prisma.companyMedia.count({ where: { id } })) > 0,
+        },
+        // Firma fotoğraflarının küçük önizlemeleri ayrı dosya, ayrı taşınır (boyutu toplamda sayılıyor)
+        {
+          pending: async () =>
+            (
+              await this.prisma.companyMedia.findMany({
+                where: { thumbStorage: StorageLocation.LOCAL },
+                orderBy: { createdAt: 'asc' },
+                take: MOVE_BATCH,
+              })
+            ).map((m) => ({ id: m.id, storageKey: m.thumbKey!, mimeType: m.mimeType, sizeBytes: 0 })),
+          markMoved: (id) =>
+            this.prisma.companyMedia.updateMany({
+              where: { id, thumbStorage: StorageLocation.LOCAL },
+              data: { thumbStorage: StorageLocation.R2 },
+            }),
+          exists: async (id) => (await this.prisma.companyMedia.count({ where: { id } })) > 0,
+        },
       ];
       let r2Used = (await this.usage())[StorageLocation.R2];
       for (const table of tables) {
         for (const item of await table.pending()) {
           if (r2Used + item.sizeBytes > this.storage.quotas.r2) return moved;
-          if (!(await this.storage.local.stat(item.storageKey))) {
+          const onDisk = await this.storage.local.stat(item.storageKey);
+          if (!onDisk) {
             this.logger.warn(`Diskte bulunamadı, taşınamadı: ${item.storageKey}`);
             continue;
           }
-          if (!(await this.storage.copyToR2(item.storageKey, item.mimeType, item.sizeBytes))) return moved;
+          // Kayıttaki boyut birden çok dosyanın toplamı olabilir (firma fotoğrafı + önizleme): diskteki boyut gönderilir
+          if (!(await this.storage.copyToR2(item.storageKey, item.mimeType, onDisk.sizeBytes))) return moved;
           const { count } = await table.markMoved(item.id);
           if (count) {
             await this.storage.delete(item.storageKey, StorageLocation.LOCAL);
@@ -263,14 +288,15 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /** Depo başına kullanılan toplam boyut (bayt). Talep dosyaları ve firma belgeleri aynı depoyu paylaşır. */
+  /** Depo başına kullanılan toplam boyut (bayt). Talep dosyaları, firma belgeleri ve firma görselleri aynı depoyu paylaşır. */
   private async usage() {
     const used = { [StorageLocation.LOCAL]: 0, [StorageLocation.R2]: 0 };
-    const [media, documents] = await Promise.all([
+    const [media, documents, showcase] = await Promise.all([
       this.prisma.requestMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
       this.prisma.companyDocument.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
+      this.prisma.companyMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
     ]);
-    for (const g of [...media, ...documents]) used[g.storage] += g._sum.sizeBytes ?? 0;
+    for (const g of [...media, ...documents, ...showcase]) used[g.storage] += g._sum.sizeBytes ?? 0;
     return used;
   }
 

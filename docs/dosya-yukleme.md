@@ -56,3 +56,14 @@ dosyalar `firmalar/<firmaId>/` altında durur ve toplam boyut sınırına (kota)
   olmadan firma onaylanamaz.
 - Onaylı K3'ün süresi dolarsa firma teklif veremez; yeni K3 yüklenip onaylanınca devam eder.
 - Hesap silinince belgeler depodan da silinir.
+
+## Firma tanıtım görselleri (logo ve fotoğraflar)
+
+Firma paneli → **Tanıtım sayfası**. Aynı depo ve yükleme akışı (`firmalar/<firmaId>/`), toplam boyut sınırına sayılır.
+
+- Tarayıcıda küçültülür: fotoğraf 1600 px + 480 px önizleme (iki dosya), logo 192 px; WebP (eski Safari'de JPEG), konum bilgisi silinir.
+- En fazla 12 fotoğraf ve 1 logo (yeni logo eskisinin yerini alır). Kurallar: `apps/api/src/companies/showcase-rules.ts`, `apps/web/src/lib/showcase.ts`.
+- Belgelerden farkı: **herkese açık ve kalıcı adres**. Site görseli kendi alan adından verir: `/medya/firmalar/<firmaId>/<dosya>` → web (`app/medya/.../route.ts`) → API `GET /v1/public-media/firmalar/...` → R2 ya da disk. Tarayıcıda bir yıl önbellekte kalır (dosya adı rastgele, içerik değişmez).
+- Yalnızca onaylı firmanın ve yönetimin gizlemediği görseller herkese açık adresten gelir; firma paneli ve yönetim önizlemeyi imzalı kısa süreli adresten görür.
+- Yönetici firma inceleme ekranından görseli gerekçeyle gizler (firma gerekçeyi panelde görür) ya da yeniden yayınlar.
+- Hesap silinince görseller depodan da silinir.
