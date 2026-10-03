@@ -8,6 +8,11 @@ import { uploadRequiredDocuments } from "./belgeler";
 const API = `http://localhost:${process.env.API_PORT ?? 4000}/v1`;
 const PASSWORD = "yonetici-sifre-123";
 
+/** Telefonda sayfa yana kaymaz: geniş tablolar kendi kutusunda kayar */
+async function expectNoHorizontalScroll(page: Page) {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+}
+
 const uniqueDigits = (n: number) => `${Date.now()}${Math.floor(Math.random() * 1e6)}`.slice(-n);
 
 async function expectAccessible(page: Page) {
@@ -52,6 +57,7 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   // Yönetim paneli tanıtım sitesinin menüsünü ve altbilgisini göstermez
   await expect(page.getByRole("link", { name: "Teklif al" })).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
+  await expectNoHorizontalScroll(page);
   await expectAccessible(page);
 
   // Onay bekleyen belgeler ayrı listede, firmaya göre aranır
@@ -61,6 +67,7 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
   await expect(page.getByRole("link", { name: companyName, exact: true })).toHaveCount(3);
   await expect(page.getByText("Yeni belge")).toHaveCount(3);
+  await expectNoHorizontalScroll(page);
   await expectAccessible(page);
 
   await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Firmalar/ }).click();
@@ -72,6 +79,7 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await page.getByRole("link", { name: companyName }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(companyName);
   await expect(page.getByText("K3.34.123456")).toBeVisible();
+  await expectNoHorizontalScroll(page);
   await expectAccessible(page);
 
   // Zorunlu belgeler onaylanmadan firma onaylanamaz
@@ -257,7 +265,7 @@ test("yönetici dönem seçerek istatistikleri görür", async ({ page }) => {
   await expect(periods.getByRole("link", { name: "Son 30 gün" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Dönüşüm hunisi" })).toBeVisible();
   // Telefonda sayfa yana kaymaz (yatay kayan yönetim menüsü dahil)
-  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  await expectNoHorizontalScroll(page);
   await expect(page.getByRole("img", { name: /^Yeni talep: 30 günde toplam/ })).toBeVisible();
   await expectAccessible(page);
 

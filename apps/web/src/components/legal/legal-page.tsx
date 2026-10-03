@@ -81,7 +81,7 @@ export function LegalPage({
 export function TableScroll({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     // Klavyeyle kaydırılabilsin diye odaklanabilir bölge (axe: scrollable-region-focusable)
-    <div className="overflow-x-auto" role="region" aria-label={label} tabIndex={0}>
+    <div className="relative overflow-x-auto" role="region" aria-label={label} tabIndex={0}>
       {children}
     </div>
   );

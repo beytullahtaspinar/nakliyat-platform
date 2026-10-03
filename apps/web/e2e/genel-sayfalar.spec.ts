@@ -90,9 +90,9 @@ test("sağlık adresi çalışır", async ({ request }) => {
 test("tanıtım sayfaları menüden ve altbilgiden açılır, yapısal veri içerir ve erişilebilir", async ({ page }) => {
   const errors = collectConsoleErrors(page);
   await page.goto("/");
-  // Üst menü mobilde gizli: bağlantıları adresinden, gezinmeyi altbilgiden doğrula
+  // Üst menü mobilde menü düğmesinin arkasında (baslik.spec.ts): bağlantıları adresinden, gezinmeyi altbilgiden doğrula
   for (const href of ["/nasil-calisir", "/firmalar-icin"]) {
-    await expect(page.locator(`header nav a[href="${href}"]`)).toHaveCount(1);
+    await expect(page.locator(`header nav[aria-label="Ana menü"] a[href="${href}"]`)).toHaveCount(1);
   }
   const footer = page.getByRole("contentinfo");
 

@@ -45,7 +45,7 @@ export default async function AdminHomePage() {
         ))}
       </ul>
 
-      <div className="mt-8 grid gap-6 2xl:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-2">
         <section aria-labelledby="bekleyen">
           <div className="mb-2 flex items-baseline justify-between gap-2">
             <h2 id="bekleyen" className="font-semibold text-slate-900">Onay bekleyen firmalar</h2>

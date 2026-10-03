@@ -18,8 +18,8 @@ export function QuoteForm({ request, quote, minDate, maxDate }: Props) {
   return (
     <form {...formProps} className="space-y-4">
       {quote && <input type="hidden" name="quoteId" value={quote.id} />}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Toplam fiyat (TL, KDV dahil)" className="sm:col-span-3">
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Toplam fiyat (TL, KDV dahil)" className="col-span-2">
           <Input
             name="priceTry"
             type="number"
@@ -53,7 +53,7 @@ export function QuoteForm({ request, quote, minDate, maxDate }: Props) {
             required
           />
         </Field>
-        <Field label="Geçerlilik (isteğe bağlı)" hint="Boş bırakırsan talep kapanana kadar geçerli.">
+        <Field label="Geçerlilik (isteğe bağlı)" hint="Boş bırakırsan talep kapanana kadar geçerli." className="col-span-2">
           <Input
             name="validUntil"
             type="date"

@@ -38,7 +38,7 @@ export default async function CompanyRequestPage({ params }: PageProps<"/firma-p
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <section>
         <Link href="/firma-paneli" className="text-sm text-zinc-500 hover:underline">
           ← Gelen talepler

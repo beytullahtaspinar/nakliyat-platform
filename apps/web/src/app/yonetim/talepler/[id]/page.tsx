@@ -40,7 +40,7 @@ export default async function AdminRequestPage({ params }: PageProps<"/yonetim/t
         actions={<span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.className}`}>{status.label}</span>}
       />
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-4">
           <Card className="p-5">
             <h2 className="font-semibold">Taşınma bilgileri</h2>
