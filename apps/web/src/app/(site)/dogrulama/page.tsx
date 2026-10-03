@@ -26,7 +26,7 @@ export default async function VerificationPage({ searchParams }: PageProps<"/dog
   const target = next ?? homeFor(user.role);
 
   return (
-    <main className="mx-auto w-full max-w-md flex-1 px-4 py-12">
+    <main data-panel className="mx-auto w-full max-w-md flex-1 px-4 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">Hesabını doğrula</h1>
       {status.complete ? (
         <Card className="mt-6 p-6">

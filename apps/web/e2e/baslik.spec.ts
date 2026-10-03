@@ -56,6 +56,11 @@ test("firma hesabında başlık 'Teklif al' yerine paneli gösterir, sayfa yana 
   expect(reg.ok()).toBeTruthy();
   const headers = { Authorization: `Bearer ${(await reg.json()).accessToken}` };
   expect((await request.post(`${API}/auth/verification/email/confirm`, { headers, data: { code: TEST_CODE } })).ok()).toBeTruthy();
+  const profile = await request.post(`${API}/company/profile`, {
+    headers,
+    data: { displayName: `Başlık Nakliyat ${phone.slice(-5)}`, legalName: "Başlık Nakliyat Ltd.", taxNumber: uniqueDigits(10).replace(/^0/, "1"), cityCode: "34", serviceCityCodes: ["34"] },
+  });
+  expect(profile.ok()).toBeTruthy();
 
   await page.goto("/giris");
   await page.getByLabel("Cep telefonu").fill(phone);
@@ -70,5 +75,29 @@ test("firma hesabında başlık 'Teklif al' yerine paneli gösterir, sayfa yana 
   if (isMobile) {
     await page.getByRole("button", { name: "Menü" }).click();
     await expect(header.getByRole("button", { name: "Çıkış" })).toBeVisible();
+  }
+
+  // Panelde ince altbilgi: yasal metinler var, tanıtım sütunları yok
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByRole("navigation", { name: "Yasal metinler" })).toBeVisible();
+  await expect(footer.getByRole("navigation", { name: "Taşınacaklar için" })).toBeHidden();
+
+  // Telefonda seçili sekme (en sondaki Bildirimler) ekranda görünür
+  await page.goto("/firma-paneli/bildirimler");
+  const tab = page.getByRole("navigation", { name: "Firma paneli" }).getByRole("link", { name: "Bildirimler" });
+  await expect(tab).toHaveAttribute("aria-current", "page");
+  // -mb-px alt çizgisi kayan kutuda 1 px kırpılır
+  await expect(tab).toBeInViewport({ ratio: 0.9 });
+  await expectNoHorizontalScroll(page);
+});
+
+test("tanıtım sayfasında tam altbilgi, masaüstü menüde bulunduğun sayfa işaretli", async ({ page, isMobile }) => {
+  await page.goto("/nasil-calisir");
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByRole("navigation", { name: "Taşınacaklar için" })).toBeVisible();
+  if (!isMobile) {
+    const menu = page.getByRole("navigation", { name: "Ana menü" });
+    await expect(menu.getByRole("link", { name: "Nasıl çalışır?" })).toHaveAttribute("aria-current", "page");
+    await expect(menu.getByRole("link", { name: "Firmalar için" })).not.toHaveAttribute("aria-current", "page");
   }
 });

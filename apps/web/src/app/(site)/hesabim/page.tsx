@@ -27,7 +27,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
   const unreadFor = (requestId: string) => unread.items.find((u) => u.requestId === requestId)?.count ?? 0;
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
+    <main data-panel className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Merhaba {user.fullName.split(" ")[0]}</h1>

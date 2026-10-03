@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 import { AccountMenu } from "@/components/account-menu";
+import { NavLink } from "@/components/nav-link";
 import { CloseIcon, MenuIcon } from "@/components/ui/icons";
 
 /**
@@ -58,13 +58,12 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
           <ul className="space-y-1">
             {links.map((l) => (
               <li key={l.href}>
-                <Link
+                <NavLink
                   href={l.href}
-                  aria-current={pathname === l.href ? "page" : undefined}
                   className="flex items-center rounded-lg px-3 py-3 text-base font-medium text-zinc-800 hover:bg-zinc-100 aria-[current=page]:bg-brand-50 aria-[current=page]:text-brand-800"
                 >
                   {l.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>

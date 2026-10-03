@@ -31,10 +31,14 @@ const COLUMNS = [
   },
 ];
 
+/**
+ * Panel sayfalarında (müşteri hesabı, firma paneli, doğrulama: `<main data-panel>`) yalnızca alt satır
+ * (telif + yasal metinler) görünür; tanıtım sütunları gizlenir (globals.css, JS gerektirmez).
+ */
 export function SiteFooter() {
   return (
     <footer className="mt-auto border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+      <div className="site-footer-columns mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <div className="flex items-center gap-2.5">
             <LogoMark />
@@ -66,7 +70,7 @@ export function SiteFooter() {
           </nav>
         ))}
       </div>
-      <div className="border-t border-zinc-200 dark:border-zinc-800">
+      <div className="site-footer-columns-divider border-t border-zinc-200 dark:border-zinc-800">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>© {new Date().getFullYear()} evdenevenakliyat.app</p>
           <nav aria-label="Yasal metinler">

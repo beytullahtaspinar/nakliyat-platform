@@ -109,3 +109,11 @@
     outline-offset: 2px;
   }
 }
+
+/* Panel sayfalarında ince altbilgi: tanıtım sütunları gizli, yalnızca telif + yasal metinler (site-footer.tsx) */
+body:has(main[data-panel]) .site-footer-columns {
+  display: none;
+}
+body:has(main[data-panel]) .site-footer-columns-divider {
+  border-top-width: 0;
+}
