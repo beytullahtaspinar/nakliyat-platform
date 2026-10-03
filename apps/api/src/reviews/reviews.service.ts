@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { getCityByCode } from '@nakliyat/locations';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { CompaniesService, toPublicCompany } from '../companies/companies.service.js';
+import { CompanyBadgesService } from '../companies/company-badges.service.js';
 import { cityName } from '../common/utils/locations.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { Prisma, type Review } from '../generated/prisma/client.js';
@@ -69,6 +70,7 @@ export class ReviewsService {
     private readonly prisma: PrismaService,
     private readonly events: DomainEvents,
     private readonly companies: CompaniesService,
+    private readonly badges: CompanyBadgesService,
   ) {}
 
   /**
@@ -214,8 +216,10 @@ export class ReviewsService {
     });
     if (!company) throw new NotFoundException('Firma bulunamadı');
     const serviceCodes = [...new Set([company.cityCode, ...company.serviceCities.map((c) => c.cityCode)])].sort();
+    const badges = await this.badges.forCompanies([company]);
     return {
       ...toPublicCompany(company),
+      badges: badges.get(company.id) ?? [],
       cityCode: company.cityCode,
       description: company.description,
       serviceCities: serviceCodes.map((code) => ({ code, name: cityName(code) })),

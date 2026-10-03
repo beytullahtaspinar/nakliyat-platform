@@ -4,6 +4,7 @@ import { CurrentUser, type AuthUser } from '../common/decorators/current-user.de
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { UserRole } from '../generated/prisma/enums.js';
 import { CompaniesService } from './companies.service.js';
+import { CompanyBadgesService } from './company-badges.service.js';
 import { CreateCompanyProfileDto, UpdateCompanyProfileDto } from './dto/company-profile.dto.js';
 
 @ApiTags('Firma: profil')
@@ -11,7 +12,10 @@ import { CreateCompanyProfileDto, UpdateCompanyProfileDto } from './dto/company-
 @Roles(UserRole.COMPANY)
 @Controller('company/profile')
 export class CompanyProfileController {
-  constructor(private readonly companies: CompaniesService) {}
+  constructor(
+    private readonly companies: CompaniesService,
+    private readonly badges: CompanyBadgesService,
+  ) {}
 
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateCompanyProfileDto) {
@@ -21,6 +25,12 @@ export class CompanyProfileController {
   @Get()
   get(@CurrentUser() user: AuthUser) {
     return this.companies.getOwn(user.id);
+  }
+
+  /** Rozetler: hangileri kazanıldı, diğerleri için ne eksik */
+  @Get('badges')
+  async badgeProgress(@CurrentUser() user: AuthUser) {
+    return this.badges.progress(await this.companies.requireCompany(user.id));
   }
 
   /** Unvan, vergi no veya K3 belge no değişirse firma yeniden doğrulamaya düşer. */

@@ -64,6 +64,12 @@ export const StarIcon = (p: P) => (
   </Icon>
 );
 
+export const BoltIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M13 3 5 13.5h6L10 21l8-10.5h-6L13 3Z" />
+  </Icon>
+);
+
 export const ArrowRightIcon = (p: P) => (
   <Icon {...p}>
     <path d="M5 12h14M13 6l6 6-6 6" />

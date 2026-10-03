@@ -164,6 +164,8 @@ export type PublicCompany = {
   ratingAverage: string;
   ratingCount: number;
   completedJobs: number;
+  /** Teklif listesinde ve firma sayfasında gelir (bkz. lib/badges.ts) */
+  badges?: BadgeCode[];
 };
 
 export type CompanyContact = PublicCompany & { contactName: string; contactPhone: string };
@@ -260,6 +262,22 @@ export type Paginated<T> = { items: T[]; total: number; page: number; limit: num
 // ─── Firma paneli ──────────────────────────────────────────────
 
 export type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
+
+export type BadgeCode = "DOCUMENTS_VERIFIED" | "FAST_RESPONSE" | "TOP_RATED";
+
+/** GET /company/profile/badges: firma panelinde rozet ilerlemesi */
+export type BadgeProgress = {
+  documents: { earned: boolean; companyVerified: boolean; missing: string[] };
+  fastResponse: {
+    earned: boolean;
+    quoteCount: number;
+    medianMinutes: number | null;
+    windowDays: number;
+    minQuotes: number;
+    maxMedianMinutes: number;
+  };
+  topRated: { earned: boolean; ratingAverage: number; ratingCount: number; minAverage: number; minCount: number };
+};
 
 export type CompanyProfile = {
   id: string;

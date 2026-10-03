@@ -69,6 +69,7 @@ export class RequestsService {
       data: {
         ...dto,
         status: verified ? RequestStatus.OPEN : RequestStatus.DRAFT,
+        publishedAt: verified ? now : null,
         specialItems: dto.specialItems ?? [],
         customerId,
         distanceKm: distanceKm ?? null,

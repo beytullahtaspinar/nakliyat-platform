@@ -17,6 +17,7 @@ import { companyPath, formatRating } from "@/lib/reviews";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib/session";
+import { BadgeLegend, CompanyBadges } from "@/components/company-badges";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { Conversation } from "@/components/messages/conversation";
 import { ReviewCard } from "@/components/reviews/review-card";
@@ -146,6 +147,7 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
                 />
               ))}
             </ul>
+            {quotes.some((q) => q.company.badges?.length) && <BadgeLegend />}
           </>
         )}
       </section>
@@ -194,12 +196,14 @@ function CompanyLine({ company }: { company: PublicCompany }) {
         ) : (
           company.displayName
         )}
-        {company.verified && (
+        {/* Belge rozeti doğrulamayı da kapsar; ikisi birlikte gösterilmez */}
+        {company.verified && !company.badges?.includes("DOCUMENTS_VERIFIED") && (
           <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800">
             ✓ Doğrulanmış firma
           </span>
         )}
       </p>
+      <CompanyBadges badges={company.badges} className="mt-1.5" />
       <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
         {company.cityName}
         {company.ratingCount > 0 ? ` · ★ ${formatRating(rating)} (${company.ratingCount} yorum)` : " · Henüz yorum yok"}
