@@ -385,6 +385,35 @@ export type AdminSummary = {
   documents: { pending: number };
 };
 
+type StatsTotals = {
+  requests: number;
+  quotes: number;
+  bookings: number;
+  completed: number;
+  customers: number;
+  companies: number;
+  verifiedCompanies: number;
+};
+
+/** GET /admin/stats?days=7|30|90 — oranlar 0-1 arası, payda 0 ise null; tutarlar TL metin */
+export type AdminStats = {
+  period: { days: 7 | 30 | 90; from: string; to: string; previousFrom: string };
+  totals: { current: StatsTotals; previous: StatsTotals };
+  funnel: {
+    requests: number;
+    quoted: number;
+    booked: number;
+    completed: number;
+    quotedRate: number | null;
+    bookedRate: number | null;
+    completedRate: number | null;
+  };
+  averages: { quotesPerRequest: number | null; acceptedPriceTry: string | null; acceptedTotalTry: string };
+  ratings: { count: number; average: number | null; distribution: { rating: number; count: number }[] };
+  cities: { code: string; name: string; requests: number; booked: number }[];
+  daily: { day: string; requests: number; quotes: number; bookings: number }[];
+};
+
 type CompanyOwner = { fullName: string; phone: string; email: string | null };
 
 export type AdminCompany = CompanyProfile & {

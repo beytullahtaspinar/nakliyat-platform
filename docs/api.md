@@ -102,6 +102,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | Durum | Yöntem | Yol | Açıklama |
 |---|---|---|---|
 | ✅ | GET | `/admin/summary` | Yönetim özeti: bekleyen firma, açık talep, kullanıcı, planlanmış iş sayıları |
+| ✅ | GET | `/admin/stats?days=7\|30\|90` | İstatistikler (varsayılan 30 gün, Türkiye saatiyle gün): önceki eşit dönemle karşılaştırılan toplamlar, dönemde açılan taleplerin teklif → iş → tamamlanma hunisi, talep başına teklif, anlaşma tutarı, puan dağılımı, en çok talep gelen 10 il, günlük talep/teklif/iş. Taslak talepler sayılmaz |
 | ✅ | GET | `/admin/companies?status=&q=` | Firmalar; ad, unvan, vergi no, K3 veya sahip adı/telefonunda arama |
 | ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |
 | ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle). Onay için zorunlu belgelerin her biri onaylı ve süresi geçerli olmalı. |

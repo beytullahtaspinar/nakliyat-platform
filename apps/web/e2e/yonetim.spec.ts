@@ -238,3 +238,33 @@ test("yönetici hesabı siler", async ({ page, request }) => {
   const login = await request.post(`${API}/auth/login`, { data: { phone: customerPhone, password: PASSWORD } });
   expect(login.status()).toBe(401);
 });
+
+test("yönetici dönem seçerek istatistikleri görür", async ({ page }) => {
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  await page.goto("/giris");
+  await page.getByLabel("Cep telefonu").fill(adminPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/yonetim$/);
+
+  await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: "İstatistikler" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "İstatistikler" })).toBeVisible();
+  const periods = page.getByRole("navigation", { name: "Dönem" });
+  await expect(periods.getByRole("link", { name: "Son 30 gün" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("heading", { name: "Dönüşüm hunisi" })).toBeVisible();
+  // Telefonda sayfa yana kaymaz (yatay kayan yönetim menüsü dahil)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+  await expect(page.getByRole("img", { name: /^Yeni talep: 30 günde toplam/ })).toBeVisible();
+  await expectAccessible(page);
+
+  await periods.getByRole("link", { name: "Son 7 gün" }).click();
+  await expect(page).toHaveURL(/donem=7/);
+  await expect(page.getByRole("img", { name: /^Verilen teklif: 7 günde toplam/ })).toBeVisible();
+  await page.getByText("Günlük sayıları tablo olarak göster").click();
+  await expect(page.getByRole("row")).not.toHaveCount(0);
+  await expectAccessible(page);
+});
