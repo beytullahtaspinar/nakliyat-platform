@@ -15,6 +15,8 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: 1
       API_URL: http://localhost:4000
+      # Blog sayfaları sahte WordPress'le ölçülür (apps/web/e2e/wordpress-mock.mjs)
+      WORDPRESS_URL: http://127.0.0.1:4100
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -23,6 +25,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Sahte WordPress
+        run: nohup node apps/web/e2e/wordpress-mock.mjs > /tmp/wordpress-mock.log 2>&1 &
       - run: pnpm turbo run build --filter=@nakliyat/web
       - name: Lighthouse (PageSpeed) ölçümü
         run: pnpm --filter @nakliyat/web lighthouse

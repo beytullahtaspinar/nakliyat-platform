@@ -14,6 +14,7 @@ const COLUMNS = [
       MARKETING_PAGES.howItWorks,
       { href: HUB_PATH, label: "81 ilde nakliyat" },
       { href: "/giris", label: "Giriş yap" },
+      { href: "/blog", label: "Taşınma rehberi (blog)" },
     ],
   },
   {

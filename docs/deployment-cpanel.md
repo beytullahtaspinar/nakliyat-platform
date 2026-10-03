@@ -36,8 +36,8 @@ Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-releas
    - Application startup file: `app.cjs`
    - Environment variables: `NODE_ENV=production`, `WEB_URL=https://evdenevenakliyat.app`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI`, `JWT_ACCESS_SECRET` (uzun, rastgele), isteğe bağlı `SENTRY_DSN` ([izleme.md](izleme.md)), talep fotoğraf/videoları için `R2_*` ([dosya-yukleme.md](dosya-yukleme.md)), e-posta bildirimleri için `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`, anlık bildirim için `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` ([bildirimler.md](bildirimler.md)), telefon doğrulaması için isteğe bağlı `PHONE_OTP_PROVIDER` ve sağlayıcı anahtarları ([dogrulama.md](dogrulama.md)), Google/Apple ile giriş için isteğe bağlı `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APPLE_*` ([google-apple-giris.md](google-apple-giris.md))
    - **Run NPM Install**'a basma; bağımlılıkları deploy getirir.
-4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`, isteğe bağlı `SENTRY_DSN`.
-5. **GitHub:** Repo → Settings → Environments → `production` → Variable `NEXT_PUBLIC_API_URL` = `https://api.evdenevenakliyat.app`.
+4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`, isteğe bağlı `SENTRY_DSN`, blog için `WORDPRESS_URL` ve `BLOG_REVALIDATE_SECRET` ([blog-wordpress.md](blog-wordpress.md)).
+5. **GitHub:** Repo → Settings → Environments → `production` → Variable `NEXT_PUBLIC_API_URL` = `https://api.evdenevenakliyat.app`; blog varsa `WORDPRESS_URL` = `https://cms.evdenevenakliyat.app`.
 6. **Sunucunun GitHub'a erişimi:** GitHub → Settings → Developer settings → **Fine-grained tokens** → Generate new token. Repository access: yalnızca `nakliyat-platform`. Permissions: **Contents: Read-only**. Token'ı cPanel → **Terminal**'de şu komutla kaydet (ekrana yazılmaz, sohbete veya dosyaya yapıştırma):
 
    ```bash

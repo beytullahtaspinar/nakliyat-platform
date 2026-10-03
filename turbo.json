@@ -8,6 +8,9 @@
       "dependsOn": [
         "^build"
       ],
+      "env": [
+        "WORDPRESS_URL"
+      ],
       "outputs": [
         "dist/**",
         ".next/**",
