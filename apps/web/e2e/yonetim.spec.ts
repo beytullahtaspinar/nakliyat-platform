@@ -256,6 +256,8 @@ test("yönetici dönem seçerek istatistikleri görür", async ({ page }) => {
   const periods = page.getByRole("navigation", { name: "Dönem" });
   await expect(periods.getByRole("link", { name: "Son 30 gün" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByRole("heading", { name: "Dönüşüm hunisi" })).toBeVisible();
+  // Telefonda sayfa yana kaymaz (yatay kayan yönetim menüsü dahil)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   await expect(page.getByRole("img", { name: /^Yeni talep: 30 günde toplam/ })).toBeVisible();
   await expectAccessible(page);
 

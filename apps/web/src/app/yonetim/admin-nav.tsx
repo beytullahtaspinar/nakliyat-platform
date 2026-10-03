@@ -27,10 +27,11 @@ export function AdminNav({ pendingCompanies, pendingDocuments }: { pendingCompan
           const active = exact ? pathname === href : pathname.startsWith(href);
           return (
             <li key={href}>
+              {/* relative: rozetin ekran okuyucu metni (sr-only, absolute) kayan menünün dışına taşıp telefonda sayfayı yatay kaydırmasın */}
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
+                className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
                   active ? "bg-brand-50 text-brand-800" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
