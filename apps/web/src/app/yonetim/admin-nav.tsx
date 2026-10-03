@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BuildingIcon, ClipboardIcon, GridIcon, ShieldCheckIcon, StarIcon, UsersIcon } from "@/components/ui/icons";
+import { BuildingIcon, ChartIcon, ClipboardIcon, GridIcon, ShieldCheckIcon, StarIcon, UsersIcon } from "@/components/ui/icons";
 
 const ITEMS = [
   { href: "/yonetim", label: "Pano", icon: GridIcon, exact: true },
+  { href: "/yonetim/istatistikler", label: "İstatistikler", icon: ChartIcon },
   { href: "/yonetim/firmalar", label: "Firmalar", icon: BuildingIcon },
   { href: "/yonetim/belgeler", label: "Belgeler", icon: ShieldCheckIcon },
   { href: "/yonetim/talepler", label: "Talepler", icon: ClipboardIcon },

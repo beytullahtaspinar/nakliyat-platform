@@ -2321,6 +2321,41 @@
         ]
       }
     },
+    "/v1/admin/stats": {
+      "get": {
+        "operationId": "AdminStatsController_stats",
+        "parameters": [
+          {
+            "name": "days",
+            "required": false,
+            "in": "query",
+            "description": "Bugünü de içeren son gün sayısı",
+            "schema": {
+              "default": 30,
+              "type": "number",
+              "enum": [
+                7,
+                30,
+                90
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: istatistikler"
+        ]
+      }
+    },
     "/v1/admin/users": {
       "get": {
         "operationId": "AdminUsersController_list",
@@ -2645,6 +2680,90 @@
         },
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bildirimler"
+        ]
+      }
+    },
+    "/v1/notifications/push/subscriptions": {
+      "post": {
+        "operationId": "PushController_subscribe",
+        "parameters": [
+          {
+            "name": "user-agent",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bildirimler"
+        ]
+      },
+      "delete": {
+        "operationId": "PushController_unsubscribe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushEndpointDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bildirimler"
+        ]
+      }
+    },
+    "/v1/notifications/push/test": {
+      "post": {
+        "operationId": "PushController_test",
+        "parameters": [],
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -3690,7 +3809,8 @@
           "channel": {
             "type": "string",
             "enum": [
-              "EMAIL"
+              "EMAIL",
+              "PUSH"
             ]
           },
           "enabled": {
@@ -3719,6 +3839,48 @@
             }
           }
         }
+      },
+      "PushKeysDto": {
+        "type": "object",
+        "properties": {
+          "p256dh": {
+            "type": "string"
+          },
+          "auth": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256dh",
+          "auth"
+        ]
+      },
+      "PushSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string",
+            "example": "https://fcm.googleapis.com/fcm/send/…"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushKeysDto"
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ]
+      },
+      "PushEndpointDto": {
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint"
+        ]
       }
     }
   }

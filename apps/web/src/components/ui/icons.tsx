@@ -85,6 +85,13 @@ export const GridIcon = (p: P) => (
   </Icon>
 );
 
+export const ChartIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3.5 20.5h17" />
+    <path d="M6.5 16.5v-5M11 16.5V7M15.5 16.5v-7M20 16.5V4.5" />
+  </Icon>
+);
+
 export const BuildingIcon = (p: P) => (
   <Icon {...p}>
     <path d="M4 20.5V5a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 15 5v15.5" />
