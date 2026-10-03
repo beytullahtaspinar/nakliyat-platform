@@ -1273,6 +1273,48 @@
         ]
       }
     },
+    "/v1/company/bookings/calendar": {
+      "get": {
+        "description": "Günler Türkiye saatine göredir; scheduledAt taşınma gününü gösterir. İptal edilen işler de döner (takvimde soluk gösterilir).",
+        "operationId": "BookingsController_companyCalendar",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "description": "İlk gün (YYYY-AA-GG, Türkiye saati)",
+            "schema": {
+              "example": "2026-09-28",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "description": "Son gün (dahil)",
+            "schema": {
+              "example": "2026-11-08",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Firmanın takvimi: verilen günler arasındaki işler (iki uç dahil, en fazla 42 gün)",
+        "tags": [
+          "Anlaşılan işler"
+        ]
+      }
+    },
     "/v1/bookings": {
       "get": {
         "operationId": "BookingsController_customerBookings",
@@ -3932,6 +3974,7 @@
               "NEW_QUOTE",
               "QUOTE_ACCEPTED",
               "NEW_MESSAGE",
+              "MOVE_REMINDER",
               "REVIEW_REQUEST",
               "NEW_REVIEW",
               "COMPANY_VERIFICATION"

@@ -111,7 +111,7 @@ describe('Bildirimler (e2e)', () => {
   it('tercihler role göre listelenir; müşteri e-posta adresini ekleyebilir', async () => {
     const before = await http().get('/v1/notifications/preferences').set(auth('customer')).expect(200);
     expect(before.body.email).toBeNull();
-    expect(before.body.items.map((i: { type: string }) => i.type)).toEqual(['NEW_QUOTE', 'QUOTE_ACCEPTED', 'NEW_MESSAGE', 'REVIEW_REQUEST']);
+    expect(before.body.items.map((i: { type: string }) => i.type)).toEqual(['NEW_QUOTE', 'QUOTE_ACCEPTED', 'NEW_MESSAGE', 'MOVE_REMINDER', 'REVIEW_REQUEST']);
     expect(before.body.items[0].channels).toEqual({ EMAIL: true });
 
     await http().patch('/v1/notifications/preferences').set(auth('customer')).send({ email: emails.company }).expect(409);

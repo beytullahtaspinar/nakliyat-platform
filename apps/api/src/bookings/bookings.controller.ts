@@ -1,5 +1,5 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { getCityByCode, getDistrict } from '@nakliyat/locations';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
@@ -8,6 +8,8 @@ import type { MovingRequest, Review } from '../generated/prisma/client.js';
 import { BookingStatus, UserRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PaginationDto } from '../requests/dto/list-requests.dto.js';
+import { addDays, dayStart, MAX_CALENDAR_DAYS } from './calendar-rules.js';
+import { CalendarRangeDto } from './dto/calendar.dto.js';
 import { moveDayReached } from '../reviews/review-rules.js';
 import { toReviewView } from '../reviews/reviews.service.js';
 
@@ -82,6 +84,54 @@ export class BookingsController {
       total,
       page,
       limit,
+    };
+  }
+
+  @Roles(UserRole.COMPANY)
+  @Get('company/bookings/calendar')
+  @ApiOperation({
+    summary: 'Firmanın takvimi: verilen günler arasındaki işler (iki uç dahil, en fazla 42 gün)',
+    description: 'Günler Türkiye saatine göredir; scheduledAt taşınma gününü gösterir. İptal edilen işler de döner (takvimde soluk gösterilir).',
+  })
+  async companyCalendar(@CurrentUser() user: AuthUser, @Query() { from, to }: CalendarRangeDto) {
+    if (to < from) throw new BadRequestException('Bitiş günü başlangıçtan önce olamaz');
+    if (to > addDays(from, MAX_CALENDAR_DAYS - 1)) {
+      throw new BadRequestException(`Takvim en fazla ${MAX_CALENDAR_DAYS} gün için istenebilir`);
+    }
+    const company = await this.companies.requireCompany(user.id);
+    const items = await this.prisma.booking.findMany({
+      where: { companyId: company.id, scheduledAt: { gte: dayStart(from), lt: dayStart(addDays(to, 1)) } },
+      orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'asc' }],
+      take: 500,
+      select: {
+        id: true,
+        status: true,
+        scheduledAt: true,
+        quote: { select: { priceTry: true } },
+        request: {
+          select: {
+            homeType: true,
+            fromCityCode: true,
+            fromDistrict: true,
+            toCityCode: true,
+            toDistrict: true,
+            customer: { select: { fullName: true } },
+          },
+        },
+      },
+    });
+    return {
+      from,
+      to,
+      items: items.map(({ quote, request: r, ...b }) => ({
+        ...b,
+        day: b.scheduledAt.toISOString().slice(0, 10),
+        priceTry: quote.priceTry,
+        homeType: r.homeType,
+        from: place(r.fromCityCode, r.fromDistrict),
+        to: place(r.toCityCode, r.toDistrict),
+        customerName: r.customer.fullName,
+      })),
     };
   }
 

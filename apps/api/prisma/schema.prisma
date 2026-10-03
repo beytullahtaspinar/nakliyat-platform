@@ -393,17 +393,19 @@ enum BookingStatus {
 }
 
 model Booking {
-  id           String        @id @default(cuid())
-  requestId    String        @unique
-  quoteId      String        @unique
-  companyId    String
-  status       BookingStatus @default(SCHEDULED)
-  scheduledAt  DateTime
-  completedAt  DateTime?
-  cancelledAt  DateTime?
-  cancelReason String?       @db.Text
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  requestId      String        @unique
+  quoteId        String        @unique
+  companyId      String
+  status         BookingStatus @default(SCHEDULED)
+  scheduledAt    DateTime
+  completedAt    DateTime?
+  cancelledAt    DateTime?
+  cancelReason   String?       @db.Text
+  /// Taşınmadan bir gün önceki hatırlatma gönderildiğinde dolar (bir kez gider)
+  reminderSentAt DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   request  MovingRequest @relation(fields: [requestId], references: [id])
   quote    Quote         @relation(fields: [quoteId], references: [id])
@@ -412,6 +414,8 @@ model Booking {
   messages Message[]
 
   @@index([companyId, status])
+  @@index([companyId, scheduledAt])
+  @@index([status, scheduledAt])
 }
 
 /// Müşterinin tamamlanan iş için firmaya verdiği puan ve yorum (iş başına bir tane).

@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { getCityByCode, getDistrict } from '@nakliyat/locations';
+import { formatTrPhone } from '../common/utils/phone.js';
 import { DomainEvents } from '../events/domain-events.js';
 import type { MovingRequest } from '../generated/prisma/client.js';
 import { UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
@@ -44,6 +45,7 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('quote.created', ({ quoteId }) => this.onQuoteCreated(quoteId));
     this.events.on('quote.accepted', ({ quoteId }) => this.onQuoteAccepted(quoteId));
     this.events.on('message.sent', ({ messageId }) => this.onMessageSent(messageId));
+    this.events.on('booking.move_day_approaching', ({ bookingId }) => this.onMoveDayApproaching(bookingId));
     this.events.on('booking.completed', (p) => this.onBookingCompleted(p.bookingId, p.completedBy));
     this.events.on('review.created', ({ reviewId }) => this.onReviewCreated(reviewId));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
@@ -136,6 +138,38 @@ export class NotificationsListener implements OnModuleInit {
         senderName: fromCustomer ? booking.request.customer.fullName : booking.company.displayName,
         body: message.body,
         path: fromCustomer ? `/firma-paneli/isler/${booking.id}` : `/hesabim/talepler/${booking.requestId}#mesajlar`,
+      }),
+    );
+  }
+
+  /** Taşınmadan bir gün önce iki tarafa hatırlatma: karşı tarafın adı ve telefonu da yazılır. */
+  async onMoveDayApproaching(bookingId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        request: { include: { customer: { select: { fullName: true, phone: true } } } },
+        company: { select: { displayName: true, ownerId: true, owner: { select: { phone: true } } } },
+      },
+    });
+    if (!booking) return;
+    const { request, company } = booking;
+    const common = { ...route(request), moveDate: booking.scheduledAt };
+    await this.notifications.notify(
+      request.customerId,
+      templates.moveReminderForCustomer({
+        ...common,
+        requestId: request.id,
+        companyName: company.displayName,
+        companyPhone: formatTrPhone(company.owner.phone),
+      }),
+    );
+    await this.notifications.notify(
+      company.ownerId,
+      templates.moveReminderForCompany({
+        ...common,
+        bookingId,
+        customerName: request.customer.fullName,
+        customerPhone: formatTrPhone(request.customer.phone),
       }),
     );
   }
