@@ -37,7 +37,7 @@ export default async function CompleteSignupPage({ searchParams }: PageProps<"/k
   };
 
   return (
-    <main className="mx-auto w-full max-w-sm flex-1 px-4 py-12">
+    <main data-panel className="mx-auto w-full max-w-sm flex-1 px-4 py-12">
       <h1 className="text-2xl font-semibold tracking-tight">Kaydı tamamla</h1>
       {!pending ? (
         <p className="mt-4 text-sm text-zinc-700">

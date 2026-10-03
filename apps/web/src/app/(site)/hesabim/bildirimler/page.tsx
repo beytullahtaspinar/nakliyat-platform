@@ -21,7 +21,7 @@ export default async function AccountNotificationsPage() {
     token: (await getAccessToken())!,
   });
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
+    <main data-panel className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
       <Link href="/hesabim" className="text-sm text-zinc-500 hover:underline">
         ← Hesabım
       </Link>

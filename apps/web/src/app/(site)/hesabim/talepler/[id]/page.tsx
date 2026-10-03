@@ -72,7 +72,7 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
   const status = REQUEST_STATUS[request.status];
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
+    <main data-panel className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <Link href="/hesabim" className="text-sm text-zinc-500 hover:underline">
         ← Taleplerim
       </Link>

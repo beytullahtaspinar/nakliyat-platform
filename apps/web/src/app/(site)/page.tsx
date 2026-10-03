@@ -77,7 +77,7 @@ export default function Home() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_28rem_at_90%_-10%,var(--color-brand-200),transparent_70%)] opacity-60 dark:bg-[radial-gradient(40rem_28rem_at_90%_-10%,var(--color-brand-800),transparent_70%)] dark:opacity-40"
         />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:py-24">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-16 pb-12 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:pt-24 lg:pb-16">
           <div>
             <Badge tone="brand">
               <ShieldCheckIcon className="h-3.5 w-3.5" /> K3 belgeli, doğrulanmış firmalar
@@ -143,7 +143,7 @@ export default function Home() {
       </section>
 
       {/* Faydalar */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section className="mx-auto max-w-6xl px-4 pt-4 pb-16 sm:px-6">
         <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {BENEFITS.map(({ icon: Icon, title, text }) => (
             <li key={title}>

@@ -7,12 +7,12 @@ export type Crumb = { name: string; href: string };
 export function Breadcrumbs({ items }: { items: Crumb[] }) {
   return (
     <nav aria-label="Sayfa yolu" className="text-sm text-zinc-500">
-      <ol className="flex flex-wrap gap-1">
+      <ol className="-my-1 flex flex-wrap gap-x-1">
         {items.map((item, i) => (
           <li key={item.href} className="flex items-center gap-1">
             {i > 0 && <span aria-hidden>/</span>}
             {i < items.length - 1 ? (
-              <Link href={item.href} className="hover:underline">
+              <Link href={item.href} className="inline-block py-1 hover:underline">
                 {item.name}
               </Link>
             ) : (

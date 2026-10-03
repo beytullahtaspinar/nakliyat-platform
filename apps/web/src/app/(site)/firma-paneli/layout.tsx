@@ -24,7 +24,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
 
   if (!profile) {
     return (
-      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
+      <main data-panel className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
         {banner}
         <h1 className="text-2xl font-bold tracking-tight">Firma bilgilerini gir</h1>
         <p className="mt-2 text-zinc-600 dark:text-zinc-400">
@@ -43,7 +43,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
   const unread = await apiFetch<UnreadMessages>("/messages/unread", { token }).catch(() => null);
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
+    <main data-panel className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
       {banner}
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>

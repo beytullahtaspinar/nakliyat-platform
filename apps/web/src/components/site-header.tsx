@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AccountMenu, RequestCta } from "@/components/account-menu";
 import { MobileMenu } from "@/components/mobile-menu";
+import { NavLink } from "@/components/nav-link";
 import { Logo } from "@/components/ui/logo";
 import { HUB_PATH } from "@/lib/local-content";
 import { MARKETING_PAGES } from "@/lib/marketing";
@@ -25,9 +26,13 @@ export function SiteHeader() {
         </Link>
         <nav aria-label="Ana menü" className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex dark:text-zinc-300">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-brand-700 dark:hover:text-white">
+            <NavLink
+              key={item.href}
+              href={item.href}
+              className="py-1 hover:text-brand-700 aria-[current=page]:text-brand-800 aria-[current=page]:underline aria-[current=page]:decoration-brand-600 aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[6px] dark:hover:text-white"
+            >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
         <div className="flex items-center gap-2 whitespace-nowrap sm:gap-4">
