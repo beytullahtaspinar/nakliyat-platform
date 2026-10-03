@@ -84,6 +84,30 @@ export const templates = {
     };
   },
 
+  moveReminderForCustomer(
+    p: Route & { requestId: string; companyName: string; companyPhone: string },
+  ): NotificationContent {
+    return {
+      type: 'MOVE_REMINDER',
+      title: `Yarın taşınıyorsun: ${p.companyName}`,
+      body: `${routeLine(p)} taşıman yarın, ${formatDate(p.moveDate)}. Firmayla saati ve son ayrıntıları konuşmak için mesaj yazabilir ya da arayabilirsin.`,
+      details: [`Firma: ${p.companyName}`, `Telefon: ${p.companyPhone}`, `Güzergâh: ${routeLine(p)}`, `Taşınma tarihi: ${formatDate(p.moveDate)}`],
+      path: `/hesabim/talepler/${p.requestId}#mesajlar`,
+      actionLabel: 'Taşınma ayrıntılarını gör',
+    };
+  },
+
+  moveReminderForCompany(p: Route & { bookingId: string; customerName: string; customerPhone: string }): NotificationContent {
+    return {
+      type: 'MOVE_REMINDER',
+      title: `Yarın taşıma var: ${routeLine(p)}`,
+      body: `${p.customerName} müşterinin taşıması yarın, ${formatDate(p.moveDate)}. Ekibini ve aracını hazırla, müşteriyle saati teyit et.`,
+      details: [`Müşteri: ${p.customerName}`, `Telefon: ${p.customerPhone}`, `Güzergâh: ${routeLine(p)}`, `Taşınma tarihi: ${formatDate(p.moveDate)}`],
+      path: `/firma-paneli/isler/${p.bookingId}`,
+      actionLabel: 'İşi görüntüle',
+    };
+  },
+
   reviewRequest(p: { companyName: string; requestId: string }): NotificationContent {
     return {
       type: 'REVIEW_REQUEST',

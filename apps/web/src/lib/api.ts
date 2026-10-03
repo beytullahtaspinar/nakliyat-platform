@@ -535,3 +535,23 @@ export type NotificationPreferences = {
     channels: Partial<Record<NotificationChannel, boolean>>;
   }[];
 };
+
+// ─── Firma takvimi ─────────────────────────────────────────────
+
+/** GET /company/bookings/calendar?from=&to= */
+export type CompanyCalendar = {
+  from: string;
+  to: string;
+  items: {
+    id: string;
+    status: CustomerBooking["status"];
+    /** Taşınma günü, "2026-10-04" */
+    day: string;
+    scheduledAt: string;
+    priceTry: string;
+    homeType: string;
+    from: { cityName: string | null; districtName: string | null };
+    to: { cityName: string | null; districtName: string | null };
+    customerName: string;
+  }[];
+};

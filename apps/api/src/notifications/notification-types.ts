@@ -25,6 +25,11 @@ export const NOTIFICATION_TYPES = {
     description: 'Anlaştığın firma ya da müşteri sana mesaj yazdığında',
     roles: [UserRole.CUSTOMER, UserRole.COMPANY],
   },
+  MOVE_REMINDER: {
+    label: 'Taşınma günü hatırlatması',
+    description: 'Taşınmadan bir gün önce, güzergâh ve iletişim bilgisiyle',
+    roles: [UserRole.CUSTOMER, UserRole.COMPANY],
+  },
   REVIEW_REQUEST: {
     label: 'Değerlendirme hatırlatması',
     description: 'Taşınman tamamlandığında firmayı değerlendirmen için',

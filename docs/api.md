@@ -78,6 +78,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | POST | `/company/quotes/:id/withdraw` | Firma | Teklifi geri çek |
 | ✅ | GET | `/company/quotes` | Firma | Verdiği teklifler |
 | ✅ | GET | `/company/bookings` | Firma | Kazandığı işler (müşteri iletişim bilgisi ve açık adres burada açılır) |
+| ✅ | GET | `/company/bookings/calendar?from=&to=` | Firma | Takvim: iki gün arasındaki işler (YYYY-AA-GG, TSİ, en fazla 42 gün). Açık adres içermez. Ekran: /firma-paneli/takvim (ay/hafta) |
 | ✅ | GET | `/company/reviews` | Firma | Aldığı değerlendirmeler (gizlenenler gerekçesiyle) ve puan özeti `{ summary: { ratingAverage, ratingCount, distribution } }` |
 | ✅ | POST | `/company/reviews/:id/reply` | Firma | Yoruma bir kez yanıt (2-1000 karakter); yorumun altında herkese açık görünür |
 
