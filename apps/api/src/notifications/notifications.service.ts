@@ -19,7 +19,7 @@ type StoredData = Pick<NotificationContent, 'path' | 'actionLabel' | 'details'>;
 /**
  * Bildirimleri kaydeder ve kanallara dağıtır.
  * Her bildirim için bir uygulama içi (IN_APP) kayıt ve kullanıcının açık tuttuğu her dış kanal
- * (şimdilik e-posta) için bir gönderim kaydı oluşur. Başarısız gönderimler birkaç kez yeniden denenir.
+ * (e-posta, anlık bildirim) için bir gönderim kaydı oluşur. Başarısız gönderimler birkaç kez yeniden denenir.
  */
 @Injectable()
 export class NotificationsService implements OnModuleInit, OnApplicationShutdown {
@@ -66,6 +66,7 @@ export class NotificationsService implements OnModuleInit, OnApplicationShutdown
     const recipient: Recipient = { userId: user.id, role: user.role, fullName: user.fullName, email: user.email, phone: user.phone };
     for (const provider of this.channels) {
       if (off.has(provider.channel)) continue;
+      if (provider.isAvailable && !(await provider.isAvailable(recipient))) continue;
       const row = await this.prisma.notification.create({ data: { ...base, channel: provider.channel } });
       await this.deliver(row, provider, recipient);
     }

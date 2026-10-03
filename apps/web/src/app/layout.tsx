@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ServiceWorker } from "@/components/pwa/service-worker";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Tek yazı tipi ailesi: indirilen font dosyası az olsun, ilk boyama (LCP) gecikmesin.
@@ -35,6 +36,8 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
   },
   robots: { index: true, follow: true },
+  // iPhone'da "Ana Ekrana Ekle" ile kurulunca tam ekran uygulama gibi açılır
+  appleWebApp: { capable: true, title: "Nakliyat", statusBarStyle: "default" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -45,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col font-sans">
         {children}
+        <ServiceWorker />
       </body>
     </html>
   );

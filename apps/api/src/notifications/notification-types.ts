@@ -45,10 +45,10 @@ export const NOTIFICATION_TYPES = {
 export type NotificationType = keyof typeof NOTIFICATION_TYPES;
 
 /**
- * Kullanıcının tercih edebildiği dış kanallar. SMS ve PUSH sağlayıcısı eklendiğinde
- * buraya eklenir; tercih ekranı ve API kendiliğinden genişler.
+ * Kullanıcının tercih edebildiği dış kanallar. SMS sağlayıcısı eklendiğinde buraya eklenir;
+ * tercih ekranı ve API kendiliğinden genişler. PUSH, VAPID anahtarları yoksa ekranda gösterilmez.
  */
-export const OPTIONAL_CHANNELS = [NotificationChannel.EMAIL] as const;
+export const OPTIONAL_CHANNELS = [NotificationChannel.EMAIL, NotificationChannel.PUSH] as const;
 export type OptionalChannel = (typeof OPTIONAL_CHANNELS)[number];
 
 export const typesForRole = (role: UserRole) =>

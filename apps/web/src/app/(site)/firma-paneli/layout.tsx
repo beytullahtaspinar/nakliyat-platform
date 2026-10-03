@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { apiFetch, type CompanyProfile, type UnreadMessages } from "@/lib/api";
 import { cityOptions, getCompanyContext } from "@/lib/company";
 import { isImpersonating } from "@/lib/session";
+import { AppPrompt } from "@/components/pwa/app-prompt";
 import { VerifyNotice } from "@/components/verify-notice";
 import { ImpersonationBanner } from "./impersonation-banner";
 import { PanelNav } from "./panel-nav";
@@ -16,7 +17,8 @@ export const metadata: Metadata = {
 
 export default async function CompanyPanelLayout({ children }: LayoutProps<"/firma-paneli">) {
   const { user, token, profile } = await getCompanyContext();
-  const banner = (await isImpersonating()) && (
+  const impersonating = await isImpersonating();
+  const banner = impersonating && (
     <ImpersonationBanner companyId={profile?.id} companyName={profile?.displayName ?? user.fullName} />
   );
 
@@ -52,6 +54,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
       <VerifyNotice user={user} returnTo="/firma-paneli" />
       <VerificationBanner profile={profile} />
       <PanelNav unreadMessages={unread?.total} />
+      {!impersonating && <AppPrompt settingsPath="/firma-paneli/bildirimler" />}
       <div className="mt-6">{children}</div>
     </main>
   );

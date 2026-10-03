@@ -17,6 +17,7 @@ import { NotificationChannel } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PaginationDto } from '../requests/dto/list-requests.dto.js';
 import { UpdatePreferencesDto } from './dto/notifications.dto.js';
+import { WebPushChannel } from './channels/web-push.channel.js';
 import { NOTIFICATION_TYPES, OPTIONAL_CHANNELS, typesForRole } from './notification-types.js';
 
 const inbox = (userId: string) => ({ userId, channel: NotificationChannel.IN_APP });
@@ -25,7 +26,10 @@ const inbox = (userId: string) => ({ userId, channel: NotificationChannel.IN_APP
 @ApiBearerAuth()
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly push: WebPushChannel,
+  ) {}
 
   /** Uygulama içi bildirim kutusu, yeniden eskiye. */
   @Get()
@@ -67,20 +71,26 @@ export class NotificationsController {
   /** Kullanıcının rolüne uygun bildirim türleri ve her kanal için açık/kapalı durumu. */
   @Get('preferences')
   async preferences(@CurrentUser() user: AuthUser) {
-    const [account, saved] = await Promise.all([
+    const [account, saved, devices] = await Promise.all([
       this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { email: true } }),
       this.prisma.notificationPreference.findMany({ where: { userId: user.id } }),
+      this.prisma.pushSubscription.count({ where: { userId: user.id } }),
     ]);
     const enabled = (type: string, channel: NotificationChannel) =>
       saved.find((p) => p.type === type && p.channel === channel)?.enabled ?? true;
+    const publicKey = this.push.publicKey;
+    // VAPID anahtarı tanımlı değilse anlık bildirim seçeneği hiç gösterilmez
+    const channels = OPTIONAL_CHANNELS.filter((c) => c !== NotificationChannel.PUSH || publicKey);
     return {
       email: account.email,
-      channels: OPTIONAL_CHANNELS,
+      channels,
+      /** Tarayıcının abone olurken kullanacağı açık anahtar ve bildirim açılmış cihaz sayısı */
+      push: { publicKey, devices },
       items: typesForRole(user.role).map((type) => ({
         type,
         label: NOTIFICATION_TYPES[type].label,
         description: NOTIFICATION_TYPES[type].description,
-        channels: Object.fromEntries(OPTIONAL_CHANNELS.map((c) => [c, enabled(type, c)])),
+        channels: Object.fromEntries(channels.map((c) => [c, enabled(type, c)])),
       })),
     };
   }

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { consentPayload } from "@/lib/legal";
-import { clearSession, homeFor, safeNext, saveSession, verificationPath } from "@/lib/session";
+import { clearSession, getAccessToken, homeFor, safeNext, saveSession, verificationPath } from "@/lib/session";
 
 export type FormState = { error?: string };
 
@@ -51,6 +51,14 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
 }
 
 export async function logout(formData?: FormData) {
+  // Bu cihazın anlık bildirim kaydı da silinir (tarayıcıdaki abonelik LogoutForm'da bırakılır)
+  const pushEndpoint = formData?.get("pushEndpoint");
+  const token = await getAccessToken();
+  if (typeof pushEndpoint === "string" && pushEndpoint && token) {
+    await apiFetch("/notifications/push/subscriptions", { method: "DELETE", token, body: { endpoint: pushEndpoint } }).catch(
+      () => undefined,
+    );
+  }
   const refreshToken = await clearSession();
   if (refreshToken) {
     await apiFetch("/auth/logout", { method: "POST", body: { refreshToken } }).catch(() => undefined);

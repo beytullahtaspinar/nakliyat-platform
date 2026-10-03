@@ -1,6 +1,6 @@
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { logout } from "@/lib/actions/auth";
+import { LogoutForm } from "@/components/logout-form";
 import type { AuthUser } from "@/lib/api";
 import { homeFor } from "@/lib/session";
 
@@ -21,12 +21,12 @@ export function SignedInNotice({ user, returnTo }: { user: AuthUser; returnTo: s
           giriştesin. Başka bir hesapla girmek veya yeni hesap açmak için önce çıkış yap.
         </p>
         <div className="mt-5 flex flex-col gap-2">
-          <form action={logout}>
+          <LogoutForm>
             <input type="hidden" name="next" value={returnTo} />
             <Button type="submit" className="w-full">
               Çıkış yap ve başka hesapla devam et
             </Button>
-          </form>
+          </LogoutForm>
           <ButtonLink href={homeFor(user.role)} variant="secondary" className="w-full">
             {PANEL_NAMES[user.role]}
           </ButtonLink>

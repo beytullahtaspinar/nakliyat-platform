@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NotificationSettings } from "@/components/notification-settings";
+import { AppAndPush } from "@/components/pwa/app-and-push";
 import { Card } from "@/components/ui/card";
 import { apiFetch, type NotificationPreferences } from "@/lib/api";
 import { getAccessToken, getCurrentUser, homeFor } from "@/lib/session";
@@ -26,6 +27,15 @@ export default async function AccountNotificationsPage() {
       </Link>
       <h1 className="mt-3 text-2xl font-semibold tracking-tight">Bildirim ayarları</h1>
       <p className="mt-1 text-sm text-zinc-600">Yeni teklif geldiğinde ve taşıman kesinleştiğinde haber verelim.</p>
+      <Card className="mt-6 p-6">
+        <h2 className="text-lg font-semibold">Uygulama ve anlık bildirimler</h2>
+        <p className="mt-1 mb-5 text-sm text-zinc-600">Yeni teklif geldiğinde telefonuna anında haber verelim.</p>
+        <AppAndPush
+          publicKey={preferences.push?.publicKey ?? null}
+          devices={preferences.push?.devices ?? 0}
+          impersonating={false}
+        />
+      </Card>
       <Card className="mt-6 p-6">
         <NotificationSettings preferences={preferences} settingsPath="/hesabim/bildirimler" />
       </Card>

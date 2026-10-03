@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
-import { logout } from "@/lib/actions/auth";
+import { LogoutForm } from "@/components/logout-form";
 
 type CookieStoreLike = EventTarget;
 
@@ -42,11 +42,11 @@ export function AccountMenu() {
       <Link href={home.href} className="text-zinc-700 hover:text-zinc-950 dark:text-zinc-300">
         {home.label}
       </Link>
-      <form action={logout}>
+      <LogoutForm>
         <button type="submit" className="text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200">
           Çıkış
         </button>
-      </form>
+      </LogoutForm>
     </div>
   );
 }
