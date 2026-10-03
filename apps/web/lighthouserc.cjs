@@ -17,6 +17,7 @@ const PUBLIC_PAGES = [
   "/istanbul-kadikoy-evden-eve-nakliyat",
   "/kvkk-aydinlatma-metni",
   "/nasil-calisir",
+  "/nakliyat-fiyat-hesaplama",
   "/firmalar-icin",
   "/hakkimizda",
 ];

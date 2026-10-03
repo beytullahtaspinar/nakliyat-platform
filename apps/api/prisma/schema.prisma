@@ -532,6 +532,15 @@ model PushSubscription {
 
 // ─── Yönetim ────────────────────────────────────────────────────
 
+/// Fiyat hesaplayıcı katsayıları (tek satır, id = 1). Değerler @nakliyat/pricing PricingSettings şeklindedir;
+/// eksik ya da geçersiz alan için paketteki varsayılan kullanılır. Değişiklikler AuditLog'a yazılır.
+model PricingSettings {
+  id          Int      @id @default(1)
+  settings    Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String

@@ -1,10 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { PRICING_SETTING_SPECS, type PricingSettingKey } from "@nakliyat/pricing";
 import { ApiError, apiFetch } from "@/lib/api";
 import { companyProfileBody } from "@/lib/company-form";
+import { PRICING_CACHE_TAG } from "@/lib/pricing";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 import { IMPERSONATION_COOKIE, IMPERSONATION_PATH } from "@/lib/session-cookies";
 
@@ -178,4 +180,25 @@ export async function stopImpersonating(formData: FormData) {
   (await cookies()).delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
   const companyId = String(formData.get("companyId") ?? "");
   redirect(/^[\w-]+$/.test(companyId) ? `/yonetim/firmalar/${companyId}` : "/yonetim/firmalar");
+}
+
+/** Fiyat hesaplayıcı katsayıları; kaydedilince herkese açık hesaplama sayfası hemen yenilenir */
+export async function updatePricing(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const body: Partial<Record<PricingSettingKey, number>> = {};
+  for (const [key, spec] of Object.entries(PRICING_SETTING_SPECS) as [PricingSettingKey, (typeof PRICING_SETTING_SPECS)[PricingSettingKey]][]) {
+    const raw = String(formData.get(key) ?? "").trim().replace(",", ".");
+    const value = Number(raw);
+    if (!raw || !Number.isFinite(value) || value < spec.min || value > spec.max) {
+      return { error: `${spec.label} ${spec.min.toLocaleString("tr-TR")} ile ${spec.max.toLocaleString("tr-TR")} arasında olmalı.` };
+    }
+    body[key] = value;
+  }
+  try {
+    await apiFetch("/admin/pricing", { method: "PATCH", token: await adminToken(), body });
+  } catch (err) {
+    return failure(err, "Katsayılar kaydedilemedi.");
+  }
+  updateTag(PRICING_CACHE_TAG);
+  revalidatePath("/yonetim/fiyat-hesaplama");
+  return { notice: "Katsayılar kaydedildi; fiyat hesaplama sayfası güncellendi." };
 }

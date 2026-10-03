@@ -92,6 +92,13 @@ export const ChartIcon = (p: P) => (
   </Icon>
 );
 
+export const CalculatorIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="5" y="3" width="14" height="18" rx="2" />
+    <path d="M8.5 7h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15v2.5M8.5 17.5h.01M12 17.5h.01" />
+  </Icon>
+);
+
 export const BuildingIcon = (p: P) => (
   <Icon {...p}>
     <path d="M4 20.5V5a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 15 5v15.5" />

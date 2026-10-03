@@ -2,6 +2,7 @@
 export const MARKETING_PAGES = {
   about: { href: "/hakkimizda", label: "Hakkımızda" },
   howItWorks: { href: "/nasil-calisir", label: "Nasıl çalışır?" },
+  priceCalculator: { href: "/nakliyat-fiyat-hesaplama", label: "Fiyat hesapla" },
   forCompanies: { href: "/firmalar-icin", label: "Firmalar için" },
 } as const;
 

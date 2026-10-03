@@ -12,6 +12,7 @@ const COLUMNS = [
     links: [
       { href: "/talep-olustur", label: "Ücretsiz teklif al" },
       MARKETING_PAGES.howItWorks,
+      { href: MARKETING_PAGES.priceCalculator.href, label: "Nakliyat fiyat hesaplama" },
       { href: HUB_PATH, label: "81 ilde nakliyat" },
       { href: "/giris", label: "Giriş yap" },
       { href: "/blog", label: "Taşınma rehberi (blog)" },

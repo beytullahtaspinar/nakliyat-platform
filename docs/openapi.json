@@ -1678,6 +1678,20 @@
         ]
       }
     },
+    "/v1/pricing": {
+      "get": {
+        "operationId": "PricingController_model",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Fiyat hesaplayıcı"
+        ]
+      }
+    },
     "/v1/admin/summary": {
       "get": {
         "operationId": "AdminOverviewController_summary",
@@ -2003,6 +2017,52 @@
         ],
         "tags": [
           "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/pricing": {
+      "get": {
+        "operationId": "AdminPricingController_view",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: fiyat hesaplayıcı"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminPricingController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePricingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: fiyat hesaplayıcı"
         ]
       }
     },
@@ -3742,6 +3802,77 @@
         "required": [
           "reason"
         ]
+      },
+      "UpdatePricingDto": {
+        "type": "object",
+        "properties": {
+          "baseFeeTry": {
+            "type": "number",
+            "description": "Sabit masraf (TL): Her işe eklenen organizasyon, temel malzeme ve sigorta payı",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "laborPerM3Try": {
+            "type": "number",
+            "description": "İşçilik (TL / m³): Yükleme ve boşaltma, asansörlü ya da zemin katta",
+            "minimum": 0,
+            "maximum": 20000
+          },
+          "stairsPerFloorPct": {
+            "type": "number",
+            "description": "Kat farkı (% / kat): Asansörsüz her kat için işçiliğe eklenen oran",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "packingPerM3Try": {
+            "type": "number",
+            "description": "Paketleme (TL / m³): Müşteri paketleme hizmeti isterse",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "assemblyPerM3Try": {
+            "type": "number",
+            "description": "Söküm ve kurulum (TL / m³): Müşteri mobilya söküm-kurulum isterse",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "localTransportTry": {
+            "type": "number",
+            "description": "Şehir içi araç (TL / araç): Aynı il içinde taşımada araç başına yol ücreti",
+            "minimum": 0,
+            "maximum": 100000
+          },
+          "perKmTry": {
+            "type": "number",
+            "description": "Şehirler arası km (TL / km / araç): İl merkezleri arası karayolu km başına, dönüş yolu dahil",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "vehicleCapacityM3": {
+            "type": "number",
+            "description": "Araç kapasitesi (m³): Bu hacmi aşan taşımalarda ikinci araç hesaplanır",
+            "minimum": 10,
+            "maximum": 120
+          },
+          "spreadPct": {
+            "type": "number",
+            "description": "Aralık genişliği (±%): Platform verisi yokken alt ve üst fiyatın orta değerden sapması",
+            "minimum": 5,
+            "maximum": 50
+          },
+          "minSamples": {
+            "type": "number",
+            "description": "Ayarlama eşiği (anlaşma): Şehir içi ya da şehirler arası grupta bu kadar anlaşma olunca fiyatlar platform verisine göre ayarlanır",
+            "minimum": 3,
+            "maximum": 1000
+          },
+          "lookbackDays": {
+            "type": "number",
+            "description": "Veri dönemi (gün): Ayarlamada kullanılan anlaşmaların geriye dönük süresi",
+            "minimum": 30,
+            "maximum": 1095
+          }
+        }
       },
       "HideReviewDto": {
         "type": "object",

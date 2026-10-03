@@ -22,6 +22,7 @@ Teklif aşamasında firmalar müşterinin adını, telefonunu ve açık adresini
 
 - [Ana sayfa](https://evdenevenakliyat.app/)
 - [Nasıl çalışır: adım adım teklif alma](https://evdenevenakliyat.app/nasil-calisir)
+- [Nakliyat fiyat hesaplama: ev tipi, eşya miktarı, kat ve mesafeye göre tahmini fiyat aralığı ve ev tipine göre örnek fiyat tablosu](https://evdenevenakliyat.app/nakliyat-fiyat-hesaplama)
 - [Nakliyat firmaları için: katılım ve doğrulama](https://evdenevenakliyat.app/firmalar-icin)
 - [Hakkımızda: platformun ilkeleri](https://evdenevenakliyat.app/hakkimizda)
 - [Türkiye geneli evden eve nakliyat (81 il)](https://evdenevenakliyat.app/evden-eve-nakliyat)
