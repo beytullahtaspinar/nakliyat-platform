@@ -17,11 +17,12 @@ export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   );
 }
 
-export function Logo() {
+/** `compactBelow360`: çok dar telefonlarda (320 px) yalnızca işaret; başlıktaki düğmelere yer kalsın */
+export function Logo({ compactBelow360 = false }: { compactBelow360?: boolean }) {
   return (
     <span className="flex items-center gap-2 sm:gap-2.5">
       <LogoMark />
-      <span className="font-display text-[0.9rem] font-bold tracking-tight text-zinc-900 sm:text-[1.05rem] dark:text-white">
+      <span className={`${compactBelow360 ? "max-[359px]:hidden " : ""}font-display text-[0.9rem] font-bold tracking-tight text-zinc-900 sm:text-[1.05rem] dark:text-white`}>
         evdenevenakliyat<span className="text-accent-700 dark:text-accent-400">.app</span>
       </span>
     </span>

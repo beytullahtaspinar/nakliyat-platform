@@ -21,7 +21,7 @@ export function AdminNav({ pendingCompanies, pendingDocuments }: { pendingCompan
   };
   const pathname = usePathname();
   return (
-    <nav aria-label="Yönetim" className="overflow-x-auto px-2 pb-2 lg:px-3 lg:pb-0">
+    <nav aria-label="Yönetim" className="relative overflow-x-auto px-2 pb-2 lg:px-3 lg:pb-0">
       <ul className="flex gap-1 whitespace-nowrap lg:flex-col">
         {ITEMS.map(({ href, label, icon: Icon, exact }) => {
           const active = exact ? pathname === href : pathname.startsWith(href);

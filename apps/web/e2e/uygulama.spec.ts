@@ -105,6 +105,8 @@ test("firma bu cihazda anlık bildirimi açıp kapatır", async ({ page, request
   await page.getByRole("button", { name: "Bu cihazda bildirimleri aç" }).click();
   await expect(page.getByText("Bu cihazda bildirimler açıldı.")).toBeVisible();
   expect(await prefs()).toBe(1);
+  // Telefonda çıkış başlıktaki menüde
+  if (await page.getByRole("button", { name: "Menü" }).isVisible()) await page.getByRole("button", { name: "Menü" }).click();
   await page.getByRole("button", { name: "Çıkış" }).click();
   await expect(page).toHaveURL("/");
   await expect.poll(prefs).toBe(0);

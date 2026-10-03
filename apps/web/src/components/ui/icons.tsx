@@ -129,3 +129,15 @@ export const SearchIcon = (p: P) => (
     <path d="m20 20-4.4-4.4" />
   </Icon>
 );
+
+export const MenuIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </Icon>
+);
+
+export const CloseIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </Icon>
+);

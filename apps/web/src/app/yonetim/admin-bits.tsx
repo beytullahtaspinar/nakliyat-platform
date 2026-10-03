@@ -170,7 +170,7 @@ export function SearchForm({
 /** Tablo kabı: dar ekranda yatay kaydırılır */
 export function DataTable({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="relative overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
       <table className="w-full min-w-[720px] text-left text-sm">
         <caption className="sr-only">{label}</caption>
         {children}

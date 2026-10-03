@@ -179,7 +179,7 @@ export default async function AdminStatsPage({ searchParams }: PageProps<"/yonet
         {stats.cities.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">Bu dönemde talep yok.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
+          <div className="relative mt-3 overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr>

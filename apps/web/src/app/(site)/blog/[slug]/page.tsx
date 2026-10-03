@@ -91,7 +91,7 @@ const PROSE = [
   "[&_hr]:my-10 [&_hr]:border-zinc-200",
   "[&_code]:rounded [&_code]:bg-zinc-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.9em]",
   "[&_pre]:mt-4 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-zinc-100 [&_pre]:p-4",
-  "[&_.blog-table]:mt-6 [&_.blog-table]:overflow-x-auto",
+  "[&_.blog-table]:relative [&_.blog-table]:mt-6 [&_.blog-table]:overflow-x-auto",
   "[&_table]:w-full [&_table]:text-left [&_table]:text-[0.95rem] [&_table]:leading-6",
   "[&_th]:border-b-2 [&_th]:border-zinc-300 [&_th]:py-2 [&_th]:pr-4 [&_th]:font-semibold [&_th]:align-bottom",
   "[&_td]:border-b [&_td]:border-zinc-200 [&_td]:py-2 [&_td]:pr-4 [&_td]:align-top",

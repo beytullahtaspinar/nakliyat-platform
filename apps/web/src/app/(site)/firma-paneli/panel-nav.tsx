@@ -17,7 +17,7 @@ const TABS = [
 export function PanelNav({ unreadMessages = 0 }: { unreadMessages?: number }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Firma paneli" className="mt-6 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800">
+    <nav aria-label="Firma paneli" className="relative mt-6 overflow-x-auto border-b border-zinc-200 dark:border-zinc-800">
       <ul className="flex gap-1 whitespace-nowrap">
         {TABS.map((tab) => {
           const active = tab.match ? tab.match(pathname) : pathname.startsWith(tab.href);
