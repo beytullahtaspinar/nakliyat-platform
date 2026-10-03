@@ -9,8 +9,11 @@ const RELOAD_KEY = "nk_surum_yenileme";
 const MAX_REPORTS_PER_PAGE = 5;
 let sent = 0;
 
-// Tarayıcı eklentileri ve bilgi taşımayan hatalar
-const IGNORED = [/ResizeObserver loop/i, /^Script error\.?$/i, /extension:\/\//i];
+// Tarayıcı eklentileri ve bilgi taşımayan hatalar.
+// "Connection closed.": sayfa geçişindeki sunucu yanıtı (RSC akışı) yarıda kesildi. Yeni sürüm
+// kurulurken uygulama yeniden başladığında, bağlantı koptuğunda ya da sekme kapanırken olur;
+// sunucu tarafında gerçek bir hata varsa o zaten sunucu loglarından ayrıca bildirilir.
+const IGNORED = [/ResizeObserver loop/i, /^Script error\.?$/i, /extension:\/\//i, /^Connection closed\.?$/m];
 
 export type ClientErrorSource = "window" | "promise" | "boundary";
 
