@@ -13,6 +13,7 @@ const COLUMNS = [
       { href: "/#nasil-calisir", label: "Nasıl çalışır?" },
       { href: HUB_PATH, label: "81 ilde nakliyat" },
       { href: "/giris", label: "Giriş yap" },
+      { href: "/blog", label: "Taşınma rehberi (blog)" },
     ],
   },
   {

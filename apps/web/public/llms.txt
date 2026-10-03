@@ -22,3 +22,8 @@ Platformdaki firmalardan Ulaştırma ve Altyapı Bakanlığı K3 yetki belgesi, 
 - [Ankara evden eve nakliyat](https://evdenevenakliyat.app/ankara-evden-eve-nakliyat)
 - [İzmir evden eve nakliyat](https://evdenevenakliyat.app/izmir-evden-eve-nakliyat)
 - [İstanbul - Ankara şehirler arası nakliyat](https://evdenevenakliyat.app/istanbul-ankara-sehirler-arasi-nakliyat)
+
+## Taşınma rehberi (blog)
+
+- [Tüm yazılar](https://evdenevenakliyat.app/blog): evden eve nakliyat fiyatları, taşınma hazırlığı ve firma seçimi rehberleri
+- [Yeni yazılar (RSS)](https://evdenevenakliyat.app/blog/rss.xml)

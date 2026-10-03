@@ -12,6 +12,7 @@
 | `robots.txt`: paneller kapalı, yapay zekâ tarayıcıları açık | `apps/web/src/app/robots.ts` |
 | `sitemap.xml` | `apps/web/src/app/sitemap.ts` |
 | `llms.txt`: yapay zekâ modelleri için site özeti | `apps/web/public/llms.txt` |
+| Blog (WordPress'ten): BlogPosting, RSS, site haritası | `apps/web/src/app/(site)/blog/`, [blog-wordpress.md](blog-wordpress.md) |
 | Organization + WebSite yapısal verisi (JSON-LD) | `apps/web/src/app/layout.tsx` |
 | Başlık şablonu, açıklama, canonical, Open Graph, `lang="tr"` | `apps/web/src/app/layout.tsx` |
 
@@ -115,9 +116,10 @@ Okur  → evdenevenakliyat.app/blog/... (Next.js, sitenin kendi tasarımı)
 ```
 
 - WordPress `cms.` alt alan adında kurulur. Ayarlar → Okuma → **"Arama motorlarının siteyi dizine eklemesini engelle"** işaretlenir. Böylece aynı içerik iki adreste görünüp birbirini zayıflatmaz. Yazıların canonical adresi her zaman `evdenevenakliyat.app/blog/...` olur.
-- SEO başlığı ve açıklaması WordPress'te **Yoast SEO** ile girilir. Yoast bunları REST API'de `yoast_head_json` alanında verir, Next.js bu alanı kullanır.
-- Yazı yayınlanınca WordPress bir webhook ile Next.js'e haber verir, sayfa saniyeler içinde güncellenir.
-- Görseller WordPress medya kütüphanesinden gelir. Next.js bunları optimize edip sunar.
+- Meta açıklama WordPress'te **Yoast SEO** ile girilebilir; Yoast bunu REST API'de `yoast_head_json` alanında verir, site bu alanı kullanır (yoksa yazının özeti).
+- Yazı yayınlanınca WordPress (mu-plugin) siteye haber verir, sayfa saniyeler içinde güncellenir.
+- Görseller WordPress medya kütüphanesinden, WordPress'in ürettiği boyutlarla (srcset) sunulur.
+- Kurulum ve yazım kuralları: [blog-wordpress.md](blog-wordpress.md).
 
 ## Yayına çıkmadan önce kontrol listesi
 

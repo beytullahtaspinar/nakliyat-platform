@@ -8,6 +8,7 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const WEB_PORT = 3000;
 const API_PORT = 4000;
+const WP_MOCK_PORT = 4100;
 const CI = Boolean(process.env.CI);
 
 export default defineConfig({
@@ -59,8 +60,22 @@ export default defineConfig({
       url: `http://127.0.0.1:${WEB_PORT}/api/saglik`,
       reuseExistingServer: !CI,
       // GitHub Actions HOSTNAME değişkenini makine adına ayarlar; sunucu yerel adreste dinlesin
-      env: { PORT: String(WEB_PORT), HOSTNAME: "127.0.0.1", API_URL: `http://localhost:${API_PORT}` },
+      env: {
+        PORT: String(WEB_PORT),
+        HOSTNAME: "127.0.0.1",
+        API_URL: `http://localhost:${API_PORT}`,
+        // Blog içeriği sahte WordPress'ten (e2e/blog.spec.ts)
+        WORDPRESS_URL: `http://127.0.0.1:${WP_MOCK_PORT}`,
+        BLOG_REVALIDATE_SECRET: "e2e-blog-yenileme-anahtari",
+      },
       timeout: 60_000,
+    },
+    {
+      command: "node e2e/wordpress-mock.mjs",
+      url: `http://127.0.0.1:${WP_MOCK_PORT}/wp-json/wp/v2/categories`,
+      reuseExistingServer: !CI,
+      env: { WP_MOCK_PORT: String(WP_MOCK_PORT) },
+      timeout: 10_000,
     },
   ],
 });

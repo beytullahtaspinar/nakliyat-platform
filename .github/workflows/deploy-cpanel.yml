@@ -35,6 +35,8 @@ jobs:
       - name: Paketleri üret
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+          # Blog listesi derlemede WordPress'ten hazırlanır (docs/blog-wordpress.md); yoksa boş başlar
+          WORDPRESS_URL: ${{ vars.WORDPRESS_URL }}
           RELEASE_TAG: surum-${{ github.run_number }}
         run: ./scripts/package-release.sh
 
