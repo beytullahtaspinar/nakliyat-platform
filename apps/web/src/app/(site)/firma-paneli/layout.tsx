@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { apiFetch, type CompanyProfile, type UnreadMessages } from "@/lib/api";
+import { apiFetch, type BadgeProgress, type CompanyProfile, type UnreadMessages } from "@/lib/api";
+import { BADGE_KEYS, BADGE_ORDER } from "@/lib/badges";
 import { cityOptions, getCompanyContext } from "@/lib/company";
 import { isImpersonating } from "@/lib/session";
+import { CompanyBadges } from "@/components/company-badges";
 import { AppPrompt } from "@/components/pwa/app-prompt";
 import { VerifyNotice } from "@/components/verify-notice";
 import { ImpersonationBanner } from "./impersonation-banner";
@@ -39,8 +41,12 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
     );
   }
 
-  // Rozet yüklenemezse panel yine açılsın
-  const unread = await apiFetch<UnreadMessages>("/messages/unread", { token }).catch(() => null);
+  // Sayaç ve rozetler yüklenemezse panel yine açılsın
+  const [unread, badges] = await Promise.all([
+    apiFetch<UnreadMessages>("/messages/unread", { token }).catch(() => null),
+    apiFetch<BadgeProgress>("/company/profile/badges", { token }).catch(() => null),
+  ]);
+  const earned = badges ? BADGE_ORDER.filter((code) => badges[BADGE_KEYS[code]].earned) : [];
 
   return (
     <main data-panel className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
@@ -49,6 +55,11 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
         <div>
           <p className="text-sm text-zinc-500">Firma paneli</p>
           <h1 className="text-2xl font-bold tracking-tight">{profile.displayName}</h1>
+          {earned.length > 0 && (
+            <Link href="/firma-paneli/degerlendirmeler#rozetler" className="mt-2 block w-fit" aria-label="Rozetlerin">
+              <CompanyBadges badges={earned} />
+            </Link>
+          )}
         </div>
       </div>
       <VerifyNotice user={user} returnTo="/firma-paneli" />

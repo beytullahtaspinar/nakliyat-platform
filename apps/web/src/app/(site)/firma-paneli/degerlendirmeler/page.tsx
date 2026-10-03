@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BadgePill } from "@/components/company-badges";
 import { Card } from "@/components/ui/card";
+import { CheckIcon } from "@/components/ui/icons";
 import { ReplyForm } from "@/components/reviews/reply-form";
 import { ReviewCard } from "@/components/reviews/review-card";
 import { RatingSummary } from "@/components/reviews/rating-summary";
-import { apiFetch, type CompanyReviews } from "@/lib/api";
+import { apiFetch, type BadgeProgress, type CompanyReviews } from "@/lib/api";
+import { BADGE_KEYS, BADGE_ORDER, badgeStatus } from "@/lib/badges";
 import { getCompanyContext } from "@/lib/company";
 import { formatDate } from "@/lib/format";
 import { companyPath } from "@/lib/reviews";
@@ -19,7 +22,10 @@ export default async function CompanyReviewsPage({ searchParams }: PageProps<"/f
   if (!profile) return null;
   const sayfa = Number((await searchParams).sayfa);
   const page = Number.isInteger(sayfa) && sayfa > 0 ? sayfa : 1;
-  const { items, total, summary } = await apiFetch<CompanyReviews>(`/company/reviews?page=${page}&limit=${LIMIT}`, { token });
+  const [{ items, total, summary }, badges] = await Promise.all([
+    apiFetch<CompanyReviews>(`/company/reviews?page=${page}&limit=${LIMIT}`, { token }),
+    apiFetch<BadgeProgress>("/company/profile/badges", { token }).catch(() => null),
+  ]);
   const verified = profile.verificationStatus === "VERIFIED";
 
   return (
@@ -39,6 +45,8 @@ export default async function CompanyReviewsPage({ searchParams }: PageProps<"/f
           )}
         </p>
       </Card>
+
+      {badges && <BadgeCard progress={badges} />}
 
       {items.length === 0 ? (
         <p className="mt-6 text-zinc-600">Henüz değerlendirme almadın.</p>
@@ -88,5 +96,39 @@ export default async function CompanyReviewsPage({ searchParams }: PageProps<"/f
         </nav>
       )}
     </div>
+  );
+}
+
+/** Rozetler: kazanılanlar ve diğerleri için ne eksik */
+function BadgeCard({ progress }: { progress: BadgeProgress }) {
+  return (
+    <Card id="rozetler" className="mt-6 scroll-mt-20 p-5">
+      <h2 className="text-lg font-semibold">Rozetlerin</h2>
+      <p className="mt-1 text-sm text-zinc-600">
+        Rozetler müşterinin teklif listesinde ve firma sayfanda görünür. Güncel verilerden hesaplanır; koşul
+        sağlanmazsa rozet kalkar.
+      </p>
+      <ul className="mt-4 space-y-4">
+        {BADGE_ORDER.map((code) => {
+          const earned = progress[BADGE_KEYS[code]].earned;
+          return (
+            <li key={code} className="flex gap-3">
+              <span
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                  earned ? "bg-brand-700 text-white" : "border border-zinc-300"
+                }`}
+              >
+                {earned && <CheckIcon className="h-3.5 w-3.5" />}
+                <span className="sr-only">{earned ? "Kazanıldı" : "Henüz kazanılmadı"}</span>
+              </span>
+              <div>
+                <BadgePill code={code} />
+                <p className="mt-1 text-sm text-zinc-800">{badgeStatus(code, progress)}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
   );
 }

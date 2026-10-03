@@ -285,10 +285,12 @@ model MovingRequest {
   routeKm           Int?
   routeMinutes      Int?
 
-  expiresAt DateTime
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  expiresAt   DateTime
+  /// Talebin firmalara açıldığı an (taslak talep doğrulama bitince yayına girer). Yanıt süresi buradan ölçülür.
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   customer User           @relation(fields: [customerId], references: [id])
   media    RequestMedia[]

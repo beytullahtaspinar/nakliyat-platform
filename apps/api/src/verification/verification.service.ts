@@ -190,7 +190,7 @@ export class VerificationService {
     for (const { id } of drafts) {
       const { count } = await this.prisma.movingRequest.updateMany({
         where: { id, status: RequestStatus.DRAFT },
-        data: { status: RequestStatus.OPEN },
+        data: { status: RequestStatus.OPEN, publishedAt: new Date() },
       });
       if (count === 1) this.events.emit('request.created', { requestId: id });
     }

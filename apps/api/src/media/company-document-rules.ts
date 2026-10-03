@@ -1,4 +1,5 @@
-import { CompanyDocumentType } from '../generated/prisma/enums.js';
+import type { CompanyDocument } from '../generated/prisma/client.js';
+import { CompanyDocumentType, VerificationStatus } from '../generated/prisma/enums.js';
 
 /**
  * Firma doğrulama belgeleri. Belgeler küçültülmez (PDF ya da telefonla çekilmiş fotoğraf).
@@ -36,3 +37,22 @@ export const todayInTurkey = (now = new Date()) => now.toLocaleDateString('en-CA
 /** Geçerlilik tarihi bugünden önceyse belge süresi dolmuş sayılır (bitiş günü dahil geçerli) */
 export const isExpired = (validUntil: Date | null, now = new Date()) =>
   validUntil !== null && validUntil.toISOString().slice(0, 10) < todayInTurkey(now);
+
+/** Zorunlu belgenin durumu: onaylı, incelemede, reddedildi, süresi dolmuş ya da hiç yüklenmemiş */
+export type RequirementState = 'VERIFIED' | 'PENDING' | 'REJECTED' | 'EXPIRED' | 'MISSING';
+
+/** Bir türün durumu: onaylı ve süresi geçerli bir belge varsa VERIFIED, yoksa en yeni belgenin durumu */
+export function requirementState(
+  documents: Pick<CompanyDocument, 'type' | 'status' | 'validUntil' | 'createdAt'>[],
+  type: CompanyDocumentType,
+  now = new Date(),
+): RequirementState {
+  const ofType = documents
+    .filter((d) => d.type === type)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  if (ofType.some((d) => d.status === VerificationStatus.VERIFIED && !isExpired(d.validUntil, now))) return 'VERIFIED';
+  const latest = ofType[0];
+  if (!latest) return 'MISSING';
+  if (latest.status === VerificationStatus.VERIFIED) return 'EXPIRED';
+  return latest.status;
+}

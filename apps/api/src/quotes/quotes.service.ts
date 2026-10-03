@@ -13,6 +13,7 @@ import {
   toPublicCompany,
   type CompanyWithCities,
 } from '../companies/companies.service.js';
+import { CompanyBadgesService } from '../companies/company-badges.service.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -28,6 +29,7 @@ export class QuotesService {
     private readonly events: DomainEvents,
     private readonly media: MediaService,
     private readonly verification: VerificationService,
+    private readonly badges: CompanyBadgesService,
   ) {}
 
   // ─── Firma tarafı ─────────────────────────────────────────────
@@ -191,10 +193,11 @@ export class QuotesService {
       include: { company: true },
     });
     const now = new Date();
+    const badges = await this.badges.forCompanies(quotes.map((q) => q.company), now);
     return quotes.map(({ company, ...q }) => ({
       ...q,
       isExpired: q.validUntil < now,
-      company: toPublicCompany(company),
+      company: { ...toPublicCompany(company), badges: badges.get(company.id) ?? [] },
     }));
   }
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { citySlug, getCityByCode } from "@nakliyat/locations";
+import { BadgePill, CompanyBadges } from "@/components/company-badges";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs, type Crumb } from "@/components/local/breadcrumbs";
 import { RatingSummary } from "@/components/reviews/rating-summary";
@@ -10,6 +11,7 @@ import { ReviewCard } from "@/components/reviews/review-card";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/card";
 import { ApiError, apiFetch, type Paginated, type PublicCompanyProfile, type PublicReview } from "@/lib/api";
+import { BADGE_ORDER, BADGES } from "@/lib/badges";
 import { HUB_PATH } from "@/lib/local-content";
 import { COMPANY_CACHE_TAG, companyIdFromSlug, companyPath, formatRating } from "@/lib/reviews";
 import { SITE_URL } from "@/lib/site";
@@ -116,14 +118,17 @@ export default async function CompanyPage({ params }: Props) {
     { name: company.displayName, href: companyPath(company) },
   ];
 
+  const earned = company.badges ?? [];
+
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
       <Breadcrumbs items={crumbs} />
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{company.displayName}</h1>
-        {company.verified && <Badge tone="success">✓ Doğrulanmış firma</Badge>}
+        {company.verified && !earned.includes("DOCUMENTS_VERIFIED") && <Badge tone="success">✓ Doğrulanmış firma</Badge>}
       </div>
+      <CompanyBadges badges={earned} className="mt-3" />
       <p className="mt-2 text-zinc-700">
         {company.cityName} merkezli
         {company.ratingCount > 0 && ` · ★ ${formatRating(company.ratingAverage)} (${company.ratingCount} yorum)`}
@@ -151,6 +156,25 @@ export default async function CompanyPage({ params }: Props) {
           . K3 belgesinin süresi dolarsa firma yeni teklif veremez.
         </p>
       </section>
+
+      {earned.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-semibold">Rozetler</h2>
+          <p className="mt-2 text-sm text-zinc-600">
+            Rozetler platformdaki güncel verilerden otomatik hesaplanır; koşul sağlanmazsa rozet kalkar.
+          </p>
+          <dl className="mt-4 space-y-3">
+            {BADGE_ORDER.filter((code) => earned.includes(code)).map((code) => (
+              <div key={code}>
+                <dt>
+                  <BadgePill code={code} />
+                </dt>
+                <dd className="mt-1 text-zinc-700">{BADGES[code].description}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
 
       {company.serviceCities.length > 0 && (
         <section className="mt-12">

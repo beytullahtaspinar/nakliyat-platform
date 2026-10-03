@@ -17,15 +17,13 @@ import {
   isExpired,
   MAX_OTHER_DOCUMENTS,
   REQUIRED_DOCUMENT_TYPES,
+  requirementState,
   todayInTurkey,
 } from './company-document-rules.js';
 import type { AttachDocumentDto, CreateDocumentUploadDto } from './dto/company-documents.dto.js';
 import { EXTENSIONS } from './media-rules.js';
 import { MediaService } from './media.service.js';
 import { FILE_STORAGE, type MediaStorage } from './storage.js';
-
-/** Zorunlu belgenin durumu: onaylı, incelemede, reddedildi, süresi dolmuş ya da hiç yüklenmemiş */
-export type RequirementState = 'VERIFIED' | 'PENDING' | 'REJECTED' | 'EXPIRED' | 'MISSING';
 
 /**
  * Firma doğrulama belgeleri (K3, vergi levhası, ticaret sicil...). Akış talep medyasıyla aynı:
@@ -283,15 +281,4 @@ export class CompanyDocumentsService {
     if (validUntil < todayInTurkey()) throw new BadRequestException('Süresi dolmuş belge yüklenemez');
     return date;
   }
-}
-
-function requirementState(documents: CompanyDocument[], type: CompanyDocumentType): RequirementState {
-  const ofType = documents
-    .filter((d) => d.type === type)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  if (ofType.some((d) => d.status === VerificationStatus.VERIFIED && !isExpired(d.validUntil))) return 'VERIFIED';
-  const latest = ofType[0];
-  if (!latest) return 'MISSING';
-  if (latest.status === VerificationStatus.VERIFIED) return 'EXPIRED';
-  return latest.status;
 }
