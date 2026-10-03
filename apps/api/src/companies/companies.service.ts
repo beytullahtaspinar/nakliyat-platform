@@ -5,7 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Company, Prisma } from '../generated/prisma/client.js';
-import { CompanyDocumentType, VerificationStatus } from '../generated/prisma/enums.js';
+import { CompanyDocumentType, CompanyMediaKind, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
+import { assertNoContactInfo, isShowcaseComplete } from './showcase-rules.js';
 import { isExpired } from '../media/company-document-rules.js';
 import { assertCityCodes, cityName } from '../common/utils/locations.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -17,6 +18,13 @@ import type {
 export const WITH_CITIES = { serviceCities: { select: { cityCode: true } } } satisfies Prisma.CompanyInclude;
 export type CompanyWithCities = Company & { serviceCities: { cityCode: string }[] };
 
+/** Herkese açık sayfada gösterilebilen firma: doğrulanmış, silinmemiş, sahibi askıda değil */
+export const PUBLIC_COMPANY = {
+  verificationStatus: VerificationStatus.VERIFIED,
+  deletedAt: null,
+  owner: { deletedAt: null, status: UserStatus.ACTIVE },
+} satisfies Prisma.CompanyWhereInput;
+
 /** Değişirse firmanın yeniden doğrulanması gereken alanlar */
 const IDENTITY_FIELDS = ['legalName', 'taxNumber', 'k3LicenseNumber'] as const;
 
@@ -26,6 +34,7 @@ export class CompaniesService {
 
   async create(ownerId: string, dto: CreateCompanyProfileDto) {
     assertCityCodes([dto.cityCode, ...dto.serviceCityCodes], 'İl');
+    assertNoContactInfo(dto.description, 'Tanıtım yazısı');
     if (await this.prisma.company.findUnique({ where: { ownerId } })) {
       throw new ConflictException('Bu hesaba ait bir firma profili zaten var');
     }
@@ -56,6 +65,7 @@ export class CompaniesService {
       if (taken) throw new ConflictException('Bu vergi numarasıyla kayıtlı bir firma var');
     }
 
+    assertNoContactInfo(dto.description, 'Tanıtım yazısı');
     const identityChanged = IDENTITY_FIELDS.some(
       (field) => dto[field] !== undefined && dto[field] !== company[field],
     );
@@ -78,7 +88,24 @@ export class CompaniesService {
         }),
       },
     });
+    if (dto.description !== undefined) await this.refreshShowcaseComplete(company.id);
     return toProfile(updated);
+  }
+
+  /**
+   * Yorumsuz firma sayfasının arama motoruna açılıp açılmayacağını (showcaseComplete) tanıtım yazısı
+   * ve yönetimin gizlemediği fotoğraflardan yeniden hesaplar.
+   */
+  async refreshShowcaseComplete(companyId: string) {
+    const [company, photos] = await Promise.all([
+      this.prisma.company.findUnique({ where: { id: companyId }, select: { description: true, showcaseComplete: true } }),
+      this.prisma.companyMedia.count({ where: { companyId, kind: CompanyMediaKind.PHOTO, hiddenAt: null } }),
+    ]);
+    if (!company) return;
+    const complete = isShowcaseComplete(company.description, photos);
+    if (complete !== company.showcaseComplete) {
+      await this.prisma.company.update({ where: { id: companyId }, data: { showcaseComplete: complete } });
+    }
   }
 
   async requireCompany(ownerId: string): Promise<CompanyWithCities> {

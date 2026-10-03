@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Length, Max, MaxLength, Min, ValidateIf } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Length, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
 import { PaginationDto } from '../../requests/dto/list-requests.dto.js';
 import { COMMENT_MAX_LENGTH, COMMENT_MIN_LENGTH, REPLY_MAX_LENGTH } from '../review-rules.js';
 
@@ -91,4 +91,22 @@ export class PublicCompaniesDto {
   @ValidateIf((_o, v) => v !== undefined)
   @IsIn(['true', 'false'])
   reviewed?: 'true' | 'false';
+
+  @ApiPropertyOptional({
+    description: 'true: yalnızca arama motoruna açık sayfalar (yorumu olan ya da tanıtımı yeterince dolu firmalar)',
+  })
+  @IsOptional()
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsIn(['true', 'false'])
+  indexable?: 'true' | 'false';
+
+  @ApiPropertyOptional({ example: '34', description: 'Bu ilde hizmet veren firmalar (merkez ya da hizmet ili)' })
+  @IsOptional()
+  @Matches(/^\d{2}$/)
+  city?: string;
+
+  @ApiPropertyOptional({ example: '06', description: 'city ile birlikte: iki ile de hizmet veren firmalar (şehirler arası)' })
+  @IsOptional()
+  @Matches(/^\d{2}$/)
+  toCity?: string;
 }

@@ -139,6 +139,14 @@ model Company {
   ratingAverage      Decimal            @default(0) @db.Decimal(3, 2)
   ratingCount        Int                @default(0)
   completedJobs      Int                @default(0)
+  /// Tanıtım sayfası: verilen hizmetler (kod listesi, bkz. companies/showcase-rules.ts)
+  services           Json?
+  foundedYear        Int?               @db.SmallInt
+  /// Araç ve ekip sayısı (firmanın beyanı)
+  fleetSize          Int?               @db.SmallInt
+  staffSize          Int?               @db.SmallInt
+  /// Tanıtım yazısı ve fotoğraflar arama motorunda listelenecek kadar dolu mu (yorumsuz firma için)
+  showcaseComplete   Boolean            @default(false)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   deletedAt          DateTime?
@@ -146,6 +154,7 @@ model Company {
   owner         User                 @relation(fields: [ownerId], references: [id])
   serviceCities CompanyServiceCity[]
   documents     CompanyDocument[]
+  media         CompanyMedia[]
   vehicles      Vehicle[]
   quotes        Quote[]
   bookings      Booking[]
@@ -197,6 +206,40 @@ model CompanyDocument {
 
   @@index([companyId, type])
   @@index([storage])
+}
+
+enum CompanyMediaKind {
+  LOGO
+  PHOTO
+}
+
+/// Firma tanıtım sayfasındaki logo ve fotoğraflar. Herkese açık: /medya/firmalar/<firmaId>/<dosya>.
+/// Tarayıcıda iki boyutta hazırlanır (büyük + küçük önizleme); logo tek boyut. Yönetici gerekçeyle gizleyebilir.
+model CompanyMedia {
+  id           String           @id @default(cuid())
+  companyId    String
+  kind         CompanyMediaKind
+  storageKey   String           @unique @db.VarChar(300)
+  storage      StorageLocation  @default(LOCAL)
+  /// Küçük önizleme (yalnızca fotoğraflar)
+  thumbKey     String?          @unique @db.VarChar(300)
+  thumbStorage StorageLocation?
+  mimeType     String           @db.VarChar(100)
+  /// Büyük dosya ve önizlemenin toplamı (kota için)
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  /// Fotoğraf açıklaması (görselin alt metni)
+  caption      String?          @db.VarChar(120)
+  hiddenAt     DateTime?
+  hiddenReason String?          @db.VarChar(300)
+  createdAt    DateTime         @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, kind])
+  @@index([storage])
+  @@index([thumbStorage])
 }
 
 enum VehicleType {

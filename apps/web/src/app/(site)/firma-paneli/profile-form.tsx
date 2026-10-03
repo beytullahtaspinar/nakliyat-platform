@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Field, FormError, Input, SubmitButton, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
@@ -102,16 +103,28 @@ export function ProfileForm({ cities, profile, action }: Props) {
         </div>
       </fieldset>
 
-      <Field label="Firmanı tanıt (isteğe bağlı)">
-        <textarea
-          name="description"
-          rows={4}
-          maxLength={3000}
-          defaultValue={profile?.description ?? ""}
-          placeholder="Kaç yıldır hizmet veriyorsunuz, araç filonuz, sigorta ve ekip bilgisi…"
-          className={inputClass}
-        />
-      </Field>
+      {/* Firma tanıtım yazısını "Tanıtım sayfası" sekmesinde yazar; yönetim düzeltme için burada görür */}
+      {action ? (
+        <Field label="Tanıtım yazısı">
+          <textarea
+            name="description"
+            rows={4}
+            maxLength={3000}
+            defaultValue={profile?.description ?? ""}
+            placeholder="Kaç yıldır hizmet veriyorsunuz, araç filonuz, sigorta ve ekip bilgisi…"
+            className={inputClass}
+          />
+        </Field>
+      ) : (
+        profile && (
+          <p className="text-sm text-zinc-600">
+            Tanıtım yazısı, logo ve fotoğraflar:{" "}
+            <Link href="/firma-paneli/tanitim" className="font-semibold text-brand-700 hover:underline">
+              Tanıtım sayfası
+            </Link>
+          </p>
+        )
+      )}
 
       {profile && !action && (
         <p className="text-xs text-zinc-500">

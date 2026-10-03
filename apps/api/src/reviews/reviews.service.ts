@@ -1,22 +1,20 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { getCityByCode } from '@nakliyat/locations';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
-import { CompaniesService, toPublicCompany } from '../companies/companies.service.js';
+import { CompaniesService, PUBLIC_COMPANY, toPublicCompany } from '../companies/companies.service.js';
+import { servicesOf } from '../companies/showcase-rules.js';
+import { publicMediaPath } from '../media/media-rules.js';
 import { CompanyBadgesService } from '../companies/company-badges.service.js';
 import { cityName } from '../common/utils/locations.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { Prisma, type Review } from '../generated/prisma/client.js';
-import { BookingStatus, RequestStatus, UserRole, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
+import { BookingStatus, CompanyMediaKind, RequestStatus, UserRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AdminListReviewsDto, CreateReviewDto, PublicCompaniesDto } from './dto/review.dto.js';
 import { maskName, moveDayReached } from './review-rules.js';
 
-/** Herkese açık sayfada gösterilebilen firma: doğrulanmış, silinmemiş, sahibi askıda değil */
-const PUBLIC_COMPANY = {
-  verificationStatus: VerificationStatus.VERIFIED,
-  deletedAt: null,
-  owner: { deletedAt: null, status: UserStatus.ACTIVE },
-} satisfies Prisma.CompanyWhereInput;
+/** Arama motoruna açık firma sayfası: yorumu var ya da tanıtım yazısı ve fotoğrafları yeterli */
+const INDEXABLE_COMPANY = { OR: [{ ratingCount: { gt: 0 } }, { showcaseComplete: true }] } satisfies Prisma.CompanyWhereInput;
 
 const AUTHOR_AND_ROUTE = {
   customer: { select: { fullName: true, deletedAt: true } },
@@ -188,31 +186,61 @@ export class ReviewsService {
 
   // ─── Herkese açık ────────────────────────────────────────────
 
-  async listPublicCompanies({ page, limit, reviewed }: PublicCompaniesDto) {
-    const where: Prisma.CompanyWhereInput = { ...PUBLIC_COMPANY, ...(reviewed === 'true' && { ratingCount: { gt: 0 } }) };
+  async listPublicCompanies({ page, limit, reviewed, indexable, city, toCity }: PublicCompaniesDto) {
+    const serves = (code: string): Prisma.CompanyWhereInput => ({
+      OR: [{ cityCode: code }, { serviceCities: { some: { cityCode: code } } }],
+    });
+    const where: Prisma.CompanyWhereInput = {
+      ...PUBLIC_COMPANY,
+      AND: [
+        ...(reviewed === 'true' ? [{ ratingCount: { gt: 0 } }] : []),
+        ...(indexable === 'true' ? [INDEXABLE_COMPANY] : []),
+        ...(city ? [serves(city)] : []),
+        ...(city && toCity ? [serves(toCity)] : []),
+      ],
+    };
     const [items, total] = await Promise.all([
       this.prisma.company.findMany({
         where,
-        orderBy: [{ ratingCount: 'desc' }, { createdAt: 'asc' }],
+        // İl sayfalarında da bu sıra: önce çok yorum alan, sonra yüksek puanlı, sonra tanıtımı dolu
+        orderBy: [{ ratingCount: 'desc' }, { ratingAverage: 'desc' }, { showcaseComplete: 'desc' }, { createdAt: 'asc' }],
         skip: (page - 1) * limit,
         take: limit,
-        select: { id: true, displayName: true, cityCode: true, ratingAverage: true, ratingCount: true, updatedAt: true },
+        select: {
+          id: true,
+          displayName: true,
+          cityCode: true,
+          logoUrl: true,
+          ratingAverage: true,
+          ratingCount: true,
+          completedJobs: true,
+          updatedAt: true,
+          serviceCities: { select: { cityCode: true } },
+        },
       }),
       this.prisma.company.count({ where }),
     ]);
     return {
-      items: items.map(({ cityCode, ...c }) => ({ ...c, cityName: cityName(cityCode) })),
+      // serviceCityCodes: merkez il dahil; il sayfaları tek istekle tüm firmaları alıp kendi içinde süzer
+      items: items.map(({ cityCode, serviceCities, ...c }) => ({
+        ...c,
+        cityName: cityName(cityCode),
+        serviceCityCodes: [...new Set([cityCode, ...serviceCities.map((s) => s.cityCode)])].sort(),
+      })),
       total,
       page,
       limit,
     };
   }
 
-  /** Firma profili: vergi no, belge, sahip bilgisi yok */
+  /** Firma profili: vergi no, belge, sahip bilgisi yok. Görseller yalnızca gizlenmemişler. */
   async publicProfile(companyId: string) {
     const company = await this.prisma.company.findFirst({
       where: { id: companyId, ...PUBLIC_COMPANY },
-      include: { serviceCities: { select: { cityCode: true } } },
+      include: {
+        serviceCities: { select: { cityCode: true } },
+        media: { where: { hiddenAt: null, kind: CompanyMediaKind.PHOTO }, orderBy: { createdAt: 'asc' } },
+      },
     });
     if (!company) throw new NotFoundException('Firma bulunamadı');
     const serviceCodes = [...new Set([company.cityCode, ...company.serviceCities.map((c) => c.cityCode)])].sort();
@@ -222,6 +250,20 @@ export class ReviewsService {
       badges: badges.get(company.id) ?? [],
       cityCode: company.cityCode,
       description: company.description,
+      services: servicesOf(company.services),
+      foundedYear: company.foundedYear,
+      fleetSize: company.fleetSize,
+      staffSize: company.staffSize,
+      photos: company.media.map((m) => ({
+        id: m.id,
+        url: publicMediaPath(m.storageKey),
+        thumbUrl: m.thumbKey ? publicMediaPath(m.thumbKey) : publicMediaPath(m.storageKey),
+        width: m.width,
+        height: m.height,
+        caption: m.caption,
+      })),
+      // Yorumu olan ya da tanıtımı yeterince dolu (showcase-rules.ts INDEX_RULES) sayfa arama motoruna açık
+      indexable: company.ratingCount > 0 || company.showcaseComplete,
       serviceCities: serviceCodes.map((code) => ({ code, name: cityName(code) })),
       verifiedAt: company.verifiedAt,
       memberSince: company.createdAt,

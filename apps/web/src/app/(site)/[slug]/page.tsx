@@ -6,6 +6,7 @@ import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/local/breadcrumbs";
 import { Faq } from "@/components/local/faq";
 import { LinkGrid } from "@/components/local/link-grid";
+import { LocalCompanies } from "@/components/local/local-companies";
 import { ButtonLink } from "@/components/ui/button";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import {
@@ -22,6 +23,7 @@ import {
   localPageDescription,
   localPageTitle,
 } from "@/lib/local-seo";
+import { getLocalCompanies } from "@/lib/local-companies";
 import { getLocalStats } from "@/lib/local-stats";
 import { calculatorHref } from "@/lib/pricing";
 import { SITE_URL } from "@/lib/site";
@@ -81,7 +83,9 @@ function serviceJsonLd(page: LocalPage) {
 
 export default async function LocalLandingPage({ params }: Props) {
   const page = await loadPage(params);
-  const stats = await getLocalStats(page);
+  const [stats, companies] = await Promise.all([getLocalStats(page), getLocalCompanies(page)]);
+  // İlçe sayfasında da il geneli: firmalar il bazında hizmet verir
+  const region = page.kind === "route" ? `${page.from.name} - ${page.to.name} arasında` : `${page.city.name} ilinde`;
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -124,6 +128,12 @@ export default async function LocalLandingPage({ params }: Props) {
           </table>
         </section>
       )}
+
+      <LocalCompanies
+        title={`${region} hizmet veren doğrulanmış firmalar`}
+        items={companies.items}
+        total={companies.total}
+      />
 
       <section className="mt-12">
         <h2 className="text-2xl font-semibold">Nasıl çalışır?</h2>

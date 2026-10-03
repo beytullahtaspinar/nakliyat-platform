@@ -22,6 +22,7 @@ import { normalizeTrMobile } from '../common/utils/phone.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { BookingStatus, QuoteStatus, RequestStatus, UserRole, UserStatus } from '../generated/prisma/enums.js';
 import { CompanyDocumentsService } from '../media/company-documents.service.js';
+import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
@@ -57,6 +58,7 @@ export class AdminUsersController {
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
     private readonly documents: CompanyDocumentsService,
+    private readonly showcase: CompanyShowcaseService,
   ) {}
 
   /** Kullanıcılar, en yenisi önce. */
@@ -246,7 +248,10 @@ export class AdminUsersController {
     ]);
     // Talep fotoğraf/videoları da kişisel veri: kayıt silindikten sonra depodan da kaldırılır
     await this.media.deleteForCustomer(id);
-    if (companyId) await this.documents.deleteForCompany(companyId);
+    if (companyId) {
+      await this.documents.deleteForCompany(companyId);
+      await this.showcase.deleteForCompany(companyId);
+    }
   }
 
   private async requireUser(id: string) {

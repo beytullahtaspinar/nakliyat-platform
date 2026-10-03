@@ -91,6 +91,13 @@ export class MediaStorage {
     return remote ? { ...remote, location: StorageLocation.R2 } : null;
   }
 
+  /** Dosyayı okur (herkese açık firma görselleri için); yoksa null */
+  async read(key: string, location: StorageLocation): Promise<{ body: Readable; sizeBytes: number } | null> {
+    if (location === StorageLocation.R2) return this.r2 ? this.r2.read(key) : null;
+    const local = await this.local.stat(key);
+    return local ? { body: createReadStream(this.local.path(key)), sizeBytes: local.sizeBytes } : null;
+  }
+
   viewUrl(key: string, location: StorageLocation) {
     return location === StorageLocation.R2 && this.r2 ? this.r2.viewUrl(key) : this.local.viewUrl(key);
   }

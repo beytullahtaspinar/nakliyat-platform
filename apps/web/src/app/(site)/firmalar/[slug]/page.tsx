@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { citySlug, getCityByCode } from "@nakliyat/locations";
 import { BadgePill, CompanyBadges } from "@/components/company-badges";
+import { CompanyGallery } from "@/components/company-gallery";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs, type Crumb } from "@/components/local/breadcrumbs";
 import { RatingSummary } from "@/components/reviews/rating-summary";
@@ -14,6 +15,7 @@ import { ApiError, apiFetch, type Paginated, type PublicCompanyProfile, type Pub
 import { BADGE_ORDER, BADGES } from "@/lib/badges";
 import { HUB_PATH } from "@/lib/local-content";
 import { COMPANY_CACHE_TAG, companyIdFromSlug, companyPath, formatRating } from "@/lib/reviews";
+import { serviceLabel } from "@/lib/showcase";
 import { SITE_URL } from "@/lib/site";
 
 // Sayfa bir saat önbellekte kalır; yorum eklenince/gizlenince sunucu eylemi önbelleği hemen bitirir (updateTag).
@@ -50,7 +52,19 @@ const load = cache(async (slug: string) => {
 
 const yearOf = (iso: string) => new Date(iso).toLocaleDateString("tr-TR", { year: "numeric", timeZone: "Europe/Istanbul" });
 
+/** Firma tanıtımının ilk cümleleri (arama sonucu açıklaması için) */
+function excerpt(text: string, max = 150) {
+  const flat = text.replace(/\s+/g, " ").trim();
+  if (flat.length <= max) return flat;
+  const cut = flat.slice(0, max);
+  return `${cut.slice(0, cut.lastIndexOf(" ") > 80 ? cut.lastIndexOf(" ") : max).replace(/[,.;:]$/, "")}…`;
+}
+
 function description(company: PublicCompanyProfile) {
+  if (company.description && company.description.trim().length >= 80) {
+    const rating = company.ratingCount > 0 ? ` ★ ${formatRating(company.ratingAverage)} (${company.ratingCount} yorum).` : "";
+    return `${excerpt(company.description)}${rating}`;
+  }
   const rating =
     company.ratingCount > 0
       ? `${company.ratingCount} müşteri yorumu, ortalama ${formatRating(company.ratingAverage)}/5 puan.`
@@ -60,21 +74,36 @@ function description(company: PublicCompanyProfile) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { company } = await load((await params).slug);
-  const title = `${company.displayName} yorumları ve puanı`;
+  const title =
+    company.ratingCount > 0
+      ? `${company.displayName} yorumları ve puanı`
+      : `${company.displayName}: ${company.cityName ?? "Türkiye"} evden eve nakliyat`;
   const path = companyPath(company);
+  const image = company.photos[0]?.url ?? company.logoUrl;
   return {
     title,
     description: description(company),
     alternates: { canonical: path },
-    openGraph: { title, description: description(company), url: path, type: "website", locale: "tr_TR" },
-    // Yorumu olmayan firma sayfası henüz ince içerik: bağlantıları izlenir ama dizine alınmaz
-    robots: company.ratingCount > 0 ? { index: true, follow: true } : { index: false, follow: true },
+    openGraph: {
+      title,
+      description: description(company),
+      url: path,
+      type: "website",
+      locale: "tr_TR",
+      ...(image && { images: [{ url: image }] }),
+    },
+    // Yorumu da tanıtımı da olmayan firma sayfası ince içerik: bağlantıları izlenir ama dizine alınmaz.
+    // Kural API'de (showcase-rules.ts): yorum ya da en az 300 karakter tanıtım + 2 fotoğraf.
+    robots: company.indexable ? { index: true, follow: true } : { index: false, follow: true },
   };
 }
 
 /** schema.org MovingCompany: puan yalnızca yayındaki gerçek yorumlardan, yorumlar sayfada görünenlerle aynı */
+const absolute = (path: string) => (path.startsWith("http") ? path : `${SITE_URL}${path}`);
+
 function companyJsonLd(company: PublicCompanyProfile, reviews: PublicReview[]) {
   const url = `${SITE_URL}${companyPath(company)}`;
+  const images = [...company.photos.map((p) => absolute(p.url)), ...(company.logoUrl ? [absolute(company.logoUrl)] : [])];
   return {
     "@context": "https://schema.org",
     "@type": "MovingCompany",
@@ -82,9 +111,22 @@ function companyJsonLd(company: PublicCompanyProfile, reviews: PublicReview[]) {
     name: company.displayName,
     url,
     ...(company.description && { description: company.description }),
-    ...(company.logoUrl && { logo: company.logoUrl, image: company.logoUrl }),
+    ...(company.logoUrl && { logo: absolute(company.logoUrl) }),
+    ...(images.length > 0 && { image: images }),
     address: { "@type": "PostalAddress", addressLocality: company.cityName, addressCountry: "TR" },
     areaServed: company.serviceCities.map((c) => ({ "@type": "City", name: c.name })),
+    ...(company.foundedYear && { foundingDate: String(company.foundedYear) }),
+    ...(company.staffSize && { numberOfEmployees: { "@type": "QuantitativeValue", value: company.staffSize } }),
+    ...(company.services.length > 0 && {
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Hizmetler",
+        itemListElement: company.services.map((code) => ({
+          "@type": "Offer",
+          itemOffered: { "@type": "Service", name: serviceLabel(code) },
+        })),
+      },
+    }),
     ...(company.ratingCount > 0 && {
       aggregateRating: {
         "@type": "AggregateRating",
@@ -119,14 +161,31 @@ export default async function CompanyPage({ params }: Props) {
   ];
 
   const earned = company.badges ?? [];
+  const facts = [
+    company.foundedYear && { label: "Kuruluş", value: String(company.foundedYear) },
+    company.fleetSize && { label: "Araç", value: String(company.fleetSize) },
+    company.staffSize && { label: "Ekip", value: `${company.staffSize} kişi` },
+  ].filter((f): f is { label: string; value: string } => !!f);
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-10">
       <Breadcrumbs items={crumbs} />
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{company.displayName}</h1>
-        {company.verified && !earned.includes("DOCUMENTS_VERIFIED") && <Badge tone="success">✓ Doğrulanmış firma</Badge>}
+      <div className="mt-6 flex items-center gap-4">
+        {company.logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- tarayıcıda küçültülmüş 192 px WebP, kalıcı adres
+          <img
+            src={company.logoUrl}
+            alt={`${company.displayName} logosu`}
+            width={72}
+            height={72}
+            className="h-16 w-16 shrink-0 rounded-xl border border-zinc-200 bg-white object-contain p-1 sm:h-[72px] sm:w-[72px]"
+          />
+        )}
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{company.displayName}</h1>
+          {company.verified && !earned.includes("DOCUMENTS_VERIFIED") && <Badge tone="success">✓ Doğrulanmış firma</Badge>}
+        </div>
       </div>
       <CompanyBadges badges={earned} className="mt-3" />
       <p className="mt-2 text-zinc-700">
@@ -136,7 +195,16 @@ export default async function CompanyPage({ params }: Props) {
         {` · ${yearOf(company.memberSince)} yılından beri platformda`}
       </p>
 
-      {company.description && <p className="mt-5 whitespace-pre-line text-lg text-zinc-800">{company.description}</p>}
+      {facts.length > 0 && (
+        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {facts.map((f) => (
+            <div key={f.label} className="rounded-lg border border-zinc-200 bg-white px-3 py-2">
+              <dt className="text-xs text-zinc-600">{f.label}</dt>
+              <dd className="text-lg font-semibold text-zinc-900">{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
       <Card className="mt-6 p-5">
         <p className="text-zinc-800">
@@ -147,6 +215,36 @@ export default async function CompanyPage({ params }: Props) {
           Ücretsiz teklif al
         </ButtonLink>
       </Card>
+
+      {company.description && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-semibold">{company.displayName} hakkında</h2>
+          <p className="mt-3 whitespace-pre-line text-zinc-800">{company.description}</p>
+        </section>
+      )}
+
+      {company.services.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-semibold">Hizmetler</h2>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {company.services.map((code) => (
+              <li key={code} className="flex items-center gap-2 text-zinc-800">
+                <span aria-hidden className="text-brand-700">
+                  ✓
+                </span>
+                {serviceLabel(code)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {company.photos.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-semibold">Fotoğraflar</h2>
+          <CompanyGallery photos={company.photos} companyName={company.displayName} />
+        </section>
+      )}
 
       <section className="mt-12">
         <h2 className="text-2xl font-semibold">Neden doğrulanmış?</h2>
