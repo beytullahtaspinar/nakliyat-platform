@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveLocalPage, type LocalPage } from "@nakliyat/locations";
 import { JsonLd } from "@/components/json-ld";
@@ -6,6 +7,7 @@ import { Breadcrumbs } from "@/components/local/breadcrumbs";
 import { Faq } from "@/components/local/faq";
 import { LinkGrid } from "@/components/local/link-grid";
 import { ButtonLink } from "@/components/ui/button";
+import { ArrowRightIcon } from "@/components/ui/icons";
 import {
   breadcrumbs,
   faq,
@@ -21,6 +23,7 @@ import {
   localPageTitle,
 } from "@/lib/local-seo";
 import { getLocalStats } from "@/lib/local-stats";
+import { calculatorHref } from "@/lib/pricing";
 import { SITE_URL } from "@/lib/site";
 
 // Dizine açık sayfalar derlemede üretilir; diğerleri ilk ziyarette üretilip önbelleğe alınır.
@@ -139,6 +142,12 @@ export default async function LocalLandingPage({ params }: Props) {
             <li key={f}>{f}</li>
           ))}
         </ul>
+        <Link
+          href={page.kind === "route" ? calculatorHref(page.from.code, page.to.code) : calculatorHref(page.city.code, page.city.code)}
+          className="mt-4 inline-flex items-center gap-1.5 py-1 font-semibold text-brand-700 hover:underline"
+        >
+          Tahmini fiyatı hesapla <ArrowRightIcon className="h-4 w-4" />
+        </Link>
       </section>
 
       <Faq items={faq(page)} />

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getCities, getCityByCode, getDistrict } from "@nakliyat/locations";
 import { getCurrentUser } from "@/lib/session";
-import { turkeyDate } from "@/lib/request-options";
+import { FLOORS, HOME_TYPES, turkeyDate } from "@/lib/request-options";
 import { RequestForm, type CityOption } from "./request-form";
 
 export const metadata: Metadata = {
@@ -20,6 +20,10 @@ const cities: CityOption[] = getCities().map((c) => ({
 }));
 
 const param = (value: string | string[] | undefined) => (typeof value === "string" ? value : undefined);
+const floorParam = (value: string | string[] | undefined) => {
+  const floor = Number(param(value) ?? "x");
+  return FLOORS.some((f) => f.value === floor) ? floor : undefined;
+};
 
 export default async function CreateRequestPage({ searchParams }: PageProps<"/talep-olustur">) {
   const params = await searchParams;
@@ -27,6 +31,8 @@ export default async function CreateRequestPage({ searchParams }: PageProps<"/ta
   const to = getCityByCode(param(params.nereye) ?? "");
   const districtSlug = param(params.ilce);
   const fromDistrict = from && districtSlug && getDistrict(from, districtSlug) ? districtSlug : undefined;
+  // Fiyat hesaplayıcıdan gelindiyse ev ve kat bilgileri de dolu gelir (lib/pricing.ts requestPrefillQuery)
+  const homeType = HOME_TYPES.find((t) => t.value === param(params.ev))?.value;
   const user = await getCurrentUser();
 
   return (
@@ -46,7 +52,18 @@ export default async function CreateRequestPage({ searchParams }: PageProps<"/ta
         <RequestForm
           cities={cities}
           userName={user?.fullName ?? null}
-          defaults={{ fromCityCode: from?.code, fromDistrict, toCityCode: to?.code }}
+          defaults={{
+            fromCityCode: from?.code,
+            fromDistrict,
+            toCityCode: to?.code,
+            homeType,
+            fromFloor: floorParam(params.kat),
+            fromHasElevator: param(params.asansor) === "1",
+            toFloor: floorParam(params.varisKat),
+            toHasElevator: param(params.varisAsansor) === "1",
+            needsPacking: param(params.paket) === "1",
+            needsAssembly: param(params.montaj) === "1",
+          }}
           minDate={turkeyDate(1)}
           maxDate={turkeyDate(365)}
         />

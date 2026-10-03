@@ -1,18 +1,10 @@
+import { HOME_VOLUME_M3, crewForVolume } from '@nakliyat/pricing';
 import { HomeType } from '../generated/prisma/enums.js';
 
 /**
  * Talep standardı: firmaların aynı bilgiyle teklif verebilmesi için sistemin ürettiği tahmin.
- * Kaba bir başlangıç modelidir; gerçek iş verisi biriktikçe katsayılar güncellenecek.
+ * Kaba bir başlangıç modelidir; ev tipi hacimleri fiyat hesaplayıcıyla ortaktır (@nakliyat/pricing).
  */
-const VOLUME_M3: Record<HomeType, number> = {
-  STUDIO: 10,
-  ONE_PLUS_ONE: 15,
-  TWO_PLUS_ONE: 25,
-  THREE_PLUS_ONE: 35,
-  FOUR_PLUS_ONE: 45,
-  VILLA: 60,
-  OFFICE: 30,
-};
 
 /** Bir kişinin saatte taşıyabildiği ortalama hacim (m³), asansörlü/zemin kat */
 const M3_PER_PERSON_HOUR = 2.5;
@@ -44,8 +36,8 @@ const stairsFactor = (floor: number, hasElevator: boolean) =>
   1 + (hasElevator ? 0 : Math.max(0, floor) * STAIRS_PENALTY_PER_FLOOR);
 
 export function estimateMove(input: EstimateInput): Estimate {
-  const volume = VOLUME_M3[input.homeType];
-  const crew = volume <= 15 ? 2 : volume <= 30 ? 3 : volume <= 45 ? 4 : 5;
+  const volume = HOME_VOLUME_M3[input.homeType];
+  const crew = crewForVolume(volume);
 
   const handlingHours = volume / (crew * M3_PER_PERSON_HOUR);
   const loading = handlingHours * stairsFactor(input.fromFloor, input.fromHasElevator);

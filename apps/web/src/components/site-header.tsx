@@ -6,8 +6,10 @@ import { Logo } from "@/components/ui/logo";
 import { HUB_PATH } from "@/lib/local-content";
 import { MARKETING_PAGES } from "@/lib/marketing";
 
+// wide: tablette (md) başlığa sığmaz, geniş ekranda (lg) görünür; telefon menüsünde her zaman var
 const NAV = [
   MARKETING_PAGES.howItWorks,
+  { ...MARKETING_PAGES.priceCalculator, wide: true },
   { href: HUB_PATH, label: "İller" },
   MARKETING_PAGES.forCompanies,
   { href: "/blog", label: "Blog" },
@@ -29,7 +31,7 @@ export function SiteHeader() {
             <NavLink
               key={item.href}
               href={item.href}
-              className="py-1 hover:text-brand-700 aria-[current=page]:text-brand-800 aria-[current=page]:underline aria-[current=page]:decoration-brand-600 aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[6px] dark:hover:text-white"
+              className={`${"wide" in item ? "hidden lg:inline " : ""}whitespace-nowrap py-1 hover:text-brand-700 aria-[current=page]:text-brand-800 aria-[current=page]:underline aria-[current=page]:decoration-brand-600 aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[6px] dark:hover:text-white`}
             >
               {item.label}
             </NavLink>

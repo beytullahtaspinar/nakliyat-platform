@@ -14,6 +14,7 @@
   "dependencies": {
     "@nakliyat/locations": "workspace:*",
     "@nakliyat/monitoring": "workspace:*",
+    "@nakliyat/pricing": "workspace:*",
     "maplibre-gl": "^5.24.0",
     "mediabunny": "^1.61.0",
     "next": "16.3.7",

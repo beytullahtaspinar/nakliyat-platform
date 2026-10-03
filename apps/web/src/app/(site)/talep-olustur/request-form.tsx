@@ -16,7 +16,18 @@ export type CityOption = { code: string; name: string; districts: { slug: string
 type Props = {
   cities: CityOption[];
   userName: string | null;
-  defaults: { fromCityCode?: string; fromDistrict?: string; toCityCode?: string };
+  defaults: {
+    fromCityCode?: string;
+    fromDistrict?: string;
+    toCityCode?: string;
+    homeType?: string;
+    fromFloor?: number;
+    fromHasElevator?: boolean;
+    toFloor?: number;
+    toHasElevator?: boolean;
+    needsPacking?: boolean;
+    needsAssembly?: boolean;
+  };
   minDate: string;
   maxDate: string;
 };
@@ -47,17 +58,30 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
     <form {...formProps} className="space-y-8">
       <input type="hidden" name="withMedia" value={picker.readyCount > 0 ? "1" : ""} />
       <Section title="Nereden taşınıyorsun?" step={1}>
-        <AddressFields prefix="from" cities={cities} cityCode={defaults.fromCityCode} district={defaults.fromDistrict} />
+        <AddressFields
+          prefix="from"
+          cities={cities}
+          cityCode={defaults.fromCityCode}
+          district={defaults.fromDistrict}
+          floor={defaults.fromFloor}
+          hasElevator={defaults.fromHasElevator}
+        />
       </Section>
 
       <Section title="Nereye taşınıyorsun?" step={2}>
-        <AddressFields prefix="to" cities={cities} cityCode={defaults.toCityCode ?? defaults.fromCityCode} />
+        <AddressFields
+          prefix="to"
+          cities={cities}
+          cityCode={defaults.toCityCode ?? defaults.fromCityCode}
+          floor={defaults.toFloor}
+          hasElevator={defaults.toHasElevator}
+        />
       </Section>
 
       <Section title="Evin ve tarih" step={3}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Ev tipi">
-            <select name="homeType" required defaultValue="" className={inputClass}>
+            <select name="homeType" required defaultValue={defaults.homeType ?? ""} className={inputClass}>
               <option value="" disabled>
                 Seçin
               </option>
@@ -79,8 +103,12 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
 
       <Section title="Ek hizmetler" step={4}>
         <div className="space-y-3">
-          <Checkbox name="needsPacking" label="Eşyalarımı firma paketlesin" />
-          <Checkbox name="needsAssembly" label="Mobilya söküm ve kurulumu (dolap, yatak vb.)" />
+          <Checkbox name="needsPacking" label="Eşyalarımı firma paketlesin" defaultChecked={defaults.needsPacking} />
+          <Checkbox
+            name="needsAssembly"
+            defaultChecked={defaults.needsAssembly}
+            label="Mobilya söküm ve kurulumu (dolap, yatak vb.)"
+          />
           <Checkbox name="needsStorage" label="Eşyalarımın bir süre depoda kalması gerekiyor" />
         </div>
         <div className="mt-4 grid gap-4">
@@ -156,11 +184,15 @@ function AddressFields({
   cities,
   cityCode: initialCity = "",
   district: initialDistrict = "",
+  floor,
+  hasElevator,
 }: {
   prefix: "from" | "to";
   cities: CityOption[];
   cityCode?: string;
   district?: string;
+  floor?: number;
+  hasElevator?: boolean;
 }) {
   const [cityCode, setCityCode] = useState(initialCity);
   const [district, setDistrict] = useState(initialDistrict);
@@ -233,7 +265,7 @@ function AddressFields({
         area={[districtName, city?.name].filter(Boolean).join(", ")}
       />
       <Field label="Kat">
-        <select name={`${prefix}Floor`} required defaultValue="" className={inputClass}>
+        <select name={`${prefix}Floor`} required defaultValue={floor ?? ""} className={inputClass}>
           <option value="" disabled>
             Kat seçin
           </option>
@@ -245,7 +277,7 @@ function AddressFields({
         </select>
       </Field>
       <div className="flex items-end pb-2">
-        <Checkbox name={`${prefix}HasElevator`} label="Binada asansör var" />
+        <Checkbox name={`${prefix}HasElevator`} label="Binada asansör var" defaultChecked={hasElevator} />
       </div>
     </div>
   );

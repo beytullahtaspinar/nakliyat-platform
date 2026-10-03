@@ -46,6 +46,7 @@ Durum: ✅ yazıldı ve test edildi · ⏳ planlandı
 |---|---|---|---|---|
 | ✅ | GET | `/locations/cities` | Herkes | 81 il: plaka kodu, ad, adres kodu |
 | ✅ | GET | `/locations/cities/:code/districts` | Herkes | İlin ilçeleri (ad ve adres kodu) |
+| ✅ | GET | `/pricing` | Herkes | Fiyat hesaplayıcı katsayıları ve platform anlaşmalarıyla ayarlama (`calibration.local` / `.intercity`, yeterli anlaşma yoksa boş). Fiyat tarayıcıda `@nakliyat/pricing` ile hesaplanır |
 
 Talep ve firma kayıtlarında il **plaka koduyla** (`"34"`), ilçe **adres koduyla** (`"kadikoy"`) tutulur; yanıtlarda okunabilir adlar da döner.
 
@@ -103,6 +104,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 |---|---|---|---|
 | ✅ | GET | `/admin/summary` | Yönetim özeti: bekleyen firma, açık talep, kullanıcı, planlanmış iş sayıları |
 | ✅ | GET | `/admin/stats?days=7\|30\|90` | İstatistikler (varsayılan 30 gün, Türkiye saatiyle gün): önceki eşit dönemle karşılaştırılan toplamlar, dönemde açılan taleplerin teklif → iş → tamamlanma hunisi, talep başına teklif, anlaşma tutarı, puan dağılımı, en çok talep gelen 10 il, günlük talep/teklif/iş. Taslak talepler sayılmaz |
+| ✅ | GET · PATCH | `/admin/pricing` | Fiyat hesaplayıcı katsayıları: görüntüle (varsayılanlar, dönemdeki anlaşma sayıları, ayarlama) ve değiştir (kısmi; sınırlar `PRICING_SETTING_SPECS`). Değişiklik karar geçmişine `pricing.update` olarak yazılır |
 | ✅ | GET | `/admin/companies?status=&q=` | Firmalar; ad, unvan, vergi no, K3 veya sahip adı/telefonunda arama |
 | ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |
 | ✅ | POST | `/admin/companies/:id/verify` · `/reject` | Firmayı onayla veya reddet (gerekçeyle). Onay için zorunlu belgelerin her biri onaylı ve süresi geçerli olmalı. |
