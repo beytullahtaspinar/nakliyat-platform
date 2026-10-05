@@ -4,6 +4,7 @@ import {
   ConflictException,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -13,9 +14,10 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import bcrypt from 'bcryptjs';
-import { BCRYPT_ROUNDS } from '../auth/auth.service.js';
+import { BCRYPT_ROUNDS, type AccessTokenPayload } from '../auth/auth.service.js';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { normalizeTrMobile } from '../common/utils/phone.js';
@@ -25,6 +27,7 @@ import { CompanyDocumentsService } from '../media/company-documents.service.js';
 import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { IMPERSONATION_TTL_SECONDS } from './admin-companies.controller.js';
 import {
   AdminListUsersDto,
   AdminSetPasswordDto,
@@ -59,6 +62,7 @@ export class AdminUsersController {
     private readonly media: MediaService,
     private readonly documents: CompanyDocumentsService,
     private readonly showcase: CompanyShowcaseService,
+    private readonly jwt: JwtService,
   ) {}
 
   /** Kullanıcılar, en yenisi önce. */
@@ -101,6 +105,32 @@ export class AdminUsersController {
       select: { action: true, details: true, createdAt: true, actor: { select: { fullName: true } } },
     });
     return { ...toUser(user), history };
+  }
+
+  /**
+   * Yönetici müşterinin hesabını müşterinin gözünden açar; müşterinin şifresi gerekmez. Firma paneline
+   * geçişle aynı kurallar: kısa ömürlü erişim anahtarı (yenileme anahtarı yok), geçiş ve bu anahtarla
+   * yapılan her değişiklik yönetici adına müşterinin geçmişine yazılır. Yönetici ve firma hesaplarına
+   * buradan geçilmez (firmalar için firma paneline geçiş var).
+   */
+  @Post(':id/impersonate')
+  @HttpCode(HttpStatus.OK)
+  async impersonate(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
+    const user = await this.requireUser(id);
+    if (user.role === UserRole.ADMIN) throw new ForbiddenException('Yönetici hesaplarına geçilemez');
+    if (user.role !== UserRole.CUSTOMER) {
+      throw new BadRequestException('Bu bir firma hesabı. Firmanın paneline firma sayfasından geçebilirsin.');
+    }
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new BadRequestException('Müşterinin hesabı askıya alınmış. Hesabına geçmek için önce hesabı etkinleştirin.');
+    }
+
+    const payload: AccessTokenPayload = { sub: user.id, role: user.role, imp: admin.id };
+    const accessToken = await this.jwt.signAsync(payload, { expiresIn: IMPERSONATION_TTL_SECONDS });
+    await this.prisma.auditLog.create({
+      data: { actorId: admin.id, action: 'user.impersonate', entityType: 'User', entityId: id },
+    });
+    return { accessToken, expiresIn: IMPERSONATION_TTL_SECONDS, user: { id: user.id, fullName: user.fullName } };
   }
 
   /** Ad, telefon, e-posta ve hesap durumu. Askıya alınan hesabın açık oturumları kapatılır. */

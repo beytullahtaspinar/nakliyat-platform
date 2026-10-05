@@ -9,7 +9,12 @@ import { companyProfileBody } from "@/lib/company-form";
 import { PRICING_CACHE_TAG } from "@/lib/pricing";
 import { COMPANY_CACHE_TAG } from "@/lib/reviews";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
-import { IMPERSONATION_COOKIE, IMPERSONATION_PATH } from "@/lib/session-cookies";
+import {
+  CUSTOMER_IMPERSONATION_COOKIE,
+  CUSTOMER_IMPERSONATION_PATH,
+  IMPERSONATION_COOKIE,
+  IMPERSONATION_PATH,
+} from "@/lib/session-cookies";
 
 export type AdminActionState = { error?: string; notice?: string };
 
@@ -208,6 +213,34 @@ export async function stopImpersonating(formData: FormData) {
   (await cookies()).delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
   const companyId = String(formData.get("companyId") ?? "");
   redirect(/^[\w-]+$/.test(companyId) ? `/yonetim/firmalar/${companyId}` : "/yonetim/firmalar");
+}
+
+/** Müşterinin hesabını müşterinin gözünden açar; yöneticinin kendi oturumu olduğu gibi kalır. */
+export async function impersonateCustomer(userId: string): Promise<AdminActionState> {
+  let result: { accessToken: string; expiresIn: number };
+  try {
+    result = await apiFetch(`/admin/users/${encodeURIComponent(userId)}/impersonate`, {
+      method: "POST",
+      token: await adminToken(),
+    });
+  } catch (err) {
+    return failure(err, "Müşteri hesabına geçilemedi.");
+  }
+  (await cookies()).set(CUSTOMER_IMPERSONATION_COOKIE, result.accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: CUSTOMER_IMPERSONATION_PATH,
+    maxAge: result.expiresIn - 60,
+  });
+  redirect(CUSTOMER_IMPERSONATION_PATH);
+}
+
+/** Müşteri hesabından yönetime döner. */
+export async function stopImpersonatingCustomer(formData: FormData) {
+  (await cookies()).delete({ name: CUSTOMER_IMPERSONATION_COOKIE, path: CUSTOMER_IMPERSONATION_PATH });
+  const userId = String(formData.get("userId") ?? "");
+  redirect(/^[\w-]+$/.test(userId) ? `/yonetim/kullanicilar/${userId}` : "/yonetim/kullanicilar");
 }
 
 /** Fiyat hesaplayıcı katsayıları; kaydedilince herkese açık hesaplama sayfası hemen yenilenir */

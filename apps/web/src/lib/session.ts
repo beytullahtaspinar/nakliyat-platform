@@ -3,6 +3,8 @@ import { cache } from "react";
 import { ApiError, apiFetch, type AuthTokens, type AuthUser, type UserRole } from "@/lib/api";
 import {
   ACCESS_COOKIE,
+  CUSTOMER_IMPERSONATION_COOKIE,
+  CUSTOMER_IMPERSONATION_PATH,
   IMPERSONATION_COOKIE,
   IMPERSONATION_PATH,
   REFRESH_COOKIE,
@@ -12,13 +14,24 @@ import {
 
 export async function getAccessToken(): Promise<string | undefined> {
   const store = await cookies();
-  // Firma paneli görüntüleme çerezi yalnızca /firma-paneli isteklerinde gelir
-  return store.get(IMPERSONATION_COOKIE)?.value ?? store.get(ACCESS_COOKIE)?.value;
+  // Görüntüleme çerezleri yalnızca kendi yollarında gelir: firma /firma-paneli, müşteri /hesabim
+  return (
+    store.get(IMPERSONATION_COOKIE)?.value ??
+    store.get(CUSTOMER_IMPERSONATION_COOKIE)?.value ??
+    store.get(ACCESS_COOKIE)?.value
+  );
 }
 
-/** Yönetici firma panelini firmanın gözünden mi görüntülüyor? */
+/** Yönetici firma panelini ya da müşteri hesabını sahibinin gözünden mi görüntülüyor? */
 export async function isImpersonating(): Promise<boolean> {
-  return (await cookies()).has(IMPERSONATION_COOKIE);
+  const store = await cookies();
+  return store.has(IMPERSONATION_COOKIE) || store.has(CUSTOMER_IMPERSONATION_COOKIE);
+}
+
+/** Yalnızca Server Action içinde çağrılabilir. */
+function dropImpersonation(store: Awaited<ReturnType<typeof cookies>>) {
+  store.delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
+  store.delete({ name: CUSTOMER_IMPERSONATION_COOKIE, path: CUSTOMER_IMPERSONATION_PATH });
 }
 
 /**
@@ -42,7 +55,7 @@ export async function saveSession(tokens: AuthTokens, role: UserRole) {
   for (const [name, value, options] of sessionCookies(tokens, role)) {
     store.set(name, value, options);
   }
-  store.delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
+  dropImpersonation(store);
 }
 
 /** Yalnızca Server Action içinde çağrılabilir. */
@@ -50,8 +63,8 @@ export async function clearSession(): Promise<string | undefined> {
   const store = await cookies();
   const refreshToken = store.get(REFRESH_COOKIE)?.value;
   for (const name of SESSION_COOKIE_NAMES) store.delete(name);
-  // Çıkış yapan yönetici firma görüntüleme anahtarını da bırakmaz
-  store.delete({ name: IMPERSONATION_COOKIE, path: IMPERSONATION_PATH });
+  // Çıkış yapan yönetici görüntüleme anahtarlarını da bırakmaz
+  dropImpersonation(store);
   return refreshToken;
 }
 

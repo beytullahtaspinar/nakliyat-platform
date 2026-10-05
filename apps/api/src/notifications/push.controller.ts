@@ -20,7 +20,7 @@ export class PushController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async subscribe(@CurrentUser() user: AuthUser, @Body() dto: PushSubscriptionDto, @Headers('user-agent') userAgent?: string) {
     // Yönetici firma panelini görüntülerken kendi cihazını firmanın bildirimlerine abone etmesin
-    if (user.impersonatorId) throw new ForbiddenException('Firma görünümündeyken bu cihaz için bildirim açılamaz');
+    if (user.impersonatorId) throw new ForbiddenException('Yönetici görünümündeyken bu cihaz için bildirim açılamaz');
     if (!this.push.publicKey) throw new BadRequestException('Anlık bildirimler şu an kullanılamıyor');
     if (!isPushEndpoint(dto.endpoint)) throw new BadRequestException('Bu tarayıcının bildirim servisi desteklenmiyor');
 
@@ -53,7 +53,7 @@ export class PushController {
   /** Kullanıcı ayarlardan "deneme bildirimi gönder" dediğinde: tüm cihazlarına kısa bir bildirim. */
   @Post('test')
   async test(@CurrentUser() user: AuthUser) {
-    if (user.impersonatorId) throw new ForbiddenException('Firma görünümündeyken deneme bildirimi gönderilemez');
+    if (user.impersonatorId) throw new ForbiddenException('Yönetici görünümündeyken deneme bildirimi gönderilemez');
     const result = await this.push
       .sendToUser(user.id, {
         title: 'Bildirimler açık',

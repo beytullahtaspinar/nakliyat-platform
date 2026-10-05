@@ -5,7 +5,7 @@ import { NotificationSettings } from "@/components/notification-settings";
 import { AppAndPush } from "@/components/pwa/app-and-push";
 import { Card } from "@/components/ui/card";
 import { apiFetch, type NotificationPreferences } from "@/lib/api";
-import { getAccessToken, getCurrentUser, homeFor } from "@/lib/session";
+import { getAccessToken, getCurrentUser, homeFor, isImpersonating } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Bildirim ayarları",
@@ -33,7 +33,7 @@ export default async function AccountNotificationsPage() {
         <AppAndPush
           publicKey={preferences.push?.publicKey ?? null}
           devices={preferences.push?.devices ?? 0}
-          impersonating={false}
+          impersonating={await isImpersonating()}
         />
       </Card>
       <Card className="mt-6 p-6">

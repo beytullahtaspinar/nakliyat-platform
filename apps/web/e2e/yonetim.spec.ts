@@ -148,6 +148,26 @@ test("yönetici kullanıcının bilgilerini ve şifresini değiştirir", async (
   expect(newPassword).toHaveLength(12);
   await page.getByRole("button", { name: "Şifreyi değiştir" }).click();
   await expect(page.getByText(/Yeni şifre kaydedildi/)).toBeVisible();
+  const userUrl = page.url();
+
+  // Müşteri hesabına şifresiz geçer; görünüm yalnızca Hesabım sayfalarında geçerli
+  await page.getByRole("button", { name: "Müşteri hesabına geç" }).click();
+  await expect(page).toHaveURL(/\/hesabim$/);
+  const banner = page.getByRole("region", { name: "Yönetici görünümü" });
+  await expect(banner).toContainText("Yönetici olarak Yeni Ad Soyad adlı müşterinin hesabını görüntülüyorsun");
+  await expect(page.getByRole("heading", { level: 1, name: "Merhaba Yeni" })).toBeVisible();
+  await expectAccessible(page);
+  await page.goto("/hesabim/bildirimler");
+  await expect(banner).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Bildirim ayarları" })).toBeVisible();
+  await page.goto("/yonetim");
+  await expect(page.getByRole("heading", { level: 1, name: "Pano" })).toBeVisible();
+  await page.goto("/hesabim");
+  await banner.getByRole("button", { name: "Yönetime dön" }).click();
+  await expect(page).toHaveURL(userUrl);
+  await expect(page.getByText("Müşteri hesabına geçildi")).toBeVisible();
+  await page.goto("/hesabim");
+  await expect(page).toHaveURL(/\/yonetim$/);
 
   // Kullanıcı yeni şifreyle girer
   const context = await browser.newContext();

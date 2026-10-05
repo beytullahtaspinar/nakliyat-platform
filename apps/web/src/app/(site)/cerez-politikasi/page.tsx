@@ -48,6 +48,11 @@ const COOKIES = [
     purpose: "Yalnızca platform yöneticileri: destek için firma panelini firmanın gözünden görüntüleme",
     duration: "En fazla 30 dakika",
   },
+  {
+    name: "nk_musteri_gorunum",
+    purpose: "Yalnızca platform yöneticileri: destek için müşteri hesabını müşterinin gözünden görüntüleme",
+    duration: "En fazla 30 dakika",
+  },
 ];
 
 export default function CookiePolicyPage() {
