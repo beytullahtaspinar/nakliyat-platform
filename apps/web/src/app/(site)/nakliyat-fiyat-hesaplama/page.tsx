@@ -17,7 +17,7 @@ import { formatDate } from "@/lib/format";
 import { HUB_PATH } from "@/lib/local-content";
 import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, PRICING_CACHE_TAG, formatTry, type PricingModel } from "@/lib/pricing";
 import { HOME_TYPES } from "@/lib/request-options";
-import { SITE_URL } from "@/lib/site";
+import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 import { PriceCalculator, type CalculatorCity } from "./price-calculator";
 
 // Katsayılar bir saat önbellekte kalır; yönetimden değişince sunucu eylemi hemen yeniler (updateTag)
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   title: "Nakliyat Fiyat Hesaplama: Evden Eve Taşıma Ücreti Ne Kadar?",
   description: DESCRIPTION,
   alternates: { canonical: PRICE_CALCULATOR_PATH },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: PRICE_CALCULATOR_PATH, type: "website", locale: "tr_TR" },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: PRICE_CALCULATOR_PATH, type: "website", locale: "tr_TR", images: DEFAULT_OG_IMAGES },
 };
 
 /** API'ye ulaşılamazsa (ör. derleme sırasında) varsayılan katsayılarla çizilir, sonraki yenilemede düzelir */

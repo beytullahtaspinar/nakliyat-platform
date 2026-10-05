@@ -22,7 +22,7 @@ export default function RouteMap({ from, to }: { from: LatLng | null; to: LatLng
       cooperativeGestures: true,
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    if (from) new maplibregl.Marker({ color: "#136544" }).setLngLat([from.lng, from.lat]).addTo(m);
+    if (from) new maplibregl.Marker({ color: "#1e3a8a" }).setLngLat([from.lng, from.lat]).addTo(m);
     if (to) new maplibregl.Marker({ color: "#f59e0b" }).setLngLat([to.lng, to.lat]).addTo(m);
     if (points.length === 2) {
       const bounds = new maplibregl.LngLatBounds();

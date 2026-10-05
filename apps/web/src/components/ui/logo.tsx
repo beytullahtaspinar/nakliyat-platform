@@ -1,18 +1,17 @@
-/** Marka işareti: ev çatısı içinde koli. `app/icon.svg` ile aynı çizim. */
+/** Marka işareti: kalın "e" ve turuncu nokta (".app" ve varış noktası). `app/icon.svg` ile aynı çizim. */
 export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden focusable="false">
       <rect width="32" height="32" rx="8" className="fill-brand-700" />
       <path
-        d="M6.5 15 16 7.5l9.5 7.5M9.5 13v11h13V13"
+        d="M9.2 16.2h12.6a6.4 6.4 0 1 0-1.9 4.6"
         fill="none"
         stroke="#fff"
-        strokeWidth="2.2"
+        strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <rect x="12.5" y="16.5" width="7" height="7.5" rx="1" className="fill-accent-400" />
-      <path d="M16 16.5v3" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="24.6" cy="22.4" r="2.4" className="fill-accent-500" />
     </svg>
   );
 }

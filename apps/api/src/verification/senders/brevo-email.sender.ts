@@ -23,12 +23,12 @@ export function renderCodeEmail(code: string, recipientName: string, webUrl: str
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#125139;padding:18px 24px;font-size:18px;font-weight:700;color:#ffffff">evdenevenakliyat<span style="color:#fcd34d">.app</span></td></tr>
+<tr><td style="background:#1b2f6e;padding:18px 24px;font-size:18px;font-weight:700;color:#ffffff">evdenevenakliyat<span style="color:#fdba74">.app</span></td></tr>
 <tr><td align="center" style="padding:32px 24px 8px">
 <p style="margin:0 0 8px;font-size:15px">Merhaba ${escape(firstName)},</p>
-<h1 style="margin:0 0 12px;font-size:20px;color:#10432f">Doğrulama kodu</h1>
+<h1 style="margin:0 0 12px;font-size:20px;color:#172554">Doğrulama kodu</h1>
 <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b">Bu kod 10 dakika geçerlidir ve yalnızca bir kez kullanılabilir. Kodu kimseyle paylaşma; ekibimiz kodu asla sormaz.</p>
-<p style="margin:0 0 12px;font-size:38px;font-weight:700;letter-spacing:4px;color:#18181b;font-family:'Courier New',Courier,monospace;background:#f0f7f3;border:2px dashed #136544;border-radius:12px;padding:14px 20px;-webkit-user-select:all;user-select:all">${code}</p>
+<p style="margin:0 0 12px;font-size:38px;font-weight:700;letter-spacing:4px;color:#18181b;font-family:'Courier New',Courier,monospace;background:#eff4ff;border:2px dashed #1e3a8a;border-radius:12px;padding:14px 20px;-webkit-user-select:all;user-select:all">${code}</p>
 <p style="margin:0 0 28px;font-size:13px;line-height:1.6;color:#52525b">Kodu kopyala ve doğrulama ekranındaki alana yapıştır.</p>
 </td></tr>
 <tr><td style="padding:20px 24px;border-top:1px solid #e4e4e7;font-size:12px;line-height:1.6;color:#71717a">

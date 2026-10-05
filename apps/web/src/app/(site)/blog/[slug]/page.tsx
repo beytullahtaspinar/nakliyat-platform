@@ -8,7 +8,7 @@ import { Breadcrumbs, type Crumb } from "@/components/local/breadcrumbs";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
-import { SITE_URL } from "@/lib/site";
+import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 import { BLOG_PATH, type BlogPost, categoryPath, getPost, getPosts, postPath } from "@/lib/blog/wordpress";
 
 // WordPress'te yazı güncellenince /api/blog/yenile önbelleği hemen bitirir; yoksa saatte bir yenilenir
@@ -45,7 +45,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       modifiedTime: post.modifiedAt,
       ...(post.author && { authors: [post.author.name] }),
       ...(post.categories[0] && { section: post.categories[0].name }),
-      ...(post.image && { images: [{ url: post.image.src, width: post.image.width, height: post.image.height, alt: post.image.alt }] }),
+      images: post.image
+        ? [{ url: post.image.src, width: post.image.width, height: post.image.height, alt: post.image.alt }]
+        : DEFAULT_OG_IMAGES,
     },
   };
 }

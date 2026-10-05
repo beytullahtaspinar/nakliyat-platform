@@ -107,7 +107,7 @@ export default function MapPicker({ value, onChange, address, area }: Props) {
       },
     });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    const pin = new maplibregl.Marker({ color: "#136544", draggable: true });
+    const pin = new maplibregl.Marker({ color: "#1e3a8a", draggable: true });
     map.current = m;
     marker.current = pin;
     // Harita kurulduktan sonra (ayrı görevde) yazılan adresi ara

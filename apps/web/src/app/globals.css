@@ -9,39 +9,39 @@
 /*
  * evdenevenakliyat.app görsel kimliği
  *
- * brand  : koyu yeşil; güven ve kurumsallık. Birincil eylemler, bağlantılar, vurgu yüzeyleri.
- * accent : altın sarısı; yeşil zeminde okunaklı. Az kullanılır (logo, ikon, küçük vurgular), buton rengi değildir.
+ * brand  : gece mavisi; güven ve kurumsallık. Birincil eylemler, bağlantılar, vurgu yüzeyleri.
+ * accent : turuncu; enerji ve hareket. Az kullanılır (logo noktası, ikon, küçük vurgular), buton rengi değildir.
  *          Açık zeminde metin için en az accent-700 (WCAG AA 4.5:1), koyu zeminde accent-300/400.
  * zinc   : nötrler, hafif mavimsi (slate) tona çekildi.
  *
  * Mevcut ekranlar `blue-*` ve `zinc-*` sınıflarını kullanıyor. Aşağıdaki eşlemeyle bu sınıflar
- * marka paletine bağlanır (`blue-*` artık marka yeşilidir); böylece her sayfa tek yerden aynı kimliği alır. Yeni kodda anlamı
+ * marka paletine bağlanır (`blue-*` artık marka mavisidir); böylece her sayfa tek yerden aynı kimliği alır. Yeni kodda anlamı
  * belli olsun diye `brand-*` / `accent-*` tercih edilir.
  */
 @theme {
-  --color-brand-50: #effaf4;
-  --color-brand-100: #d8f3e3;
-  --color-brand-200: #b3e6ca;
-  --color-brand-300: #7fd2a9;
-  --color-brand-400: #48b683;
-  --color-brand-500: #259a67;
-  --color-brand-600: #177d52;
-  --color-brand-700: #136544;
-  --color-brand-800: #125139;
-  --color-brand-900: #10432f;
-  --color-brand-950: #06251a;
+  --color-brand-50: #eff4ff;
+  --color-brand-100: #dbe6fe;
+  --color-brand-200: #bfd3fe;
+  --color-brand-300: #93b4fd;
+  --color-brand-400: #6090fa;
+  --color-brand-500: #3b6ef6;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e3a8a;
+  --color-brand-800: #1b2f6e;
+  --color-brand-900: #172554;
+  --color-brand-950: #0f1838;
 
-  --color-accent-50: #fffbeb;
-  --color-accent-100: #fef3c7;
-  --color-accent-200: #fde68a;
-  --color-accent-300: #fcd34d;
-  --color-accent-400: #fbbf24;
-  --color-accent-500: #f59e0b;
-  --color-accent-600: #d97706;
-  --color-accent-700: #b45309;
-  --color-accent-800: #92400e;
-  --color-accent-900: #78350f;
-  --color-accent-950: #451a03;
+  --color-accent-50: #fff7ed;
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f97316;
+  --color-accent-600: #ea580c;
+  --color-accent-700: #c2410c;
+  --color-accent-800: #9a3412;
+  --color-accent-900: #7c2d12;
+  --color-accent-950: #431407;
 
   --color-zinc-50: #f8fafc;
   --color-zinc-100: #f1f5f9;
