@@ -262,6 +262,7 @@ function AddressFields({
         key={`${cityCode}-${district}`}
         prefix={prefix}
         address={address}
+        onAddress={setAddress}
         area={[districtName, city?.name].filter(Boolean).join(", ")}
       />
       <Field label="Kat">

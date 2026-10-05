@@ -43,6 +43,13 @@ test("müşteri adresini haritada işaretler; işaret talep sayfasında görün�
   await from.getByRole("button", { name: /Haritada işaretle/ }).click();
   await expect(from.getByText("Yazdığın adrese göre işaretlendi", { exact: false })).toBeVisible();
   await expect(from.getByText("İşaretlenen yer: Moda Caddesi, Caferağa, İstanbul")).toBeVisible();
+  // Açılışta yazdığı adres korunur
+  await expect(from.getByLabel("Açık adres")).toHaveValue("Caferağa Mah. Moda Cad. No: 10 D: 3");
+  // Haritaya dokununca seçilen yer açık adrese yazılır; müşteri sonra düzenler
+  await from.locator(".maplibregl-canvas").click({ position: { x: 40, y: 60 } });
+  await expect(from.getByText("Seçtiğin yer açık adrese yazıldı", { exact: false })).toBeVisible();
+  await expect(from.getByLabel("Açık adres")).toHaveValue("Caferağa, Moda Caddesi");
+  await from.getByLabel("Açık adres").fill("Caferağa, Moda Caddesi No: 10 D: 3");
 
   const to = page.getByRole("group", { name: /Nereye taşınıyorsun/ });
   await to.getByRole("combobox", { name: "İl", exact: true }).selectOption({ label: "İstanbul" });
@@ -56,6 +63,8 @@ test("müşteri adresini haritada işaretler; işaret talep sayfasında görün�
   await to.getByRole("searchbox", { name: "Haritada adres ara" }).press("Enter");
   await to.getByRole("button", { name: "Sinanpaşa Sokak, Beşiktaş, İstanbul" }).click();
   await expect(to.getByText("İşaretlenen yer: Sinanpaşa Sokak, Beşiktaş, İstanbul")).toBeVisible();
+  await expect(to.getByLabel("Açık adres")).toHaveValue("Beşiktaş, Sinanpaşa Sokak");
+  await to.getByLabel("Açık adres").fill("Beşiktaş, Sinanpaşa Sokak No: 20 D: 5");
 
   const a11y = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
   expect(a11y.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);

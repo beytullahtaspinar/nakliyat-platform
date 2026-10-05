@@ -8,7 +8,8 @@ const TURKEY_BBOX = "25.6,35.8,44.9,42.2";
 export const TURKEY_CENTER: [number, number] = [35.2, 39.0];
 
 export type LatLng = { lat: number; lng: number };
-export type Place = LatLng & { label: string };
+/** label: tam okunur ad; street: il ve ilçe olmadan mahalle, sokak ve bina (açık adres alanı için) */
+export type Place = LatLng & { label: string; street: string };
 
 type PhotonFeature = {
   geometry: { coordinates: [number, number] };
@@ -17,16 +18,25 @@ type PhotonFeature = {
   >;
 };
 
+const join = (parts: (string | undefined)[]) => [...new Set(parts.filter(Boolean))].join(", ");
+const streetNo = (p: PhotonFeature["properties"]) =>
+  p.street ? [p.street, p.housenumber].filter(Boolean).join(" No:") : undefined;
+
 function label({ properties: p }: PhotonFeature): string {
-  const street = p.street ? [p.street, p.housenumber].filter(Boolean).join(" No:") : undefined;
-  const parts = [p.name, street, p.district ?? p.locality, p.county, p.city ?? p.state];
-  return [...new Set(parts.filter(Boolean))].join(", ");
+  return join([p.name, streetNo(p), p.district ?? p.locality, p.county, p.city ?? p.state]);
+}
+
+/** Mahalle, sokak/no ve bina adı; il ve ilçe formda ayrıca seçildiği için yazılmaz */
+function street({ properties: p }: PhotonFeature): string {
+  const area = [p.county, p.city, p.state];
+  return join([p.district ?? p.locality, streetNo(p), p.name].filter((x) => !area.includes(x)));
 }
 
 const toPlace = (f: PhotonFeature): Place => ({
   lng: f.geometry.coordinates[0],
   lat: f.geometry.coordinates[1],
   label: label(f),
+  street: street(f),
 });
 
 async function photon(path: string, params: Record<string, string>, signal?: AbortSignal): Promise<Place[]> {
@@ -45,10 +55,10 @@ export function searchPlaces(query: string, near?: LatLng, signal?: AbortSignal)
   );
 }
 
-/** İşaretlenen noktanın okunur adresi (bulunamazsa null) */
-export async function describePoint(point: LatLng, signal?: AbortSignal): Promise<string | null> {
+/** İşaretlenen noktanın adresi (bulunamazsa null) */
+export async function describePoint(point: LatLng, signal?: AbortSignal): Promise<Place | null> {
   const [place] = await photon("/reverse", { lat: String(point.lat), lon: String(point.lng) }, signal);
-  return place?.label || null;
+  return place?.label ? place : null;
 }
 
 const coords = (p: LatLng) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
