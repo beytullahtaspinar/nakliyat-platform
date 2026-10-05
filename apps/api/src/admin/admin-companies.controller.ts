@@ -28,7 +28,8 @@ import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { HideShowcaseMediaDto } from '../media/dto/company-showcase.dto.js';
 import { CompaniesService } from '../companies/companies.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
+import { AdminCreateCompanyDto, ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
+import { newAccountData } from './new-account.js';
 import { phoneDigits } from './dto/admin-lists.dto.js';
 
 /** Firma paneli / müşteri hesabı görüntüleme süresi: 30 dk, sonra yönetici kendi oturumuna döner */
@@ -77,6 +78,48 @@ export class AdminCompaniesController {
       expiresIn: IMPERSONATION_TTL_SECONDS,
       company: { id: company.id, displayName: company.displayName },
     };
+  }
+
+  /**
+   * Yönetici firmayı yetkilisinin hesabıyla birlikte açar. Firma onay bekler durumda başlar: onay için
+   * zorunlu belgeler yine yüklenip onaylanmalı (firma paneline geçerek yüklenebilir).
+   */
+  @Post()
+  async create(@CurrentUser() admin: AuthUser, @Body() dto: AdminCreateCompanyDto) {
+    const { fullName, phone, email, password, markVerified, serviceCityCodes, ...fields } = dto;
+    assertCityCodes([fields.cityCode, ...serviceCityCodes], 'İl');
+    if (await this.prisma.company.findUnique({ where: { taxNumber: fields.taxNumber } })) {
+      throw new ConflictException('Bu vergi numarasıyla kayıtlı bir firma var');
+    }
+    const owner = await newAccountData(this.prisma, { fullName, phone, email, password, markVerified }, UserRole.COMPANY);
+    const services = [...new Set([fields.cityCode, ...serviceCityCodes])];
+    const company = await this.prisma.company.create({
+      data: {
+        ...fields,
+        owner: { create: owner },
+        serviceCities: { create: services.map((cityCode) => ({ cityCode })) },
+      },
+      select: { id: true, ownerId: true },
+    });
+    await this.prisma.auditLog.createMany({
+      data: [
+        {
+          actorId: admin.id,
+          action: 'company.create',
+          entityType: 'Company',
+          entityId: company.id,
+        },
+        {
+          actorId: admin.id,
+          action: 'user.create',
+          entityType: 'User',
+          entityId: company.ownerId,
+          details: { role: UserRole.COMPANY, verified: Boolean(markVerified) },
+        },
+      ],
+    });
+    if (fields.description) await this.companies.refreshShowcaseComplete(company.id);
+    return this.detail(company.id);
   }
 
   @Get()

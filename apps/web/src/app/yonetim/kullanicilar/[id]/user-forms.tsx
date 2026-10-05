@@ -6,6 +6,7 @@ import { useFormAction } from "@/components/forms/use-form-action";
 import { Button } from "@/components/ui/button";
 import { deleteUser, setUserPassword, updateUser, type AdminActionState } from "@/lib/actions/admin";
 import type { AdminUser } from "@/lib/api";
+import { generatePassword } from "../../account-fields";
 import { formatPhone } from "@/lib/format";
 
 function Notice({ message }: { message?: string }) {
@@ -44,13 +45,6 @@ export function UserForm({ user, isSelf }: { user: AdminUser; isSelf: boolean })
       </Button>
     </form>
   );
-}
-
-/** Karışabilecek karakterler (0/O, 1/l/I) olmadan, telefonda okunup yazılabilecek şifre */
-function generatePassword(): string {
-  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint32Array(12));
-  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
 }
 
 export function PasswordForm({ userId }: { userId: string }) {
