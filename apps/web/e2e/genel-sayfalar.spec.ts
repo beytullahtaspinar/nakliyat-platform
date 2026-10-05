@@ -114,8 +114,9 @@ test("tanıtım sayfaları menüden ve altbilgiden açılır, yapısal veri içe
   await footer.getByRole("link", { name: "Hakkımızda" }).click();
   await expect(page).toHaveURL(/\/hakkimizda$/);
   expect(await jsonLdTypes(page)).toContain("AboutPage");
-  // Şirket bilgileri girilmeden yer tutucular gösterilmez
-  await expect(page.getByText("[Şirket unvanı]")).toHaveCount(0);
+  // İşleten bilgisi gösterilir; yer tutucu kalmaz
+  await expect(page.getByText(/İşleten: Mehtap Yılmaz/)).toBeVisible();
+  await expect(page.getByText(/\[[^\]]+\]/)).toHaveCount(0);
   await expectAccessible(page);
   expect(errors).toEqual([]);
 });

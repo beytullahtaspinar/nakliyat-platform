@@ -41,13 +41,12 @@ export default function KvkkPage() {
     >
       <h2 id="veri-sorumlusu">1. Veri sorumlusu</h2>
       <p>
-        Kişisel verileriniz, veri sorumlusu sıfatıyla {COMPANY.title} (&quot;Platform&quot;) tarafından
-        işlenmektedir.
+        Kişisel verileriniz, veri sorumlusu sıfatıyla, {COMPANY.site} platformunu (&quot;Platform&quot;) şahıs
+        işletmesi olarak işleten {COMPANY.title} tarafından işlenmektedir.
       </p>
       <ul>
         <li>Adres: {COMPANY.address}</li>
-        <li>MERSİS: {COMPANY.mersis}</li>
-        <li>KEP: {COMPANY.kep}</li>
+        <li>Vergi bilgisi: {COMPANY.taxInfo}</li>
         <li>
           E-posta: <a href={`mailto:${COMPANY.kvkkEmail}`}>{COMPANY.kvkkEmail}</a>
         </li>
@@ -257,7 +256,7 @@ export default function KvkkPage() {
             <tr>
               <td>SMS / WhatsApp doğrulama sağlayıcısı</td>
               <td>Telefon doğrulama kodu gönderimi (devreye alındığında)</td>
-              <td>[Sağlayıcı ve konum]</td>
+              <td>Devreye alındığında belirtilecek</td>
             </tr>
           </tbody>
         </table>
@@ -273,7 +272,7 @@ export default function KvkkPage() {
       <p>
         Yukarıda yurt dışında olduğu belirtilen hizmet sağlayıcılara aktarım, Kanun&apos;un 9. maddesine uygun olarak,
         Kişisel Verileri Koruma Kurulu&apos;nun ilan ettiği standart sözleşmeler imzalanarak ve Kurul&apos;a
-        bildirilerek yapılır. [Hizmet sağlayıcı bazında aktarım dayanağı hukuki kontrolde netleştirilecektir.]
+        bildirilerek yapılır.
       </p>
 
       <h2 id="saklama">7. Saklama süreleri</h2>
@@ -284,12 +283,12 @@ export default function KvkkPage() {
           olarak kaldırılır.
         </li>
         <li>
-          Kabul edilen işlere ilişkin kayıtlar ve onay kayıtları: olası uyuşmazlıklar için genel zamanaşımı süresi
-          boyunca [süre hukuki kontrolde belirlenecektir].
+          Kabul edilen işlere ilişkin kayıtlar ve onay kayıtları: olası uyuşmazlıklar için genel zamanaşımı süresi (10 yıl)
+          boyunca.
         </li>
         <li>Doğrulama kodları: en fazla 10 dakika geçerlidir; yalnızca geri döndürülemez özetleri saklanır.</li>
         <li>Veritabanı yedekleri: 14 gün sonra silinir.</li>
-        <li>Erişim ve hata kayıtları: mevzuatın öngördüğü süre boyunca [süre hukuki kontrolde belirlenecektir].</li>
+        <li>Erişim ve hata kayıtları: mevzuatın öngördüğü süre boyunca.</li>
       </ul>
       <p>
         Süresi dolan veriler, Kişisel Verilerin Silinmesi, Yok Edilmesi veya Anonim Hale Getirilmesi Hakkında
@@ -321,7 +320,6 @@ export default function KvkkPage() {
       </p>
       <ul>
         <li>Yazılı olarak {COMPANY.address} adresine,</li>
-        <li>KEP ile {COMPANY.kep} adresine,</li>
         <li>
           Platformda kayıtlı e-posta adresinden <a href={`mailto:${COMPANY.kvkkEmail}`}>{COMPANY.kvkkEmail}</a>{" "}
           adresine

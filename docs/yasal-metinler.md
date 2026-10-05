@@ -12,15 +12,17 @@
 | /cerez-politikasi | `apps/web/src/app/(site)/cerez-politikasi/page.tsx` |
 | /acik-riza-metni | `apps/web/src/app/(site)/acik-riza-metni/page.tsx` (yalnızca ticari elektronik ileti) |
 
-Ortak bilgiler (şirket unvanı, adres, e-postalar, sürüm) tek yerde: `apps/web/src/lib/legal.ts`.
+Ortak bilgiler (işleten adı, adres, vergi bilgisi, e-postalar, sürüm) tek yerde: `apps/web/src/lib/legal.ts`.
 Bağlantılar altbilgide ve her yasal sayfanın sonunda; sayfalar sitemap'te.
 
 ## Doldurulacak yer tutucular (`lib/legal.ts` ve metin içi `[...]`)
 
-- Şirket unvanı, açık adres, MERSİS, vergi bilgisi, KEP adresi, VERBİS durumu
+- ~~İşleten bilgileri~~ girildi (2026-10-05): şahıs işletmesi, ticaret unvanı ve MERSİS yok; ad, adres ve VKN
+  `lib/legal.ts`'te. **T.C. kimlik numarası hiçbir yerde yayınlanmaz ve kaydedilmez.** KEP adresi alınırsa
+  aydınlatma metninin başvuru bölümüne eklenebilir. VERBİS kayıt yükümlülüğü avukatla kontrol edilmeli.
 - `kvkk@` ve `destek@evdenevenakliyat.app` adreslerinin açılması (şu an yalnızca `bildirim@` var)
 - Kayıtların ve erişim loglarının saklama süreleri (aydınlatma metni, 7. bölüm)
-- Tüketici olmayanlar için yetkili mahkeme şehri (kullanım koşulları, 12. bölüm)
+- Tüketici olmayanlar için yetkili mahkeme: işletme adresine göre Uşak yazıldı, avukat teyit etmeli
 - Telefon doğrulama sağlayıcısı (Netgsm / WhatsApp) seçilince adı ve konumu
 
 ## Avukatın özellikle bakması gerekenler
