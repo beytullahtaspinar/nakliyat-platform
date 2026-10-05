@@ -25,6 +25,11 @@ export const NOTIFICATION_TYPES = {
     description: 'Anlaştığın firma ya da müşteri sana mesaj yazdığında',
     roles: [UserRole.CUSTOMER, UserRole.COMPANY],
   },
+  BOOKING_CANCELLED: {
+    label: 'İş iptali',
+    description: 'Anlaştığın firma ya da müşteri taşımayı iptal ettiğinde',
+    roles: [UserRole.CUSTOMER, UserRole.COMPANY],
+  },
   MOVE_REMINDER: {
     label: 'Taşınma günü hatırlatması',
     description: 'Taşınmadan bir gün önce, güzergâh ve iletişim bilgisiyle',

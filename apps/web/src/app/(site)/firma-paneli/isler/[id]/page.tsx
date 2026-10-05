@@ -6,6 +6,7 @@ import { getCompanyContext } from "@/lib/company";
 import { formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { homeTypeLabel } from "@/lib/request-options";
 import { Conversation } from "@/components/messages/conversation";
+import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { ReplyForm } from "@/components/reviews/reply-form";
 import { ReviewCard } from "@/components/reviews/review-card";
@@ -44,14 +45,29 @@ export default async function CompanyBookingMessagesPage({ params }: PageProps<"
           </a>
         </p>
       )}
-      {booking?.canComplete && (
-        <div className="mt-4">
-          <ConfirmButton
-            action={completeBooking.bind(null, booking.id, `/firma-paneli/isler/${booking.id}`)}
-            label="İş tamamlandı"
-            confirmText={`${booking.customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`}
-            confirmLabel="Evet, tamamlandı"
-          />
+      {booking?.status === "CANCELLED" && (
+        <p className="mt-4 rounded-lg bg-zinc-100 px-3 py-2 text-sm text-zinc-800">
+          Bu iş iptal edildi{booking.cancelledAt && ` (${formatDate(booking.cancelledAt)})`}.
+          {booking.cancelReason && ` İptal nedeni: ${booking.cancelReason}`}
+        </p>
+      )}
+      {booking && (booking.canComplete || booking.canCancel) && (
+        <div className="mt-4 flex flex-wrap items-start gap-3">
+          {booking.canComplete && (
+            <ConfirmButton
+              action={completeBooking.bind(null, booking.id, `/firma-paneli/isler/${booking.id}`)}
+              label="İş tamamlandı"
+              confirmText={`${booking.customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`}
+              confirmLabel="Evet, tamamlandı"
+            />
+          )}
+          {booking.canCancel && (
+            <CancelBookingForm
+              bookingId={booking.id}
+              pagePath={`/firma-paneli/isler/${booking.id}`}
+              consequence={`${booking.customer.fullName} müşterisinin taşıması iptal edilecek ve müşteriye haber verilecek.`}
+            />
+          )}
         </div>
       )}
       {booking?.status === "COMPLETED" && (

@@ -24,6 +24,8 @@ export interface DomainEventMap {
   'booking.move_day_approaching': { bookingId: string };
   /** Müşteri ya da firma işi tamamlandı olarak işaretledi */
   'booking.completed': { bookingId: string; completedBy: 'CUSTOMER' | 'COMPANY' };
+  /** Müşteri ya da firma anlaşılan işi iptal etti */
+  'booking.cancelled': { bookingId: string; cancelledBy: 'CUSTOMER' | 'COMPANY' };
   /** Müşteri tamamlanan işin firmasını değerlendirdi */
   'review.created': { reviewId: string };
 }

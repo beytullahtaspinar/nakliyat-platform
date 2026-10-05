@@ -47,6 +47,14 @@ export class HideReviewDto {
   reason!: string;
 }
 
+export class CancelBookingDto {
+  @ApiProperty({ example: 'Taşınma tarihim değişti, ev sahibi çıkışı bir ay erteledi.' })
+  @Transform(trim)
+  @IsString()
+  @Length(5, 500, { message: 'İptal nedeni 5-500 karakter olmalı' })
+  reason!: string;
+}
+
 export class AdminListReviewsDto extends PaginationDto {
   @ApiPropertyOptional({ enum: ['visible', 'hidden'], description: 'Boşsa hepsi' })
   @IsOptional()

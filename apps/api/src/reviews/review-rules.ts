@@ -13,6 +13,13 @@ export const moveDayReached = (scheduledAt: Date, now = new Date()) =>
   todayInTurkey(now) >= scheduledAt.toISOString().slice(0, 10);
 
 /**
+ * Taşınma günü geçti mi? Anlaşılan iş taşınma gününün sonuna kadar iptal edilebilir; sonrasında
+ * iş ya tamamlanır ya da yönetime bildirilir (firma kötü yorumdan kaçmak için geriye dönük iptal edemez).
+ */
+export const moveDayPassed = (scheduledAt: Date, now = new Date()) =>
+  todayInTurkey(now) > scheduledAt.toISOString().slice(0, 10);
+
+/**
  * Herkese açık sayfada yorum sahibinin adı: "Ayşe Yılmaz" → "Ayşe Y.". Soyadı ve iletişim
  * bilgisi gösterilmez; hesabını silen müşterinin adı hiç gösterilmez.
  */
