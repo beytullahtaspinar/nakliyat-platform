@@ -141,6 +141,50 @@ export async function setCompanyMediaHidden(
   return { notice: hide ? "Görsel sayfadan kaldırıldı." : "Görsel yeniden yayında." };
 }
 
+/** Yönetimden açılan hesabın ortak alanları (müşteri ya da firma yetkilisi) */
+function accountBody(formData: FormData) {
+  const text = (name: string) => String(formData.get(name) ?? "").trim();
+  return {
+    fullName: text("fullName"),
+    phone: text("phone"),
+    email: text("email"),
+    password: String(formData.get("password") ?? ""),
+    markVerified: formData.get("markVerified") === "on",
+  };
+}
+
+/** Müşteri hesabı açar ve yeni hesabın sayfasına gider */
+export async function createCustomer(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const body = accountBody(formData);
+  if (body.password.length < 8) return { error: "Şifre en az 8 karakter olmalı." };
+  let id: string;
+  try {
+    ({ id } = await apiFetch<{ id: string }>("/admin/users", { method: "POST", token: await adminToken(), body }));
+  } catch (err) {
+    return failure(err, "Müşteri hesabı açılamadı.");
+  }
+  revalidatePath("/yonetim", "layout");
+  redirect(`/yonetim/kullanicilar/${id}?yeni=1`);
+}
+
+/** Firmayı yetkilisinin hesabıyla birlikte açar ve firmanın inceleme sayfasına gider */
+export async function createCompany(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const account = accountBody(formData);
+  if (account.password.length < 8) return { error: "Şifre en az 8 karakter olmalı." };
+  let id: string;
+  try {
+    ({ id } = await apiFetch<{ id: string }>("/admin/companies", {
+      method: "POST",
+      token: await adminToken(),
+      body: { ...companyProfileBody(formData, true), ...account },
+    }));
+  } catch (err) {
+    return failure(err, "Firma açılamadı.");
+  }
+  revalidatePath("/yonetim", "layout");
+  redirect(`/yonetim/firmalar/${id}?yeni=1`);
+}
+
 export async function updateUser(userId: string, _prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
   const text = (name: string) => String(formData.get(name) ?? "").trim();
   try {

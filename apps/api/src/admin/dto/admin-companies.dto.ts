@@ -1,8 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, IntersectionType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEnum, IsOptional, IsString, Length, MaxLength } from 'class-validator';
 import { VerificationStatus } from '../../generated/prisma/enums.js';
+import { CreateCompanyProfileDto } from '../../companies/dto/company-profile.dto.js';
 import { PaginationDto } from '../../requests/dto/list-requests.dto.js';
+import { AdminCreateUserDto } from './admin-lists.dto.js';
 
 export class ListCompaniesDto extends PaginationDto {
   @ApiPropertyOptional({ enum: VerificationStatus })
@@ -24,3 +26,6 @@ export class RejectCompanyDto {
   @Length(5, 500)
   reason: string;
 }
+
+/** Yönetimden firma açılışı: firma bilgileri + yetkilinin hesabı (fullName yetkilinin adıdır) */
+export class AdminCreateCompanyDto extends IntersectionType(CreateCompanyProfileDto, AdminCreateUserDto) {}

@@ -23,6 +23,7 @@ import { companyPath } from "@/lib/reviews";
 export const metadata: Metadata = { title: "Firma inceleme" };
 
 const HISTORY_LABELS: Record<string, string> = {
+  "company.create": "Firma yönetimden açıldı",
   "company.update": "Bilgiler yönetimden düzenlendi",
   "company.document.upload": "Firma belge yükledi",
   "company.document.approve": "Belge onaylandı",
@@ -55,9 +56,10 @@ async function load(token: string, id: string) {
   }
 }
 
-export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/firmalar/[id]">) {
+export default async function AdminCompanyPage({ params, searchParams }: PageProps<"/yonetim/firmalar/[id]">) {
   const { token } = await getAdminContext();
   const { id } = await params;
+  const created = Boolean((await searchParams).yeni);
   const c = await load(token, id);
   const missing = c.requirements.filter((r) => r.state !== "VERIFIED").map((r) => DOCUMENT_LABELS[r.type]);
 
@@ -74,6 +76,11 @@ export default async function AdminCompanyPage({ params }: PageProps<"/yonetim/f
           </div>
         }
       />
+      {created && (
+        <p role="status" className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+          Firma açıldı ve onay bekliyor. Onaylamak için zorunlu belgeleri yükle: firma paneline geçip Belgeler sayfasından yükleyebilirsin.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-4">

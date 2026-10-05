@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Field, FormError, Input, SubmitButton, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
 import { saveCompanyProfile, type CompanyFormState } from "@/lib/actions/company";
@@ -14,9 +14,11 @@ type Props = {
   profile?: CompanyProfile;
   /** Yönetim ekranı kendi kayıt eylemini verir; firma kimlik değişikliğinde yeniden doğrulamaya düşmez. */
   action?: (state: CompanyFormState, formData: FormData) => Promise<CompanyFormState>;
+  /** Formun başına eklenen alanlar (yönetimden firma açarken yetkilinin hesabı) */
+  children?: ReactNode;
 };
 
-export function ProfileForm({ cities, profile, action }: Props) {
+export function ProfileForm({ cities, profile, action, children }: Props) {
   const { state, pending, formProps } = useFormAction(action ?? saveCompanyProfile.bind(null, !profile), {});
   const [cityCode, setCityCode] = useState(profile?.cityCode ?? "");
   const [service, setService] = useState<Set<string>>(new Set(profile?.serviceCityCodes ?? []));
@@ -31,6 +33,7 @@ export function ProfileForm({ cities, profile, action }: Props) {
 
   return (
     <form {...formProps} className="space-y-5">
+      {children}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Görünen ad" hint="Müşterilerin teklifinde göreceği ad.">
           <Input name="displayName" defaultValue={profile?.displayName} minLength={2} maxLength={80} required />

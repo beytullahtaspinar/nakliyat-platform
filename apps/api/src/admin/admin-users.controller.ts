@@ -28,7 +28,9 @@ import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { IMPERSONATION_TTL_SECONDS } from './admin-companies.controller.js';
+import { newAccountData } from './new-account.js';
 import {
+  AdminCreateUserDto,
   AdminListUsersDto,
   AdminSetPasswordDto,
   AdminUpdateUserDto,
@@ -91,6 +93,26 @@ export class AdminUsersController {
       this.prisma.user.count({ where }),
     ]);
     return { items: items.map(toUser), total, page, limit };
+  }
+
+  /**
+   * Yönetici müşteri hesabı açar (telefonla destek, deneme hesabı). Firma hesabı firma bilgileriyle
+   * birlikte POST /admin/companies ile açılır; yönetici hesabı panelden açılmaz.
+   */
+  @Post()
+  async create(@CurrentUser() admin: AuthUser, @Body() dto: AdminCreateUserDto) {
+    const data = await newAccountData(this.prisma, dto, UserRole.CUSTOMER);
+    const user = await this.prisma.user.create({ data, select: { id: true } });
+    await this.prisma.auditLog.create({
+      data: {
+        actorId: admin.id,
+        action: 'user.create',
+        entityType: 'User',
+        entityId: user.id,
+        details: { role: UserRole.CUSTOMER, verified: Boolean(dto.markVerified) },
+      },
+    });
+    return this.detail(user.id);
   }
 
   /** Düzenleme ekranı: kullanıcı ve yönetimin bu hesapta yaptığı son işlemler */

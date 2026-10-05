@@ -12,6 +12,7 @@ import { DeleteUserForm, PasswordForm, UserForm } from "./user-forms";
 export const metadata: Metadata = { title: "Kullanıcı" };
 
 const ACTION_LABELS: Record<string, string> = {
+  "user.create": "Hesap yönetimden açıldı",
   "user.update": "Bilgiler güncellendi",
   "user.password_set": "Yeni şifre belirlendi",
   "user.delete": "Hesap silindi",
@@ -37,9 +38,10 @@ function accountArea(path?: string): string | undefined {
   return undefined;
 }
 
-export default async function AdminUserPage({ params }: PageProps<"/yonetim/kullanicilar/[id]">) {
+export default async function AdminUserPage({ params, searchParams }: PageProps<"/yonetim/kullanicilar/[id]">) {
   const { token, user: admin } = await getAdminContext();
   const { id } = await params;
+  const created = Boolean((await searchParams).yeni);
   const u = await apiFetch<AdminUserDetail>(`/admin/users/${encodeURIComponent(id)}`, { token }).catch((err) => {
     if (err instanceof ApiError && err.status === 404) notFound();
     throw err;
@@ -58,6 +60,11 @@ export default async function AdminUserPage({ params }: PageProps<"/yonetim/kull
         }
         actions={u.role === "CUSTOMER" && u.status === "ACTIVE" && <ImpersonateCustomerButton userId={u.id} />}
       />
+      {created && (
+        <p role="status" className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+          Müşteri hesabı açıldı. Kişi telefon numarası ve belirlediğin şifreyle giriş yapabilir.
+        </p>
+      )}
       {u.company && (
         <p className="-mt-2 mb-4 text-sm">
           Firma:{" "}

@@ -234,6 +234,74 @@ test("roller birbirinin ekranına girmez; açık oturumla giriş sayfası hesap 
   expect(api.status()).toBe(403);
 });
 
+test("yönetici müşteri ve firma hesabı açar", async ({ page, request }) => {
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  await page.goto("/giris");
+  await page.getByLabel("Cep telefonu").fill(adminPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/yonetim$/);
+
+  // Müşteri
+  const customerPhone = `0536${uniqueDigits(7)}`;
+  const customerName = `Destek Müşterisi ${uniqueDigits(5)}`;
+  await page.goto("/yonetim/kullanicilar");
+  await page.getByRole("link", { name: "Müşteri ekle" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Müşteri ekle" })).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await expectAccessible(page);
+  await page.getByLabel("Ad soyad").fill(customerName);
+  await page.getByLabel("Cep telefonu").fill(customerPhone);
+  await page.getByLabel(/^E-posta/).fill(`musteri${uniqueDigits(8)}@ornek.com`);
+  await page.getByRole("button", { name: "Şifre oluştur" }).click();
+  await expect(page.getByLabel("Şifre", { exact: false })).not.toHaveValue("");
+  await page.getByLabel("Şifre", { exact: false }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Müşteri hesabını aç" }).click();
+  await expect(page).toHaveURL(/\/yonetim\/kullanicilar\/[^/?]+\?yeni=1$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(customerName);
+  await expect(page.getByText("Müşteri hesabı açıldı.")).toBeVisible();
+  await expect(page.getByText("Hesap yönetimden açıldı")).toBeVisible();
+  const customerLogin = await request.post(`${API}/auth/login`, { data: { phone: customerPhone, password: PASSWORD } });
+  expect(customerLogin.ok()).toBeTruthy();
+  expect((await customerLogin.json()).user).toMatchObject({ role: "CUSTOMER", verified: true });
+
+  // Aynı numarayla ikinci hesap açılmaz; yazılanlar kaybolmaz
+  await page.goto("/yonetim/kullanicilar/yeni");
+  await page.getByLabel("Ad soyad").fill("İkinci Hesap");
+  await page.getByLabel("Cep telefonu").fill(customerPhone);
+  await page.getByLabel(/^E-posta/).fill(`ikinci${uniqueDigits(8)}@ornek.com`);
+  await page.getByLabel("Şifre", { exact: false }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Müşteri hesabını aç" }).click();
+  await expect(page.getByText("Bu telefon numarasıyla kayıtlı bir hesap var")).toBeVisible();
+  await expect(page.getByLabel("Ad soyad")).toHaveValue("İkinci Hesap");
+
+  // Firma
+  const companyName = `Panelden Nakliyat ${uniqueDigits(5)}`;
+  await page.goto("/yonetim/firmalar");
+  await page.getByRole("link", { name: "Firma ekle" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Firma ekle" })).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await expectAccessible(page);
+  await page.getByLabel("Yetkilinin adı soyadı").fill("Firma Yetkilisi");
+  await page.getByLabel("Cep telefonu").fill(`0534${uniqueDigits(7)}`);
+  await page.getByLabel(/^E-posta/).fill(`firma${uniqueDigits(8)}@ornek.com`);
+  await page.getByLabel("Şifre", { exact: false }).fill(PASSWORD);
+  await page.getByLabel("Görünen ad").fill(companyName);
+  await page.getByLabel("Ticari unvan").fill(`${companyName} Ltd. Şti.`);
+  await page.getByLabel("Vergi numarası").fill(uniqueDigits(10).replace(/^0/, "1"));
+  await page.getByLabel("Merkez il").selectOption({ label: "İzmir" });
+  await page.getByRole("button", { name: "Firmayı kaydet" }).click();
+  await expect(page).toHaveURL(/\/yonetim\/firmalar\/[^/?]+\?yeni=1$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(companyName);
+  await expect(page.getByText("Firma açıldı ve onay bekliyor.")).toBeVisible();
+  await expect(page.getByText("Firma yönetimden açıldı")).toBeVisible();
+  await expectAccessible(page);
+});
+
 test("yönetici hesabı siler", async ({ page, request }) => {
   const adminPhone = `0533${uniqueDigits(7)}`;
   execFileSync("node", ["dist/create-admin.js"], {

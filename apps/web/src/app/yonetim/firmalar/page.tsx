@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ButtonLink } from "@/components/ui/button";
 import { getAdminContext, oneParam, pageParam } from "@/lib/admin";
 import { apiFetch, type AdminCompany, type Paginated, type VerificationStatus } from "@/lib/api";
 import { formatDate, formatPhone } from "@/lib/format";
@@ -30,7 +31,15 @@ export default async function AdminCompaniesPage({ searchParams }: PageProps<"/y
 
   return (
     <>
-      <PageHeader title="Firmalar" description="Firma başvuruları, doğrulama durumu ve iletişim bilgileri." />
+      <PageHeader
+        title="Firmalar"
+        description="Firma başvuruları, doğrulama durumu ve iletişim bilgileri."
+        actions={
+          <ButtonLink href="/yonetim/firmalar/yeni" size="sm">
+            Firma ekle
+          </ButtonLink>
+        }
+      />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <FilterTabs
           label="Firma durumu"

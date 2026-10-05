@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsEmail,
   IsEnum,
   IsOptional,
@@ -75,6 +76,37 @@ export class AdminSetPasswordDto {
   @MinLength(8, { message: 'Şifre en az 8 karakter olmalı' })
   @MaxLength(72)
   password: string;
+}
+
+/** Yönetimden açılan hesap (müşteri ya da firma yetkilisi) */
+export class AdminCreateUserDto {
+  @ApiProperty({ example: 'Ayşe Yılmaz' })
+  @Transform(trim)
+  @IsString()
+  @Length(2, 100)
+  fullName: string;
+
+  @ApiProperty({ example: '0532 123 45 67', description: 'Giriş bu numarayla yapılır' })
+  @IsString()
+  phone: string;
+
+  @ApiProperty({ example: 'ayse@ornek.com', description: 'Teklif vermek/kabul etmek için doğrulanmış e-posta gerekir' })
+  @Transform(trim)
+  @IsEmail({}, { message: 'Geçerli bir e-posta adresi girin' })
+  email: string;
+
+  @ApiProperty({ minLength: 8 })
+  @IsString()
+  @MinLength(8, { message: 'Şifre en az 8 karakter olmalı' })
+  @MaxLength(72)
+  password: string;
+
+  @ApiPropertyOptional({
+    description: 'Telefon ve e-posta doğrulanmış sayılır (yönetici kişiyle görüşüp bilgileri teyit ettiyse)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  markVerified?: boolean;
 }
 
 /** "0532 123" → "532123": telefonlar +90 ile saklandığı için baştaki 0 atılır; 3 haneden kısaysa aranmaz. */

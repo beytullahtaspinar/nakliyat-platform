@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/card";
 import { getAdminContext, oneParam, pageParam } from "@/lib/admin";
 import { apiFetch, type AdminUser, type Paginated, type UserRole } from "@/lib/api";
@@ -43,7 +44,15 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
 
   return (
     <>
-      <PageHeader title="Kullanıcılar" description="Müşteri, firma ve yönetici hesapları." />
+      <PageHeader
+        title="Kullanıcılar"
+        description="Müşteri, firma ve yönetici hesapları."
+        actions={
+          <ButtonLink href="/yonetim/kullanicilar/yeni" size="sm">
+            Müşteri ekle
+          </ButtonLink>
+        }
+      />
       {params.silindi && (
         <p role="status" className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
           Hesap silindi.
