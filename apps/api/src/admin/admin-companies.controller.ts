@@ -31,8 +31,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
 import { phoneDigits } from './dto/admin-lists.dto.js';
 
-/** Firma paneli görüntüleme süresi: 30 dk, sonra yönetici kendi oturumuna döner */
-const IMPERSONATION_TTL_SECONDS = 30 * 60;
+/** Firma paneli / müşteri hesabı görüntüleme süresi: 30 dk, sonra yönetici kendi oturumuna döner */
+export const IMPERSONATION_TTL_SECONDS = 30 * 60;
 
 @ApiTags('Admin: firmalar')
 @ApiBearerAuth()

@@ -43,7 +43,7 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Oturum süresi dolmuş veya geçersiz');
     }
     if (payload.imp) {
-      // Firma görüntüleme anahtarı: yönetici o arada yetkisini kaybettiyse anahtar da geçersiz
+      // Yönetici görüntüleme anahtarı (firma paneli / müşteri hesabı): yönetici o arada yetkisini kaybettiyse anahtar da geçersiz
       const admin = await this.prisma.user.findUnique({
         where: { id: payload.imp },
         select: { role: true, status: true, deletedAt: true },

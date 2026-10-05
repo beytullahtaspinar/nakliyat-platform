@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
 import { ApiError, apiFetch, type AdminUserDetail } from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { PageHeader, ROLE_LABELS, VerificationBadge } from "../../admin-bits";
+import { ImpersonateCustomerButton } from "./impersonate-button";
 import { DeleteUserForm, PasswordForm, UserForm } from "./user-forms";
 
 export const metadata: Metadata = { title: "Kullanıcı" };
@@ -14,6 +15,8 @@ const ACTION_LABELS: Record<string, string> = {
   "user.update": "Bilgiler güncellendi",
   "user.password_set": "Yeni şifre belirlendi",
   "user.delete": "Hesap silindi",
+  "user.impersonate": "Müşteri hesabına geçildi",
+  "user.impersonate.action": "Müşteri hesabında değişiklik",
 };
 const FIELD_LABELS: Record<string, string> = {
   fullName: "ad soyad",
@@ -21,6 +24,18 @@ const FIELD_LABELS: Record<string, string> = {
   email: "e-posta",
   status: "hesap durumu",
 };
+
+/** Müşteri hesabında yönetici görünümüyle yapılan değişikliğin hangi bölümde olduğu */
+function accountArea(path?: string): string | undefined {
+  if (!path) return undefined;
+  if (path.includes("/messages")) return "mesajlar";
+  if (path.includes("/complete")) return "iş tamamlandı";
+  if (path.includes("/media")) return "dosyalar";
+  if (path.includes("/quotes")) return "teklifler";
+  if (path.includes("/requests")) return "talepler";
+  if (path.includes("/notifications")) return "bildirimler";
+  return undefined;
+}
 
 export default async function AdminUserPage({ params }: PageProps<"/yonetim/kullanicilar/[id]">) {
   const { token, user: admin } = await getAdminContext();
@@ -41,6 +56,7 @@ export default async function AdminUserPage({ params }: PageProps<"/yonetim/kull
             {u.role === "CUSTOMER" ? ` · ${u.requestCount} talep` : ""}
           </>
         }
+        actions={u.role === "CUSTOMER" && u.status === "ACTIVE" && <ImpersonateCustomerButton userId={u.id} />}
       />
       {u.company && (
         <p className="-mt-2 mb-4 text-sm">
@@ -89,13 +105,17 @@ export default async function AdminUserPage({ params }: PageProps<"/yonetim/kull
               <h2 className="font-semibold">Yönetim geçmişi</h2>
               <ol className="mt-2 space-y-2 text-sm">
                 {u.history.map((h, i) => {
-                  const fields = (h.details as { fields?: string[] } | null)?.fields;
+                  const details = h.details as { fields?: string[]; path?: string } | null;
+                  const fields = details?.fields;
+                  const area = accountArea(details?.path);
                   return (
                     <li key={i}>
                       <span className="font-medium">{ACTION_LABELS[h.action] ?? h.action}</span>
-                      {fields?.length ? ` (${fields.map((f) => FIELD_LABELS[f] ?? f).join(", ")})` : ""}{" "}
+                      {fields?.length ? ` (${fields.map((f) => FIELD_LABELS[f] ?? f).join(", ")})` : ""}
+                      {area ? ` (${area})` : ""}{" "}
                       <span className="text-zinc-500">
-                        · {h.actor.fullName} · {formatDate(h.createdAt)}
+                        · {h.actor.fullName} ·{" "}
+                        {h.action.startsWith("user.impersonate") ? formatDateTime(h.createdAt) : formatDate(h.createdAt)}
                       </span>
                     </li>
                   );

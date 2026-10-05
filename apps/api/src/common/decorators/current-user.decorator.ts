@@ -4,7 +4,7 @@ import type { UserRole } from '../../generated/prisma/enums.js';
 export interface AuthUser {
   id: string;
   role: UserRole;
-  /** Firma paneline yönetici olarak geçildiyse yöneticinin kimliği */
+  /** Firma paneline ya da müşteri hesabına yönetici olarak geçildiyse yöneticinin kimliği */
   impersonatorId?: string;
 }
 

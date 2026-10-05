@@ -12,6 +12,9 @@ export const ROLE_COOKIE = "nk_rol";
  */
 export const IMPERSONATION_COOKIE = "nk_firma_gorunum";
 export const IMPERSONATION_PATH = "/firma-paneli";
+/** Aynısı müşteri hesabı için: yalnızca /hesabim altına gönderilir. */
+export const CUSTOMER_IMPERSONATION_COOKIE = "nk_musteri_gorunum";
+export const CUSTOMER_IMPERSONATION_PATH = "/hesabim";
 
 const ACCESS_MAX_AGE = 14 * 60;
 const REFRESH_MAX_AGE = 30 * 24 * 60 * 60;

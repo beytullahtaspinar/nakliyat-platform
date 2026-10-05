@@ -404,4 +404,42 @@ describe('Pazaryeri akışı (e2e)', () => {
     await http().post('/v1/admin/companies/yok/impersonate').set(auth('admin')).expect(404);
   });
 
+  it('yönetici müşteri hesabına geçer: müşterinin gözünden çalışır, her değişiklik kaydedilir', async () => {
+    const adminId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.admin } })).id;
+    const customerId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.customer } })).id;
+    const res = await http().post(`/v1/admin/users/${customerId}/impersonate`).set(auth('admin')).expect(200);
+    expect(res.body).toMatchObject({ expiresIn: 1800, user: { id: customerId } });
+    const asCustomer = { Authorization: `Bearer ${res.body.accessToken}` };
+
+    const me = await http().get('/v1/auth/me').set(asCustomer).expect(200);
+    expect(me.body).toMatchObject({ id: customerId, role: 'CUSTOMER' });
+    await http().get('/v1/requests').set(asCustomer).expect(200);
+    await http().patch('/v1/notifications/preferences').set(asCustomer).send({ items: [] }).expect(200);
+    // Herkese açık yorum müşterinin kendi görüşü: yönetici müşteri adına yazamaz
+    const booking = await prisma.booking.findFirstOrThrow({ where: { request: { customerId } } });
+    await http().post(`/v1/bookings/${booking.id}/review`).set(asCustomer).send({ rating: 5 }).expect(403);
+    await http().get('/v1/admin/summary').set(asCustomer).expect(403);
+
+    const logs = await prisma.auditLog.findMany({
+      where: { entityType: 'User', entityId: customerId, action: { startsWith: 'user.impersonate' } },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(logs.map((l) => [l.action, l.actorId])).toEqual([
+      ['user.impersonate', adminId],
+      ['user.impersonate.action', adminId],
+    ]);
+    expect(logs[1].details).toEqual({ method: 'PATCH', path: '/v1/notifications/preferences' });
+
+    // Yönetici ve firma hesaplarına, başkasına ait yetkiyle ya da askıdaki hesaba geçilmez
+    await http().post(`/v1/admin/users/${adminId}/impersonate`).set(auth('admin')).expect(403);
+    const companyCOwner = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.companyC } })).id;
+    await http().post(`/v1/admin/users/${companyCOwner}/impersonate`).set(auth('admin')).expect(400);
+    await http().post(`/v1/admin/users/${customerId}/impersonate`).set(auth('companyA')).expect(403);
+    await http().post(`/v1/admin/users/${customerId}/impersonate`).set(asCustomer).expect(403);
+    await prisma.user.update({ where: { id: customerId }, data: { status: 'SUSPENDED' } });
+    await http().post(`/v1/admin/users/${customerId}/impersonate`).set(auth('admin')).expect(400);
+    await prisma.user.update({ where: { id: customerId }, data: { status: 'ACTIVE' } });
+    await http().post('/v1/admin/users/yok/impersonate').set(auth('admin')).expect(404);
+  });
+
 });
