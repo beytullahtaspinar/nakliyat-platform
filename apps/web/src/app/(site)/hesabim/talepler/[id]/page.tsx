@@ -19,6 +19,7 @@ import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-opt
 import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib/session";
 import { BadgeLegend, CompanyBadges } from "@/components/company-badges";
 import { ConfirmButton } from "@/components/forms/confirm-button";
+import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
 import { Conversation } from "@/components/messages/conversation";
 import { ReviewCard } from "@/components/reviews/review-card";
 import { ReviewForm } from "@/components/reviews/review-form";
@@ -54,7 +55,7 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
   const { kabul, medya } = await searchParams;
 
   const booking =
-    request.status === "BOOKED" || request.status === "COMPLETED"
+    request.status === "BOOKED" || request.status === "COMPLETED" || request.status === "CANCELLED"
       ? (await apiFetch<Paginated<CustomerBooking>>("/bookings?limit=50", { token })).items.find(
           (b) => b.requestId === request.id,
         )
@@ -295,6 +296,25 @@ function QuoteCard({
 
 function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; justAccepted: boolean }) {
   const completed = booking.status === "COMPLETED";
+  if (booking.status === "CANCELLED") {
+    return (
+      <section className="mt-6 rounded-xl border border-zinc-300 bg-zinc-50 p-5 text-zinc-900">
+        <h2 className="text-lg font-semibold">Taşıma iptal edildi</h2>
+        <p className="mt-1 text-sm">
+          {booking.company.displayName} · {formatMoney(booking.priceTry)} · {formatDate(booking.scheduledAt)}
+          {booking.cancelledAt && ` · iptal: ${formatDate(booking.cancelledAt)}`}
+        </p>
+        {booking.cancelReason && <p className="mt-2 text-sm">İptal nedeni: {booking.cancelReason}</p>}
+        <p className="mt-3 text-sm">
+          Yeniden teklif almak için{" "}
+          <Link href="/talep-olustur" className="font-semibold text-brand-700 underline">
+            yeni bir talep oluştur
+          </Link>
+          .
+        </p>
+      </section>
+    );
+  }
   return (
     <section className="mt-6 rounded-xl border border-green-300 bg-green-50 p-5 text-green-950 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
       <h2 className="text-lg font-semibold">
@@ -318,14 +338,23 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
           {!booking.canComplete && " Taşınma günü geldiğinde işi tamamlandı olarak işaretleyip firmayı değerlendirebileceksin."}
         </p>
       )}
-      {booking.canComplete && (
-        <div className="mt-4">
-          <ConfirmButton
-            action={completeBooking.bind(null, booking.id, `/hesabim/talepler/${booking.requestId}`)}
-            label="Taşınma tamamlandı"
-            confirmText={`${booking.company.displayName} taşımanı bitirdi mi? Onaylarsan iş tamamlandı olarak kapanır ve firmayı değerlendirebilirsin.`}
-            confirmLabel="Evet, tamamlandı"
-          />
+      {(booking.canComplete || booking.canCancel) && (
+        <div className="mt-4 flex flex-wrap items-start gap-3">
+          {booking.canComplete && (
+            <ConfirmButton
+              action={completeBooking.bind(null, booking.id, `/hesabim/talepler/${booking.requestId}`)}
+              label="Taşınma tamamlandı"
+              confirmText={`${booking.company.displayName} taşımanı bitirdi mi? Onaylarsan iş tamamlandı olarak kapanır ve firmayı değerlendirebilirsin.`}
+              confirmLabel="Evet, tamamlandı"
+            />
+          )}
+          {booking.canCancel && (
+            <CancelBookingForm
+              bookingId={booking.id}
+              pagePath={`/hesabim/talepler/${booking.requestId}`}
+              consequence={`${booking.company.displayName} ile anlaştığın taşıma iptal edilecek ve firmaya haber verilecek. Yeniden teklif almak için yeni talep oluşturman gerekir.`}
+            />
+          )}
         </div>
       )}
     </section>

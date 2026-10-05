@@ -108,6 +108,28 @@ export const templates = {
     };
   },
 
+  bookingCancelledForCustomer(p: Route & { requestId: string; companyName: string; reason: string }): NotificationContent {
+    return {
+      type: 'BOOKING_CANCELLED',
+      title: `${p.companyName} taşımanı iptal etti`,
+      body: `${formatDate(p.moveDate)} tarihli taşıman iptal edildi. Yeni bir talep oluşturarak diğer firmalardan hemen teklif alabilirsin.`,
+      details: [`Güzergâh: ${routeLine(p)}`, `İptal nedeni: ${p.reason}`],
+      path: '/talep-olustur',
+      actionLabel: 'Yeni talep oluştur',
+    };
+  },
+
+  bookingCancelledForCompany(p: Route & { bookingId: string; reason: string }): NotificationContent {
+    return {
+      type: 'BOOKING_CANCELLED',
+      title: `Müşteri taşımayı iptal etti: ${routeLine(p)}`,
+      body: `${formatDate(p.moveDate)} tarihli iş iptal edildi; takviminden düşüldü.`,
+      details: [`Güzergâh: ${routeLine(p)}`, `İptal nedeni: ${p.reason}`],
+      path: `/firma-paneli/isler/${p.bookingId}`,
+      actionLabel: 'İşi görüntüle',
+    };
+  },
+
   reviewRequest(p: { companyName: string; requestId: string }): NotificationContent {
     return {
       type: 'REVIEW_REQUEST',

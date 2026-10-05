@@ -202,11 +202,15 @@ export type OwnReview = {
   createdAt: string;
 };
 
-/** Değerlendirme ve "iş tamamlandı" düğmesi için iş alanları */
+/** Değerlendirme, "iş tamamlandı" ve "işi iptal et" düğmeleri için iş alanları */
 type BookingReviewState = {
   completedAt: string | null;
   /** Planlanmış ve taşınma günü gelmiş: tamamlandı olarak işaretlenebilir */
   canComplete: boolean;
+  /** Planlanmış ve taşınma günü geçmemiş: gerekçeyle iptal edilebilir */
+  canCancel: boolean;
+  cancelledAt: string | null;
+  cancelReason: string | null;
   review: OwnReview | null;
 };
 

@@ -11,7 +11,7 @@ import { Prisma, type Review } from '../generated/prisma/client.js';
 import { BookingStatus, CompanyMediaKind, RequestStatus, UserRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AdminListReviewsDto, CreateReviewDto, PublicCompaniesDto } from './dto/review.dto.js';
-import { maskName, moveDayReached } from './review-rules.js';
+import { maskName, moveDayPassed, moveDayReached } from './review-rules.js';
 
 /** Arama motoruna açık firma sayfası: yorumu var ya da tanıtım yazısı ve fotoğrafları yeterli */
 const INDEXABLE_COMPANY = { OR: [{ ratingCount: { gt: 0 } }, { showcaseComplete: true }] } satisfies Prisma.CompanyWhereInput;
@@ -109,6 +109,55 @@ export class ReviewsService {
     });
     this.events.emit('booking.completed', { bookingId: booking.id, completedBy: isCustomer ? 'CUSTOMER' : 'COMPANY' });
     return { id: booking.id, status: BookingStatus.COMPLETED, completedAt };
+  }
+
+  /**
+   * Müşteri ya da firma anlaşılan işi gerekçeyle iptal eder (taşınma gününün sonuna kadar).
+   * Talep de iptal olur; müşteri yeniden teklif almak için yeni talep açar. Karşı tarafa bildirim gider,
+   * konuşma salt okunur kalır. Kimin iptal ettiği denetim kaydında tutulur.
+   */
+  async cancelBooking(user: AuthUser, bookingId: string, reason: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: {
+        id: true,
+        status: true,
+        scheduledAt: true,
+        requestId: true,
+        request: { select: { customerId: true } },
+        company: { select: { ownerId: true } },
+      },
+    });
+    const isCustomer = user.role === UserRole.CUSTOMER && booking?.request.customerId === user.id;
+    const isCompany = user.role === UserRole.COMPANY && booking?.company.ownerId === user.id;
+    if (!booking || (!isCustomer && !isCompany)) throw new NotFoundException('İş bulunamadı');
+    if (booking.status === BookingStatus.CANCELLED) throw new ConflictException('Bu iş zaten iptal edilmiş');
+    if (booking.status === BookingStatus.COMPLETED) throw new ConflictException('Tamamlanan iş iptal edilemez');
+    if (moveDayPassed(booking.scheduledAt)) {
+      throw new ConflictException('Taşınma günü geçen iş iptal edilemez; sorun varsa destek@evdenevenakliyat.app adresine yaz');
+    }
+
+    const cancelledBy = isCustomer ? 'CUSTOMER' : 'COMPANY';
+    const cancelledAt = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      const done = await tx.booking.updateMany({
+        where: { id: booking.id, status: BookingStatus.SCHEDULED },
+        data: { status: BookingStatus.CANCELLED, cancelledAt, cancelReason: reason },
+      });
+      if (done.count !== 1) throw new ConflictException('Bu işin durumu değişti, sayfayı yenile');
+      await tx.movingRequest.update({ where: { id: booking.requestId }, data: { status: RequestStatus.CANCELLED } });
+      await tx.auditLog.create({
+        data: {
+          actorId: user.impersonatorId ?? user.id,
+          action: 'booking.cancel',
+          entityType: 'Booking',
+          entityId: booking.id,
+          details: { cancelledBy, reason, ...(user.impersonatorId && { onBehalfOf: user.id }) },
+        },
+      });
+    });
+    this.events.emit('booking.cancelled', { bookingId: booking.id, cancelledBy });
+    return { id: booking.id, status: BookingStatus.CANCELLED, cancelledAt, cancelReason: reason, cancelledBy };
   }
 
   /** Müşteri tamamlanan işin firmasını puanlar; iş başına bir değerlendirme, sonradan değiştirilemez. */

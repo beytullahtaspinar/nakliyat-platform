@@ -92,7 +92,7 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
               ))}
             </select>
           </Field>
-          <Field label="Taşınma tarihi">
+          <Field label="Taşınma tarihi" hint="En erken yarın; firmaların teklif verebilmesi için zaman gerekir.">
             <Input name="moveDate" type="date" min={minDate} max={maxDate} required />
           </Field>
         </div>

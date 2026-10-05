@@ -47,6 +47,7 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('message.sent', ({ messageId }) => this.onMessageSent(messageId));
     this.events.on('booking.move_day_approaching', ({ bookingId }) => this.onMoveDayApproaching(bookingId));
     this.events.on('booking.completed', (p) => this.onBookingCompleted(p.bookingId, p.completedBy));
+    this.events.on('booking.cancelled', (p) => this.onBookingCancelled(p.bookingId, p.cancelledBy));
     this.events.on('review.created', ({ reviewId }) => this.onReviewCreated(reviewId));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
   }
@@ -172,6 +173,32 @@ export class NotificationsListener implements OnModuleInit {
         customerPhone: formatTrPhone(request.customer.phone),
       }),
     );
+  }
+
+  /** İptali yapmayan tarafa haber ver. */
+  async onBookingCancelled(bookingId: string, cancelledBy: 'CUSTOMER' | 'COMPANY') {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { request: true, company: { select: { ownerId: true, displayName: true } } },
+    });
+    if (!booking) return;
+    const reason = booking.cancelReason ?? '';
+    if (cancelledBy === 'COMPANY') {
+      await this.notifications.notify(
+        booking.request.customerId,
+        templates.bookingCancelledForCustomer({
+          ...route(booking.request),
+          requestId: booking.requestId,
+          companyName: booking.company.displayName,
+          reason,
+        }),
+      );
+    } else {
+      await this.notifications.notify(
+        booking.company.ownerId,
+        templates.bookingCancelledForCompany({ ...route(booking.request), bookingId, reason }),
+      );
+    }
   }
 
   /** Firma işi tamamladıysa müşteriden değerlendirme iste; müşteri kendisi tamamladıysa formu zaten görüyor. */

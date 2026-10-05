@@ -92,6 +92,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | GET | `/bookings` | Müşteri | Anlaşılan işler, firmanın iletişim bilgisiyle |
 | ⏳ | GET | `/bookings/:id` | Taraflar | İş detayı |
 | ✅ | POST | `/bookings/:id/complete` | Taraflar | İşi tamamlandı olarak işaretle; taşınma günü gelmeden yapılamaz. Talep de tamamlanır. Firma tamamlarsa müşteriye `REVIEW_REQUEST` gider. |
+| ✅ | POST | `/bookings/:id/cancel` | Taraflar | Anlaşılan işi gerekçeyle (`reason`, 5-500 karakter) iptal et; taşınma gününün sonuna kadar. Talep de iptal olur, mesajlaşma kapanır, karşı tarafa `BOOKING_CANCELLED` gider. Kimin iptal ettiği denetim kaydında (`booking.cancel`). |
 | ✅ | POST | `/bookings/:id/review` | Müşteri | Tamamlanan işe 1-5 puan ve isteğe bağlı yorum (10-2000 karakter); iş başına bir kez, değiştirilemez. Firmaya `NEW_REVIEW` gider. ([degerlendirmeler.md](degerlendirmeler.md)) |
 | ✅ | GET · POST | `/bookings/:id/messages` | Taraflar | İş üzerinden yazışma (teklif kabulünden sonra). GET karşı tarafın mesajlarını okundu sayar (yönetici firma görünümünde saymaz). Mesaj 1-2000 karakter; iptal edilen işte salt okunur. Karşı tarafa okunmamışların ilki için `NEW_MESSAGE` bildirimi gider. |
 | ✅ | GET | `/messages/unread` | Müşteri, Firma | Okunmamış mesajlar: `{ total, items: [{ bookingId, requestId, count }] }` |

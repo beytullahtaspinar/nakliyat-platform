@@ -29,6 +29,26 @@ export async function completeBooking(bookingId: string, pagePath: string): Prom
   return {};
 }
 
+/** Müşteri ya da firma anlaşılan işi gerekçeyle iptal eder; karşı tarafa bildirim gider. */
+export async function cancelBooking(
+  bookingId: string,
+  pagePath: string,
+  _prev: ReviewActionState,
+  formData: FormData,
+): Promise<ReviewActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length < 5 || reason.length > 500) return { error: "İptal nedenini yaz (5-500 karakter)." };
+  const token = await getAccessToken();
+  if (!token) return { error: SESSION_ENDED };
+  try {
+    await apiFetch(`/bookings/${encodeURIComponent(bookingId)}/cancel`, { method: "POST", token, body: { reason } });
+  } catch (err) {
+    return failure(err, "İş iptal edilemedi, lütfen tekrar dene.");
+  }
+  revalidatePath(pagePath);
+  return {};
+}
+
 export async function submitReview(
   bookingId: string,
   pagePath: string,

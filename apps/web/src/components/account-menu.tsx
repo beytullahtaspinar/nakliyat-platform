@@ -53,7 +53,7 @@ export function AccountMenu({ stacked = false }: { stacked?: boolean }) {
       <Link href={home.href} className={item}>
         {home.label}
       </Link>
-      <LogoutForm>
+      <LogoutForm className={stacked ? undefined : "flex"}>
         <button
           type="submit"
           className={stacked ? `${item} text-zinc-600` : "text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"}

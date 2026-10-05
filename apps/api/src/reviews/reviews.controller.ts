@@ -4,7 +4,7 @@ import { CurrentUser, type AuthUser } from '../common/decorators/current-user.de
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { UserRole } from '../generated/prisma/enums.js';
 import { PaginationDto } from '../requests/dto/list-requests.dto.js';
-import { CreateReviewDto, ReplyReviewDto } from './dto/review.dto.js';
+import { CancelBookingDto, CreateReviewDto, ReplyReviewDto } from './dto/review.dto.js';
 import { ReviewsService } from './reviews.service.js';
 
 @ApiTags('Değerlendirmeler')
@@ -19,6 +19,14 @@ export class ReviewsController {
   @HttpCode(HttpStatus.OK)
   complete(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.reviews.completeBooking(user, id);
+  }
+
+  /** Müşteri ya da firma anlaşılan işi gerekçeyle iptal eder (taşınma gününün sonuna kadar). */
+  @Roles(UserRole.CUSTOMER, UserRole.COMPANY)
+  @Post('bookings/:id/cancel')
+  @HttpCode(HttpStatus.OK)
+  cancel(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CancelBookingDto) {
+    return this.reviews.cancelBooking(user, id, dto.reason);
   }
 
   /** Müşteri tamamlanan işin firmasını 1-5 puanla, isteğe bağlı yorumla değerlendirir (iş başına bir kez). */

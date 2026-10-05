@@ -6,6 +6,7 @@ import { getCompanyContext } from "@/lib/company";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { homeTypeLabel } from "@/lib/request-options";
 import { RouteOverview } from "@/components/map/route-overview";
+import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { Stars } from "@/components/reviews/stars";
 import { completeBooking } from "@/lib/actions/reviews";
@@ -89,6 +90,12 @@ export default async function CompanyBookingsPage() {
                     <dd className="inline">{b.request.notes}</dd>
                   </div>
                 )}
+                {b.status === "CANCELLED" && b.cancelReason && (
+                  <div>
+                    <dt className="inline text-zinc-500">İptal nedeni: </dt>
+                    <dd className="inline">{b.cancelReason}</dd>
+                  </div>
+                )}
               </dl>
               <p className="mt-4 text-sm">
                 <Link href={`/firma-paneli/isler/${b.id}`} className="font-semibold text-brand-700 underline">
@@ -109,15 +116,24 @@ export default async function CompanyBookingsPage() {
                   </Link>
                 </p>
               )}
-              {b.canComplete && (
-                <div className="mt-4">
-                  <ConfirmButton
-                    action={completeBooking.bind(null, b.id, "/firma-paneli/isler")}
-                    label="İş tamamlandı"
-                    confirmText={`${b.customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`}
-                    confirmLabel="Evet, tamamlandı"
-                    variant="quiet"
-                  />
+              {(b.canComplete || b.canCancel) && (
+                <div className="mt-4 flex flex-wrap items-start gap-3">
+                  {b.canComplete && (
+                    <ConfirmButton
+                      action={completeBooking.bind(null, b.id, "/firma-paneli/isler")}
+                      label="İş tamamlandı"
+                      confirmText={`${b.customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`}
+                      confirmLabel="Evet, tamamlandı"
+                      variant="quiet"
+                    />
+                  )}
+                  {b.canCancel && (
+                    <CancelBookingForm
+                      bookingId={b.id}
+                      pagePath="/firma-paneli/isler"
+                      consequence={`${b.customer.fullName} müşterisinin taşıması iptal edilecek ve müşteriye haber verilecek.`}
+                    />
+                  )}
                 </div>
               )}
               {b.status === "SCHEDULED" && (
