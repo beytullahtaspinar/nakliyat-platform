@@ -13,7 +13,7 @@ import { ReviewsService } from '../reviews/reviews.service.js';
 export class AdminReviewsController {
   constructor(private readonly reviews: ReviewsService) {}
 
-  /** Tüm değerlendirmeler, en yeni önce; yayında/gizli, puan ve firma adı/metin araması */
+  /** Tüm değerlendirmeler; yayında/gizli, puan, yanıt durumu, sıralama ve arama; genel sayaçlar */
   @Get()
   list(@Query() dto: AdminListReviewsDto) {
     return this.reviews.adminList(dto);

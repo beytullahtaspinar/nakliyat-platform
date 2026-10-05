@@ -426,7 +426,15 @@ export type CompanyBooking = BookingReviewState & {
 /** GET /company/reviews */
 export type CompanyReviews = Paginated<
   OwnReview & { customerName: string; bookingId: string; route: string; moveDate: string }
-> & { summary: { ratingAverage: string; ratingCount: number; distribution: RatingDistribution } };
+> & {
+  summary: {
+    ratingAverage: string;
+    ratingCount: number;
+    distribution: RatingDistribution;
+    /** Gizlenenler dahil tüm değerlendirmeler */
+    counts: { total: number; unanswered: number; hidden: number };
+  };
+};
 
 // ─── Mesajlaşma ────────────────────────────────────────────────
 
@@ -582,6 +590,12 @@ export type AdminReview = OwnReview & {
   customer: { id: string; fullName: string };
   requestId: string;
   route: string;
+  moveDate: string;
+};
+
+/** GET /admin/reviews: liste ve süzgeçten bağımsız genel sayaçlar */
+export type AdminReviews = Paginated<AdminReview> & {
+  stats: { total: number; ratingAverage: number; hidden: number; unanswered: number; lowRating: number; lastWeek: number };
 };
 
 export type AdminUser = {
