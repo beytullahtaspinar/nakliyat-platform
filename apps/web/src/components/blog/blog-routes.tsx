@@ -9,6 +9,7 @@ import {
   getPosts,
   pagePath,
 } from "@/lib/blog/wordpress";
+import { DEFAULT_OG_IMAGES } from "@/lib/site";
 
 /**
  * Blog liste sayfaları: /blog, /blog/sayfa/[n], /blog/kategori/[slug], /blog/kategori/[slug]/sayfa/[n].
@@ -43,7 +44,7 @@ function listingMetadata({
       canonical: path,
       types: { "application/rss+xml": [{ url: `${BLOG_PATH}/rss.xml`, title: BLOG_TITLE }] },
     },
-    openGraph: { title, description, url: path, type: "website", locale: "tr_TR" },
+    openGraph: { title, description, url: path, type: "website", locale: "tr_TR", images: DEFAULT_OG_IMAGES },
     // Yazı yokken sayfa boş: dizine alınmaz, bağlantıları izlenir
     robots: hasPosts ? { index: true, follow: true } : { index: false, follow: true },
   };

@@ -26,7 +26,7 @@ import {
 import { getLocalCompanies } from "@/lib/local-companies";
 import { getLocalStats } from "@/lib/local-stats";
 import { calculatorHref } from "@/lib/pricing";
-import { SITE_URL } from "@/lib/site";
+import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 
 // Dizine açık sayfalar derlemede üretilir; diğerleri ilk ziyarette üretilip önbelleğe alınır.
 export const dynamicParams = true;
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: `/${page.slug}` },
-    openGraph: { title, description, url: `/${page.slug}`, type: "website", locale: "tr_TR" },
+    openGraph: { title, description, url: `/${page.slug}`, type: "website", locale: "tr_TR", images: DEFAULT_OG_IMAGES },
     robots: isIndexable(page) ? { index: true, follow: true } : { index: false, follow: true },
   };
 }

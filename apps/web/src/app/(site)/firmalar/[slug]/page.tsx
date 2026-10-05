@@ -16,7 +16,7 @@ import { BADGE_ORDER, BADGES } from "@/lib/badges";
 import { HUB_PATH } from "@/lib/local-content";
 import { COMPANY_CACHE_TAG, companyIdFromSlug, companyPath, formatRating } from "@/lib/reviews";
 import { serviceLabel } from "@/lib/showcase";
-import { SITE_URL } from "@/lib/site";
+import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 
 // Sayfa bir saat önbellekte kalır; yorum eklenince/gizlenince sunucu eylemi önbelleği hemen bitirir (updateTag).
 export const revalidate = 3600;
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: path,
       type: "website",
       locale: "tr_TR",
-      ...(image && { images: [{ url: image }] }),
+      images: image ? [{ url: image }] : DEFAULT_OG_IMAGES,
     },
     // Yorumu da tanıtımı da olmayan firma sayfası ince içerik: bağlantıları izlenir ama dizine alınmaz.
     // Kural API'de (showcase-rules.ts): yorum ya da en az 300 karakter tanıtım + 2 fotoğraf.
