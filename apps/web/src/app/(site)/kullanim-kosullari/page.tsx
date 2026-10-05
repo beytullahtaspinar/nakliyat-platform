@@ -49,7 +49,7 @@ export default function TermsPage() {
       <ul>
         <li>
           <strong>Platform:</strong> {COMPANY.site} alan adında ve bağlı uygulamalarda sunulan hizmet; işleteni{" "}
-          {COMPANY.title} ({COMPANY.address}, MERSİS: {COMPANY.mersis}).
+          {COMPANY.title} (şahıs işletmesi; {COMPANY.address}; {COMPANY.taxInfo}).
         </li>
         <li>
           <strong>Müşteri:</strong> Taşınma talebi oluşturan ve teklif alan gerçek veya tüzel kişi.
@@ -245,7 +245,7 @@ export default function TermsPage() {
       <p>
         Bu koşullara Türkiye Cumhuriyeti hukuku uygulanır. Tüketiciler, parasal sınırlar dahilinde yerleşim yerlerindeki
         tüketici hakem heyetlerine, bu sınırları aşan uyuşmazlıklarda tüketici mahkemelerine başvurabilir. Tüketici
-        olmayan kullanıcılarla doğan uyuşmazlıklarda [şehir] mahkemeleri ve icra daireleri yetkilidir.
+        olmayan kullanıcılarla doğan uyuşmazlıklarda Uşak mahkemeleri ve icra daireleri yetkilidir.
       </p>
 
       <h2 id="iletisim">13. İletişim</h2>
@@ -257,7 +257,6 @@ export default function TermsPage() {
           Kişisel veri başvuruları: <a href={`mailto:${COMPANY.kvkkEmail}`}>{COMPANY.kvkkEmail}</a>
         </li>
         <li>Adres: {COMPANY.address}</li>
-        <li>KEP: {COMPANY.kep}</li>
       </ul>
     </LegalPage>
   );

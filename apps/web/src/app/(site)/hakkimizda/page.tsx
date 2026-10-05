@@ -158,7 +158,7 @@ export default function AboutPage() {
                 <li className="flex items-start gap-3">
                   <CheckIcon className="mt-1 h-4 w-4 shrink-0 text-accent-700" />
                   <span>
-                    {COMPANY.title}, {COMPANY.address}
+                    İşleten: {COMPANY.title} (şahıs işletmesi), {COMPANY.address}
                   </span>
                 </li>
               )}
