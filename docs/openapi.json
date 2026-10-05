@@ -871,6 +871,174 @@
         ]
       }
     },
+    "/v1/company/showcase": {
+      "get": {
+        "operationId": "CompanyShowcaseController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: tanıtım sayfası"
+        ]
+      },
+      "patch": {
+        "operationId": "CompanyShowcaseController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShowcaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: tanıtım sayfası"
+        ]
+      }
+    },
+    "/v1/company/showcase/uploads": {
+      "post": {
+        "operationId": "CompanyShowcaseController_createUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShowcaseUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: tanıtım sayfası"
+        ]
+      }
+    },
+    "/v1/company/showcase/media": {
+      "post": {
+        "operationId": "CompanyShowcaseController_attach",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachShowcaseMediaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: tanıtım sayfası"
+        ]
+      }
+    },
+    "/v1/company/showcase/media/{mediaId}": {
+      "patch": {
+        "operationId": "CompanyShowcaseController_updateMedia",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShowcaseMediaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: tanıtım sayfası"
+        ]
+      },
+      "delete": {
+        "operationId": "CompanyShowcaseController_remove",
+        "parameters": [
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: tanıtım sayfası"
+        ]
+      }
+    },
     "/v1/company/profile": {
       "post": {
         "operationId": "CompanyProfileController_create",
@@ -944,6 +1112,25 @@
         ]
       }
     },
+    "/v1/company/profile/badges": {
+      "get": {
+        "operationId": "CompanyProfileController_badgeProgress",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: profil"
+        ]
+      }
+    },
     "/v1/company/requests": {
       "get": {
         "operationId": "CompanyQuotesController_listRequests",
@@ -973,6 +1160,29 @@
                   "$ref": "#/components/schemas/Object"
                 }
               ]
+            }
+          },
+          {
+            "name": "quoted",
+            "required": false,
+            "in": "query",
+            "description": "yes: teklif verdiklerim, no: henüz teklif vermediklerim",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "yes",
+                "no"
+              ]
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "Çıkış ya da varış ili (plaka kodu)",
+            "schema": {
+              "example": "34",
+              "type": "string"
             }
           }
         ],
@@ -1085,6 +1295,21 @@
                 {
                   "$ref": "#/components/schemas/Object"
                 }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "ACCEPTED",
+                "REJECTED",
+                "WITHDRAWN",
+                "EXPIRED"
               ]
             }
           }
@@ -1228,6 +1453,7 @@
     },
     "/v1/company/bookings": {
       "get": {
+        "description": "Yaklaşan (SCHEDULED) işler ve süzgeçsiz liste taşınma gününe göre eskiden yeniye, tamamlanan ve iptal edilenler yeniden eskiye sıralanır. q: müşteri adı ya da telefonu.",
         "operationId": "BookingsController_companyBookings",
         "parameters": [
           {
@@ -1256,6 +1482,28 @@
                 }
               ]
             }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Müşteri adı ya da telefonunun bir parçası",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SCHEDULED",
+                "COMPLETED",
+                "CANCELLED"
+              ]
+            }
           }
         ],
         "responses": {
@@ -1268,6 +1516,65 @@
             "bearer": []
           }
         ],
+        "summary": "Firmanın işleri",
+        "tags": [
+          "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/company/customers": {
+      "get": {
+        "description": "Teklifi kabul edilen müşteriler: iş sayısı, son taşınma ve iptal edilmeyen işlerin toplamı. En son taşınan önce.",
+        "operationId": "BookingsController_companyCustomers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Müşteri adı ya da telefonunun bir parçası",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Firmanın müşterileri",
         "tags": [
           "Anlaşılan işler"
         ]
@@ -1310,6 +1617,34 @@
           }
         ],
         "summary": "Firmanın takvimi: verilen günler arasındaki işler (iki uç dahil, en fazla 42 gün)",
+        "tags": [
+          "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/company/bookings/{id}": {
+      "get": {
+        "operationId": "BookingsController_companyBooking",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Anlaşılan işler"
         ]
@@ -1359,6 +1694,27 @@
         ],
         "tags": [
           "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/company/overview": {
+      "get": {
+        "description": "Günler ve ay Türkiye saatine göredir. Kazanma oranı son 90 günde sonuçlanan teklifler (kabul / kabul + başka firma seçildi + süresi doldu); geri çekilenler sayılmaz. Ciro: iptal edilmeyen işlerin anlaşma tutarı, taşınma gününün ayına göre.",
+        "operationId": "CompanyOverviewController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Firma panelinin ilk sayfası: bekleyen işler ve özet sayılar",
+        "tags": [
+          "Firma: pano"
         ]
       }
     },
@@ -1458,6 +1814,44 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Değerlendirmeler"
+        ]
+      }
+    },
+    "/v1/bookings/{id}/cancel": {
+      "post": {
+        "operationId": "ReviewsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelBookingDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1635,6 +2029,35 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "indexable",
+            "required": false,
+            "in": "query",
+            "description": "true: yalnızca arama motoruna açık sayfalar (yorumu olan ya da tanıtımı yeterince dolu firmalar)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "Bu ilde hizmet veren firmalar (merkez ya da hizmet ili)",
+            "schema": {
+              "example": "34",
+              "type": "string"
+            }
+          },
+          {
+            "name": "toCity",
+            "required": false,
+            "in": "query",
+            "description": "city ile birlikte: iki ile de hizmet veren firmalar (şehirler arası)",
+            "schema": {
+              "example": "06",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1782,6 +2205,33 @@
       }
     },
     "/v1/admin/companies": {
+      "post": {
+        "operationId": "AdminCompaniesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      },
       "get": {
         "operationId": "AdminCompaniesController_list",
         "parameters": [
@@ -1899,6 +2349,88 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/companies/{id}/media/{mediaId}/hide": {
+      "post": {
+        "operationId": "AdminCompaniesController_hideMedia",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HideShowcaseMediaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/companies/{id}/media/{mediaId}/unhide": {
+      "post": {
+        "operationId": "AdminCompaniesController_unhideMedia",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mediaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -2525,6 +3057,33 @@
         "tags": [
           "Admin: kullanıcılar"
         ]
+      },
+      "post": {
+        "operationId": "AdminUsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kullanıcılar"
+        ]
       }
     },
     "/v1/admin/users/{id}": {
@@ -2604,6 +3163,34 @@
         ],
         "responses": {
           "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kullanıcılar"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/impersonate": {
+      "post": {
+        "operationId": "AdminUsersController_impersonate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -3599,6 +4186,124 @@
           "fileName"
         ]
       },
+      "UpdateShowcaseDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Tanıtım yazısı. Telefon, e-posta ya da web adresi içeremez."
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "EVDEN_EVE",
+                "SEHIRLER_ARASI",
+                "OFIS",
+                "PARCA_ESYA",
+                "ASANSORLU",
+                "PAKETLEME",
+                "MONTAJ",
+                "DEPOLAMA",
+                "PIYANO",
+                "SIGORTALI"
+              ]
+            }
+          },
+          "foundedYear": {
+            "type": "object",
+            "example": 2008,
+            "nullable": true
+          },
+          "fleetSize": {
+            "type": "object",
+            "description": "Araç sayısı",
+            "nullable": true
+          },
+          "staffSize": {
+            "type": "object",
+            "description": "Ekip (çalışan) sayısı",
+            "nullable": true
+          }
+        }
+      },
+      "CreateShowcaseUploadDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "LOGO",
+              "PHOTO"
+            ]
+          },
+          "file": {
+            "description": "Logo ya da fotoğrafın büyük hali",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UploadFileDto"
+              }
+            ]
+          },
+          "thumb": {
+            "description": "Fotoğrafın küçük önizlemesi (fotoğrafta zorunlu)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UploadFileDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "file"
+        ]
+      },
+      "AttachShowcaseMediaDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "LOGO",
+              "PHOTO"
+            ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "thumbKey": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Görsel açıklaması (alt metin)"
+          }
+        },
+        "required": [
+          "kind",
+          "key"
+        ]
+      },
+      "UpdateShowcaseMediaDto": {
+        "type": "object",
+        "properties": {
+          "caption": {
+            "type": "string",
+            "description": "Görsel açıklaması; boş bırakılırsa silinir"
+          }
+        },
+        "required": [
+          "caption"
+        ]
+      },
       "CreateCompanyProfileDto": {
         "type": "object",
         "properties": {
@@ -3800,6 +4505,18 @@
           "body"
         ]
       },
+      "CancelBookingDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Taşınma tarihim değişti, ev sahibi çıkışı bir ay erteledi."
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
       "CreateReviewDto": {
         "type": "object",
         "properties": {
@@ -3831,6 +4548,94 @@
         },
         "required": [
           "body"
+        ]
+      },
+      "AdminCreateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string",
+            "example": "Örnek Nakliyat Taşımacılık Ltd. Şti."
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Örnek Nakliyat",
+            "description": "Müşterilere görünen ad"
+          },
+          "taxNumber": {
+            "type": "string",
+            "example": "1234567890",
+            "description": "Vergi kimlik no (10 hane) veya şahıs şirketi için TCKN (11 hane)"
+          },
+          "k3LicenseNumber": {
+            "type": "string",
+            "example": "K3.34.123456"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cityCode": {
+            "type": "string",
+            "example": "34",
+            "description": "Merkez ili plaka kodu"
+          },
+          "serviceCityCodes": {
+            "example": [
+              "34",
+              "41",
+              "16"
+            ],
+            "description": "Hizmet verilen iller (plaka kodu)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Ayşe Yılmaz"
+          },
+          "phone": {
+            "type": "string",
+            "example": "0532 123 45 67",
+            "description": "Giriş bu numarayla yapılır"
+          },
+          "email": {
+            "type": "string",
+            "example": "ayse@ornek.com",
+            "description": "Teklif vermek/kabul etmek için doğrulanmış e-posta gerekir"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "markVerified": {
+            "type": "boolean",
+            "description": "Telefon ve e-posta doğrulanmış sayılır (yönetici kişiyle görüşüp bilgileri teyit ettiyse)"
+          }
+        },
+        "required": [
+          "legalName",
+          "displayName",
+          "taxNumber",
+          "cityCode",
+          "serviceCityCodes",
+          "fullName",
+          "phone",
+          "email",
+          "password"
+        ]
+      },
+      "HideShowcaseMediaDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Gizleme gerekçesi (firma panelinde görünür)"
+          }
+        },
+        "required": [
+          "reason"
         ]
       },
       "RejectCompanyDto": {
@@ -3928,6 +4733,39 @@
           "reason"
         ]
       },
+      "AdminCreateUserDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Ayşe Yılmaz"
+          },
+          "phone": {
+            "type": "string",
+            "example": "0532 123 45 67",
+            "description": "Giriş bu numarayla yapılır"
+          },
+          "email": {
+            "type": "string",
+            "example": "ayse@ornek.com",
+            "description": "Teklif vermek/kabul etmek için doğrulanmış e-posta gerekir"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "markVerified": {
+            "type": "boolean",
+            "description": "Telefon ve e-posta doğrulanmış sayılır (yönetici kişiyle görüşüp bilgileri teyit ettiyse)"
+          }
+        },
+        "required": [
+          "fullName",
+          "phone",
+          "email",
+          "password"
+        ]
+      },
       "AdminUpdateUserDto": {
         "type": "object",
         "properties": {
@@ -3974,6 +4812,7 @@
               "NEW_QUOTE",
               "QUOTE_ACCEPTED",
               "NEW_MESSAGE",
+              "BOOKING_CANCELLED",
               "MOVE_REMINDER",
               "REVIEW_REQUEST",
               "NEW_REVIEW",

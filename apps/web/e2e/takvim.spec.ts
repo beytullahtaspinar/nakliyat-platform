@@ -77,7 +77,7 @@ test("firma kabul edilen işi takviminde görür", async ({ page, request }) => 
 
   await login(page, companyPhone);
   await expect(page).toHaveURL(/\/firma-paneli$/);
-  await page.getByRole("link", { name: "Takvim" }).click();
+  await page.getByRole("link", { name: "Takvim", exact: true }).click();
   await expect(page).toHaveURL(/\/firma-paneli\/takvim$/);
   await page.goto(`/firma-paneli/takvim?ay=${moveDate.slice(0, 7)}`);
 

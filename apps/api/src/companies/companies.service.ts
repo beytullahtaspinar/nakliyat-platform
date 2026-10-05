@@ -18,6 +18,11 @@ import type {
 export const WITH_CITIES = { serviceCities: { select: { cityCode: true } } } satisfies Prisma.CompanyInclude;
 export type CompanyWithCities = Company & { serviceCities: { cityCode: string }[] };
 
+/** Firmanın talep görebildiği iller: merkez + hizmet illeri */
+export const serviceArea = (company: CompanyWithCities) => [
+  ...new Set([company.cityCode, ...company.serviceCities.map((c) => c.cityCode)]),
+];
+
 /** Herkese açık sayfada gösterilebilen firma: doğrulanmış, silinmemiş, sahibi askıda değil */
 export const PUBLIC_COMPANY = {
   verificationStatus: VerificationStatus.VERIFIED,

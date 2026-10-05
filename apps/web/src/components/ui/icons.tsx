@@ -154,3 +154,52 @@ export const CloseIcon = (p: P) => (
     <path d="M6 6l12 12M18 6 6 18" />
   </Icon>
 );
+
+export const CalendarIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+    <path d="M3.5 9.5h17M8 3v4M16 3v4" />
+  </Icon>
+);
+
+export const BellIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z" />
+    <path d="M10 20.5a2 2 0 0 0 4 0" />
+  </Icon>
+);
+
+export const TagIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3.5 12.1V4.5a1 1 0 0 1 1-1h7.6a1 1 0 0 1 .7.3l8 8a1 1 0 0 1 0 1.4l-7.6 7.6a1 1 0 0 1-1.4 0l-8-8a1 1 0 0 1-.3-.7z" />
+    <circle cx="8" cy="8" r="1.3" />
+  </Icon>
+);
+
+export const PhotoIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2" />
+    <circle cx="9" cy="9.5" r="1.8" />
+    <path d="m4 17.5 5-4.5 3.5 3 3-2.5 4.5 4" />
+  </Icon>
+);
+
+export const InboxIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M3.5 13.5 6 5.5A1.5 1.5 0 0 1 7.4 4.5h9.2A1.5 1.5 0 0 1 18 5.5l2.5 8v5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z" />
+    <path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5" />
+  </Icon>
+);
+
+export const ChevronDownIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
+  </Icon>
+);
+
+export const ExternalIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M13.5 4.5h6v6M19.5 4.5 11 13" />
+    <path d="M17.5 14v4.5A1.5 1.5 0 0 1 16 20H5.5A1.5 1.5 0 0 1 4 18.5V8a1.5 1.5 0 0 1 1.5-1.5H10" />
+  </Icon>
+);
