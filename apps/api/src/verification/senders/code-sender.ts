@@ -6,8 +6,11 @@
 export interface CodeSender {
   /** Loglarda ve durum ekranında görünen sağlayıcı adı */
   readonly provider: string;
-  send(to: CodeRecipient, code: string): Promise<void>;
+  send(to: CodeRecipient, code: string, purpose?: CodePurpose): Promise<void>;
 }
+
+/** Kodun amacı: hesap doğrulama (varsayılan) ya da "şifremi unuttum". E-postanın başlığı ve metni buna göre değişir. */
+export type CodePurpose = 'verify' | 'password-reset';
 
 export interface CodeRecipient {
   /** E-posta adresi ya da +905XXXXXXXXX telefon */

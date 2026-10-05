@@ -6,6 +6,7 @@ import { Public } from '../common/decorators/public.decorator.js';
 import { AuthService } from './auth.service.js';
 import { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-response.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 
@@ -42,6 +43,24 @@ export class AuthController {
   @ApiOkResponse({ type: AuthTokensDto })
   refresh(@Body() dto: RefreshDto) {
     return this.auth.refresh(dto.refreshToken);
+  }
+
+  /** Hesap varsa e-postaya 15 dakika geçerli kod gönderir. Yanıt her durumda aynıdır (hesap var mı belli olmaz). */
+  @Public()
+  @Throttle(AUTH_THROTTLE)
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.auth.forgotPassword(dto.email);
+  }
+
+  /** Kodla yeni şifre belirler; tüm oturumlar kapanır, kullanıcı yeni şifreyle giriş yapar. */
+  @Public()
+  @Throttle(AUTH_THROTTLE)
+  @Post('reset-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.auth.resetPassword(dto);
   }
 
   @Public()
