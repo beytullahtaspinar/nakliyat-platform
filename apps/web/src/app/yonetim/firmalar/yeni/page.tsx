@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
 import { createCompany } from "@/lib/actions/admin";
 import { cityOptions } from "@/lib/company";
-import { ProfileForm } from "@/app/(site)/firma-paneli/profile-form";
+import { ProfileForm } from "@/app/firma-paneli/profile-form";
 import { AccountFields } from "../../account-fields";
 import { PageHeader } from "../../admin-bits";
 

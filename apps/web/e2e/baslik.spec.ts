@@ -48,7 +48,7 @@ test("dar telefonda (320 px) başlık sayfayı yana kaydırmaz", async ({ page, 
   await expectNoHorizontalScroll(page);
 });
 
-test("firma hesabında başlık 'Teklif al' yerine paneli gösterir, sayfa yana kaymaz", async ({ page, request, isMobile }) => {
+test("firma paneli kendi kabuğunda açılır, sayfa yana kaymaz", async ({ page, request }) => {
   const phone = `0534${uniqueDigits(7)}`;
   const reg = await request.post(`${API}/auth/register`, {
     data: { role: "COMPANY", fullName: "Başlık Firma", phone, password: PASSWORD, email: `baslik${phone}@test.local`, termsVersion: "2026-10-01" },
@@ -68,19 +68,18 @@ test("firma hesabında başlık 'Teklif al' yerine paneli gösterir, sayfa yana 
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page).toHaveURL(/\/firma-paneli/);
 
-  const header = page.getByRole("banner");
-  await expect(header.getByRole("link", { name: "Teklif al" })).toHaveCount(0);
-  await expect(header.getByRole("link", { name: "Firma paneli" })).toBeVisible();
+  // Firma paneli kendi kabuğunda (yönetim gibi): tanıtım sitesinin menüsü yok, çıkış her ekranda görünür
+  await expect(page.getByRole("navigation", { name: "Ana menü" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Teklif al" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Firma paneli" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Gelen talepler" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Çıkış/ })).toBeVisible();
   await expectNoHorizontalScroll(page);
-  if (isMobile) {
-    await page.getByRole("button", { name: "Menü" }).click();
-    await expect(header.getByRole("button", { name: "Çıkış" })).toBeVisible();
-  }
 
   // Panelde ince altbilgi: yasal metinler var, tanıtım sütunları yok
   const footer = page.getByRole("contentinfo");
   await expect(footer.getByRole("navigation", { name: "Yasal metinler" })).toBeVisible();
-  await expect(footer.getByRole("navigation", { name: "Taşınacaklar için" })).toBeHidden();
+  await expect(footer.getByRole("navigation", { name: "Taşınacaklar için" })).toHaveCount(0);
 
   // Telefonda seçili sekme (en sondaki Bildirimler) ekranda görünür
   await page.goto("/firma-paneli/bildirimler");
