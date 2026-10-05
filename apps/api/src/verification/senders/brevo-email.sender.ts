@@ -8,15 +8,14 @@ const escape = (value: string) =>
   value.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 /**
- * Kod e-postası. Kod boşluksuz yazılır: seçip kopyalayınca hane kaybolmaz. Konu satırında da
- * kod var; Gmail ve iOS Mail bunu tanıyıp kendi "Kodu kopyala" düğmesini gösterir.
- * E-postada JavaScript çalışmadığı için kopyalama düğmesi yerine kodu ekrana kendisi yazan
- * bir bağlantı var (/dogrulama?kod=...).
+ * Kod e-postası. Kod boşluksuz ve tek dokunuşla seçilir (user-select: all): kopyalayınca hane
+ * kaybolmaz. Konu satırında da kod var; Gmail ve iOS Mail bunu tanıyıp kendi "Kodu kopyala"
+ * düğmesini gösterir. Bilerek bağlantı yok: e-posta uygulaması bağlantıyı oturumun açık olmadığı
+ * başka bir tarayıcıda açabiliyor, kullanıcı kodu doğrulama ekranındaki alana yapıştırır.
  */
 export function renderCodeEmail(code: string, recipientName: string, webUrl: string) {
   const firstName = recipientName.trim().split(/\s+/)[0] ?? '';
   const host = new URL(webUrl).host;
-  const fillLink = new URL(`/dogrulama?kod=${code}`, webUrl).toString();
   const subject = `Doğrulama kodun: ${code}`;
   const html = `<!doctype html>
 <html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(subject)}</title></head>
@@ -29,8 +28,8 @@ export function renderCodeEmail(code: string, recipientName: string, webUrl: str
 <p style="margin:0 0 8px;font-size:15px">Merhaba ${escape(firstName)},</p>
 <h1 style="margin:0 0 12px;font-size:20px;color:#10432f">Doğrulama kodu</h1>
 <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#52525b">Bu kod 10 dakika geçerlidir ve yalnızca bir kez kullanılabilir. Kodu kimseyle paylaşma; ekibimiz kodu asla sormaz.</p>
-<p style="margin:0 0 24px;font-size:34px;font-weight:700;letter-spacing:6px;color:#18181b;font-family:'Courier New',Courier,monospace;-webkit-user-select:all;user-select:all">${code}</p>
-<a href="${escape(fillLink)}" style="display:inline-block;margin:0 0 28px;background:#136544;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 22px;border-radius:8px">Kodu otomatik gir</a>
+<p style="margin:0 0 12px;font-size:38px;font-weight:700;letter-spacing:4px;color:#18181b;font-family:'Courier New',Courier,monospace;background:#f0f7f3;border:2px dashed #136544;border-radius:12px;padding:14px 20px;-webkit-user-select:all;user-select:all">${code}</p>
+<p style="margin:0 0 28px;font-size:13px;line-height:1.6;color:#52525b">Kodu kopyala ve doğrulama ekranındaki alana yapıştır.</p>
 </td></tr>
 <tr><td style="padding:20px 24px;border-top:1px solid #e4e4e7;font-size:12px;line-height:1.6;color:#71717a">
 Bu kodu sen istemediysen e-postayı yok sayabilirsin; hesabında bir değişiklik yapılmaz. ${escape(host)}
@@ -43,8 +42,7 @@ Bu kodu sen istemediysen e-postayı yok sayabilirsin; hesabında bir değişikli
     `Merhaba ${firstName},`,
     '',
     `Doğrulama kodun: ${code}`,
-    '',
-    `Kodu otomatik girmek için: ${fillLink}`,
+    'Kodu kopyala ve doğrulama ekranındaki alana yapıştır.',
     '',
     'Bu kod 10 dakika geçerlidir ve yalnızca bir kez kullanılabilir. Kodu kimseyle paylaşma.',
     'Bu kodu sen istemediysen e-postayı yok sayabilirsin.',

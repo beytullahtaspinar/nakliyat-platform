@@ -14,12 +14,9 @@ export const metadata: Metadata = {
 export default async function VerificationPage({ searchParams }: PageProps<"/dogrulama">) {
   const params = await searchParams;
   const next = safeNext(params.next as string | undefined);
-  // E-postadaki "Kodu otomatik gir" bağlantısı: /dogrulama?kod=123456
-  const emailCode = typeof params.kod === "string" && /^\d{6}$/.test(params.kod) ? params.kod : undefined;
   const user = await getCurrentUser();
   if (!user) {
-    const back = emailCode ? `/dogrulama?kod=${emailCode}${next ? `&next=${encodeURIComponent(next)}` : ""}` : verificationPath(next);
-    redirect(`/giris?next=${encodeURIComponent(back)}`);
+    redirect(`/giris?next=${encodeURIComponent(verificationPath(next))}`);
   }
 
   const status = await apiFetch<ContactVerification>("/auth/verification", { token: (await getAccessToken())! });
@@ -44,7 +41,7 @@ export default async function VerificationPage({ searchParams }: PageProps<"/dog
               ? "Taleplere teklif verebilmek için iletişim bilgilerini doğrula. Müşteriler doğrulanmış firmalarla çalışır."
               : "Talebinin firmalara iletilmesi ve teklif kabul edebilmen için iletişim bilgilerini doğrula. Bir kez yapman yeterli."}
           </p>
-          <VerificationSteps status={status} next={target} emailCode={emailCode} />
+          <VerificationSteps status={status} next={target} />
         </>
       )}
     </main>

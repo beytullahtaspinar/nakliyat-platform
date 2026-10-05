@@ -31,18 +31,21 @@ test("yeni kullanıcı e-posta kodunu girer ve hesabına geçer", async ({ page 
   await expect(page.getByText("hesabını doğrula", { exact: false })).toHaveCount(0);
 });
 
-// E-postadaki "Kodu otomatik gir" bağlantısı kodu yazıp kendiliğinden gönderir
-test("e-postadaki bağlantı kodu otomatik girer", async ({ page }) => {
+// E-postada bağlantı yok; kopyalanan kod "Kodu yapıştır" düğmesiyle tek dokunuşla girilir
+test("kopyalanan kod yapıştır düğmesiyle girilir", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const phone = `0537${String(Date.now()).slice(-7)}`;
   await page.goto("/kayit");
-  await page.getByLabel("Ad soyad").fill("Bağlantı Deneme");
+  await page.getByLabel("Ad soyad").fill("Yapıştır Deneme");
   await page.getByLabel("Cep telefonu").fill(phone);
-  await page.getByLabel("E-posta").fill(`baglanti${phone}@test.local`);
+  await page.getByLabel("E-posta").fill(`yapistir${phone}@test.local`);
   await page.getByLabel("Şifre").fill("guvenli-sifre-123");
   await page.getByLabel(/Kullanım koşullarını kabul ediyorum/).check();
   await page.getByRole("button", { name: "Kayıt ol" }).click();
   await expect(page).toHaveURL(/\/dogrulama/);
 
-  await page.goto(`/dogrulama?kod=${TEST_CODE}`);
+  // Panoda kod dışında yazı olsa da hane hane alınır
+  await page.evaluate((code) => navigator.clipboard.writeText(`Doğrulama kodun: ${code}`), TEST_CODE);
+  await page.getByRole("button", { name: "Kodu yapıştır" }).click();
   await expect(page).toHaveURL(/\/hesabim$/);
 });

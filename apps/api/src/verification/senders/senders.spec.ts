@@ -9,12 +9,14 @@ const to = { address: '+905321234567', fullName: 'Ayşe Yılmaz' };
 describe('doğrulama kodu sağlayıcıları', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('e-posta konusu kodu içerir (Gmail "Kodu kopyala"), HTML kaçışı yapılır', () => {
+  it('e-posta konusu kodu içerir (Gmail "Kodu kopyala"), bağlantı yok, HTML kaçışı yapılır', () => {
     const { subject, html, text } = renderCodeEmail('513001', '<Ayşe> Yılmaz', 'https://evdenevenakliyat.app');
     // Boşluksuz: seçip kopyalayınca hane kaybolmaz
     expect(subject).toBe('Doğrulama kodun: 513001');
     expect(html).toContain('>513001</p>');
-    expect(html).toContain('href="https://evdenevenakliyat.app/dogrulama?kod=513001"');
+    // Bağlantı yok: başka tarayıcıda açılıp oturumsuz kalıyordu, kod kopyalanıp yapıştırılır
+    expect(html).not.toContain('<a ');
+    expect(text).not.toContain('http');
     expect(html).toContain('&lt;Ayşe&gt;');
     expect(text).toContain('10 dakika');
   });

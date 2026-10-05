@@ -66,6 +66,9 @@ satırıyla biter: Android Chrome kodu ekrandaki alana kendisi doldurur (WebOTP)
 Bildirimlerle aynı Brevo hesabını kullanır (`BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`;
 bkz. [bildirimler.md](bildirimler.md)). Kod e-postası kullanıcının bildirim tercihlerinden etkilenmez.
 Konu satırında kod yer aldığı için Gmail "Kodu kopyala" düğmesini kendisi gösterir.
+E-postada bilerek bağlantı yok: e-posta uygulaması bağlantıyı oturumun açık olmadığı başka bir
+tarayıcıda açabiliyor. Kod büyük ve tek dokunuşla seçilir; doğrulama ekranındaki "Kodu yapıştır"
+düğmesi panodaki kodu alana yazar ve formu gönderir.
 
 `BREVO_API_KEY` yoksa canlıda (`NODE_ENV=production`) kod gönderilemez ve kullanıcı hata görür;
 geliştirmede kod API loguna yazılır.
