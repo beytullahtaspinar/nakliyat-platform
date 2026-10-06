@@ -5,6 +5,7 @@ import { LEGAL_LINKS } from "@/lib/legal";
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
+import { BRAND_PROMISE, BRAND_SLOGAN, BRAND_TAGLINE } from "@/lib/site";
 
 const COLUMNS = [
   {
@@ -45,9 +46,11 @@ export function SiteFooter() {
             <LogoMark />
             <span className="font-display font-bold text-zinc-900 dark:text-white">evdenevenakliyat.app</span>
           </div>
-          <p className="mt-4 max-w-xs text-sm text-zinc-600 dark:text-zinc-400">
-            Türkiye genelinde evden eve ve şehirler arası nakliyat için K3 belgeli, doğrulanmış
-            firmalardan teklif alıp karşılaştırabileceğin platform.
+          <p className="mt-4 max-w-xs text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            {BRAND_SLOGAN}
+          </p>
+          <p className="mt-1.5 max-w-xs text-sm text-zinc-600 dark:text-zinc-400">
+            {BRAND_TAGLINE} {BRAND_PROMISE}
           </p>
           <Link
             href={MARKETING_PAGES.about.href}
