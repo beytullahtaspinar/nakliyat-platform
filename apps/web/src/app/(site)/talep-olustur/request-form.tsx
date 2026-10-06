@@ -78,7 +78,7 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
         />
       </Section>
 
-      <Section title="Evin ve tarih" step={3}>
+      <Section title="Ev tipi ve tarih" step={3}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Ev tipi">
             <select name="homeType" required defaultValue={defaults.homeType ?? ""} className={inputClass}>
