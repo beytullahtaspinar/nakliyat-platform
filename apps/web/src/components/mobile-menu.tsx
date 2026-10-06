@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
-import { AccountMenu } from "@/components/account-menu";
+import { AccountMenu, useRole } from "@/components/account-menu";
 import { NavLink } from "@/components/nav-link";
 import { CloseIcon, MenuIcon } from "@/components/ui/icons";
 
@@ -16,10 +16,12 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
   const root = useRef<HTMLDivElement>(null);
   const panelId = useId();
 
-  // Bağlantıya dokununca yeni sayfada menü kapalı açılsın
-  const [lastPath, setLastPath] = useState(pathname);
-  if (lastPath !== pathname) {
-    setLastPath(pathname);
+  // Bağlantıya dokununca yeni sayfada menü kapalı açılsın; ana sayfadayken çıkış yapınca adres
+  // değişmez, oturum (rol) değişince de kapanır
+  const role = useRole();
+  const [last, setLast] = useState({ pathname, role });
+  if (last.pathname !== pathname || last.role !== role) {
+    setLast({ pathname, role });
     setOpen(false);
   }
 
@@ -52,7 +54,9 @@ export function MobileMenu({ links }: { links: { href: string; label: string }[]
       <div
         id={panelId}
         hidden={!open}
-        className="absolute inset-x-0 top-full border-b border-zinc-200 bg-white px-4 pt-2 pb-4 shadow-lg sm:px-6"
+        // Alçak ekranda (küçük telefon yatayda, büyük yazı boyutu) alttaki Hesabım/Çıkış ekran dışında kalmasın:
+        // başlık sabit olduğu için sayfa kaydırılınca menü de kaymaz, menü kendi içinde kayar
+        className="absolute inset-x-0 top-full max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-b border-zinc-200 bg-white px-4 pt-2 pb-4 shadow-lg sm:px-6"
       >
         <nav aria-label="Menü">
           <ul className="space-y-1">

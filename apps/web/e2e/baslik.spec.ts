@@ -106,3 +106,21 @@ test("tanıtım sayfasında tam altbilgi, masaüstü menüde bulunduğun sayfa i
     await expect(menu.getByRole("link", { name: "Firmalar için" })).not.toHaveAttribute("aria-current", "page");
   }
 });
+
+test("telefon menüsünde Hesabım'a dokununca sayfa gelene kadar bekleme göstergesi görünür", async ({ page, context, isMobile, baseURL }) => {
+  test.skip(!isMobile, "Telefon menüsü");
+  // Yalnızca arayüz çerezi: /hesabim oturumsuz olduğu için girişe yönlenir
+  await context.addCookies([{ name: "nk_rol", value: "CUSTOMER", url: baseURL! }]);
+  // Panel sayfası sunucuda API'yi beklerken olduğu gibi yanıt gecikir
+  await page.route(/\/hesabim(\?|$)/, async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    await route.continue();
+  });
+  await page.goto("/nasil-calisir");
+  await page.getByRole("button", { name: "Menü" }).click();
+  const menu = page.getByRole("banner");
+  await menu.getByRole("link", { name: "Hesabım" }).click();
+  await expect(menu.getByRole("link", { name: "Hesabım (yükleniyor)" })).toBeVisible();
+  await expect(page).toHaveURL(/\/giris/);
+  await expect(page.getByRole("button", { name: "Menü" })).toHaveAttribute("aria-expanded", "false");
+});
