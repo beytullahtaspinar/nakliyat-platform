@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { citySlug, getCities } from "@nakliyat/locations";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
@@ -15,6 +16,20 @@ import {
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
+import { BRAND_PROMISE, BRAND_SLOGAN, DEFAULT_OG_IMAGES, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+
+// Paylaşım kartında da marka sloganı görünsün (kök düzendeki openGraph başlık taşımaz, alt sayfalara sızmasın)
+export const metadata: Metadata = {
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    url: "/",
+    siteName: SITE_NAME,
+    title: `${BRAND_SLOGAN} | ${SITE_NAME}`,
+    description: SITE_DESCRIPTION,
+    images: DEFAULT_OG_IMAGES,
+  },
+};
 
 const selectClass =
   "mt-1.5 block w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-base text-zinc-900 " +
@@ -46,15 +61,15 @@ const BENEFITS = [
 
 const STEPS = [
   {
-    title: "Talebini oluştur",
+    title: "Tek talep",
     text: "Nereden, nereye, ev tipi, kat ve tarih bilgilerini bir kez gir. İki dakika sürer.",
   },
   {
-    title: "Teklifler gelsin",
+    title: "Çok teklif",
     text: "Bölgende hizmet veren doğrulanmış firmalar talebine özel fiyat teklifi gönderir.",
   },
   {
-    title: "Karşılaştır ve seç",
+    title: "Doğru seçim",
     text: "Teklifleri fiyat, kapsam ve puana göre karşılaştır, sana uyanı tek tıkla kabul et.",
   },
 ];
@@ -83,12 +98,15 @@ export default function Home() {
               <ShieldCheckIcon className="h-3.5 w-3.5" /> K3 belgeli, doğrulanmış firmalar
             </Badge>
             <h1 className="mt-5 text-4xl font-extrabold leading-[1.1] text-zinc-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
-              Taşınmanı <span className="text-brand-700 dark:text-brand-300">güvenle</span> planla,
-              teklifleri tek yerden karşılaştır
+              Evden Eve Taşınmanın <span className="text-brand-700 dark:text-brand-300">Yeni Yolu</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-zinc-600 dark:text-zinc-300">
-              Taşınma bilgilerini bir kez gir. Türkiye genelinde doğrulanmış nakliyat firmaları sana
-              teklif göndersin; fiyatı, kapsamı ve puanı yan yana görüp en uygununu seç.
+            <p className="mt-5 text-xl font-bold text-zinc-800 sm:text-2xl dark:text-zinc-100">
+              Tek Talep. Çok Teklif. <span className="text-accent-700">Doğru Seçim.</span>
+            </p>
+            <p className="mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-300">
+              <strong className="font-semibold text-zinc-800 dark:text-zinc-100">{BRAND_PROMISE}</strong> Taşınma
+              bilgilerini bir kez gir; Türkiye genelinde doğrulanmış nakliyat firmaları sana teklif göndersin,
+              fiyatı, kapsamı ve puanı yan yana görüp en uygununu seç.
             </p>
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {["Ücretsiz", "Bağlayıcı değil", "81 ilde"].map((item) => (

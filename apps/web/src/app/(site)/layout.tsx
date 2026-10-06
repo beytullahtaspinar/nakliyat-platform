@@ -1,7 +1,7 @@
 import { JsonLd } from "@/components/json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { BRAND_SLOGAN, BRAND_TAGLINE, SITE_NAME, SITE_URL } from "@/lib/site";
 
 /** Herkese açık site ve müşteri/firma panelleri: üst menü ve altbilgi. Yönetim paneli bu düzenin dışında. */
 const organizationJsonLd = [
@@ -11,6 +11,7 @@ const organizationJsonLd = [
     "@id": `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
+    slogan: `${BRAND_SLOGAN}. ${BRAND_TAGLINE}`,
     description:
       "Türkiye genelinde evden eve ve şehirler arası nakliyat için doğrulanmış firma, fiyat ve taşınma rehberi platformu.",
     areaServed: { "@type": "Country", name: "Türkiye" },

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ServiceWorker } from "@/components/pwa/service-worker";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { BRAND_SLOGAN, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // Tek yazı tipi ailesi: indirilen font dosyası az olsun, ilk boyama (LCP) gecikmesin.
 // Inter, Türkçe karakterlerde (ı, ş, ğ) aralıkları düzgün çizdiği için seçildi.
@@ -23,11 +23,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Evden Eve Nakliyat Teklifi Al | evdenevenakliyat.app",
+    default: `${BRAND_SLOGAN} | ${SITE_NAME}`,
     template: "%s | evdenevenakliyat.app",
   },
-  description:
-    "Taşınma bilgilerini bir kez gir, K3 belgeli doğrulanmış nakliyat firmalarından teklifleri karşılaştır, sana en uygun olanı seç.",
+  description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -37,6 +36,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   // iPhone'da "Ana Ekrana Ekle" ile kurulunca tam ekran uygulama gibi açılır
+  applicationName: SITE_NAME,
   appleWebApp: { capable: true, title: "Nakliyat", statusBarStyle: "default" },
 };
 

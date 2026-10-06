@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { BRAND_SLOGAN, BRAND_TAGLINE } from "@/lib/site";
 
 /**
  * Telefona "uygulama gibi" kurulum (PWA). Ana ekrandan açılınca tarayıcı çubuğu olmadan,
@@ -10,7 +11,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: "Evden Eve Nakliyat",
     short_name: "Nakliyat",
-    description: "Taşınma talepleri, teklifler ve mesajlar; yeni iş geldiğinde anında bildirim.",
+    description: `${BRAND_SLOGAN}. ${BRAND_TAGLINE} Taşınma talepleri, teklifler ve mesajlar; yeni iş geldiğinde anında bildirim.`,
     lang: "tr",
     dir: "ltr",
     start_url: "/uygulama",
