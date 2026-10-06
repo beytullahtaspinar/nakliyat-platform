@@ -18,7 +18,7 @@ import type { AccessTokenPayload } from '../auth/auth.service.js';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { toProfile, WITH_CITIES } from '../companies/companies.service.js';
-import { UpdateCompanyProfileDto } from '../companies/dto/company-profile.dto.js';
+import { AdminUpdateCompanyDto } from '../companies/dto/company-profile.dto.js';
 import { assertCityCodes } from '../common/utils/locations.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { DomainEvents } from '../events/domain-events.js';
@@ -27,6 +27,7 @@ import { CompanyDocumentsService } from '../media/company-documents.service.js';
 import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { HideShowcaseMediaDto } from '../media/dto/company-showcase.dto.js';
 import { CompaniesService } from '../companies/companies.service.js';
+import { CompanyNameChangesService } from '../companies/company-name-changes.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AdminCreateCompanyDto, ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
 import { newAccountData } from './new-account.js';
@@ -46,6 +47,7 @@ export class AdminCompaniesController {
     private readonly documents: CompanyDocumentsService,
     private readonly showcase: CompanyShowcaseService,
     private readonly companies: CompaniesService,
+    private readonly nameChanges: CompanyNameChangesService,
     private readonly jwt: JwtService,
   ) {}
 
@@ -182,6 +184,7 @@ export class AdminCompaniesController {
       owner,
       ...(await this.documents.summary(id)),
       media: await this.showcase.listForAdmin(id),
+      nameChanges: await this.nameChanges.historyFor(id),
       quoteCount: _count.quotes,
       bookingCount: _count.bookings,
       history,
@@ -190,10 +193,11 @@ export class AdminCompaniesController {
 
   /**
    * Firma bilgilerini düzeltir. Firmanın kendi düzenlemesinden farkı: kimlik alanları değişse de
-   * doğrulama durumu korunur (kontrolü yapan zaten yönetici).
+   * doğrulama durumu korunur (kontrolü yapan zaten yönetici); ticari unvanı yalnızca yönetim değiştirir;
+   * görünen ad onaya düşmeden hemen değişir ve yıllık ad değişikliği sınırına sayılmaz.
    */
   @Patch(':id')
-  async update(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: UpdateCompanyProfileDto) {
+  async update(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: AdminUpdateCompanyDto) {
     const company = await this.prisma.company.findFirst({ where: { id, deletedAt: null }, include: WITH_CITIES });
     if (!company) throw new NotFoundException('Firma bulunamadı');
     const cityCode = dto.cityCode ?? company.cityCode;

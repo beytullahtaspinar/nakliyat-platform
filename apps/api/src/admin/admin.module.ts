@@ -4,6 +4,7 @@ import { PricingModule } from '../pricing/pricing.module.js';
 import { ReviewsModule } from '../reviews/reviews.module.js';
 import { AdminCompaniesController } from './admin-companies.controller.js';
 import { AdminDocumentsController } from './admin-documents.controller.js';
+import { AdminNameChangesController } from './admin-name-changes.controller.js';
 import { AdminOverviewController } from './admin-overview.controller.js';
 import { AdminPricingController } from './admin-pricing.controller.js';
 import { AdminRequestsController } from './admin-requests.controller.js';
@@ -13,6 +14,6 @@ import { AdminUsersController } from './admin-users.controller.js';
 
 @Module({
   imports: [MediaModule, PricingModule, ReviewsModule],
-  controllers: [AdminOverviewController, AdminCompaniesController, AdminPricingController, AdminDocumentsController, AdminRequestsController, AdminReviewsController, AdminStatsController, AdminUsersController],
+  controllers: [AdminOverviewController, AdminCompaniesController, AdminPricingController, AdminDocumentsController, AdminNameChangesController, AdminRequestsController, AdminReviewsController, AdminStatsController, AdminUsersController],
 })
 export class AdminModule {}

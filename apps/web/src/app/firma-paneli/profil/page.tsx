@@ -12,10 +12,15 @@ export default async function CompanyProfilePage() {
     <>
       <PageHeader
         title="Firma profili"
-        description="Unvan, vergi numarası, K3 belge numarası ve hizmet illerin. Unvan, vergi ya da K3 numarası değişirse firman yeniden incelenir."
+        description="Görünen ad, vergi numarası, K3 belge numarası ve hizmet illerin. Vergi ya da K3 numarası değişirse firman yeniden incelenir; ad değişikliği yönetim onayından sonra yayına girer."
       />
       <PanelSection id="firma-bilgileri" title="Firma bilgileri">
-        <ProfileForm key={profile.verificationStatus} cities={cityOptions} profile={profile} />
+        {/* Onay kararı ya da ad değişikliği sonrası form yeni değerlerle baştan kurulur */}
+        <ProfileForm
+          key={[profile.verificationStatus, profile.displayName, profile.nameChange?.pending?.newName].join("|")}
+          cities={cityOptions}
+          profile={profile}
+        />
       </PanelSection>
     </>
   );

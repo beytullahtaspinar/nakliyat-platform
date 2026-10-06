@@ -6,7 +6,8 @@ export function companyProfileBody(formData: FormData, isNew: boolean) {
   const cityCode = text("cityCode");
   return {
     displayName: text("displayName"),
-    legalName: text("legalName"),
+    // Unvanı yalnızca yönetim değiştirir; firmanın düzenleme formunda alan yok (API reddeder)
+    ...(formData.has("legalName") ? { legalName: text("legalName") } : {}),
     taxNumber: text("taxNumber").replace(/\s/g, ""),
     cityCode,
     serviceCityCodes: [...new Set([cityCode, ...formData.getAll("serviceCityCodes").map(String)])],

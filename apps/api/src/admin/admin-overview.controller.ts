@@ -14,7 +14,7 @@ export class AdminOverviewController {
   /** Yönetim ekranının ilk sayfası: bekleyen işler ve toplamlar */
   @Get()
   async summary() {
-    const [companies, requests, users, scheduledBookings, pendingDocuments] = await this.prisma.$transaction([
+    const [companies, requests, users, scheduledBookings, pendingDocuments, pendingNameChanges] = await this.prisma.$transaction([
       this.prisma.company.groupBy({
         by: ['verificationStatus'],
         where: { deletedAt: null },
@@ -37,6 +37,9 @@ export class AdminOverviewController {
       this.prisma.companyDocument.count({
         where: { status: VerificationStatus.PENDING, company: { deletedAt: null } },
       }),
+      this.prisma.companyNameChange.count({
+        where: { status: VerificationStatus.PENDING, company: { deletedAt: null } },
+      }),
     ]);
     const count = <K extends string>(rows: ({ _count: { _all: number } } & Record<string, unknown>)[], key: string) =>
       Object.fromEntries(rows.map((r) => [r[key] as K, r._count._all])) as Partial<Record<K, number>>;
@@ -49,6 +52,7 @@ export class AdminOverviewController {
       users: { customers: byRole.CUSTOMER ?? 0, companies: byRole.COMPANY ?? 0, total: sum(byRole) },
       bookings: { scheduled: scheduledBookings },
       documents: { pending: pendingDocuments },
+      nameChanges: { pending: pendingNameChanges },
     };
   }
 }

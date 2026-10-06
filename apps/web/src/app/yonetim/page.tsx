@@ -19,6 +19,12 @@ export default async function AdminHomePage() {
   const stats = [
     { label: "Onay bekleyen firma", value: summary.companies.pending, href: "/yonetim/firmalar?durum=bekleyen", highlight: summary.companies.pending > 0 },
     { label: "Onay bekleyen belge", value: summary.documents.pending, href: "/yonetim/belgeler", highlight: summary.documents.pending > 0 },
+    {
+      label: "Onay bekleyen ad değişikliği",
+      value: summary.nameChanges.pending,
+      href: "/yonetim/ad-degisiklikleri",
+      highlight: summary.nameChanges.pending > 0,
+    },
     { label: "Onaylı firma", value: summary.companies.verified, href: "/yonetim/firmalar?durum=onayli" },
     { label: "Teklif bekleyen talep", value: summary.requests.open, href: "/yonetim/talepler?durum=acik" },
     { label: "Planlanmış iş", value: summary.bookings.scheduled, href: "/yonetim/talepler?durum=firma-secildi" },
@@ -29,7 +35,7 @@ export default async function AdminHomePage() {
   return (
     <>
       <PageHeader title="Pano" description={`Hoş geldin ${user.fullName.split(" ")[0]}. Bekleyen işler ve genel durum.`} />
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-8">
         {stats.map((s) => (
           <li key={s.label}>
             <Link

@@ -18,6 +18,8 @@ export interface DomainEventMap {
   'quote.accepted': { quoteId: string; bookingId: string };
   /** Yönetici firmayı onayladı veya reddetti */
   'company.verification_changed': { companyId: string };
+  /** Yönetici firmanın görünen ad değişikliğini onayladı veya reddetti */
+  'company.name_change_reviewed': { changeId: string };
   /** Müşteri veya firma işin konuşmasına mesaj yazdı */
   'message.sent': { messageId: string };
   /** İşin taşınma günü yarın (Türkiye saatiyle); hatırlatma zamanı geldi */

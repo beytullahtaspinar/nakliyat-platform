@@ -14,6 +14,7 @@ import {
 } from "@/lib/company-documents";
 import { formatDate, formatDateTime, formatPhone } from "@/lib/format";
 import { PageHeader, VERIFICATION, VerificationBadge } from "../../admin-bits";
+import { NameChangeReview } from "../../name-change-review";
 import { CompanyDecision } from "./company-decision";
 import { DocumentReview } from "./document-review";
 import { ImpersonateButton } from "./impersonate-button";
@@ -32,6 +33,9 @@ const HISTORY_LABELS: Record<string, string> = {
   "company.impersonate.action": "Firma panelinde değişiklik",
   "company.media.hide": "Tanıtım görseli gizlendi",
   "company.media.unhide": "Tanıtım görseli yeniden yayınlandı",
+  "company.name_change.request": "Firma yeni ad istedi",
+  "company.name_change.approve": "Ad değişikliği onaylandı",
+  "company.name_change.reject": "Ad değişikliği reddedildi",
 };
 
 /** Firma panelinde yapılan değişikliğin hangi bölüme ait olduğu (API yolundan) */
@@ -62,6 +66,7 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
   const created = Boolean((await searchParams).yeni);
   const c = await load(token, id);
   const missing = c.requirements.filter((r) => r.state !== "VERIFIED").map((r) => DOCUMENT_LABELS[r.type]);
+  const pendingName = c.nameChanges.find((n) => n.status === "PENDING");
 
   return (
     <>
@@ -84,6 +89,18 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="space-y-4">
+          {pendingName && (
+            <Card className="p-5 ring-2 ring-accent-300">
+              <h2 className="font-semibold">Ad değişikliği onay bekliyor</h2>
+              <p className="mt-1 text-sm text-zinc-700">
+                “{pendingName.oldName}” yerine “<strong>{pendingName.newName}</strong>” · {formatDate(pendingName.createdAt)}.
+                Onaylanana kadar eski ad yayında.
+              </p>
+              <div className="mt-3">
+                <NameChangeReview changeId={pendingName.id} oldName={pendingName.oldName} newName={pendingName.newName} />
+              </div>
+            </Card>
+          )}
           <Card className="p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="font-semibold">Kimlik ve belge bilgileri</h2>
@@ -213,6 +230,7 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
                         ? VERIFICATION[h.details.to].label
                         : (HISTORY_LABELS[h.action] ?? h.action)}
                       {h.details?.type && `: ${DOCUMENT_LABELS[h.details.type]}`}
+                      {h.details?.newName && `: “${h.details.oldName}” → “${h.details.newName}”`}
                       {panelArea(h.details?.path) && ` (${panelArea(h.details?.path)})`}
                     </span>{" "}
                     <span className="text-zinc-500">

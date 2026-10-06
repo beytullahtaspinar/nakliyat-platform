@@ -47,7 +47,7 @@ export const NOTIFICATION_TYPES = {
   },
   COMPANY_VERIFICATION: {
     label: 'Firma hesabı onayı',
-    description: 'Firma hesabın onaylandığında veya reddedildiğinde',
+    description: 'Firma hesabın ya da ad değişikliğin onaylandığında veya reddedildiğinde',
     roles: [UserRole.COMPANY],
   },
 } as const satisfies Record<string, { label: string; description: string; roles: UserRole[] }>;

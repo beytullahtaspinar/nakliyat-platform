@@ -141,6 +141,41 @@ export async function setCompanyMediaHidden(
   return { notice: hide ? "Görsel sayfadan kaldırıldı." : "Görsel yeniden yayında." };
 }
 
+/** Onaylı firmanın görünen ad değişikliği: onayda yeni ad hemen yayına girer */
+export async function approveNameChange(changeId: string): Promise<AdminActionState> {
+  try {
+    await apiFetch(`/admin/name-changes/${encodeURIComponent(changeId)}/approve`, {
+      method: "POST",
+      token: await adminToken(),
+    });
+  } catch (err) {
+    return failure(err, "Ad değişikliği onaylanamadı.");
+  }
+  revalidatePath("/yonetim", "layout");
+  updateTag(COMPANY_CACHE_TAG);
+  return { notice: "Yeni ad yayında." };
+}
+
+export async function rejectNameChange(
+  changeId: string,
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length < 5) return { error: "Firmanın anlayacağı bir gerekçe yazın." };
+  try {
+    await apiFetch(`/admin/name-changes/${encodeURIComponent(changeId)}/reject`, {
+      method: "POST",
+      token: await adminToken(),
+      body: { reason },
+    });
+  } catch (err) {
+    return failure(err, "Ad değişikliği reddedilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Reddedildi; firma eski adıyla görünmeye devam ediyor." };
+}
+
 /** Yönetimden açılan hesabın ortak alanları (müşteri ya da firma yetkilisi) */
 function accountBody(formData: FormData) {
   const text = (name: string) => String(formData.get(name) ?? "").trim();
