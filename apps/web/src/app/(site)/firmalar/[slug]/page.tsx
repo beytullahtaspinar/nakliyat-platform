@@ -5,12 +5,13 @@ import { cache } from "react";
 import { citySlug, getCityByCode } from "@nakliyat/locations";
 import { BadgePill, CompanyBadges } from "@/components/company-badges";
 import { CompanyGallery } from "@/components/company-gallery";
+import { CompanyLogo } from "@/components/company-logo";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs, type Crumb } from "@/components/local/breadcrumbs";
 import { RatingSummary } from "@/components/reviews/rating-summary";
 import { ReviewCard } from "@/components/reviews/review-card";
 import { ButtonLink } from "@/components/ui/button";
-import { Badge, Card } from "@/components/ui/card";
+import { Badge, Card, cardClass } from "@/components/ui/card";
 import { ApiError, apiFetch, type Paginated, type PublicCompanyProfile, type PublicReview } from "@/lib/api";
 import { BADGE_ORDER, BADGES } from "@/lib/badges";
 import { HUB_PATH } from "@/lib/local-content";
@@ -49,6 +50,8 @@ const load = cache(async (slug: string) => {
     throw err;
   }
 });
+
+const FACT_COLS: Record<number, string> = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3" };
 
 const yearOf = (iso: string) => new Date(iso).toLocaleDateString("tr-TR", { year: "numeric", timeZone: "Europe/Istanbul" });
 
@@ -103,7 +106,24 @@ const absolute = (path: string) => (path.startsWith("http") ? path : `${SITE_URL
 
 function companyJsonLd(company: PublicCompanyProfile, reviews: PublicReview[]) {
   const url = `${SITE_URL}${companyPath(company)}`;
-  const images = [...company.photos.map((p) => absolute(p.url)), ...(company.logoUrl ? [absolute(company.logoUrl)] : [])];
+  const logo = company.logoUrl && {
+    "@type": "ImageObject",
+    contentUrl: absolute(company.logoUrl),
+    url: absolute(company.logoUrl),
+    caption: `${company.displayName} logosu`,
+  };
+  // Fotoğraflar sayfadaki galeriyle aynı sırada; açıklaması olan fotoğrafın açıklaması da verilir
+  const images = [
+    ...company.photos.map((p, i) => ({
+      "@type": "ImageObject",
+      contentUrl: absolute(p.url),
+      url: absolute(p.url),
+      thumbnailUrl: absolute(p.thumbUrl),
+      caption: p.caption ?? `${company.displayName} fotoğrafı ${i + 1}`,
+      ...(p.width && p.height && { width: p.width, height: p.height }),
+    })),
+    ...(logo ? [logo] : []),
+  ];
   return {
     "@context": "https://schema.org",
     "@type": "MovingCompany",
@@ -111,7 +131,7 @@ function companyJsonLd(company: PublicCompanyProfile, reviews: PublicReview[]) {
     name: company.displayName,
     url,
     ...(company.description && { description: company.description }),
-    ...(company.logoUrl && { logo: absolute(company.logoUrl) }),
+    ...(logo && { logo }),
     ...(images.length > 0 && { image: images }),
     address: { "@type": "PostalAddress", addressLocality: company.cityName, addressCountry: "TR" },
     areaServed: company.serviceCities.map((c) => ({ "@type": "City", name: c.name })),
@@ -167,165 +187,204 @@ export default async function CompanyPage({ params }: Props) {
     company.staffSize && { label: "Ekip", value: `${company.staffSize} kişi` },
   ].filter((f): f is { label: string; value: string } => !!f);
 
+  const cover = company.photos[0];
+  const summary = [
+    company.cityName && `${company.cityName} merkezli`,
+    company.ratingCount > 0 && `★ ${formatRating(company.ratingAverage)} (${company.ratingCount} yorum)`,
+    company.completedJobs > 0 && `${company.completedJobs} tamamlanan taşıma`,
+    `${yearOf(company.memberSince)} yılından beri platformda`,
+  ].filter(Boolean);
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
+    <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
       <Breadcrumbs items={crumbs} />
 
-      <div className="mt-6 flex items-center gap-4">
-        {company.logoUrl && (
-          // eslint-disable-next-line @next/next/no-img-element -- tarayıcıda küçültülmüş 192 px WebP, kalıcı adres
-          <img
-            src={company.logoUrl}
+      {/* Profil başlığı: ilk fotoğraf kapak, logo kapağın üzerine taşar */}
+      <header className={`${cardClass} mt-5 overflow-hidden`}>
+        <div className="relative h-36 bg-gradient-to-br from-brand-700 via-brand-800 to-brand-950 sm:h-56">
+          {cover ? (
+            <picture>
+              {/* Telefonda 480 px önizleme yeter (karartmalı şerit); geniş ekranda büyük fotoğraf */}
+              <source media="(min-width: 640px)" srcSet={cover.url} />
+              <img
+                src={cover.thumbUrl}
+                alt=""
+                width={cover.width ?? 1600}
+                height={cover.height ?? 1200}
+                fetchPriority="high"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            </picture>
+          ) : (
+            <div
+              aria-hidden
+              className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:18px_18px]"
+            />
+          )}
+          <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
+        </div>
+        <div className="px-5 pb-5 sm:px-8 sm:pb-7">
+          <CompanyLogo
+            name={company.displayName}
+            logoUrl={company.logoUrl}
             alt={`${company.displayName} logosu`}
-            width={72}
-            height={72}
-            className="h-16 w-16 shrink-0 rounded-xl border border-zinc-200 bg-white object-contain p-1 sm:h-[72px] sm:w-[72px]"
+            size="xl"
+            priority
+            className="relative -mt-10 shadow-md ring-4 ring-white sm:-mt-12"
           />
-        )}
-        <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{company.displayName}</h1>
-          {company.verified && !earned.includes("DOCUMENTS_VERIFIED") && <Badge tone="success">✓ Doğrulanmış firma</Badge>}
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">{company.displayName}</h1>
+          <p className="mt-1 text-zinc-600">{summary.join(" · ")}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {company.verified && !earned.includes("DOCUMENTS_VERIFIED") && <Badge tone="success">✓ Doğrulanmış firma</Badge>}
+            <CompanyBadges badges={earned} />
+          </div>
+          {facts.length > 0 && (
+            <dl className={`mt-5 grid ${FACT_COLS[facts.length]} divide-x divide-zinc-200 rounded-xl border border-zinc-200 bg-zinc-50 sm:max-w-md`}>
+              {facts.map((f) => (
+                <div key={f.label} className="px-3 py-2.5 text-center">
+                  <dt className="text-xs text-zinc-600">{f.label}</dt>
+                  <dd className="text-lg font-semibold text-zinc-900">{f.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </header>
+
+      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <aside className="lg:col-start-2 lg:row-start-1">
+          <Card className="p-5 lg:sticky lg:top-24">
+            <p className="font-semibold text-zinc-900">Bu firmadan teklif al</p>
+            <p className="mt-1 text-sm text-zinc-700">
+              Taşınma talebini oluştur; {company.displayName} dahil bölgendeki doğrulanmış firmalardan ücretsiz teklif
+              al, fiyatları ve yorumları karşılaştırıp seç.
+            </p>
+            <ButtonLink href="/talep-olustur" size="lg" className="mt-4 w-full justify-center">
+              Ücretsiz teklif al
+            </ButtonLink>
+          </Card>
+        </aside>
+
+        <div className="min-w-0 space-y-12 lg:col-start-1 lg:row-start-1">
+          {company.description && (
+            <section>
+              <h2 className="text-2xl font-semibold">{company.displayName} hakkında</h2>
+              <p className="mt-3 whitespace-pre-line text-zinc-800">{company.description}</p>
+            </section>
+          )}
+
+          {company.photos.length > 0 && (
+            <section aria-labelledby="fotograflar">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 id="fotograflar" className="text-2xl font-semibold">
+                  Fotoğraflar
+                </h2>
+                <p className="text-sm text-zinc-600">{company.photos.length} fotoğraf</p>
+              </div>
+              <CompanyGallery photos={company.photos} companyName={company.displayName} />
+            </section>
+          )}
+
+          {company.services.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-semibold">Hizmetler</h2>
+              <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                {company.services.map((code) => (
+                  <li key={code} className="flex items-center gap-2 text-zinc-800">
+                    <span aria-hidden className="text-brand-700">
+                      ✓
+                    </span>
+                    {serviceLabel(code)}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section>
+            <h2 className="text-2xl font-semibold">Neden doğrulanmış?</h2>
+            <p className="mt-3 text-zinc-700">
+              Firmanın K3 yetki belgesi, vergi levhası ve ticaret sicil kaydı ekibimiz tarafından kontrol edildi
+              {company.verifiedAt && ` (${new Date(company.verifiedAt).toLocaleDateString("tr-TR", { month: "long", year: "numeric", timeZone: "Europe/Istanbul" })})`}
+              . K3 belgesinin süresi dolarsa firma yeni teklif veremez.
+            </p>
+          </section>
+
+          {earned.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-semibold">Rozetler</h2>
+              <p className="mt-2 text-sm text-zinc-600">
+                Rozetler platformdaki güncel verilerden otomatik hesaplanır; koşul sağlanmazsa rozet kalkar.
+              </p>
+              <dl className="mt-4 space-y-3">
+                {BADGE_ORDER.filter((code) => earned.includes(code)).map((code) => (
+                  <div key={code}>
+                    <dt>
+                      <BadgePill code={code} />
+                    </dt>
+                    <dd className="mt-1 text-zinc-700">{BADGES[code].description}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
+          {company.serviceCities.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-semibold">Hizmet verdiği iller</h2>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {company.serviceCities.map((c) => {
+                  const record = getCityByCode(c.code);
+                  return (
+                    <li key={c.code}>
+                      {record ? (
+                        <Link
+                          href={`/${citySlug(record)}`}
+                          className="inline-block rounded-full border border-zinc-300 px-3 py-1 text-sm text-zinc-800 hover:border-brand-700 hover:text-brand-800"
+                        >
+                          {c.name} evden eve nakliyat
+                        </Link>
+                      ) : (
+                        c.name
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          <section id="yorumlar" className="scroll-mt-20">
+            <h2 className="text-2xl font-semibold">Müşteri yorumları</h2>
+            <p className="mt-2 text-sm text-zinc-600">
+              Yorumlar yalnızca bu firmayla platform üzerinden anlaşan ve taşınması tamamlanan müşterilerden gelir; her
+              taşıma için bir değerlendirme yapılabilir. Kurallara aykırı yorumlar gerekçesiyle yayından kaldırılır.
+            </p>
+            <Card className="mt-4 p-5">
+              <RatingSummary
+                average={company.ratingAverage}
+                count={company.ratingCount}
+                distribution={company.ratingDistribution}
+                headingLevel={3}
+              />
+            </Card>
+            {reviews.items.length > 0 && (
+              <ul className="mt-4 space-y-3">
+                {reviews.items.map((r) => (
+                  <ReviewCard key={r.id} as="li" review={r} companyName={company.displayName} author={`${r.authorName} · ${r.route}`} />
+                ))}
+              </ul>
+            )}
+            {reviews.total > reviews.items.length && (
+              <p className="mt-3 text-sm text-zinc-600">
+                En yeni {reviews.items.length} yorum gösteriliyor (toplam {reviews.total}).
+              </p>
+            )}
+          </section>
+
         </div>
       </div>
-      <CompanyBadges badges={earned} className="mt-3" />
-      <p className="mt-2 text-zinc-700">
-        {company.cityName} merkezli
-        {company.ratingCount > 0 && ` · ★ ${formatRating(company.ratingAverage)} (${company.ratingCount} yorum)`}
-        {company.completedJobs > 0 && ` · ${company.completedJobs} tamamlanan taşıma`}
-        {` · ${yearOf(company.memberSince)} yılından beri platformda`}
-      </p>
-
-      {facts.length > 0 && (
-        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {facts.map((f) => (
-            <div key={f.label} className="rounded-lg border border-zinc-200 bg-white px-3 py-2">
-              <dt className="text-xs text-zinc-600">{f.label}</dt>
-              <dd className="text-lg font-semibold text-zinc-900">{f.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-
-      <Card className="mt-6 p-5">
-        <p className="text-zinc-800">
-          Taşınma talebini oluştur; {company.displayName} dahil bölgendeki doğrulanmış firmalardan ücretsiz teklif al,
-          fiyatları ve yorumları karşılaştırıp seç.
-        </p>
-        <ButtonLink href="/talep-olustur" size="lg" className="mt-4">
-          Ücretsiz teklif al
-        </ButtonLink>
-      </Card>
-
-      {company.description && (
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold">{company.displayName} hakkında</h2>
-          <p className="mt-3 whitespace-pre-line text-zinc-800">{company.description}</p>
-        </section>
-      )}
-
-      {company.services.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold">Hizmetler</h2>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {company.services.map((code) => (
-              <li key={code} className="flex items-center gap-2 text-zinc-800">
-                <span aria-hidden className="text-brand-700">
-                  ✓
-                </span>
-                {serviceLabel(code)}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {company.photos.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold">Fotoğraflar</h2>
-          <CompanyGallery photos={company.photos} companyName={company.displayName} />
-        </section>
-      )}
-
-      <section className="mt-12">
-        <h2 className="text-2xl font-semibold">Neden doğrulanmış?</h2>
-        <p className="mt-3 text-zinc-700">
-          Firmanın K3 yetki belgesi, vergi levhası ve ticaret sicil kaydı ekibimiz tarafından kontrol edildi
-          {company.verifiedAt && ` (${new Date(company.verifiedAt).toLocaleDateString("tr-TR", { month: "long", year: "numeric", timeZone: "Europe/Istanbul" })})`}
-          . K3 belgesinin süresi dolarsa firma yeni teklif veremez.
-        </p>
-      </section>
-
-      {earned.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold">Rozetler</h2>
-          <p className="mt-2 text-sm text-zinc-600">
-            Rozetler platformdaki güncel verilerden otomatik hesaplanır; koşul sağlanmazsa rozet kalkar.
-          </p>
-          <dl className="mt-4 space-y-3">
-            {BADGE_ORDER.filter((code) => earned.includes(code)).map((code) => (
-              <div key={code}>
-                <dt>
-                  <BadgePill code={code} />
-                </dt>
-                <dd className="mt-1 text-zinc-700">{BADGES[code].description}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
-
-      {company.serviceCities.length > 0 && (
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold">Hizmet verdiği iller</h2>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {company.serviceCities.map((c) => {
-              const record = getCityByCode(c.code);
-              return (
-                <li key={c.code}>
-                  {record ? (
-                    <Link
-                      href={`/${citySlug(record)}`}
-                      className="inline-block rounded-full border border-zinc-300 px-3 py-1 text-sm text-zinc-800 hover:border-brand-700 hover:text-brand-800"
-                    >
-                      {c.name} evden eve nakliyat
-                    </Link>
-                  ) : (
-                    c.name
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-
-      <section id="yorumlar" className="mt-12 scroll-mt-20">
-        <h2 className="text-2xl font-semibold">Müşteri yorumları</h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          Yorumlar yalnızca bu firmayla platform üzerinden anlaşan ve taşınması tamamlanan müşterilerden gelir; her
-          taşıma için bir değerlendirme yapılabilir. Kurallara aykırı yorumlar gerekçesiyle yayından kaldırılır.
-        </p>
-        <Card className="mt-4 p-5">
-          <RatingSummary
-            average={company.ratingAverage}
-            count={company.ratingCount}
-            distribution={company.ratingDistribution}
-            headingLevel={3}
-          />
-        </Card>
-        {reviews.items.length > 0 && (
-          <ul className="mt-4 space-y-3">
-            {reviews.items.map((r) => (
-              <ReviewCard key={r.id} as="li" review={r} companyName={company.displayName} author={`${r.authorName} · ${r.route}`} />
-            ))}
-          </ul>
-        )}
-        {reviews.total > reviews.items.length && (
-          <p className="mt-3 text-sm text-zinc-600">
-            En yeni {reviews.items.length} yorum gösteriliyor (toplam {reviews.total}).
-          </p>
-        )}
-      </section>
 
       <JsonLd data={companyJsonLd(company, reviews.items)} />
     </main>

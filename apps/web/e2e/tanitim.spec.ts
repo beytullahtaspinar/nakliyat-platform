@@ -119,13 +119,27 @@ test("firma tanıtım sayfasını doldurur; sayfa yayında, dizine açık ve il 
   const jsonLd = await page.locator('script[type="application/ld+json"]').allTextContents();
   const company = jsonLd.map((t) => JSON.parse(t)).find((d) => d["@type"] === "MovingCompany");
   expect(company).toMatchObject({ foundingDate: "2008", numberOfEmployees: { value: 14 } });
+  // Galeri sırasıyla fotoğraflar, sonra logo; açıklamalarıyla ImageObject
   expect(company.image).toHaveLength(3);
+  expect(company.image[0]).toMatchObject({ "@type": "ImageObject", caption: "Asansörlü aracımız" });
+  expect(company.image[0].contentUrl).toMatch(/^http.*\/medya\/firmalar\//);
+  expect(company.image[0].thumbnailUrl).toMatch(/\/medya\/firmalar\//);
+  expect(company.logo).toMatchObject({ "@type": "ImageObject", contentUrl: expect.stringContaining(logoSrc!) });
   expect(company.hasOfferCatalog.itemListElement).toHaveLength(2);
 
   const gallery = page.getByRole("img", { name: "Asansörlü aracımız" });
   await gallery.scrollIntoViewIfNeeded();
   await gallery.click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  const viewer = page.getByRole("dialog");
+  await expect(viewer).toBeVisible();
+  await expect(viewer.getByText("1 / 2")).toBeVisible();
+  await expect(viewer.getByRole("img", { name: "Asansörlü aracımız" })).toBeVisible();
+  await viewer.getByRole("button", { name: "Sonraki fotoğraf" }).click();
+  await expect(viewer.getByText("2 / 2")).toBeVisible();
+  await expect(viewer.getByRole("img", { name: `${companyName} fotoğrafı 2` })).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await expect(viewer.getByText("1 / 2")).toBeVisible();
+  await expectAccessible(page);
   await page.getByRole("button", { name: "Kapat" }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
   await expectAccessible(page);
@@ -148,7 +162,8 @@ test("firma tanıtım sayfasını doldurur; sayfa yayında, dizine açık ve il 
   await adminContext.close();
 
   await page.goto(`/firmalar/${companyName.toLocaleLowerCase("tr-TR").replace(/ı/g, "i").replace(/\s+/g, "-")}-${companyId}`);
-  await expect(page.getByRole("heading", { name: "Fotoğraflar" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Fotoğraflar" }).locator("..").getByRole("listitem")).toHaveCount(1);
+  const gallery2 = page.getByRole("region", { name: "Fotoğraflar" });
+  await expect(gallery2.getByText("1 fotoğraf")).toBeVisible();
+  await expect(gallery2.getByRole("listitem")).toHaveCount(1);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
 });
