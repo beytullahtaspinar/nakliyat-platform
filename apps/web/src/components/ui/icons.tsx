@@ -203,3 +203,10 @@ export const ExternalIcon = (p: P) => (
     <path d="M17.5 14v4.5A1.5 1.5 0 0 1 16 20H5.5A1.5 1.5 0 0 1 4 18.5V8a1.5 1.5 0 0 1 1.5-1.5H10" />
   </Icon>
 );
+
+/** Bekleme göstergesi: döndürmek için `animate-spin` ile kullanılır */
+export const SpinnerIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 3a9 9 0 1 0 9 9" />
+  </Icon>
+);
