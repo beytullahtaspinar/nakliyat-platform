@@ -15,10 +15,12 @@ type Props = {
   /** Yazılan açık adres, ilçe ve il; harita açılınca bu adres aranır */
   address: string;
   area: string;
+  /** Haritada seçilen yerin adresi açık adres alanına yazılsın diye */
+  onAddress: (street: string) => void;
 };
 
 /** Talep formunda isteğe bağlı konum işareti; enlem/boylam gizli alanlarla gönderilir. */
-export function LocationField({ prefix, address, area }: Props) {
+export function LocationField({ prefix, address, area, onAddress }: Props) {
   const [open, setOpen] = useState(false);
   const [point, setPoint] = useState<LatLng | null>(null);
 
@@ -34,6 +36,7 @@ export function LocationField({ prefix, address, area }: Props) {
         <MapPicker
           value={point}
           onChange={setPoint}
+          onAddress={onAddress}
           address={address}
           area={area}
         />

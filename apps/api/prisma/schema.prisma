@@ -94,6 +94,8 @@ model UserIdentity {
 enum VerificationChannel {
   EMAIL
   PHONE
+  /// "Şifremi unuttum" kodu: e-postaya gider, doğrulama kodlarından ayrı sayılır
+  PASSWORD_RESET
 }
 
 /// E-posta veya telefon doğrulaması için gönderilen 6 haneli kodlar. Kodun kendisi saklanmaz,

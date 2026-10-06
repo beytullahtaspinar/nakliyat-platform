@@ -126,7 +126,8 @@ export default async function CompanyShowcasePage() {
         <h2 className="text-lg font-semibold">Araç, ekip ve depo fotoğrafları</h2>
         <p className="mt-1 text-sm text-zinc-600">
           En fazla {limits.maxPhotos} fotoğraf. Kendi araçların, ekibin ve iş başındaki fotoğraflar güven verir; başka
-          firmaların ya da internetten alınmış görseller kaldırılır. Fotoğraflar küçültülür, konum bilgisi silinir.
+          firmaların ya da internetten alınmış görseller kaldırılır. İlk fotoğraf sayfanın üstünde kapak olarak görünür.
+          Fotoğraflar küçültülür, konum bilgisi silinir.
         </p>
         {showcase.photos.length > 0 && (
           <ul className="mt-4 grid gap-4 sm:grid-cols-2">

@@ -9,6 +9,8 @@ import { MAP_STYLE_URL, TURKEY_CENTER, describePoint, searchPlaces, type LatLng,
 type Props = {
   value: LatLng | null;
   onChange: (point: LatLng | null) => void;
+  /** Müşteri haritada yer seçince bulunan adres (mahalle, sokak, no); açık adres alanına yazılır */
+  onAddress: (street: string) => void;
   /** Formda yazılan açık adres; açılışta aranır */
   address: string;
   /** İlçe ve il; adres bulunamazsa harita buraya odaklanır */
@@ -19,7 +21,7 @@ type Props = {
  * Adres arama + sürüklenebilir iğne. Yalnızca kullanıcı "Haritada işaretle" deyince yüklenir
  * (maplibre-gl büyük bir kütüphane; ilk açılış hızını etkilememeli).
  */
-export default function MapPicker({ value, onChange, address, area }: Props) {
+export default function MapPicker({ value, onChange, onAddress, address, area }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map>(null);
   const marker = useRef<maplibregl.Marker>(null);
@@ -31,17 +33,36 @@ export default function MapPicker({ value, onChange, address, area }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
 
-  /** İğneyi koy; adı bilinmiyorsa okunur adresini sor ki müşteri doğru yeri seçtiğini görsün */
-  const pick = (point: LatLng, label?: string) => {
+  /** Seçilen yerin adresini açık adres alanına yaz; müşteri sonra düzenleyebilir */
+  const fillAddress = (p: Place) => {
+    if (!p.street) return;
+    onAddress(p.street);
+    setMessage("Seçtiğin yer açık adrese yazıldı. Bina ve daire numarasını ekleyip düzenleyebilirsin.");
+  };
+
+  /**
+   * İğneyi koy; adı bilinmiyorsa okunur adresini sor ki müşteri doğru yeri seçtiğini görsün.
+   * fill: müşteri yeri kendisi seçtiyse (dokunma, sürükleme, arama sonucu) adres alanı da dolar;
+   * açılışta yazdığı adresten bulunan yerde dolmaz, yazdığı korunur.
+   */
+  const pick = (point: LatLng, place?: Place, fill = true) => {
     marker.current?.setLngLat([point.lng, point.lat]).addTo(map.current!);
     onChange(point);
     lookup.current?.abort();
-    if (label) return setPicked(label);
+    if (place) {
+      setPicked(place.label);
+      if (fill) fillAddress(place);
+      return;
+    }
     setPicked(null);
     const ctrl = new AbortController();
     lookup.current = ctrl;
     describePoint(point, ctrl.signal)
-      .then((name) => !ctrl.signal.aborted && setPicked(name))
+      .then((found) => {
+        if (ctrl.signal.aborted) return;
+        setPicked(found?.label ?? null);
+        if (found && fill) fillAddress(found);
+      })
       .catch(() => undefined);
   };
   const pickRef = useRef(pick);
@@ -50,7 +71,7 @@ export default function MapPicker({ value, onChange, address, area }: Props) {
   });
 
   const choose = (p: Place) => {
-    pick(p, p.label);
+    pick(p, p);
     map.current?.flyTo({ center: [p.lng, p.lat], zoom: 17 });
     setResults([]);
   };
@@ -75,7 +96,7 @@ export default function MapPicker({ value, onChange, address, area }: Props) {
     try {
       const [found] = address.trim().length >= 5 ? await searchPlaces(`${address}, ${area}`) : [];
       if (found) {
-        pickRef.current(found, found.label);
+        pickRef.current(found, found, false);
         map.current?.jumpTo({ center: [found.lng, found.lat], zoom: 17 });
         setMessage("Yazdığın adrese göre işaretlendi. Tam yer değilse iğneyi sürükle veya haritaya dokun.");
         return;

@@ -32,6 +32,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/giris">) {
         Taleplerini ve gelen teklifleri görmek için giriş yap.
       </p>
       <div className="mt-8 space-y-4">
+        {params.sifre === "yenilendi" && (
+          <p role="status" className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-sm text-brand-900">
+            Şifren değişti. Yeni şifrenle giriş yap.
+          </p>
+        )}
         <FormError message={error} />
         <SocialLogin providers={await getOAuthProviders()} next={next} />
         <LoginForm next={next} />

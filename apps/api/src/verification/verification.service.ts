@@ -12,14 +12,16 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DomainEvents } from '../events/domain-events.js';
-import { Prisma, type User } from '../generated/prisma/client.js';
-import { RequestStatus, VerificationChannel } from '../generated/prisma/enums.js';
+import { Prisma, type User, type VerificationCode as VerificationCodeRow } from '../generated/prisma/client.js';
+import { RequestStatus, UserStatus, VerificationChannel } from '../generated/prisma/enums.js';
 import { ErrorReporterService } from '../observability/error-reporter.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { VerificationStatusDto } from './dto/verification.dto.js';
-import { EMAIL_CODE_SENDER, PHONE_CODE_SENDER, type CodeSender } from './senders/code-sender.js';
+import { EMAIL_CODE_SENDER, PHONE_CODE_SENDER, type CodePurpose, type CodeSender } from './senders/code-sender.js';
 
 export const CODE_TTL_MS = 10 * 60_000;
+/** "Şifremi unuttum" kodu biraz daha uzun geçerli: kullanıcı e-postayı başka cihazda açıp yeni şifre düşünür */
+export const PASSWORD_RESET_TTL_MS = 15 * 60_000;
 export const RESEND_INTERVAL_MS = 60_000;
 export const MAX_ATTEMPTS = 5;
 /** Kullanıcı başına, kanal başına 24 saatte en fazla bu kadar kod (SMS maliyeti ve kötüye kullanım) */
@@ -130,15 +132,81 @@ export class VerificationService {
     const user = await this.findUser(userId);
     const wasComplete = this.isComplete(user);
     const latest = await this.latestCode(userId, channel);
+    if (channel === VerificationChannel.PHONE && latest && latest.target !== user.phone) {
+      throw new BadRequestException('Telefon numaran değişmiş. Yeni kod iste.');
+    }
+    const now = await this.consume(latest, code);
+
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data:
+          channel === VerificationChannel.EMAIL
+            ? { email: latest!.target, emailVerifiedAt: now }
+            : { phoneVerifiedAt: now },
+      });
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('Bu e-posta adresi başka bir hesapta kayıtlı');
+      }
+      throw e;
+    }
+
+    const status = await this.status(userId);
+    if (status.complete && !wasComplete) await this.publishDrafts(userId);
+    return status;
+  }
+
+  /**
+   * "Şifremi unuttum": e-postaya kayıtlı hesap varsa 15 dakika geçerli kod gönderir.
+   * Hesap yoksa, 60 saniye dolmadıysa ya da günlük sınır aşıldıysa sessizce hiçbir şey yapmaz:
+   * yanıt her durumda aynıdır, böylece hangi adresin kayıtlı olduğu bu uçtan öğrenilemez.
+   * Gönderilen kodun kullanıcı kimliğini döndürür (kayıt için); gönderilmediyse null.
+   */
+  async sendPasswordResetCode(email: string): Promise<string | null> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user || user.deletedAt || user.status !== UserStatus.ACTIVE) return null;
+    try {
+      await this.issue(user, VerificationChannel.PASSWORD_RESET, email, this.emailSender, {
+        ttlMs: PASSWORD_RESET_TTL_MS,
+        purpose: 'password-reset',
+      });
+    } catch (e) {
+      // Önceki kod hâlâ geçerli ya da günlük sınır doldu: kayıtlı olduğunu belli etmemek için sessiz
+      if (e instanceof HttpException && e.getStatus() === HttpStatus.TOO_MANY_REQUESTS) return null;
+      throw e;
+    }
+    return user.id;
+  }
+
+  /**
+   * Şifre sıfırlama kodunu tüketir ve hesabı döndürür. Kod tek kullanımlık; kullanılınca, süresi
+   * dolunca ya da 5 hatalı denemede yeni kod istenmelidir. Kod e-postaya gittiği için adres de
+   * doğrulanmış sayılır.
+   */
+  async consumePasswordResetCode(email: string, code: string): Promise<User> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    const latest =
+      user && !user.deletedAt && user.status === UserStatus.ACTIVE
+        ? await this.latestCode(user.id, VerificationChannel.PASSWORD_RESET)
+        : null;
+    // Kod başka adrese gönderilmişse (hesabın e-postası sonradan değişti) geçersiz
+    const now = await this.consume(latest && latest.target === email ? latest : null, code);
+    if (!user!.emailVerifiedAt) {
+      await this.prisma.user.update({ where: { id: user!.id }, data: { emailVerifiedAt: now } });
+    }
+    return user!;
+  }
+
+  /**
+   * Kodu karşılaştırır ve tek kullanımlık olarak işaretler; kullanılma anını döndürür.
+   * Deneme hakkı karşılaştırmadan önce düşülür: eşzamanlı isteklerle 5 sınırı aşılamaz.
+   */
+  private async consume(latest: VerificationCodeRow | null, code: string): Promise<Date> {
     const now = new Date();
     if (!latest || latest.consumedAt || latest.expiresAt <= now) {
       throw new BadRequestException('Kodun süresi dolmuş. Yeni kod iste.');
     }
-    if (channel === VerificationChannel.PHONE && latest.target !== user.phone) {
-      throw new BadRequestException('Telefon numaran değişmiş. Yeni kod iste.');
-    }
-
-    // Deneme hakkı karşılaştırmadan önce düşülür: eşzamanlı isteklerle 5 sınırı aşılamaz
     const counted = await this.prisma.verificationCode.updateMany({
       where: { id: latest.id, consumedAt: null, attempts: { lt: MAX_ATTEMPTS } },
       data: { attempts: { increment: 1 } },
@@ -157,25 +225,7 @@ export class VerificationService {
       data: { consumedAt: now },
     });
     if (consumed.count !== 1) throw new BadRequestException('Bu kod zaten kullanıldı. Yeni kod iste.');
-
-    try {
-      await this.prisma.user.update({
-        where: { id: userId },
-        data:
-          channel === VerificationChannel.EMAIL
-            ? { email: latest.target, emailVerifiedAt: now }
-            : { phoneVerifiedAt: now },
-      });
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
-        throw new ConflictException('Bu e-posta adresi başka bir hesapta kayıtlı');
-      }
-      throw e;
-    }
-
-    const status = await this.status(userId);
-    if (status.complete && !wasComplete) await this.publishDrafts(userId);
-    return status;
+    return now;
   }
 
   /**
@@ -201,6 +251,7 @@ export class VerificationService {
     channel: VerificationChannel,
     target: string,
     sender: CodeSender | null,
+    { ttlMs = CODE_TTL_MS, purpose = 'verify' }: { ttlMs?: number; purpose?: CodePurpose } = {},
   ) {
     if (!sender) {
       throw new ServiceUnavailableException('Doğrulama kodu şu an gönderilemiyor, lütfen biraz sonra tekrar dene.');
@@ -226,11 +277,11 @@ export class VerificationService {
     });
     const id = cuidLike();
     await this.prisma.verificationCode.create({
-      data: { id, userId: user.id, channel, target, codeHash: this.hash(id, code), expiresAt: new Date(now + CODE_TTL_MS) },
+      data: { id, userId: user.id, channel, target, codeHash: this.hash(id, code), expiresAt: new Date(now + ttlMs) },
     });
 
     try {
-      await sender.send({ address: target, fullName: user.fullName }, code);
+      await sender.send({ address: target, fullName: user.fullName }, code, purpose);
     } catch (error) {
       await this.prisma.verificationCode.delete({ where: { id } }).catch(() => undefined);
       this.logger.error(`${sender.provider} doğrulama kodu gönderilemedi`);

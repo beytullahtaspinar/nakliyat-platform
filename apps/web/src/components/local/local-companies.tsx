@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CompanyLogo } from "@/components/company-logo";
 import type { PublicCompanyListItem } from "@/lib/api";
 import { companyPath, formatRating } from "@/lib/reviews";
 
@@ -26,25 +27,7 @@ export function LocalCompanies({
               href={companyPath(c)}
               className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 transition hover:border-brand-300 hover:bg-brand-50"
             >
-              {c.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- 192 px WebP logo, kalıcı adres
-                <img
-                  src={c.logoUrl}
-                  alt=""
-                  width={48}
-                  height={48}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-12 w-12 shrink-0 rounded-lg border border-zinc-200 bg-white object-contain p-0.5"
-                />
-              ) : (
-                <span
-                  aria-hidden
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-lg font-semibold text-brand-800"
-                >
-                  {c.displayName.slice(0, 1).toLocaleUpperCase("tr-TR")}
-                </span>
-              )}
+              <CompanyLogo name={c.displayName} logoUrl={c.logoUrl} />
               <span className="min-w-0">
                 <span className="block truncate font-semibold text-zinc-900">{c.displayName}</span>
                 <span className="block text-sm text-zinc-600">

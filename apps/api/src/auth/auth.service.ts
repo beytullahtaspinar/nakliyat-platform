@@ -15,6 +15,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { VerificationService } from '../verification/verification.service.js';
 import type { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
+import type { ResetPasswordDto } from './dto/password-reset.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 import { consentData } from './dto/consent.js';
 
@@ -95,6 +96,40 @@ export class AuthService {
       throw new UnauthorizedException('Telefon numarası veya şifre hatalı');
     }
     return this.signIn(user);
+  }
+
+  /** "Şifremi unuttum" 1. adım: kod gönderilirse denetim kaydına yazılır. Ayrıntı: docs/dogrulama.md */
+  async forgotPassword(email: string): Promise<void> {
+    const userId = await this.verification.sendPasswordResetCode(email);
+    if (!userId) return;
+    await this.prisma.auditLog.create({
+      data: { actorId: userId, action: 'password_reset.request', entityType: 'User', entityId: userId },
+    });
+  }
+
+  /**
+   * "Şifremi unuttum" 2. adım: kod doğruysa şifre değişir ve açık oturumların hepsi kapanır
+   * (şifreyi bilen biri başka cihazda oturum açmışsa da düşer).
+   */
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    const user = await this.verification.consumePasswordResetCode(dto.email, dto.code);
+    const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId: user.id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+      this.prisma.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: 'password_reset.complete',
+          entityType: 'User',
+          entityId: user.id,
+          details: { hadPassword: user.passwordHash !== OAUTH_ONLY_PASSWORD },
+        },
+      }),
+    ]);
   }
 
   /** Yenileme anahtarını tek kullanımlık olarak döndürür (rotation). */
