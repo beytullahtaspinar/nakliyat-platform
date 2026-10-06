@@ -10,7 +10,7 @@ import { DomainEvents } from '../events/domain-events.js';
 import { Prisma, type Review } from '../generated/prisma/client.js';
 import { BookingStatus, CompanyMediaKind, RequestStatus, UserRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { AdminListReviewsDto, CreateReviewDto, PublicCompaniesDto } from './dto/review.dto.js';
+import type { AdminListReviewsDto, CreateReviewDto, ListReviewsDto, PublicCompaniesDto, ReviewSort } from './dto/review.dto.js';
 import { maskName, moveDayPassed, moveDayReached } from './review-rules.js';
 
 /** Arama motoruna açık firma sayfası: yorumu var ya da tanıtım yazısı ve fotoğrafları yeterli */
@@ -21,6 +21,20 @@ const AUTHOR_AND_ROUTE = {
   booking: { select: { requestId: true, scheduledAt: true, request: { select: { fromCityCode: true, toCityCode: true } } } },
 } satisfies Prisma.ReviewInclude;
 type ReviewWithAuthor = Prisma.ReviewGetPayload<{ include: typeof AUTHOR_AND_ROUTE }>;
+
+const SORT_ORDER: Record<ReviewSort, Prisma.ReviewOrderByWithRelationInput[]> = {
+  newest: [{ createdAt: 'desc' }],
+  oldest: [{ createdAt: 'asc' }],
+  lowest: [{ rating: 'asc' }, { createdAt: 'desc' }],
+  highest: [{ rating: 'desc' }, { createdAt: 'desc' }],
+};
+
+/** Ortak süzgeç: yayında/gizli, puan, yanıt durumu */
+const filterWhere = ({ status, rating, reply }: Pick<ListReviewsDto, 'status' | 'rating' | 'reply'>): Prisma.ReviewWhereInput => ({
+  ...(status && { isPublished: status === 'visible' }),
+  ...(rating && { rating }),
+  ...(reply && { companyReply: reply === 'answered' ? { not: null } : null }),
+});
 
 /** Müşterinin ve firmanın kendi ekranında gördüğü değerlendirme (gizlenme durumu dahil) */
 export function toReviewView(review: Review) {
@@ -190,22 +204,36 @@ export class ReviewsService {
   }
 
   /** Firmanın kendi değerlendirmeleri (gizlenenler dahil), en yeni önce, puan dağılımıyla */
-  async listForCompany(ownerId: string, page: number, limit: number) {
+  async listForCompany(ownerId: string, { page, limit, sort, q, ...filters }: ListReviewsDto) {
     const company = await this.companies.requireCompany(ownerId);
-    const where = { companyId: company.id };
-    const [items, total, distribution] = await Promise.all([
+    const own = { companyId: company.id };
+    const where: Prisma.ReviewWhereInput = {
+      ...own,
+      ...filterWhere(filters),
+      ...(q && { OR: [{ comment: { contains: q } }, { customer: { fullName: { contains: q } } }] }),
+    };
+    const [items, total, distribution, all, unanswered, hidden] = await Promise.all([
       this.prisma.review.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: SORT_ORDER[sort],
         skip: (page - 1) * limit,
         take: limit,
         include: AUTHOR_AND_ROUTE,
       }),
       this.prisma.review.count({ where }),
       this.distribution(company.id),
+      this.prisma.review.count({ where: own }),
+      this.prisma.review.count({ where: { ...own, companyReply: null } }),
+      this.prisma.review.count({ where: { ...own, isPublished: false } }),
     ]);
     return {
-      summary: { ratingAverage: company.ratingAverage, ratingCount: company.ratingCount, distribution },
+      summary: {
+        ratingAverage: company.ratingAverage,
+        ratingCount: company.ratingCount,
+        distribution,
+        // Gizlenenler dahil tüm değerlendirmeler
+        counts: { total: all, unanswered, hidden },
+      },
       items: items.map((r) => ({
         ...toReviewView(r),
         // Firma müşteriyi iş kaydından zaten tanıyor
@@ -340,16 +368,22 @@ export class ReviewsService {
 
   // ─── Yönetim ─────────────────────────────────────────────────
 
-  async adminList({ status, rating, q, page, limit }: AdminListReviewsDto) {
+  async adminList({ page, limit, sort, q, ...filters }: AdminListReviewsDto) {
     const where: Prisma.ReviewWhereInput = {
-      ...(status && { isPublished: status === 'visible' }),
-      ...(rating && { rating }),
-      ...(q && { OR: [{ company: { displayName: { contains: q } } }, { comment: { contains: q } }] }),
+      ...filterWhere(filters),
+      ...(q && {
+        OR: [
+          { company: { displayName: { contains: q } } },
+          { comment: { contains: q } },
+          { customer: { fullName: { contains: q } } },
+        ],
+      }),
     };
-    const [items, total] = await Promise.all([
+    const weekAgo = new Date(Date.now() - 7 * 86_400_000);
+    const [items, total, all, published, hidden, unanswered, low, recent] = await Promise.all([
       this.prisma.review.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: SORT_ORDER[sort],
         skip: (page - 1) * limit,
         take: limit,
         include: {
@@ -359,6 +393,12 @@ export class ReviewsService {
         },
       }),
       this.prisma.review.count({ where }),
+      this.prisma.review.count(),
+      this.prisma.review.aggregate({ where: { isPublished: true }, _avg: { rating: true } }),
+      this.prisma.review.count({ where: { isPublished: false } }),
+      this.prisma.review.count({ where: { companyReply: null } }),
+      this.prisma.review.count({ where: { isPublished: true, rating: { lte: 2 } } }),
+      this.prisma.review.count({ where: { createdAt: { gte: weekAgo } } }),
     ]);
     return {
       items: items.map((r) => ({
@@ -368,10 +408,20 @@ export class ReviewsService {
         customer: { id: r.customer.id, fullName: r.customer.fullName },
         requestId: r.booking.requestId,
         route: routeOf(r.booking.request),
+        moveDate: r.booking.scheduledAt,
       })),
       total,
       page,
       limit,
+      /** Süzgeçten bağımsız genel durum (pano kutuları) */
+      stats: {
+        total: all,
+        ratingAverage: Math.round((published._avg.rating ?? 0) * 100) / 100,
+        hidden,
+        unanswered,
+        lowRating: low,
+        lastWeek: recent,
+      },
     };
   }
 

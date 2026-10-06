@@ -232,6 +232,16 @@ describe('Değerlendirmeler (e2e)', () => {
     expect(own.body.summary).toMatchObject({ ratingCount: 1 });
     expect(own.body.items[0]).toMatchObject({ id: reviewId, customerName: 'Ayşe Yorumcu', route: 'İzmir → Ankara' });
 
+    expect(own.body.summary.counts).toEqual({ total: 1, unanswered: 0, hidden: 0 });
+
+    // Süzgeçler: yanıtlanan / yanıt bekleyen, puan, sıralama, arama
+    const answered = await http().get('/v1/company/reviews?reply=answered&sort=lowest').set(auth('company')).expect(200);
+    expect(answered.body.total).toBe(1);
+    expect((await http().get('/v1/company/reviews?reply=unanswered').set(auth('company')).expect(200)).body.total).toBe(0);
+    expect((await http().get('/v1/company/reviews?rating=1').set(auth('company')).expect(200)).body.total).toBe(0);
+    expect((await http().get('/v1/company/reviews?q=Yorumcu').set(auth('company')).expect(200)).body.total).toBe(1);
+    await http().get('/v1/company/reviews?sort=rastgele').set(auth('company')).expect(400);
+
     const reviews = await http().get(`/v1/companies/${companyId}/reviews`).expect(200);
     expect(reviews.body.items[0].companyReply).toBe('Gecikme için özür dileriz, yeni evinizde mutluluklar.');
   });
@@ -246,9 +256,14 @@ describe('Değerlendirmeler (e2e)', () => {
     expect([Number(profile.body.ratingAverage), profile.body.ratingCount]).toEqual([0, 0]);
     const own = await http().get('/v1/company/reviews').set(auth('company')).expect(200);
     expect(own.body.items[0]).toMatchObject({ isPublished: false, hiddenReason: 'Yorumda kişisel bilgi var.' });
+    expect(own.body.summary.counts).toMatchObject({ total: 1, hidden: 1 });
 
     const adminList = await http().get(`/v1/admin/reviews?status=hidden&q=Puanl%C4%B1%20Test`).set(auth('admin')).expect(200);
     expect(adminList.body.items.map((r: { id: string }) => r.id)).toEqual([reviewId]);
+    expect(adminList.body.stats.hidden).toBeGreaterThanOrEqual(1);
+    expect(adminList.body.stats.total).toBeGreaterThanOrEqual(adminList.body.stats.hidden);
+    const byCustomer = await http().get(`/v1/admin/reviews?reply=answered&sort=oldest&q=Ay%C5%9Fe%20Yorumcu`).set(auth('admin')).expect(200);
+    expect(byCustomer.body.items.map((r: { id: string }) => r.id)).toContain(reviewId);
     const adminId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.admin } })).id;
     expect(await prisma.auditLog.count({ where: { actorId: adminId, action: 'review.hide', entityId: reviewId } })).toBe(1);
 

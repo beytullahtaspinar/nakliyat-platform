@@ -17,6 +17,7 @@ import { companyPath, formatRating } from "@/lib/reviews";
 import { floorLabel, formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { REQUEST_STATUS, VEHICLE_LABELS, homeTypeLabel } from "@/lib/request-options";
 import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib/session";
+import { CompanyLogo } from "@/components/company-logo";
 import { BadgeLegend, CompanyBadges } from "@/components/company-badges";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
@@ -188,28 +189,32 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
 function CompanyLine({ company }: { company: PublicCompany }) {
   const rating = Number(company.ratingAverage);
   return (
-    <div>
-      <p className="flex flex-wrap items-center gap-2 font-semibold">
-        {company.verified ? (
-          <Link href={companyPath(company)} className="hover:underline">
-            {company.displayName}
-          </Link>
-        ) : (
-          company.displayName
-        )}
-        {/* Belge rozeti doğrulamayı da kapsar; ikisi birlikte gösterilmez */}
-        {company.verified && !company.badges?.includes("DOCUMENTS_VERIFIED") && (
-          <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800">
-            ✓ Doğrulanmış firma
-          </span>
-        )}
-      </p>
-      <CompanyBadges badges={company.badges} className="mt-1.5" />
-      <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
-        {company.cityName}
-        {company.ratingCount > 0 ? ` · ★ ${formatRating(rating)} (${company.ratingCount} yorum)` : " · Henüz yorum yok"}
-        {company.completedJobs > 0 && ` · ${company.completedJobs} tamamlanan iş`}
-      </p>
+    <div className="flex items-start gap-3">
+      {/* /medya adresi yalnızca onaylı firmalarda açılır */}
+      <CompanyLogo name={company.displayName} logoUrl={company.verified ? company.logoUrl : null} size="sm" className="mt-0.5" />
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-2 font-semibold">
+          {company.verified ? (
+            <Link href={companyPath(company)} className="hover:underline">
+              {company.displayName}
+            </Link>
+          ) : (
+            company.displayName
+          )}
+          {/* Belge rozeti doğrulamayı da kapsar; ikisi birlikte gösterilmez */}
+          {company.verified && !company.badges?.includes("DOCUMENTS_VERIFIED") && (
+            <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-800">
+              ✓ Doğrulanmış firma
+            </span>
+          )}
+        </p>
+        <CompanyBadges badges={company.badges} className="mt-1.5" />
+        <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
+          {company.cityName}
+          {company.ratingCount > 0 ? ` · ★ ${formatRating(rating)} (${company.ratingCount} yorum)` : " · Henüz yorum yok"}
+          {company.completedJobs > 0 && ` · ${company.completedJobs} tamamlanan iş`}
+        </p>
+      </div>
     </div>
   );
 }

@@ -112,6 +112,22 @@ test("tamamlanan taşımada müşteri firmayı değerlendirir, yorum firma sayfa
   await companyPage.getByRole("navigation", { name: "Firma paneli" }).getByRole("link", { name: "Değerlendirmeler" }).click();
   await expect(companyPage.getByText("Ekip çok özenliydi, yalnızca biraz geç geldiler.")).toBeVisible();
   await expect(companyPage.getByText("1 değerlendirme")).toBeVisible();
+  // Sayaçlar ve süzgeçler: yanıt bekleyen sekmesi, puan süzgeci
+  const tabs = companyPage.getByRole("navigation", { name: "Değerlendirme süzgeci" });
+  await expect(tabs.getByRole("link", { name: "Yanıt bekleyen (1)" })).toBeVisible();
+  await companyPage.getByLabel("Puan", { exact: true }).selectOption("1");
+  await companyPage.getByRole("button", { name: "Uygula" }).click();
+  await expect(companyPage).toHaveURL(/puan=1/);
+  await expect(companyPage.getByText("Bu süzgece uyan değerlendirme yok.")).toBeVisible();
+  await companyPage.getByRole("link", { name: "Temizle" }).click();
+  await expect(companyPage).not.toHaveURL(/puan=/);
+  await tabs.getByRole("link", { name: "Yanıt bekleyen (1)" }).click();
+  await expect(companyPage).toHaveURL(/durum=yanitsiz/);
+  await expect(companyPage.getByText("Ekip çok özenliydi, yalnızca biraz geç geldiler.")).toBeVisible();
+  await expectAccessible(companyPage);
+  // Yanıtlanan yorum "Yanıt bekleyen" sekmesinden düşer; yanıtı Tümü sekmesinde görürüz
+  await tabs.getByRole("link", { name: /^Tümü/ }).click();
+  await expect(companyPage).not.toHaveURL(/durum=/);
   await companyPage.getByRole("button", { name: "Yanıtla" }).click();
   await companyPage.getByLabel("Yanıtın").fill("Gecikme için özür dileriz, yeni evinizde mutluluklar.");
   await companyPage.getByRole("button", { name: "Yanıtı yayımla" }).click();
@@ -143,10 +159,20 @@ test("tamamlanan taşımada müşteri firmayı değerlendirir, yorum firma sayfa
   await login(adminPage, adminPhone);
   await expect(adminPage).toHaveURL(/\/yonetim$/);
   await adminPage.goto(`/yonetim/degerlendirmeler?ara=${encodeURIComponent(companyName)}`);
-  await adminPage.getByRole("button", { name: "Gizle" }).click();
-  await adminPage.getByLabel("Gizleme gerekçesi").fill("Test için gizlendi.");
-  await adminPage.getByRole("button", { name: "Yorumu gizle" }).click();
-  await expect(adminPage.getByText("Gizleme gerekçesi: Test için gizlendi.")).toBeVisible();
+  const row = adminPage.getByRole("row").filter({ hasText: "Ekip çok özenliydi" });
+  await expect(row.getByText("Yanıtlandı")).toBeVisible();
+  await expectAccessible(adminPage);
+  await row.getByRole("button", { name: "Gizle" }).click();
+  const dialog = adminPage.getByRole("dialog", { name: "Yorumu gizle" });
+  await dialog.getByLabel("Gizleme gerekçesi").fill("Test için gizlendi.");
+  await dialog.getByRole("button", { name: "Yorumu gizle" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(row.getByText("Gizleme gerekçesi: Test için gizlendi.")).toBeVisible();
+  await expect(row.getByRole("button", { name: "Yayına al" })).toBeVisible();
+  // Gizlenen sekmesinde görünür, yayında sekmesinde görünmez
+  await adminPage.getByRole("navigation", { name: "Değerlendirme süzgeci" }).getByRole("link", { name: /^Gizlenen/ }).click();
+  await expect(adminPage).toHaveURL(/durum=gizli/);
+  await expect(adminPage.getByText("Ekip çok özenliydi, yalnızca biraz geç geldiler.")).toBeVisible();
   await expectAccessible(adminPage);
   await adminContext.close();
 
