@@ -16,6 +16,11 @@ export function LoginForm({ next }: { next?: string }) {
       <Field label="Şifre">
         <Input name="password" type="password" autoComplete="current-password" required />
       </Field>
+      <p className="-mt-2 text-right text-sm">
+        <Link href="/sifre-sifirla" className="font-medium text-blue-700 hover:underline">
+          Şifremi unuttum
+        </Link>
+      </p>
       <FormError message={state.error} />
       <SubmitButton pending={pending}>Giriş yap</SubmitButton>
       <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">

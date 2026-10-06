@@ -85,3 +85,19 @@ geliştirmede kod API loguna yazılır.
 SELECT channel, target, attempts, expiresAt, consumedAt, createdAt
 FROM VerificationCode ORDER BY createdAt DESC LIMIT 20;
 ```
+
+## Şifremi unuttum
+
+Ekran: `/sifre-sifirla` (giriş ve kayıt sayfalarındaki "Şifremi unuttum" bağlantısı). API:
+`POST /v1/auth/forgot-password` (`email`) ve `POST /v1/auth/reset-password` (`email`, `code`, `password`).
+
+- Kullanıcı e-posta adresini yazar; hesap varsa adrese **6 haneli kod** gider. Yanıt her durumda aynıdır
+  (adresin kayıtlı olup olmadığı bu uçtan anlaşılmaz). E-postada bağlantı yoktur, kod ekrana yapıştırılır.
+- Kod **15 dakika** geçerli ve **tek kullanımlıktır**; 5 hatalı denemede kilitlenir. Kullanıldıktan ya da
+  süresi dolduktan sonra yeni kod istenmelidir. 60 saniye ve günde 10 kod sınırı doğrulama kodlarıyla aynıdır
+  ama ayrı sayılır (`VerificationCode.channel = PASSWORD_RESET`); bekleyen e-posta doğrulama kodu geçersiz olmaz.
+- Şifre değişince hesabın **tüm oturumları kapanır**, kullanıcı giriş sayfasına yeni şifreyle döner.
+  Kod e-postaya gittiği için e-posta adresi de doğrulanmış sayılır. Google/Apple ile açılmış hesaplar da
+  böylece şifre belirleyebilir.
+- Denetim kaydı: `password_reset.request` (kod gönderildi) ve `password_reset.complete` (şifre değişti).
+- Hesabında e-posta olmayan kullanıcı destek@evdenevenakliyat.app'e yazar; yönetici şifreyi yönetim ekranından belirler.

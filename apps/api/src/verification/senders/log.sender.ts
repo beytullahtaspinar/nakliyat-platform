@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import type { CodeRecipient, CodeSender } from './code-sender.js';
+import type { CodePurpose, CodeRecipient, CodeSender } from './code-sender.js';
 
 /**
  * Yerel geliştirme ve testler için: kodu göndermez, sunucu loguna yazar.
@@ -13,7 +13,7 @@ export class LogCodeSender implements CodeSender {
     this.logger = new Logger(`LogCodeSender:${label}`);
   }
 
-  async send(to: CodeRecipient, code: string) {
-    this.logger.warn(`Doğrulama kodu (${to.address}): ${code} — gerçek gönderim yapılandırılmamış`);
+  async send(to: CodeRecipient, code: string, purpose: CodePurpose = 'verify') {
+    this.logger.warn(`${purpose === 'password-reset' ? 'Şifre sıfırlama' : 'Doğrulama'} kodu (${to.address}): ${code} — gerçek gönderim yapılandırılmamış`);
   }
 }

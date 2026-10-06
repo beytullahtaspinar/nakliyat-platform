@@ -34,6 +34,10 @@ export function RegisterForm({ role, next }: { role: "CUSTOMER" | "COMPANY"; nex
         <Link href={loginHref} className="font-medium text-blue-700 hover:underline">
           Giriş yap
         </Link>
+        {" · "}
+        <Link href="/sifre-sifirla" className="font-medium text-blue-700 hover:underline">
+          Şifremi unuttum
+        </Link>
       </p>
     </form>
   );

@@ -21,6 +21,15 @@ describe('doğrulama kodu sağlayıcıları', () => {
     expect(text).toContain('10 dakika');
   });
 
+  it('şifre sıfırlama e-postası kendi başlığını ve 15 dakikayı yazar', () => {
+    const { subject, html, text } = renderCodeEmail('042917', 'Ayşe', 'https://evdenevenakliyat.app', 'password-reset');
+    expect(subject).toBe('Şifre sıfırlama kodun: 042917');
+    expect(html).toContain('Şifre sıfırlama kodu</h1>');
+    expect(text).toContain('15 dakika');
+    expect(text).toContain('şifren değişmez');
+    expect(html).not.toContain('<a ');
+  });
+
   it('Brevo isteği kodu konu ve gövdede taşır', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 201 }));
     vi.stubGlobal('fetch', fetchMock);
