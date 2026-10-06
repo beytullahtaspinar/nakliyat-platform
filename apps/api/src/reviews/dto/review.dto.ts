@@ -55,7 +55,11 @@ export class CancelBookingDto {
   reason!: string;
 }
 
-export class AdminListReviewsDto extends PaginationDto {
+export const REVIEW_SORTS = ['newest', 'oldest', 'lowest', 'highest'] as const;
+export type ReviewSort = (typeof REVIEW_SORTS)[number];
+
+/** Firma panelinde ve yönetimde ortak süzgeç ve sıralama */
+export class ListReviewsDto extends PaginationDto {
   @ApiPropertyOptional({ enum: ['visible', 'hidden'], description: 'Boşsa hepsi' })
   @IsOptional()
   @IsIn(['visible', 'hidden'])
@@ -69,13 +73,25 @@ export class AdminListReviewsDto extends PaginationDto {
   @Max(5)
   rating?: number;
 
-  @ApiPropertyOptional({ description: 'Firma adında veya yorum metninde arar' })
+  @ApiPropertyOptional({ enum: ['answered', 'unanswered'], description: 'Firma yanıtı olan / olmayan' })
+  @IsOptional()
+  @IsIn(['answered', 'unanswered'])
+  reply?: 'answered' | 'unanswered';
+
+  @ApiPropertyOptional({ enum: REVIEW_SORTS, default: 'newest' })
+  @IsOptional()
+  @IsIn(REVIEW_SORTS)
+  sort: ReviewSort = 'newest';
+
+  @ApiPropertyOptional({ description: 'Yorum metninde (yönetimde firma adında da) arar' })
   @IsOptional()
   @Transform(trim)
   @IsString()
   @MaxLength(100)
   q?: string;
 }
+
+export class AdminListReviewsDto extends ListReviewsDto {}
 
 /** Herkese açık firma listesi (site haritası için büyük sayfa) */
 export class PublicCompaniesDto {

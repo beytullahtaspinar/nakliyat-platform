@@ -3,8 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { UserRole } from '../generated/prisma/enums.js';
-import { PaginationDto } from '../requests/dto/list-requests.dto.js';
-import { CancelBookingDto, CreateReviewDto, ReplyReviewDto } from './dto/review.dto.js';
+import { CancelBookingDto, CreateReviewDto, ListReviewsDto, ReplyReviewDto } from './dto/review.dto.js';
 import { ReviewsService } from './reviews.service.js';
 
 @ApiTags('Değerlendirmeler')
@@ -38,11 +37,11 @@ export class ReviewsController {
     return this.reviews.create(user.id, id, dto);
   }
 
-  /** Firmanın aldığı değerlendirmeler (gizlenenler dahil) ve puan özeti */
+  /** Firmanın aldığı değerlendirmeler (gizlenenler dahil), süzgeç ve sıralamayla; puan özeti ve sayaçlar */
   @Roles(UserRole.COMPANY)
   @Get('company/reviews')
-  listOwn(@CurrentUser() user: AuthUser, @Query() { page, limit }: PaginationDto) {
-    return this.reviews.listForCompany(user.id, page, limit);
+  listOwn(@CurrentUser() user: AuthUser, @Query() dto: ListReviewsDto) {
+    return this.reviews.listForCompany(user.id, dto);
   }
 
   /** Firma yoruma bir kez yanıt verir */
