@@ -20,7 +20,7 @@ test("müşteri talep oluşturur ve hesabında görür", async ({ page }) => {
   await to.getByLabel("Açık adres").fill("Kızılay Mah. Atatürk Bulvarı No: 20 D: 5");
   await to.getByRole("combobox", { name: "Kat", exact: true }).selectOption({ label: "Zemin / bahçe katı" });
 
-  const home = page.getByRole("group", { name: /Evin ve tarih/ });
+  const home = page.getByRole("group", { name: /Ev tipi ve tarih/ });
   await home.getByRole("combobox", { name: "Ev tipi", exact: true }).selectOption({ label: "2+1" });
   const date = await home.getByLabel("Taşınma tarihi").getAttribute("min");
   await home.getByLabel("Taşınma tarihi").fill(date!);

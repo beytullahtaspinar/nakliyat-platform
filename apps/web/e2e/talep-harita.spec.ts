@@ -69,7 +69,7 @@ test("müşteri adresini haritada işaretler; işaret talep sayfasında görün�
   const a11y = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
   expect(a11y.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
 
-  const home = page.getByRole("group", { name: /Evin ve tarih/ });
+  const home = page.getByRole("group", { name: /Ev tipi ve tarih/ });
   await home.getByRole("combobox", { name: "Ev tipi", exact: true }).selectOption({ label: "2+1" });
   const date = await home.getByLabel("Taşınma tarihi").getAttribute("min");
   await home.getByLabel("Taşınma tarihi").fill(date!);
