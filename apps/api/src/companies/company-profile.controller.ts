@@ -33,7 +33,10 @@ export class CompanyProfileController {
     return this.badges.progress(await this.companies.requireCompany(user.id));
   }
 
-  /** Unvan, vergi no veya K3 belge no değişirse firma yeniden doğrulamaya düşer. */
+  /**
+   * Unvan, vergi no veya K3 belge no değişirse firma yeniden doğrulamaya düşer.
+   * Telefon buradan değiştirilemez (salt okunur, bkz. UpdateCompanyProfileDto).
+   */
   @Patch()
   update(@CurrentUser() user: AuthUser, @Body() dto: UpdateCompanyProfileDto) {
     return this.companies.update(user.id, dto);

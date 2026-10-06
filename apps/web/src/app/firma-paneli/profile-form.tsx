@@ -6,6 +6,8 @@ import { Field, FormError, Input, SubmitButton, inputClass } from "@/components/
 import { useFormAction } from "@/components/forms/use-form-action";
 import { saveCompanyProfile, type CompanyFormState } from "@/lib/actions/company";
 import type { CompanyProfile } from "@/lib/api";
+import { formatPhone } from "@/lib/format";
+import { COMPANY } from "@/lib/legal";
 
 type City = { code: string; name: string };
 
@@ -53,6 +55,25 @@ export function ProfileForm({ cities, profile, action, children }: Props) {
         <Field label="K3 yetki belgesi no" hint="Evden eve taşımacılık için gerekli.">
           <Input name="k3LicenseNumber" defaultValue={profile?.k3LicenseNumber ?? ""} maxLength={50} placeholder="K3.34.123456" />
         </Field>
+        {/* Telefon sahibin hesabındaki numara: yalnızca gösterilir, değişikliği yönetim yapar */}
+        {!action && profile?.contactPhone && (
+          <div className="min-w-0">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Telefon</span>
+            <p className="mt-1 flex items-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-3 py-2 text-base text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-300">
+              {formatPhone(profile.contactPhone)}
+              <span className="ml-auto rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                Değiştirilemez
+              </span>
+            </p>
+            <span className="mt-1 block text-xs text-zinc-500">
+              Girişte ve müşteriyle iletişimde kullanılan numara. Değiştirmek için{" "}
+              <a href={`mailto:${COMPANY.supportEmail}`} className="font-medium text-brand-700 hover:underline">
+                {COMPANY.supportEmail}
+              </a>{" "}
+              adresinden destek ile iletişime geç.
+            </span>
+          </div>
+        )}
         <Field label="Merkez il">
           <select
             name="cityCode"

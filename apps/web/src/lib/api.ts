@@ -316,6 +316,8 @@ export type CompanyProfile = {
   verificationStatus: VerificationStatus;
   verificationNote: string | null;
   serviceCityCodes: string[];
+  /** Giriş ve iletişim telefonu: panelde yalnızca gösterilir, firma kendi değiştiremez */
+  contactPhone?: string | null;
 };
 
 /** Firma panelinde/yönetimde görsel: önizleme imzalı kısa süreli adresten */
