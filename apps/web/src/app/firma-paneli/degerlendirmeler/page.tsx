@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/panel/panel-bits";
 import Link from "next/link";
 import { BadgePill } from "@/components/company-badges";
 import { Badge, Card } from "@/components/ui/card";
@@ -67,6 +68,7 @@ export default async function CompanyReviewsPage({ searchParams }: PageProps<"/f
 
   return (
     <div className="space-y-6">
+      <PageHeader title="Değerlendirmeler" description="Müşterilerinin puanları ve yorumları. Her yoruma bir kez yanıt verebilirsin." />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Card className="p-5">
           <RatingSummary

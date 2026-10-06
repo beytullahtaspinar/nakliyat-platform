@@ -10,15 +10,15 @@ import { Prisma } from '../generated/prisma/client.js';
 import { QuoteStatus, RequestStatus } from '../generated/prisma/enums.js';
 import {
   CompaniesService,
+  serviceArea,
   toPublicCompany,
-  type CompanyWithCities,
 } from '../companies/companies.service.js';
 import { CompanyBadgesService } from '../companies/company-badges.service.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { VerificationService } from '../verification/verification.service.js';
-import type { PaginationDto } from '../requests/dto/list-requests.dto.js';
+import type { CompanyQuotesQueryDto, CompanyRequestsQueryDto } from './dto/company-lists.dto.js';
 import type { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto.js';
 
 @Injectable()
@@ -35,14 +35,20 @@ export class QuotesService {
   // ─── Firma tarafı ─────────────────────────────────────────────
 
   /** Firmanın hizmet bölgesindeki açık talepler. Müşteri kimliği ve açık adres gizli. */
-  async listOpenRequestsForCompany(ownerId: string, { page, limit }: PaginationDto) {
+  async listOpenRequestsForCompany(ownerId: string, { page, limit, quoted, city }: CompanyRequestsQueryDto) {
     const company = await this.companies.requireCompany(ownerId);
     const cities = serviceArea(company);
+    const own = { companyId: company.id };
     const where: Prisma.MovingRequestWhereInput = {
       status: RequestStatus.OPEN,
       deletedAt: null,
       expiresAt: { gt: new Date() },
-      OR: [{ fromCityCode: { in: cities } }, { toCityCode: { in: cities } }],
+      AND: [
+        { OR: [{ fromCityCode: { in: cities } }, { toCityCode: { in: cities } }] },
+        ...(city ? [{ OR: [{ fromCityCode: city }, { toCityCode: city }] }] : []),
+      ],
+      ...(quoted === 'yes' && { quotes: { some: own } }),
+      ...(quoted === 'no' && { quotes: { none: own } }),
     };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.movingRequest.findMany({
@@ -159,9 +165,9 @@ export class QuotesService {
     });
   }
 
-  async listCompanyQuotes(ownerId: string, { page, limit }: PaginationDto) {
+  async listCompanyQuotes(ownerId: string, { page, limit, status }: CompanyQuotesQueryDto) {
     const company = await this.companies.requireCompany(ownerId);
-    const where = { companyId: company.id };
+    const where = { companyId: company.id, ...(status && { status }) };
     const [items, total] = await this.prisma.$transaction([
       this.prisma.quote.findMany({
         where,
@@ -265,10 +271,6 @@ export class QuotesService {
     return { quote: rest as Quote, request };
   }
 }
-
-const serviceArea = (company: CompanyWithCities) => [
-  ...new Set([company.cityCode, ...company.serviceCities.map((c) => c.cityCode)]),
-];
 
 function assertAcceptingQuotes(request: MovingRequest) {
   if (request.status !== RequestStatus.OPEN || request.expiresAt < new Date()) {

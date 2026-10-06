@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/panel/panel-bits";
 import Link from "next/link";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { Badge, Card } from "@/components/ui/card";
@@ -45,6 +46,17 @@ export default async function CompanyShowcasePage() {
 
   return (
     <div className="space-y-4">
+      <PageHeader
+        title="Tanıtım sayfası"
+        description="Herkese açık firma sayfanın yazısı, logosu ve fotoğrafları."
+        actions={
+          published && (
+            <Link href={companyPath(profile)} className="text-sm font-semibold text-brand-700 hover:underline">
+              Sayfanı gör
+            </Link>
+          )
+        }
+      />
       <Card className="p-6">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-semibold">Tanıtım sayfan</h2>
@@ -56,11 +68,6 @@ export default async function CompanyShowcasePage() {
           Müşteriler teklifini karşılaştırırken ve Google&apos;da firmanı ararken bu sayfayı görür. Yazdıkların ve
           eklediğin görseller hemen yayınlanır; kurallara aykırı içeriği yönetim kaldırabilir.
         </p>
-        {published && (
-          <Link href={companyPath(profile)} className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:underline">
-            Sayfanı gör
-          </Link>
-        )}
         <div className="mt-4 rounded-lg bg-zinc-50 p-4 text-sm">
           {indexing.hasReviews || indexing.complete ? (
             <p className="font-medium text-green-800">Sayfan Google&apos;da listelenebilir.</p>

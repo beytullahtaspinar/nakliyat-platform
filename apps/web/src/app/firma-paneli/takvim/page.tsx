@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/panel/panel-bits";
 import Link from "next/link";
 import { Badge, Card } from "@/components/ui/card";
 import { apiFetch, type CompanyCalendar } from "@/lib/api";
@@ -65,6 +66,7 @@ export default async function CompanyCalendarPage({ searchParams }: PageProps<"/
 
   return (
     <div>
+      <PageHeader title="Takvim" description="Planlanan, tamamlanan ve iptal edilen işlerin taşınma günlerine göre." />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold capitalize">{title}</h2>

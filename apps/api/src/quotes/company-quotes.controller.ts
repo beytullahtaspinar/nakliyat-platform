@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { UserRole } from '../generated/prisma/enums.js';
-import { PaginationDto } from '../requests/dto/list-requests.dto.js';
+import { CompanyQuotesQueryDto, CompanyRequestsQueryDto } from './dto/company-lists.dto.js';
 import { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto.js';
 import { QuotesService } from './quotes.service.js';
 
@@ -15,7 +15,7 @@ export class CompanyQuotesController {
   constructor(private readonly quotes: QuotesService) {}
 
   @Get('requests')
-  listRequests(@CurrentUser() user: AuthUser, @Query() query: PaginationDto) {
+  listRequests(@CurrentUser() user: AuthUser, @Query() query: CompanyRequestsQueryDto) {
     return this.quotes.listOpenRequestsForCompany(user.id, query);
   }
 
@@ -30,7 +30,7 @@ export class CompanyQuotesController {
   }
 
   @Get('quotes')
-  listQuotes(@CurrentUser() user: AuthUser, @Query() query: PaginationDto) {
+  listQuotes(@CurrentUser() user: AuthUser, @Query() query: CompanyQuotesQueryDto) {
     return this.quotes.listCompanyQuotes(user.id, query);
   }
 

@@ -423,6 +423,33 @@ export type CompanyBooking = BookingReviewState & {
   customer: { fullName: string; phone: string };
 };
 
+/** GET /company/customers: teklifi kabul edilen müşteriler */
+export type CompanyCustomer = {
+  fullName: string;
+  phone: string;
+  bookingCount: number;
+  /** Planlanmış (henüz yapılmamış) iş sayısı */
+  activeCount: number;
+  /** İptal edilmeyen işlerin anlaşma tutarı toplamı */
+  totalTry: number;
+  lastBooking: {
+    id: string;
+    status: CustomerBooking["status"];
+    scheduledAt: string;
+    from: { cityName: string | null; districtName: string | null };
+    to: { cityName: string | null; districtName: string | null };
+  };
+};
+
+/** GET /company/overview: firma panosu */
+export type CompanyOverview = {
+  requests: { open: number; notQuoted: number };
+  quotes: { pending: number; accepted: number; winRate: number | null };
+  bookings: { scheduled: number; next7Days: number; completed: number; cancelled: number };
+  revenue: { month: string; thisMonthTry: number; lastMonthTry: number };
+  rating: { average: number; count: number };
+};
+
 /** GET /company/reviews */
 export type CompanyReviews = Paginated<
   OwnReview & { customerName: string; bookingId: string; route: string; moveDate: string }

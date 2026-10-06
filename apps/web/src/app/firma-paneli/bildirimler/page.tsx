@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/panel/panel-bits";
 import { NotificationSettings } from "@/components/notification-settings";
 import { AppAndPush } from "@/components/pwa/app-and-push";
 import { Card } from "@/components/ui/card";
@@ -16,6 +17,7 @@ export default async function CompanyNotificationsPage() {
   });
   return (
     <div className="space-y-6">
+      <PageHeader title="Bildirimler" description="Yeni talep, teklif kabulü ve mesaj bildirimlerini nereden alacağını seç." />
       <Card className="p-6">
         <h2 className="text-lg font-semibold">Uygulama ve anlık bildirimler</h2>
         <p className="mt-1 mb-5 text-sm text-zinc-600">

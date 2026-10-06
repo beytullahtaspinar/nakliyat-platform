@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Card } from "@/components/ui/card";
+import { PageHeader, PanelSection } from "@/components/panel/panel-bits";
 import { cityOptions, getCompanyContext } from "@/lib/company";
 import { ProfileForm } from "../profile-form";
 
@@ -9,8 +9,14 @@ export default async function CompanyProfilePage() {
   const { profile } = await getCompanyContext();
   if (!profile) return null;
   return (
-    <Card className="p-6">
-      <ProfileForm key={profile.verificationStatus} cities={cityOptions} profile={profile} />
-    </Card>
+    <>
+      <PageHeader
+        title="Firma profili"
+        description="Unvan, vergi numarası, K3 belge numarası ve hizmet illerin. Unvan, vergi ya da K3 numarası değişirse firman yeniden incelenir."
+      />
+      <PanelSection id="firma-bilgileri" title="Firma bilgileri">
+        <ProfileForm key={profile.verificationStatus} cities={cityOptions} profile={profile} />
+      </PanelSection>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import type { CompanyRequestView, OwnQuote } from "@/lib/api";
+import type { CompanyRequest, CompanyRequestView, OwnQuote } from "@/lib/api";
 import { Badge } from "@/components/ui/card";
 import { floorLabel, formatDate, formatMoney, place } from "@/lib/format";
 import { routeText } from "@/lib/geo";
@@ -35,12 +35,18 @@ const QUOTE_BADGE: Record<OwnQuote["status"], { label: string; tone: "brand" | "
   EXPIRED: { label: "Süresi doldu", tone: "neutral" },
 };
 
-export function QuoteBadge({ quote }: { quote: OwnQuote }) {
+/** hidePrice: tutar ayrı sütunda gösteriliyorsa */
+export function QuoteBadge({ quote, hidePrice = false }: { quote: OwnQuote; hidePrice?: boolean }) {
   const b = QUOTE_BADGE[quote.status];
   return (
-    <Badge tone={b.tone}>
+    <Badge tone={b.tone} className="whitespace-nowrap">
       {b.label}
-      {quote.status === "PENDING" || quote.status === "ACCEPTED" ? ` · ${formatMoney(quote.priceTry)}` : ""}
+      {!hidePrice && (quote.status === "PENDING" || quote.status === "ACCEPTED") ? ` · ${formatMoney(quote.priceTry)}` : ""}
     </Badge>
   );
+}
+
+/** Talep listesinde durum: teklif verildiyse teklifin durumu, verilmediyse "Yeni" */
+export function RequestStateBadge({ request }: { request: Pick<CompanyRequest, "myQuote"> }) {
+  return request.myQuote ? <QuoteBadge quote={request.myQuote} /> : <Badge tone="accent">Yeni</Badge>;
 }

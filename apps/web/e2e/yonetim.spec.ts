@@ -105,8 +105,8 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await expect(page).toHaveURL(/\/firma-paneli$/);
   const banner = page.getByRole("region", { name: "Yönetici görünümü" });
   await expect(banner).toContainText(`Yönetici olarak ${companyName} firmasının panelini görüntülüyorsun`);
-  await expect(page.getByRole("heading", { level: 1, name: "Gelen talepler" })).toBeVisible();
-  await expect(page.getByRole("main").getByText(companyName, { exact: true })).toBeVisible();
+  await expect(page.getByRole("complementary").getByText(companyName)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Pano" })).toBeVisible();
   await expectAccessible(page);
   await page.goto("/yonetim");
   await expect(page.getByRole("heading", { level: 1, name: "Pano" })).toBeVisible();

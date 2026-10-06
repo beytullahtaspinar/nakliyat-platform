@@ -1209,6 +1209,29 @@
                 }
               ]
             }
+          },
+          {
+            "name": "quoted",
+            "required": false,
+            "in": "query",
+            "description": "yes: teklif verdiklerim, no: henüz teklif vermediklerim",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "yes",
+                "no"
+              ]
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "Çıkış ya da varış ili (plaka kodu)",
+            "schema": {
+              "example": "34",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1320,6 +1343,21 @@
                 {
                   "$ref": "#/components/schemas/Object"
                 }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "ACCEPTED",
+                "REJECTED",
+                "WITHDRAWN",
+                "EXPIRED"
               ]
             }
           }
@@ -1463,6 +1501,7 @@
     },
     "/v1/company/bookings": {
       "get": {
+        "description": "Yaklaşan (SCHEDULED) işler ve süzgeçsiz liste taşınma gününe göre eskiden yeniye, tamamlanan ve iptal edilenler yeniden eskiye sıralanır. q: müşteri adı ya da telefonu.",
         "operationId": "BookingsController_companyBookings",
         "parameters": [
           {
@@ -1491,6 +1530,28 @@
                 }
               ]
             }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Müşteri adı ya da telefonunun bir parçası",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SCHEDULED",
+                "COMPLETED",
+                "CANCELLED"
+              ]
+            }
           }
         ],
         "responses": {
@@ -1503,6 +1564,65 @@
             "bearer": []
           }
         ],
+        "summary": "Firmanın işleri",
+        "tags": [
+          "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/company/customers": {
+      "get": {
+        "description": "Teklifi kabul edilen müşteriler: iş sayısı, son taşınma ve iptal edilmeyen işlerin toplamı. En son taşınan önce.",
+        "operationId": "BookingsController_companyCustomers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Müşteri adı ya da telefonunun bir parçası",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Firmanın müşterileri",
         "tags": [
           "Anlaşılan işler"
         ]
@@ -1545,6 +1665,34 @@
           }
         ],
         "summary": "Firmanın takvimi: verilen günler arasındaki işler (iki uç dahil, en fazla 42 gün)",
+        "tags": [
+          "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/company/bookings/{id}": {
+      "get": {
+        "operationId": "BookingsController_companyBooking",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "tags": [
           "Anlaşılan işler"
         ]
@@ -1594,6 +1742,27 @@
         ],
         "tags": [
           "Anlaşılan işler"
+        ]
+      }
+    },
+    "/v1/company/overview": {
+      "get": {
+        "description": "Günler ve ay Türkiye saatine göredir. Kazanma oranı son 90 günde sonuçlanan teklifler (kabul / kabul + başka firma seçildi + süresi doldu); geri çekilenler sayılmaz. Ciro: iptal edilmeyen işlerin anlaşma tutarı, taşınma gününün ayına göre.",
+        "operationId": "CompanyOverviewController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Firma panelinin ilk sayfası: bekleyen işler ve özet sayılar",
+        "tags": [
+          "Firma: pano"
         ]
       }
     },
@@ -1813,6 +1982,67 @@
                   "$ref": "#/components/schemas/Object"
                 }
               ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Boşsa hepsi",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "visible",
+                "hidden"
+              ]
+            }
+          },
+          {
+            "name": "rating",
+            "required": false,
+            "in": "query",
+            "description": "Yalnızca bu puandaki yorumlar",
+            "schema": {
+              "minimum": 1,
+              "maximum": 5,
+              "type": "number"
+            }
+          },
+          {
+            "name": "reply",
+            "required": false,
+            "in": "query",
+            "description": "Firma yanıtı olan / olmayan",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "answered",
+                "unanswered"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "newest",
+              "type": "string",
+              "enum": [
+                "newest",
+                "oldest",
+                "lowest",
+                "highest"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Yorum metninde (yönetimde firma adında da) arar",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -2744,10 +2974,38 @@
             }
           },
           {
+            "name": "reply",
+            "required": false,
+            "in": "query",
+            "description": "Firma yanıtı olan / olmayan",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "answered",
+                "unanswered"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "newest",
+              "type": "string",
+              "enum": [
+                "newest",
+                "oldest",
+                "lowest",
+                "highest"
+              ]
+            }
+          },
+          {
             "name": "q",
             "required": false,
             "in": "query",
-            "description": "Firma adında veya yorum metninde arar",
+            "description": "Yorum metninde (yönetimde firma adında da) arar",
             "schema": {
               "type": "string"
             }

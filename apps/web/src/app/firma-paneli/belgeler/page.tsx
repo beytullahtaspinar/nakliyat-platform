@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/panel/panel-bits";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { Badge, Card } from "@/components/ui/card";
 import { removeDocument } from "@/lib/actions/company-documents";
@@ -26,6 +27,7 @@ export default async function CompanyDocumentsPage() {
 
   return (
     <div className="space-y-4">
+      <PageHeader title="Belgeler" description="Doğrulama ve isteğe bağlı belgelerin; yalnızca sen ve platform yöneticileri görebilir." />
       <Card className="p-6">
         <h2 className="text-lg font-semibold">Doğrulama belgeleri</h2>
         <p className="mt-1 text-sm text-zinc-600">

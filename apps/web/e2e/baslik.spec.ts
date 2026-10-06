@@ -48,7 +48,7 @@ test("dar telefonda (320 px) başlık sayfayı yana kaydırmaz", async ({ page, 
   await expectNoHorizontalScroll(page);
 });
 
-test("firma paneli kendi kabuğunda açılır, sayfa yana kaymaz", async ({ page, request }) => {
+test("firma paneli kendi kabuğunda; tanıtım başlığı 'Teklif al' yerine paneli gösterir, sayfa yana kaymaz", async ({ page, request, isMobile }) => {
   const phone = `0534${uniqueDigits(7)}`;
   const reg = await request.post(`${API}/auth/register`, {
     data: { role: "COMPANY", fullName: "Başlık Firma", phone, password: PASSWORD, email: `baslik${phone}@test.local`, termsVersion: "2026-10-01" },
@@ -68,26 +68,32 @@ test("firma paneli kendi kabuğunda açılır, sayfa yana kaymaz", async ({ page
   await page.getByRole("button", { name: "Giriş yap" }).click();
   await expect(page).toHaveURL(/\/firma-paneli/);
 
-  // Firma paneli kendi kabuğunda (yönetim gibi): tanıtım sitesinin menüsü yok, çıkış her ekranda görünür
-  await expect(page.getByRole("navigation", { name: "Ana menü" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Teklif al" })).toHaveCount(0);
-  await expect(page.getByRole("navigation", { name: "Firma paneli" })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1, name: "Gelen talepler" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Çıkış/ })).toBeVisible();
-  await expectNoHorizontalScroll(page);
-
-  // Panelde ince altbilgi: yasal metinler var, tanıtım sütunları yok
+  // Panel CRM kabuğunda: tanıtım sitesinin menüsü yok, sol menü ve ince altbilgi var
+  await expect(page.getByRole("banner")).toHaveCount(0);
+  const nav = page.getByRole("navigation", { name: "Firma paneli" });
+  await expect(nav.getByRole("link", { name: "Pano" })).toHaveAttribute("aria-current", "page");
   const footer = page.getByRole("contentinfo");
   await expect(footer.getByRole("navigation", { name: "Yasal metinler" })).toBeVisible();
-  await expect(footer.getByRole("navigation", { name: "Taşınacaklar için" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Taşınacaklar için" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Çıkış/ }).first()).toBeVisible();
+  await expectNoHorizontalScroll(page);
 
-  // Telefonda seçili sekme (en sondaki Bildirimler) ekranda görünür
+  // Telefonda seçili menü bağlantısı (en sondaki Bildirimler) ekranda görünür
   await page.goto("/firma-paneli/bildirimler");
-  const tab = page.getByRole("navigation", { name: "Firma paneli" }).getByRole("link", { name: "Bildirimler" });
+  const tab = nav.getByRole("link", { name: "Bildirimler" });
   await expect(tab).toHaveAttribute("aria-current", "page");
-  // -mb-px alt çizgisi kayan kutuda 1 px kırpılır
   await expect(tab).toBeInViewport({ ratio: 0.9 });
   await expectNoHorizontalScroll(page);
+
+  // Tanıtım sitesinde başlık 'Teklif al' yerine panele götürür
+  await page.goto("/nasil-calisir");
+  const header = page.getByRole("banner");
+  await expect(header.getByRole("link", { name: "Teklif al" })).toHaveCount(0);
+  await expect(header.getByRole("link", { name: "Firma paneli" })).toBeVisible();
+  if (isMobile) {
+    await page.getByRole("button", { name: "Menü" }).click();
+    await expect(header.getByRole("button", { name: "Çıkış" })).toBeVisible();
+  }
 });
 
 test("tanıtım sayfasında tam altbilgi, masaüstü menüde bulunduğun sayfa işaretli", async ({ page, isMobile }) => {

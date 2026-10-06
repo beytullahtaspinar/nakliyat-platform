@@ -73,12 +73,14 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | POST · GET | `/company/profile` | Firma | Firma profilini oluştur / görüntüle (vergi no benzersiz) |
 | ✅ | PATCH | `/company/profile` | Firma | Profili güncelle. Unvan, vergi no veya K3 no değişirse firma yeniden doğrulamaya düşer. |
 | ✅ | GET · POST · DELETE | `/company/documents`, `/company/documents/uploads` | Firma | Doğrulama belgeleri: K3 (geçerlilik tarihiyle), vergi levhası, ticaret sicil zorunlu; sigorta ve ek belge isteğe bağlı. PDF/JPG/PNG/WebP, en fazla 10 MB. Yükleme akışı talep medyasıyla aynı (docs/dosya-yukleme.md). Onaylı belge silinmez, yenisi onaylanınca yerini alır. |
-| ✅ | GET · GET | `/company/requests`, `/company/requests/:id` | Firma | Hizmet bölgesindeki açık talepler. Müşteri adı ve açık adres gizli. |
+| ✅ | GET · GET | `/company/requests`, `/company/requests/:id` | Firma | Hizmet bölgesindeki açık talepler. Müşteri adı ve açık adres gizli. Süzgeç: `quoted=yes\|no`, `city=34` |
 | ✅ | POST | `/company/requests/:id/quotes` | Doğrulanmış firma | Teklif ver (talep başına bir teklif, yalnızca hizmet bölgesindeki taleplere) |
 | ✅ | PATCH | `/company/quotes/:id` | Firma | Bekleyen teklifi güncelle. Her fiyat değişikliği geçmişe kaydedilir. |
 | ✅ | POST | `/company/quotes/:id/withdraw` | Firma | Teklifi geri çek |
-| ✅ | GET | `/company/quotes` | Firma | Verdiği teklifler |
-| ✅ | GET | `/company/bookings` | Firma | Kazandığı işler (müşteri iletişim bilgisi ve açık adres burada açılır) |
+| ✅ | GET | `/company/quotes` | Firma | Verdiği teklifler. Süzgeç: `status=PENDING\|ACCEPTED\|REJECTED\|EXPIRED\|WITHDRAWN` |
+| ✅ | GET · GET | `/company/bookings`, `/company/bookings/:id` | Firma | Kazandığı işler (müşteri iletişim bilgisi ve açık adres burada açılır). Süzgeç: `status`, `q` (müşteri adı/telefonu) |
+| ✅ | GET | `/company/customers?q=` | Firma | Müşterileri: iş sayısı, planlı iş, iptal edilmeyen işlerin toplamı, son iş. Ekran: /firma-paneli/musteriler |
+| ✅ | GET | `/company/overview` | Firma | Pano: açık/teklifsiz talep, bekleyen teklif, kazanma oranı (90 gün), 7 günlük iş, bu ay/geçen ay ciro (TSİ), puan. Ekran: /firma-paneli |
 | ✅ | GET | `/company/bookings/calendar?from=&to=` | Firma | Takvim: iki gün arasındaki işler (YYYY-AA-GG, TSİ, en fazla 42 gün). Açık adres içermez. Ekran: /firma-paneli/takvim (ay/hafta) |
 | ✅ | GET | `/company/reviews` | Firma | Aldığı değerlendirmeler (gizlenenler gerekçesiyle) ve puan özeti `{ summary: { ratingAverage, ratingCount, distribution } }` |
 | ✅ | POST | `/company/reviews/:id/reply` | Firma | Yoruma bir kez yanıt (2-1000 karakter); yorumun altında herkese açık görünür |
