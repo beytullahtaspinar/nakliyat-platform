@@ -55,11 +55,21 @@ export class CompaniesService {
       },
       include: WITH_CITIES,
     });
-    return toProfile(company);
+    return { ...toProfile(company), contactPhone: await this.ownerPhone(ownerId) };
   }
 
   async getOwn(ownerId: string) {
-    return toProfile(await this.requireCompany(ownerId));
+    const company = await this.requireCompany(ownerId);
+    return { ...toProfile(company), contactPhone: await this.ownerPhone(ownerId) };
+  }
+
+  /**
+   * Firmanın giriş ve iletişim telefonu (sahibin hesabındaki numara). Panelde yalnızca gösterilir;
+   * firma kendi değiştiremez, yalnızca yönetim /admin/users üzerinden günceller.
+   */
+  private async ownerPhone(ownerId: string) {
+    const owner = await this.prisma.user.findUnique({ where: { id: ownerId }, select: { phone: true } });
+    return owner?.phone ?? null;
   }
 
   async update(ownerId: string, dto: UpdateCompanyProfileDto) {
@@ -94,7 +104,7 @@ export class CompaniesService {
       },
     });
     if (dto.description !== undefined) await this.refreshShowcaseComplete(company.id);
-    return toProfile(updated);
+    return { ...toProfile(updated), contactPhone: await this.ownerPhone(ownerId) };
   }
 
   /**

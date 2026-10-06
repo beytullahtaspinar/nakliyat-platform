@@ -154,6 +154,15 @@ test("firma paneli CRM düzeninde: pano, süzgeçli talepler, işler ve müşter
   await expect(page.getByRole("button", { name: "İşi iptal et" })).toBeVisible();
   await expectAccessible(page);
 
+  // Firma profili: telefon görünür ama firma değiştiremez
+  await nav.getByRole("link", { name: "Firma profili" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Firma profili" })).toBeVisible();
+  const prettyPhone = companyPhone.replace(/^(\d{4})(\d{3})(\d{2})(\d{2})$/, "$1 $2 $3 $4");
+  await expect(page.getByText(prettyPhone)).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Telefon" })).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath("firma-profili.png"), fullPage: true });
+  await expectAccessible(page);
+
   // Müşteriler
   await nav.getByRole("link", { name: "Müşteriler" }).click();
   const customers = page.getByRole("table", { name: "Müşteriler" });

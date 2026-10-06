@@ -19,7 +19,9 @@ describe('Pazaryeri akışı (e2e)', () => {
     companyC: '+905320000204',
     admin: '+905320000205',
   };
-  const allPhones = Object.values(phones);
+  // Telefon değiştirme testinde geçici olarak kullanılan numara da temizlenir
+  const movedPhone = '+905320000299';
+  const allPhones = [...Object.values(phones), movedPhone];
   const tokens: Record<string, string> = {};
   const companyIds: Record<string, string> = {};
   let requestId: string;
@@ -267,6 +269,24 @@ describe('Pazaryeri akışı (e2e)', () => {
     const desc = await http().patch('/v1/company/profile').set(auth('companyC')).send({ description: 'Yeni açıklama' }).expect(200);
     expect(desc.body.verificationStatus).toBe('VERIFIED');
   });
+  it('firma telefonunu panelde görür ama değiştiremez; yönetim değiştirir', async () => {
+    const own = await http().get('/v1/company/profile').set(auth('companyC')).expect(200);
+    expect(own.body.contactPhone).toBe(phones.companyC);
+
+    // Firma kendi telefonunu güncelleyemez: alan DTO'da yok, ValidationPipe reddeder
+    await http().patch('/v1/company/profile').set(auth('companyC')).send({ phone: movedPhone }).expect(400);
+    await http().patch('/v1/company/profile').set(auth('companyC')).send({ contactPhone: movedPhone }).expect(400);
+    const after = await http().get('/v1/company/profile').set(auth('companyC')).expect(200);
+    expect(after.body.contactPhone).toBe(phones.companyC);
+
+    // Yönetimin yetkisi sürüyor
+    const id = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.companyC } })).id;
+    await http().patch(`/v1/admin/users/${id}`).set(auth('admin')).send({ phone: movedPhone }).expect(200);
+    const moved = await http().get('/v1/company/profile').set(auth('companyC')).expect(200);
+    expect(moved.body.contactPhone).toBe(movedPhone);
+    await http().patch(`/v1/admin/users/${id}`).set(auth('admin')).send({ phone: phones.companyC }).expect(200);
+  });
+
   it('admin firma bilgilerini düzeltir; doğrulama durumu korunur, vergi no çakışması reddedilir', async () => {
     const res = await http()
       .patch(`/v1/admin/companies/${companyIds.companyC}`)

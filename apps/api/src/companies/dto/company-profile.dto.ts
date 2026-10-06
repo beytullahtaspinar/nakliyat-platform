@@ -49,4 +49,9 @@ export class CreateCompanyProfileDto {
   serviceCityCodes: string[];
 }
 
+/**
+ * Firma kendi telefonunu değiştiremez: numara sahibin hesabında (User.phone) tutulur ve burada alanı yok.
+ * Gövdede `phone`/`contactPhone` gönderilirse ValidationPipe (forbidNonWhitelisted) isteği 400 ile reddeder.
+ * Numarayı yalnızca yönetim PATCH /admin/users/:id ile günceller.
+ */
 export class UpdateCompanyProfileDto extends PartialType(CreateCompanyProfileDto) {}
