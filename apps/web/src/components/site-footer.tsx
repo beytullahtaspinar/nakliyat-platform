@@ -33,7 +33,7 @@ const COLUMNS = [
 ];
 
 /**
- * Panel sayfalarında (müşteri hesabı, firma paneli, doğrulama: `<main data-panel>`) yalnızca alt satır
+ * Panel sayfalarında (müşteri hesabı, doğrulama: `<main data-panel>`) yalnızca alt satır
  * (telif + yasal metinler) görünür; tanıtım sütunları gizlenir (globals.css, JS gerektirmez).
  */
 export function SiteFooter() {

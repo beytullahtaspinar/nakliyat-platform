@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge, Card } from "@/components/ui/card";
+import { InboxIcon } from "@/components/ui/icons";
 import { apiFetch, type CompanyRequest, type Paginated } from "@/lib/api";
 import { getCompanyContext } from "@/lib/company";
 import { formatDate } from "@/lib/format";
@@ -12,10 +13,16 @@ export default async function IncomingRequestsPage() {
 
   if (items.length === 0) {
     return (
-      <p className="text-zinc-600 dark:text-zinc-400">
-        Hizmet verdiğin illerde şu an açık talep yok. Yeni talepler geldikçe burada listelenecek. Daha
-        fazla talep görmek için <Link href="/firma-paneli/profil" className="font-medium text-brand-700 hover:underline">hizmet illerini</Link> genişletebilirsin.
-      </p>
+      <Card className="flex flex-col items-center px-6 py-12 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+          <InboxIcon className="h-6 w-6" />
+        </span>
+        <p className="mt-4 font-semibold text-slate-900">Şu an açık talep yok</p>
+        <p className="mt-1 max-w-md text-sm text-slate-600">
+          Hizmet verdiğin illerde yeni talepler geldikçe burada listelenecek. Daha fazla talep görmek için{" "}
+          <Link href="/firma-paneli/profil" className="font-medium text-brand-700 hover:underline">hizmet illerini</Link> genişletebilirsin.
+        </p>
+      </Card>
     );
   }
 

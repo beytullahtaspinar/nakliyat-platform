@@ -6,7 +6,7 @@ import { updateCompany } from "@/lib/actions/admin";
 import { ApiError, apiFetch, type AdminCompanyDetail } from "@/lib/api";
 import { cityOptions } from "@/lib/company";
 import { PageHeader } from "../../../admin-bits";
-import { ProfileForm } from "@/app/(site)/firma-paneli/profile-form";
+import { ProfileForm } from "@/app/firma-paneli/profile-form";
 
 export const metadata: Metadata = { title: "Firma bilgilerini düzenle" };
 
