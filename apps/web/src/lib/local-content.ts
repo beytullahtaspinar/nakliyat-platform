@@ -19,7 +19,7 @@ export function placeName(page: LocalPage): string {
     case "city":
       return page.city.name;
     case "district":
-      return `${page.district.name}, ${page.city.name}`;
+      return `${page.city.name}, ${page.district.name}`;
     case "route":
       return `${page.from.name} - ${page.to.name}`;
   }

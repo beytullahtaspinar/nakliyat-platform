@@ -37,4 +37,4 @@ export function formatPhone(phone: string): string {
 }
 
 export const place = (city: string | null, district: string | null) =>
-  [district, city].filter(Boolean).join(", ");
+  [city, district].filter(Boolean).join(", ");

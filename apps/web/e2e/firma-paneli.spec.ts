@@ -105,8 +105,8 @@ test("firma paneli CRM düzeninde: pano, süzgeçli talepler, işler ve müşter
   await expect(page).toHaveURL(/durum=yeni/);
   const requests = page.getByRole("table", { name: "Gelen talepler" });
   // Yeniden denemede önceki açık talepler de listelenebilir
-  await expect(requests.getByRole("link", { name: new RegExp(`${area.openName}, ${area.name}$`) }).first()).toBeVisible();
-  await expect(requests.getByRole("link", { name: new RegExp(`${area.bookedName}, ${area.name}$`) })).toHaveCount(0);
+  await expect(requests.getByRole("link", { name: new RegExp(`${area.name}, ${area.openName}$`) }).first()).toBeVisible();
+  await expect(requests.getByRole("link", { name: new RegExp(`${area.name}, ${area.bookedName}$`) })).toHaveCount(0);
   await expectAccessible(page);
 
   // Talep ayrıntısı: fiyatı etkileyenler listede ve ayrıntıda göze batar
