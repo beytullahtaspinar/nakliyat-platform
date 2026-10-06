@@ -387,7 +387,12 @@ export type CompanyRequestView = {
 
 export type OwnQuote = Omit<CustomerQuote, "company" | "isExpired"> & { createdAt: string };
 
-export type CompanyRequest = CompanyRequestView & { quoteCount: number; myQuote: OwnQuote | null };
+export type CompanyRequest = CompanyRequestView & {
+  quoteCount: number;
+  /** Müşterinin eklediği fotoğraf ve video sayısı */
+  mediaCount: number;
+  myQuote: OwnQuote | null;
+};
 
 /** Firma talep ayrıntısı: müşterinin eklediği fotoğraf ve videolarla */
 export type CompanyRequestDetail = CompanyRequest & { media: RequestMedia[] };

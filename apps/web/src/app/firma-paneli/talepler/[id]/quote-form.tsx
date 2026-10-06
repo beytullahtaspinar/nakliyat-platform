@@ -13,6 +13,16 @@ type Props = {
   maxDate: string;
 };
 
+/** Müşterinin istediği hizmet, işaret kaldırılsa da görünür kalsın */
+const withWish = (label: string, wanted: boolean) =>
+  wanted ? (
+    <>
+      {label} <span className="font-semibold text-accent-800">(müşteri istiyor)</span>
+    </>
+  ) : (
+    label
+  );
+
 export function QuoteForm({ request, quote, minDate, maxDate }: Props) {
   const { state, pending, formProps } = useFormAction(submitQuote.bind(null, request.id), {});
   return (
@@ -65,10 +75,10 @@ export function QuoteForm({ request, quote, minDate, maxDate }: Props) {
       </div>
       <div className="space-y-2">
         <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Fiyata dahil</p>
-        <Checkbox name="includesPacking" label="Paketleme" defaultChecked={quote?.includesPacking ?? request.needsPacking} />
+        <Checkbox name="includesPacking" label={withWish("Paketleme", request.needsPacking)} defaultChecked={quote?.includesPacking ?? request.needsPacking} />
         <Checkbox
           name="includesAssembly"
-          label="Mobilya söküm ve kurulumu"
+          label={withWish("Mobilya söküm ve kurulumu", request.needsAssembly)}
           defaultChecked={quote?.includesAssembly ?? request.needsAssembly}
         />
         <Checkbox name="includesInsurance" label="Taşıma sigortası" defaultChecked={quote?.includesInsurance ?? false} />

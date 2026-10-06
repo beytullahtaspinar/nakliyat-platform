@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/format";
 import { routeText } from "@/lib/geo";
 import { oneParam, pageParam } from "@/lib/params";
 import { homeTypeLabel } from "@/lib/request-options";
-import { RequestStateBadge, route, servicesOf } from "../request-bits";
+import { RequestFlags, RequestStateBadge, daysText, daysUntil, route } from "../request-bits";
 
 export const metadata: Metadata = { title: "Gelen talepler" };
 
@@ -80,7 +80,6 @@ export default async function IncomingRequestsPage({ searchParams }: PageProps<"
             <th scope="col" className={th}>Güzergâh</th>
             <th scope="col" className={th}>Taşınma</th>
             <th scope="col" className={th}>Ev ve yol</th>
-            <th scope="col" className={th}>Hizmetler</th>
             <th scope="col" className={th}>Teklif</th>
             <th scope="col" className={th}>Son gün</th>
             <th scope="col" className={th}>Durum</th>
@@ -89,7 +88,7 @@ export default async function IncomingRequestsPage({ searchParams }: PageProps<"
         </thead>
         <tbody>
           {items.length === 0 && (
-            <EmptyRow colSpan={8}>
+            <EmptyRow colSpan={7}>
               {filter.value === "tumu" && !city ? (
                 <>
                   Hizmet verdiğin illerde şu an açık talep yok. Daha fazla talep görmek için{" "}
@@ -103,47 +102,46 @@ export default async function IncomingRequestsPage({ searchParams }: PageProps<"
               )}
             </EmptyRow>
           )}
-          {items.map((r) => {
-            const services = servicesOf(r);
-            return (
-              <tr key={r.id} className="hover:bg-slate-50">
-                <td className={td}>
-                  <Link href={`/firma-paneli/talepler/${r.id}`} className="font-semibold text-slate-900 hover:text-brand-700 hover:underline">
-                    {route(r)}
+          {items.map((r) => (
+            <tr key={r.id} className="hover:bg-slate-50">
+              <td className={`${td} min-w-64`}>
+                <Link href={`/firma-paneli/talepler/${r.id}`} className="font-semibold text-slate-900 hover:text-brand-700 hover:underline">
+                  {route(r)}
+                </Link>
+                <RequestFlags request={r} className="mt-1.5" />
+              </td>
+              <td className={`${td} whitespace-nowrap`}>
+                {formatDate(r.moveDate)}
+                <div className="text-xs text-slate-600">
+                  {[daysText(daysUntil(r.moveDate)), r.isDateFlexible && "esnek"].filter(Boolean).join(" · ")}
+                </div>
+              </td>
+              <td className={td}>
+                {homeTypeLabel(r.homeType)}
+                <div className="text-xs text-slate-500">
+                  {[routeText(r) ?? (r.distanceKm ? `${r.distanceKm} km` : "Şehir içi"), r.estimatedVolumeM3 && `~${r.estimatedVolumeM3} m³`]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </div>
+              </td>
+              <td className={`${td} tabular-nums`}>{r.quoteCount}</td>
+              <td className={`${td} whitespace-nowrap text-slate-600`}>{formatDate(r.expiresAt)}</td>
+              <td className={td}>
+                <RequestStateBadge request={r} />
+              </td>
+              <td className={`${td} text-right whitespace-nowrap`}>
+                {r.myQuote ? (
+                  <Link href={`/firma-paneli/talepler/${r.id}`} className="text-sm font-semibold text-brand-700 hover:underline">
+                    Teklifini gör
                   </Link>
-                </td>
-                <td className={`${td} whitespace-nowrap`}>
-                  {formatDate(r.moveDate)}
-                  {r.isDateFlexible && <div className="text-xs text-slate-500">esnek</div>}
-                </td>
-                <td className={td}>
-                  {homeTypeLabel(r.homeType)}
-                  <div className="text-xs text-slate-500">
-                    {[routeText(r) ?? (r.distanceKm ? `${r.distanceKm} km` : "Şehir içi"), r.estimatedVolumeM3 && `~${r.estimatedVolumeM3} m³`]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </div>
-                </td>
-                <td className={`${td} text-slate-600`}>{services.length > 0 ? services.join(", ") : "Yalnızca taşıma"}</td>
-                <td className={`${td} tabular-nums`}>{r.quoteCount}</td>
-                <td className={`${td} whitespace-nowrap text-slate-600`}>{formatDate(r.expiresAt)}</td>
-                <td className={td}>
-                  <RequestStateBadge request={r} />
-                </td>
-                <td className={`${td} text-right whitespace-nowrap`}>
-                  {r.myQuote ? (
-                    <Link href={`/firma-paneli/talepler/${r.id}`} className="text-sm font-semibold text-brand-700 hover:underline">
-                      Teklifini gör
-                    </Link>
-                  ) : (
-                    <ButtonLink href={`/firma-paneli/talepler/${r.id}`} size="sm">
-                      Teklif ver
-                    </ButtonLink>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
+                ) : (
+                  <ButtonLink href={`/firma-paneli/talepler/${r.id}`} size="sm">
+                    Teklif ver
+                  </ButtonLink>
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </DataTable>
       <Pager page={page} limit={LIMIT} total={total} href={(p) => href(filter.value, p)} />

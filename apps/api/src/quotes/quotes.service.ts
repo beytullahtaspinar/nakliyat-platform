@@ -58,7 +58,7 @@ export class QuotesService {
         take: limit,
         include: {
           quotes: { where: { companyId: company.id } },
-          _count: { select: { quotes: true } },
+          _count: { select: { quotes: true, media: true } },
         },
       }),
       this.prisma.movingRequest.count({ where }),
@@ -67,6 +67,7 @@ export class QuotesService {
       items: items.map(({ quotes, _count, ...r }) => ({
         ...toCompanyRequestView(r),
         quoteCount: _count.quotes,
+        mediaCount: _count.media,
         myQuote: quotes[0] ?? null,
       })),
       total,
@@ -86,13 +87,17 @@ export class QuotesService {
           { toCityCode: { in: serviceArea(company) } },
         ],
       },
-      include: { quotes: { where: { companyId: company.id } }, _count: { select: { quotes: true } } },
+      include: {
+        quotes: { where: { companyId: company.id } },
+        _count: { select: { quotes: true, media: true } },
+      },
     });
     if (!request) throw new NotFoundException('Talep bulunamadı');
     const { quotes, _count, ...r } = request;
     return {
       ...toCompanyRequestView(r),
       quoteCount: _count.quotes,
+      mediaCount: _count.media,
       myQuote: quotes[0] ?? null,
       media: await this.media.listForRequest(r.id),
     };

@@ -62,20 +62,22 @@ test("firma paneli CRM düzeninde: pano, süzgeçli talepler, işler ve müşter
   const customerPhone = `0532${uniqueDigits(7)}`;
   const customer = await verifiedUser(request, "CUSTOMER", customerName, customerPhone);
   const day = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
-  const open = async (toDistrict: string, moveDate: string) => {
+  const open = async (toDistrict: string, moveDate: string, extra: Record<string, unknown> = {}) => {
     const created = await request.post(`${API}/requests`, {
       headers: customer,
       data: {
         fromCityCode: area.code, fromDistrict: "merkez", fromAddress: "CRM Sok. No:1", fromFloor: 1, fromHasElevator: false,
         toCityCode: area.code, toDistrict, toAddress: "CRM Sok. No:2", toFloor: 2, toHasElevator: true,
-        homeType: "TWO_PLUS_ONE", moveDate,
+        homeType: "TWO_PLUS_ONE", moveDate, ...extra,
       },
     });
     expect(created.ok()).toBeTruthy();
     return (await created.json()).id as string;
   };
   const booked = await open(area.booked, day(5));
-  await open(area.open, day(12));
+  await open(area.open, day(2), {
+    fromFloor: 4, needsPacking: true, specialItems: ["Piyano"], notes: "Piyano dikkatli taşınmalı.",
+  });
   const quote = await request.post(`${API}/company/requests/${booked}/quotes`, {
     headers: company,
     data: { priceTry: 14500, crewSize: 3, vehicleType: "KAMYON" },
@@ -106,6 +108,24 @@ test("firma paneli CRM düzeninde: pano, süzgeçli talepler, işler ve müşter
   await expect(requests.getByRole("link", { name: new RegExp(`${area.openName}, ${area.name}$`) }).first()).toBeVisible();
   await expect(requests.getByRole("link", { name: new RegExp(`${area.bookedName}, ${area.name}$`) })).toHaveCount(0);
   await expectAccessible(page);
+
+  // Talep ayrıntısı: fiyatı etkileyenler listede ve ayrıntıda göze batar
+  const openRow = requests.getByRole("row").filter({ hasText: area.openName }).first();
+  const flags = openRow.getByRole("list", { name: "Dikkat" });
+  await expect(flags.getByText(/^!?Acil: /)).toBeVisible();
+  await expect(flags.getByText("Çıkış: asansörsüz 4. kat")).toBeVisible();
+  await expect(flags.getByText("Özel eşya: Piyano")).toBeVisible();
+  await expect(flags.getByText("Paketleme")).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("gelen-talepler.png"), fullPage: true });
+  await openRow.getByRole("link", { name: "Teklif ver" }).click();
+  const attention = page.getByRole("region", { name: /Fiyatı etkileyenler/ });
+  await expect(attention.getByText("Çıkış: asansörsüz 4. kat")).toBeVisible();
+  await expect(attention.getByText("Piyano")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Müşteri notu" }).getByText("Piyano dikkatli taşınmalı.")).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: /Paketleme \(müşteri istiyor\)/ })).toBeChecked();
+  await page.screenshot({ path: testInfo.outputPath("talep-ayrintisi.png"), fullPage: true });
+  await expectAccessible(page);
+  await page.goBack();
 
   // Tekliflerim: kabul edilenler
   await nav.getByRole("link", { name: "Tekliflerim" }).click();

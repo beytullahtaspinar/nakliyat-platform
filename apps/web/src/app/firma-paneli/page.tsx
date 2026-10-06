@@ -15,7 +15,7 @@ import { BADGE_KEYS, BADGE_ORDER } from "@/lib/badges";
 import { getCompanyContext } from "@/lib/company";
 import { formatDate, formatMoney, formatPhone, place } from "@/lib/format";
 import { homeTypeLabel } from "@/lib/request-options";
-import { route } from "./request-bits";
+import { RequestFlags, route } from "./request-bits";
 
 export const metadata: Metadata = { title: { absolute: "Pano | Firma paneli" } };
 
@@ -112,6 +112,7 @@ export default async function CompanyDashboardPage() {
                       {route(r)}
                     </Link>
                     <div className="text-xs text-slate-500">{homeTypeLabel(r.homeType)}</div>
+                    <RequestFlags request={r} className="mt-1.5" />
                   </td>
                   <td className={`${td} whitespace-nowrap`}>{formatDate(r.moveDate)}</td>
                   <td className={`${td} tabular-nums`}>{r.quoteCount}</td>
