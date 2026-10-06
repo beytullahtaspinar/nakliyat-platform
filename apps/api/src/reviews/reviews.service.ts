@@ -324,6 +324,8 @@ export class ReviewsService {
     const badges = await this.badges.forCompanies([company]);
     return {
       ...toPublicCompany(company),
+      // Vergi levhasındaki resmi unvan: görünen ad ne olursa olsun müşteri kiminle çalıştığını bilsin
+      legalName: company.legalName,
       badges: badges.get(company.id) ?? [],
       cityCode: company.cityCode,
       description: company.description,

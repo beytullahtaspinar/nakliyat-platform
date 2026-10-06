@@ -203,7 +203,7 @@ describe('Değerlendirmeler (e2e)', () => {
     expect(Number(profile.body.ratingAverage)).toBe(4);
     expect(profile.body.serviceCities.map((c: { name: string }) => c.name)).toEqual(['Ankara', 'İzmir']);
     expect(profile.body).not.toHaveProperty('taxNumber');
-    expect(profile.body).not.toHaveProperty('legalName');
+    expect(profile.body.legalName).toBe('Yorum Nakliyat Ltd.');
 
     const reviews = await http().get(`/v1/companies/${companyId}/reviews`).expect(200);
     expect(reviews.body.total).toBe(1);

@@ -171,4 +171,25 @@ export const templates = {
       actionLabel: 'Firma bilgilerini düzenle',
     };
   },
+
+  companyNameApproved(p: { newName: string }): NotificationContent {
+    return {
+      type: 'COMPANY_VERIFICATION',
+      title: 'Yeni firma adın yayında',
+      body: `Görünen ad değişikliğin onaylandı. Müşteriler firmanı artık "${p.newName}" adıyla görüyor.`,
+      path: '/firma-paneli/profil',
+      actionLabel: 'Firma profiline git',
+    };
+  },
+
+  companyNameRejected(p: { newName: string; reason: string | null }): NotificationContent {
+    return {
+      type: 'COMPANY_VERIFICATION',
+      title: 'Ad değişikliğin onaylanmadı',
+      body: `"${p.newName}" adı onaylanmadı; firman eski adıyla görünmeye devam ediyor.`,
+      details: p.reason ? [`Gerekçe: ${p.reason}`] : undefined,
+      path: '/firma-paneli/profil',
+      actionLabel: 'Firma profiline git',
+    };
+  },
 };

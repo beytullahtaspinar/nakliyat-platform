@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { cache } from "react";
 import { citySlug, getCityByCode } from "@nakliyat/locations";
 import { BadgePill, CompanyBadges } from "@/components/company-badges";
@@ -129,6 +129,7 @@ function companyJsonLd(company: PublicCompanyProfile, reviews: PublicReview[]) {
     "@type": "MovingCompany",
     "@id": `${url}#firma`,
     name: company.displayName,
+    legalName: company.legalName,
     url,
     ...(company.description && { description: company.description }),
     ...(logo && { logo }),
@@ -169,8 +170,9 @@ function companyJsonLd(company: PublicCompanyProfile, reviews: PublicReview[]) {
 export default async function CompanyPage({ params }: Props) {
   const { slug } = await params;
   const { company, reviews } = await load(slug);
-  // Firma adı değiştiyse eski adres yenisine kalıcı yönlenir
-  if (`/firmalar/${slug}` !== companyPath(company)) permanentRedirect(companyPath(company));
+  // Firma adı değiştiyse eski adres de açılır; kanonik adres (generateMetadata) yeni adı gösterir.
+  // Yönlendirme yapılmıyor: önbellekteki eski sayfa yönlendirmeye dönüşünce Next.js 16 Location başlığını
+  // iki kez yazıyor ve tarayıcı 404 alıyor (ad değişikliği onayından hemen sonraki ziyaretler).
 
   const city = getCityByCode(company.cityCode);
   const crumbs: Crumb[] = [
@@ -234,6 +236,11 @@ export default async function CompanyPage({ params }: Props) {
             className="relative -mt-10 shadow-md ring-4 ring-white sm:-mt-12"
           />
           <h1 className="mt-3 text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">{company.displayName}</h1>
+          {/* Vergi levhasındaki resmi unvan: görünen ad değişse de müşteri kiminle çalıştığını bilir */}
+          <p className="mt-0.5 text-sm text-zinc-600">
+            <span className="sr-only">Ticari unvan: </span>
+            {company.legalName}
+          </p>
           <p className="mt-1 text-zinc-600">{summary.join(" · ")}</p>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {company.verified && !earned.includes("DOCUMENTS_VERIFIED") && <Badge tone="success">✓ Doğrulanmış firma</Badge>}

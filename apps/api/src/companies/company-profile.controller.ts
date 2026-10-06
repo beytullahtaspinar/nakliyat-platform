@@ -34,8 +34,9 @@ export class CompanyProfileController {
   }
 
   /**
-   * Unvan, vergi no veya K3 belge no değişirse firma yeniden doğrulamaya düşer.
-   * Telefon buradan değiştirilemez (salt okunur, bkz. UpdateCompanyProfileDto).
+   * Vergi no veya K3 belge no değişirse firma yeniden doğrulamaya düşer. Onaylı firmanın görünen ad
+   * değişikliği yönetim onayına gider (yılda en fazla 2). Unvan ve telefon buradan değiştirilemez
+   * (bkz. UpdateCompanyProfileDto).
    */
   @Patch()
   update(@CurrentUser() user: AuthUser, @Body() dto: UpdateCompanyProfileDto) {

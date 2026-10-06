@@ -19,7 +19,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/yonetim">)
       home="/yonetim"
       title="Nakliyat CRM"
       subtitle="Yönetim paneli"
-      nav={<AdminNav pendingCompanies={summary.companies.pending} pendingDocuments={summary.documents.pending} />}
+      nav={
+        <AdminNav
+          pendingCompanies={summary.companies.pending}
+          pendingDocuments={summary.documents.pending}
+          pendingNameChanges={summary.nameChanges.pending}
+        />
+      }
       account={
         <>
           <p className="truncate text-sm font-medium text-slate-900">{user.fullName}</p>

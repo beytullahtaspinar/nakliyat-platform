@@ -161,9 +161,28 @@ model Company {
   quotes        Quote[]
   bookings      Booking[]
   reviews       Review[]
+  nameChanges   CompanyNameChange[]
 
   @@index([verificationStatus])
   @@index([cityCode])
+}
+
+/// Firmanın görünen ad değişikliği. Onaylı firmada yeni ad, yönetim onaylayana kadar yayına girmez
+/// (eski ad görünür). Onaylanan değişiklik sınırı: companies/name-change-rules.ts
+model CompanyNameChange {
+  id         String             @id @default(cuid())
+  companyId  String
+  oldName    String             @db.VarChar(191)
+  newName    String             @db.VarChar(80)
+  status     VerificationStatus @default(PENDING)
+  reviewNote String?            @db.VarChar(500)
+  createdAt  DateTime           @default(now())
+  reviewedAt DateTime?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, status])
+  @@index([status, createdAt])
 }
 
 /// Firmanın hizmet verdiği iller (plaka kodu). "Bu ile kim hizmet veriyor?" sorgusu için ayrı tablo.

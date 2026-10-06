@@ -239,6 +239,8 @@ export type PublicCompanyPhoto = {
 };
 
 export type PublicCompanyProfile = PublicCompany & {
+  /** Vergi levhasındaki resmi unvan: görünen ad değişse de müşteri kiminle çalıştığını görür */
+  legalName: string;
   cityCode: string;
   description: string | null;
   services: string[];
@@ -318,6 +320,33 @@ export type CompanyProfile = {
   serviceCityCodes: string[];
   /** Giriş ve iletişim telefonu: panelde yalnızca gösterilir, firma kendi değiştiremez */
   contactPhone?: string | null;
+  /** Yalnızca firmanın kendi profilinde: görünen ad değişikliği onayı ve yıllık hak */
+  nameChange?: NameChangeState;
+};
+
+/** Onaylı firmanın ad değişikliği yönetim onayına düşer; son 365 günde en fazla `limit` onay */
+export type NameChangeState = {
+  pending: { newName: string; createdAt: string } | null;
+  lastRejected: { newName: string; reviewNote: string | null; reviewedAt: string } | null;
+  limit: number;
+  used: number;
+  remaining: number;
+  /** Hak bittiyse bir sonraki değişikliğin yapılabileceği gün */
+  nextAvailableAt: string | null;
+};
+
+export type NameChange = {
+  id: string;
+  oldName: string;
+  newName: string;
+  status: VerificationStatus;
+  reviewNote: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+};
+
+export type AdminNameChange = NameChange & {
+  company: { id: string; displayName: string; legalName: string; verificationStatus: VerificationStatus };
 };
 
 /** Firma panelinde/yönetimde görsel: önizleme imzalı kısa süreli adresten */
@@ -503,6 +532,7 @@ export type AdminSummary = {
   users: { customers: number; companies: number; total: number };
   bookings: { scheduled: number };
   documents: { pending: number };
+  nameChanges: { pending: number };
 };
 
 type StatsTotals = {
@@ -581,6 +611,8 @@ export type AdminCompanyDetail = AdminCompany &
   owner: CompanyOwner & { id: string; createdAt: string };
   /** Tanıtım sayfası görselleri (gizlenenler dahil) */
   media: ShowcaseMedia[];
+  /** Görünen ad değişiklikleri, en yeni önce */
+  nameChanges: NameChange[];
   quoteCount: number;
   bookingCount: number;
   history: {
@@ -592,6 +624,9 @@ export type AdminCompanyDetail = AdminCompany &
       type?: CompanyDocument["type"];
       method?: string;
       path?: string;
+      /** Görünen ad değişikliği */
+      oldName?: string;
+      newName?: string;
     } | null;
     createdAt: string;
     actor: { fullName: string };

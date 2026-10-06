@@ -50,6 +50,7 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('booking.cancelled', (p) => this.onBookingCancelled(p.bookingId, p.cancelledBy));
     this.events.on('review.created', ({ reviewId }) => this.onReviewCreated(reviewId));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
+    this.events.on('company.name_change_reviewed', ({ changeId }) => this.onNameChangeReviewed(changeId));
   }
 
   /** Talebin çıkış veya varış iline hizmet veren doğrulanmış firmalara haber ver. */
@@ -233,6 +234,22 @@ export class NotificationsListener implements OnModuleInit {
       await this.notifications.notify(
         company.ownerId,
         templates.companyRejected({ companyName: company.displayName, reason: company.verificationNote }),
+      );
+    }
+  }
+
+  async onNameChangeReviewed(changeId: string) {
+    const change = await this.prisma.companyNameChange.findUnique({
+      where: { id: changeId },
+      select: { newName: true, status: true, reviewNote: true, company: { select: { ownerId: true } } },
+    });
+    if (!change) return;
+    if (change.status === VerificationStatus.VERIFIED) {
+      await this.notifications.notify(change.company.ownerId, templates.companyNameApproved({ newName: change.newName }));
+    } else if (change.status === VerificationStatus.REJECTED) {
+      await this.notifications.notify(
+        change.company.ownerId,
+        templates.companyNameRejected({ newName: change.newName, reason: change.reviewNote }),
       );
     }
   }

@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -50,8 +50,19 @@ export class CreateCompanyProfileDto {
 }
 
 /**
- * Firma kendi telefonunu değiştiremez: numara sahibin hesabında (User.phone) tutulur ve burada alanı yok.
- * Gövdede `phone`/`contactPhone` gönderilirse ValidationPipe (forbidNonWhitelisted) isteği 400 ile reddeder.
- * Numarayı yalnızca yönetim PATCH /admin/users/:id ile günceller.
+ * Firmanın kendi düzenlemesi. Ticari unvan (vergi levhasındaki resmi ad) ve telefon burada yok: unvanı
+ * yönetim PATCH /admin/companies/:id, telefonu PATCH /admin/users/:id ile değiştirir. Gövdede `legalName`,
+ * `phone` ya da `contactPhone` gönderilirse ValidationPipe (forbidNonWhitelisted) isteği 400 ile reddeder.
+ * Onaylı firmada `displayName` değişikliği hemen uygulanmaz, yönetim onayına düşer (name-change-rules.ts).
  */
-export class UpdateCompanyProfileDto extends PartialType(CreateCompanyProfileDto) {}
+export class UpdateCompanyProfileDto extends PartialType(OmitType(CreateCompanyProfileDto, ['legalName'] as const)) {}
+
+/** Yönetimin düzeltmesi: tüm alanlar, unvan dahil. Ad değişikliği onaya düşmez, hemen uygulanır. */
+export class AdminUpdateCompanyDto extends PartialType(CreateCompanyProfileDto) {}
+
+export class RejectNameChangeDto {
+  @ApiProperty({ example: 'Yeni ad vergi levhasındaki unvanla ilgisiz görünüyor.' })
+  @IsString()
+  @Length(5, 500)
+  reason: string;
+}

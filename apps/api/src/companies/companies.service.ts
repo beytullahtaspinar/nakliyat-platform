@@ -10,6 +10,7 @@ import { assertNoContactInfo, isShowcaseComplete } from './showcase-rules.js';
 import { isExpired } from '../media/company-document-rules.js';
 import { assertCityCodes, cityName } from '../common/utils/locations.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { CompanyNameChangesService } from './company-name-changes.service.js';
 import type {
   CreateCompanyProfileDto,
   UpdateCompanyProfileDto,
@@ -30,12 +31,15 @@ export const PUBLIC_COMPANY = {
   owner: { deletedAt: null, status: UserStatus.ACTIVE },
 } satisfies Prisma.CompanyWhereInput;
 
-/** Değişirse firmanın yeniden doğrulanması gereken alanlar */
-const IDENTITY_FIELDS = ['legalName', 'taxNumber', 'k3LicenseNumber'] as const;
+/** Firma değiştirirse yeniden doğrulanması gereken alanlar (unvanı yalnızca yönetim değiştirir) */
+const IDENTITY_FIELDS = ['taxNumber', 'k3LicenseNumber'] as const;
 
 @Injectable()
 export class CompaniesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly nameChanges: CompanyNameChangesService,
+  ) {}
 
   async create(ownerId: string, dto: CreateCompanyProfileDto) {
     assertCityCodes([dto.cityCode, ...dto.serviceCityCodes], 'İl');
@@ -55,12 +59,20 @@ export class CompaniesService {
       },
       include: WITH_CITIES,
     });
-    return { ...toProfile(company), contactPhone: await this.ownerPhone(ownerId) };
+    return this.ownProfile(company);
   }
 
   async getOwn(ownerId: string) {
-    const company = await this.requireCompany(ownerId);
-    return { ...toProfile(company), contactPhone: await this.ownerPhone(ownerId) };
+    return this.ownProfile(await this.requireCompany(ownerId));
+  }
+
+  /** Firma panelindeki profil: telefon (salt okunur) ve ad değişikliği durumuyla */
+  private async ownProfile(company: CompanyWithCities) {
+    const [contactPhone, nameChange] = await Promise.all([
+      this.ownerPhone(company.ownerId),
+      this.nameChanges.stateFor(company.id),
+    ]);
+    return { ...toProfile(company), contactPhone, nameChange };
   }
 
   /**
@@ -84,12 +96,17 @@ export class CompaniesService {
     const identityChanged = IDENTITY_FIELDS.some(
       (field) => dto[field] !== undefined && dto[field] !== company[field],
     );
-    const { serviceCityCodes, ...fields } = dto;
+    // Onaylı firmanın yeni adı herkese açık sayfaya ve tekliflere yönetim onayından sonra girer.
+    // Onaysız firma henüz yayında değil; adı doğrudan değişir, yönetim onay incelemesinde görür.
+    const { serviceCityCodes, displayName, ...fields } = dto;
+    const reviewName = displayName !== undefined && company.verificationStatus === VerificationStatus.VERIFIED;
+    if (reviewName) await this.nameChanges.request(company, displayName, ownerId);
     const updated = await this.prisma.company.update({
       where: { id: company.id },
       include: WITH_CITIES,
       data: {
         ...fields,
+        ...(displayName !== undefined && !reviewName && { displayName: displayName.trim() }),
         ...(serviceCityCodes && {
           serviceCities: {
             deleteMany: {},
@@ -104,7 +121,7 @@ export class CompaniesService {
       },
     });
     if (dto.description !== undefined) await this.refreshShowcaseComplete(company.id);
-    return { ...toProfile(updated), contactPhone: await this.ownerPhone(ownerId) };
+    return this.ownProfile(updated);
   }
 
   /**
