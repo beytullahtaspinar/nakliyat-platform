@@ -151,6 +151,12 @@ describe('Talep fotoğraf ve videoları (e2e)', () => {
   it('hizmet bölgesindeki firma dosyaları görür, bölge dışındaki talebi göremez', async () => {
     const res = await http().get(`/v1/company/requests/${requestId}`).set(auth('company')).expect(200);
     expect(res.body.media).toHaveLength(1);
+    expect(res.body.mediaCount).toBe(1);
+    // Listede yalnızca sayı gelir: firma fotoğraflı talebi tek bakışta görsün
+    const list = await http().get('/v1/company/requests?limit=50').set(auth('company')).expect(200);
+    const item = list.body.items.find((r: { id: string }) => r.id === requestId);
+    expect(item.mediaCount).toBe(1);
+    expect(item.media).toBeUndefined();
     await http().get(`/v1/company/requests/${requestId}`).set(auth('farCompany')).expect(404);
   });
 

@@ -6,8 +6,8 @@ import { renderEmail } from './email-layout.js';
 
 const recipient = { userId: 'u1', role: UserRole.CUSTOMER, fullName: 'Ayşe Yılmaz', email: 'ayse@ornek.com', phone: '+905321234567' };
 const content = templates.newQuote({
-  from: 'Kadıköy, İstanbul',
-  to: 'Çankaya, Ankara',
+  from: 'İstanbul, Kadıköy',
+  to: 'Ankara, Çankaya',
   moveDate: new Date('2026-10-20T00:00:00Z'),
   requestId: 'req1',
   companyName: '<Hızlı> & Güvenli',

@@ -145,7 +145,7 @@ describe('Bildirimler (e2e)', () => {
     await events.drain();
 
     const mail = email.sent.find((m) => m.to === emails.company && m.content.type === 'NEW_REQUEST');
-    expect(mail?.content.title).toBe('Yeni talep: Nilüfer, Bursa → Çankaya, Ankara');
+    expect(mail?.content.title).toBe('Yeni talep: Bursa, Nilüfer → Ankara, Çankaya');
     expect(mail?.content.path).toBe(`/firma-paneli/talepler/${requestId}`);
     expect(JSON.stringify(mail)).not.toContain('Gizli Sok');
   });

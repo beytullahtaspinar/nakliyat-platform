@@ -18,12 +18,12 @@ const HOME_TYPE_LABELS: Record<string, string> = {
   OFFICE: 'Ofis',
 };
 
-/** "Kadıköy, İstanbul" biçiminde yer adı. Müşterinin açık adresi bildirimlere hiç girmez. */
+/** "İstanbul, Kadıköy" biçiminde yer adı. Müşterinin açık adresi bildirimlere hiç girmez. */
 const place = (cityCode: string, districtSlug: string) => {
   const city = getCityByCode(cityCode);
   if (!city) return cityCode;
   const district = getDistrict(city, districtSlug);
-  return district ? `${district.name}, ${city.name}` : city.name;
+  return district ? `${city.name}, ${district.name}` : city.name;
 };
 const route = (r: MovingRequest) => ({
   from: place(r.fromCityCode, r.fromDistrict),

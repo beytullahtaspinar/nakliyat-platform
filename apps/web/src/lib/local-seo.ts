@@ -59,7 +59,7 @@ export function localPageDescription(page: LocalPage): string {
     case "city":
       return `${page.city.name} içinde ve ${page.city.name} çıkışlı taşınmanız için K3 belgeli, doğrulanmış nakliyat firmalarından ücretsiz teklif alın, fiyatları ve yorumları karşılaştırın.`;
     case "district":
-      return `${page.district.name}, ${page.city.name} evden eve nakliyat: bölgede hizmet veren doğrulanmış firmalardan teklif alın, fiyat, kapsam ve müşteri yorumlarını karşılaştırın.`;
+      return `${page.city.name}, ${page.district.name} evden eve nakliyat: bölgede hizmet veren doğrulanmış firmalardan teklif alın, fiyat, kapsam ve müşteri yorumlarını karşılaştırın.`;
     case "route":
       return `${page.from.name} ile ${page.to.name} arası ${page.distanceKm} km şehirler arası taşınma: doğrulanmış nakliyat firmalarından teklif alın ve karşılaştırın.`;
   }
