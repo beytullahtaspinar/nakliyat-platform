@@ -135,3 +135,24 @@ select:not([multiple]):not([size]):disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/*
+ * Tarih alanları: iPhone Safari tarih kutusunu kendi iç genişliğiyle çizip w-full'u yok sayıyor,
+ * dar ekranda kutu sağa taşıyordu; boşken de yüksekliği çöküyordu. Görünüm sıfırlanır, genişlik
+ * kapsayıcıya bağlanır, yükseklik diğer kutularla eşitlenir, değer sola yaslanır.
+ */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.625rem;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value {
+  text-align: start;
+}

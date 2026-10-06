@@ -33,7 +33,7 @@ type Props = {
 };
 
 export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Props) {
-  const { state, pending, formProps } = useFormAction(createRequest, {});
+  const { state, pending, invalid, formProps } = useFormAction(createRequest, {});
   const picker = useMediaPicker();
   const router = useRouter();
   const [uploadState, setUploadState] = useState<"idle" | "uploading">("idle");
@@ -146,7 +146,7 @@ export function RequestForm({ cities, userName, defaults, minDate, maxDate }: Pr
       )}
 
       <div className="space-y-3">
-        <FormError message={state.error} />
+        <FormError message={invalid ?? state.error} />
         {uploadState === "uploading" ? (
           <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-center text-sm text-brand-900">
             Talebin oluşturuldu, fotoğraf ve videolar yükleniyor…

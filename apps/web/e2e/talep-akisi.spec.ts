@@ -56,3 +56,17 @@ test("müşteri talep oluşturur ve hesabında görür", async ({ page }) => {
   await expect(accepted.getByRole("checkbox", { name: "Anlık bildirim" })).toBeChecked();
   await expect(page.getByRole("listitem").filter({ hasText: "Talebime yeni teklif" }).getByRole("checkbox", { name: "E-posta" })).toBeChecked();
 });
+
+// iPhone'da bildirilen: tarih kutusu sağa taşıyordu; eksik alanla "Teklif iste" sessiz kalıyordu
+test("dar ekranda tarih kutusu taşmaz, eksik alan düğmenin yanında söylenir", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.goto("/talep-olustur");
+
+  const box = await page.getByLabel("Taşınma tarihi").boundingBox();
+  expect(box!.x + box!.width).toBeLessThanOrEqual(320);
+
+  await page.getByRole("button", { name: "Ücretsiz teklif iste" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "İl:" })).toBeVisible();
+  await expect(page).toHaveURL(/\/talep-olustur/);
+  await expect(page.getByRole("group", { name: /Nereden taşınıyorsun/ }).getByRole("combobox", { name: "İl", exact: true })).toBeInViewport();
+});

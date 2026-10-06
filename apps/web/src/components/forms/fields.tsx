@@ -17,7 +17,7 @@ export function Field({
   className?: string;
 }) {
   return (
-    <label className={`block ${className ?? ""}`}>
+    <label className={`block min-w-0 ${className ?? ""}`}>
       <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{label}</span>
       {children}
       {hint && <span className="mt-1 block text-xs text-zinc-500">{hint}</span>}
