@@ -34,12 +34,25 @@ gerekmez. `eas.json` profilleri:
 - `firma-deneme`, `musteri-deneme`: kendi telefonuna kurulacak deneme sürümü (Android'de APK)
 - `firma`, `musteri`: mağaza sürümü
 
-Gerekenler (hesap sahibi tarafından açılır, anahtarlar depoya ve sohbete yazılmaz):
-Expo hesabı, Apple Developer Program, Google Play Console. Her uygulama için `eas init`
-sonrası verilen proje kimliği `app.config.ts` içindeki `easProjectId` alanına yazılır.
+Expo projeleri `beytullah001` hesabında açık: `evdenevenakliyat-firma` ve `evdenevenakliyat`
+(kimlikleri `app.config.ts` içinde).
+
+### GitHub'dan derleme (önerilen)
+
+1. expo.dev → Account settings → **Access tokens** → yeni token oluştur.
+2. GitHub deposu → Settings → Secrets and variables → Actions → **New repository secret**:
+   adı `EXPO_TOKEN`, değeri bu token. (Token sohbete ya da dosyaya yazılmaz.)
+3. GitHub → Actions → **Mobil derleme** → Run workflow: uygulama, profil (`deneme` / `magaza`)
+   ve platformu seç. Derleme expo.dev → Builds sayfasında görünür; Android deneme sürümü APK
+   olarak oradan telefona indirilir.
+
+Mağazaya gönderme (`eas submit`) bu işte yok; ayrıca ve elle yapılır.
+
+### Bilgisayardan derleme
 
 ```bash
 cd apps/mobile
+npx eas-cli@latest login
 APP_VARIANT=firma npx eas-cli@latest build --profile firma-deneme --platform android
 ```
 

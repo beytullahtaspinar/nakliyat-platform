@@ -14,8 +14,8 @@ const VARIANTS = {
     scheme: 'evdenevenakliyat-firma',
     id: 'app.evdenevenakliyat.firma',
     background: '#f97316',
-    /** `eas init` ile EAS'te proje açılınca buraya yazılır (gizli değildir) */
-    easProjectId: undefined as string | undefined,
+    /** expo.dev'deki projenin kimliği (gizli değildir) */
+    easProjectId: '084d903b-b052-4101-8a94-e6153827d0b7' as string | undefined,
   },
   musteri: {
     name: 'Evdenevenakliyat',
@@ -23,7 +23,7 @@ const VARIANTS = {
     scheme: 'evdenevenakliyat',
     id: 'app.evdenevenakliyat.musteri',
     background: '#1e3a8a',
-    easProjectId: undefined as string | undefined,
+    easProjectId: '724e123c-2655-4a5a-8541-e3dae4cac277' as string | undefined,
   },
 } as const;
 
@@ -35,6 +35,8 @@ const assets = `./assets/${variant}`;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
+  /** expo.dev hesabı: projeler bu hesabın altında */
+  owner: 'beytullah001',
   name: v.name,
   slug: v.slug,
   scheme: v.scheme,

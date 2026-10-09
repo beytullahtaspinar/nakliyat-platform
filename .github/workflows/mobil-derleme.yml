@@ -1,0 +1,46 @@
+name: Mobil derleme
+
+# Elle başlatılır (Actions → Mobil derleme → Run workflow). Derleme Expo'nun bulutunda (EAS) yapılır;
+# bu iş yalnızca derlemeyi başlatır ve bitmesini beklemez. Sonuç expo.dev → Builds sayfasında görünür.
+# Gerekli gizli değer: EXPO_TOKEN (expo.dev → Account settings → Access tokens).
+# Mağazaya gönderme burada yok; o adım ayrıca ve elle yapılır.
+on:
+  workflow_dispatch:
+    inputs:
+      uygulama:
+        description: Hangi uygulama
+        type: choice
+        options: [firma, musteri]
+        default: firma
+      profil:
+        description: "deneme: telefona kurulacak APK / magaza: mağaza paketi"
+        type: choice
+        options: [deneme, magaza]
+        default: deneme
+      platform:
+        description: Platform
+        type: choice
+        options: [android, ios, all]
+        default: android
+
+jobs:
+  derle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - name: EAS derlemesini başlat
+        working-directory: apps/mobile
+        env:
+          APP_VARIANT: ${{ inputs.uygulama }}
+          PROFILE: ${{ inputs.profil == 'deneme' && format('{0}-deneme', inputs.uygulama) || inputs.uygulama }}
+        run: eas build --profile "$PROFILE" --platform ${{ inputs.platform }} --non-interactive --no-wait
