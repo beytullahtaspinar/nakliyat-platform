@@ -61,7 +61,7 @@ describe('Anlık bildirim (e2e)', () => {
   it('ayarlarda anlık bildirim kanalı ve açık anahtar görünür', async () => {
     const res = await http().get('/v1/notifications/preferences').set(auth('company')).expect(200);
     expect(res.body.channels).toEqual(['EMAIL', 'PUSH']);
-    expect(res.body.push).toEqual({ publicKey: process.env.VAPID_PUBLIC_KEY, devices: 0 });
+    expect(res.body.push).toEqual({ publicKey: process.env.VAPID_PUBLIC_KEY, devices: 0, mobileDevices: 0 });
     expect(res.body.items[0].channels).toEqual({ EMAIL: true, PUSH: true });
   });
 
@@ -131,5 +131,54 @@ describe('Anlık bildirim (e2e)', () => {
     expect(await prisma.pushSubscription.count({ where: { endpoint } })).toBe(1);
     await http().delete('/v1/notifications/push/subscriptions').set(auth('company')).send({ endpoint }).expect(204);
     expect(await prisma.pushSubscription.count({ where: { endpoint } })).toBe(0);
+  });
+
+  describe('mobil uygulama', () => {
+    const token = 'ExponentPushToken[e2e-telefon-1]';
+    const realFetch = globalThis.fetch;
+    const expo = vi.spyOn(globalThis, 'fetch');
+    const sentTo = () =>
+      expo.mock.calls.filter(([url]) => String(url).startsWith('https://exp.host/')).flatMap(([, init]) => JSON.parse(String(init?.body)));
+
+    beforeEach(() => {
+      expo.mockReset().mockImplementation(async (url, init) => {
+        // Expo dışındaki istekler (ör. test istemcisi) olduğu gibi geçer
+        if (!String(url).startsWith('https://exp.host/')) return realFetch(url, init);
+        return new Response(JSON.stringify({ data: [{ status: 'ok', id: 'bilet' }] }), { status: 200 });
+      });
+    });
+    afterAll(() => expo.mockRestore());
+
+    it('telefon yalnızca Expo adresiyle kaydedilir ve ayarlarda sayılır', async () => {
+      await http().post('/v1/notifications/push/devices').set(auth('company')).send({ token: 'bozuk', platform: 'android' }).expect(400);
+      await http().post('/v1/notifications/push/devices').set(auth('company')).send({ token, platform: 'windows' }).expect(400);
+      await http().post('/v1/notifications/push/devices').set(auth('company')).send({ token, platform: 'android' }).expect(204);
+      await http().post('/v1/notifications/push/devices').set(auth('company')).send({ token, platform: 'android' }).expect(204);
+      const res = await http().get('/v1/notifications/preferences').set(auth('company')).expect(200);
+      expect(res.body.push.mobileDevices).toBe(1);
+    });
+
+    it('bildirim telefona açılacak yolla gider', async () => {
+      await notifications.notify(await userId('company'), message());
+      expect(sentTo()).toEqual([expect.objectContaining({ to: token, title: 'Ayşe Yılmaz sana mesaj yazdı', data: { path: '/firma-paneli/isler/b1', tag: 'NEW_MESSAGE:/firma-paneli/isler/b1' } })]);
+    });
+
+    it('uygulaması silinen telefonun kaydı silinir', async () => {
+      expo.mockResolvedValueOnce(
+        new Response(JSON.stringify({ data: [{ status: 'error', details: { error: 'DeviceNotRegistered' } }] }), { status: 200 }),
+      );
+      // Tarayıcı aboneliği de olmasın ki gönderim yalnızca telefona denensin
+      await prisma.pushSubscription.deleteMany({ where: { userId: await userId('company') } });
+      await notifications.notify(await userId('company'), message());
+      expect(await prisma.mobilePushToken.count({ where: { token } })).toBe(0);
+    });
+
+    it('çıkışta kayıt silinir; başkasının kaydı silinemez', async () => {
+      await http().post('/v1/notifications/push/devices').set(auth('company')).send({ token, platform: 'ios' }).expect(204);
+      await http().delete('/v1/notifications/push/devices').set(auth('customer')).send({ token }).expect(204);
+      expect(await prisma.mobilePushToken.count({ where: { token } })).toBe(1);
+      await http().delete('/v1/notifications/push/devices').set(auth('company')).send({ token }).expect(204);
+      expect(await prisma.mobilePushToken.count({ where: { token } })).toBe(0);
+    });
   });
 });

@@ -104,6 +104,16 @@ Anahtarları değiştirmek mevcut abonelikleri geçersiz kılar: kullanıcılar 
 
 Gönderim durumu: `SELECT createdAt, type, status, lastError FROM Notification WHERE channel = 'PUSH' ORDER BY createdAt DESC LIMIT 20;`
 
+### Mobil uygulamalar (Expo)
+
+Firma ve müşteri uygulamaları aynı PUSH kanalından bildirim alır: `WebPushChannel` tarayıcı
+aboneliklerine VAPID ile, `MobilePushToken` kayıtlarına `ExpoPushSender` ile
+(`https://exp.host/--/api/v2/push/send`) gönderir. Mobil gönderim VAPID'e bağlı değildir.
+Telefon `POST /v1/notifications/push/devices` ile kaydolur, çıkışta `DELETE` ile silinir;
+uygulaması silinen telefonun kaydı Expo `DeviceNotRegistered` dönünce silinir. Bildirimin
+`data` alanında `path` ve `tag` gider; uygulama bunlardan açılacak ekranı bulur.
+Firebase ve Expo kurulumu: `apps/mobile/README.md` → Anlık bildirimler.
+
 ## Yeni kanal eklemek (SMS)
 
 1. `src/notifications/channels/` altına `ChannelProvider` arayüzünü uygulayan bir sınıf yaz

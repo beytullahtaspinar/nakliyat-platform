@@ -2,6 +2,7 @@ import type { CompanyOverview } from '@nakliyat/api-client';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { PanelScreen } from '@/components/panel';
+import { PushPrompt } from '@/components/push-prompt';
 import { AppText, Card, Notice } from '@/components/ui';
 import { formatTry } from '@/lib/format';
 import { useApi } from '@/lib/use-api';
@@ -13,6 +14,7 @@ export default function CompanyHome() {
 
   return (
     <PanelScreen title="Pano" onRefresh={reload}>
+      <PushPrompt text="Yeni talep geldiğinde ve müşteri mesaj yazdığında telefonuna bildirim düşsün." />
       {error ? <Notice>{error}</Notice> : null}
       {data ? (
         <>

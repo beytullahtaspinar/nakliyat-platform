@@ -85,3 +85,22 @@ export class PushEndpointDto {
   @MaxLength(2000)
   endpoint: string;
 }
+
+/** Mobil uygulamanın Expo bildirim adresi */
+export class MobileDeviceDto {
+  @ApiProperty({ example: 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]' })
+  @IsString()
+  @MaxLength(255)
+  token: string;
+
+  @ApiProperty({ enum: ['ios', 'android'] })
+  @IsIn(['ios', 'android'])
+  platform: 'ios' | 'android';
+}
+
+export class MobileDeviceTokenDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(255)
+  token: string;
+}

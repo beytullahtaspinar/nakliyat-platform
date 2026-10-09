@@ -6,6 +6,7 @@ import { NotificationChannel } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { NotificationContent } from '../templates.js';
 import type { ChannelProvider, DeliveryResult, Recipient } from './channel.js';
+import { ExpoPushSender } from './expo-push.js';
 
 const TIMEOUT_MS = 10_000;
 /** Telefon kapalıysa push servisi bildirimi bu kadar süre saklar; sonra bayat sayılıp atılır */
@@ -53,7 +54,8 @@ const HIGH_URGENCY = new Set<string>(['NEW_REQUEST', 'QUOTE_ACCEPTED', 'NEW_MESS
  * Standart Web Push (VAPID): Chrome/Android, Firefox, Edge ve ana ekrana eklenmiş iPhone (iOS 16.4+)
  * aynı yolla bildirim alır; ücretli bir servis gerekmez.
  * Ortam değişkenleri: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (mailto: adresi).
- * Anahtarlar yoksa push kapalıdır: ayarlarda görünmez, gönderim yapılmaz.
+ * Anahtarlar yoksa tarayıcı push'u kapalıdır: ayarlarda görünmez, tarayıcılara gönderim yapılmaz.
+ * Mobil uygulamalar (bkz. ExpoPushSender) aynı kanaldan, VAPID'den bağımsız olarak bildirim alır.
  */
 @Injectable()
 export class WebPushChannel implements ChannelProvider {
@@ -63,6 +65,7 @@ export class WebPushChannel implements ChannelProvider {
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly mobile: ExpoPushSender,
   ) {}
 
   /** Tarayıcının abone olurken kullandığı açık anahtar; push kapalıysa null */
@@ -80,6 +83,7 @@ export class WebPushChannel implements ChannelProvider {
 
   /** Kayıtlı cihazı olmayan kullanıcı için her bildirimde boşuna gönderim satırı açılmasın. */
   async isAvailable(recipient: Recipient) {
+    if (await this.mobile.hasDevices(recipient.userId)) return true;
     if (!this.vapid()) return false;
     return (await this.prisma.pushSubscription.count({ where: { userId: recipient.userId } })) > 0;
   }
@@ -93,23 +97,25 @@ export class WebPushChannel implements ChannelProvider {
   }
 
   /**
-   * Kullanıcının tüm cihazlarına gönderir. En az bir cihaza ulaştıysa SENT; geçersiz abonelikler
-   * (uygulama kaldırıldı, izin geri alındı) silinir. Hiçbir cihaza geçici bir hata yüzünden
-   * ulaşılamadıysa hata fırlatılır ve bildirim yeniden denenir.
+   * Kullanıcının tüm cihazlarına (tarayıcılar ve mobil uygulama) gönderir. En az bir cihaza ulaştıysa
+   * SENT; geçersiz abonelikler (uygulama kaldırıldı, izin geri alındı) silinir. Hiçbir cihaza geçici
+   * bir hata yüzünden ulaşılamadıysa hata fırlatılır ve bildirim yeniden denenir.
    */
   async sendToUser(userId: string, payload: PushPayload, urgency: Urgency = 'normal'): Promise<DeliveryResult> {
     const vapid = this.vapid();
-    if (!vapid) return { status: 'SKIPPED', reason: 'VAPID anahtarları tanımlı değil' };
-    const subscriptions = await this.prisma.pushSubscription.findMany({ where: { userId } });
-    if (!subscriptions.length) return { status: 'SKIPPED', reason: 'Bildirim açılmış cihaz yok' };
+    const subscriptions = vapid ? await this.prisma.pushSubscription.findMany({ where: { userId } }) : [];
+    const mobile = await this.mobile.sendToUser(userId, payload, urgency === 'high');
+    if (!subscriptions.length && !mobile.devices) {
+      return { status: 'SKIPPED', reason: vapid ? 'Bildirim açılmış cihaz yok' : 'VAPID anahtarları tanımlı değil' };
+    }
 
     const body = JSON.stringify(payload);
-    let delivered = 0;
-    let lastError: unknown;
+    let delivered = mobile.delivered;
+    let lastError: string | undefined = mobile.error;
     for (const sub of subscriptions) {
       try {
         await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, body, {
-          vapidDetails: vapid,
+          vapidDetails: vapid!,
           TTL: TTL_SECONDS,
           urgency,
           timeout: TIMEOUT_MS,
@@ -122,12 +128,12 @@ export class WebPushChannel implements ChannelProvider {
           await this.prisma.pushSubscription.deleteMany({ where: { id: sub.id } });
           continue;
         }
-        lastError = e;
-        this.logger.warn(`Push gönderilemedi: ${describe(e)}`);
+        lastError = describe(e);
+        this.logger.warn(`Push gönderilemedi: ${lastError}`);
       }
     }
     if (delivered > 0) return { status: 'SENT' };
-    if (lastError) throw new Error(`Push gönderilemedi: ${describe(lastError)}`);
+    if (lastError) throw new Error(`Push gönderilemedi: ${lastError}`);
     return { status: 'SKIPPED', reason: 'Cihaz aboneliklerinin süresi dolmuş' };
   }
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BrevoEmailChannel } from './channels/brevo-email.channel.js';
+import { ExpoPushSender } from './channels/expo-push.js';
 import { NOTIFICATION_CHANNELS, type ChannelProvider } from './channels/channel.js';
 import { WebPushChannel } from './channels/web-push.channel.js';
 import { NotificationsController } from './notifications.controller.js';
@@ -16,6 +17,7 @@ import { NotificationsService } from './notifications.service.js';
   controllers: [NotificationsController, PushController],
   providers: [
     BrevoEmailChannel,
+    ExpoPushSender,
     WebPushChannel,
     {
       provide: NOTIFICATION_CHANNELS,

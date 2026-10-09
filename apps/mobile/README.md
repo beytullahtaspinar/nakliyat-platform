@@ -56,6 +56,28 @@ npx eas-cli@latest login
 APP_VARIANT=firma npx eas-cli@latest build --profile firma-deneme --platform android
 ```
 
+## Anlık bildirimler
+
+Uygulama girişten sonra bildirim izni varsa telefonu `POST /v1/notifications/push/devices` ile
+kaydeder (izin yoksa panoda "Bildirimleri aç" kartı çıkar); çıkışta kayıt silinir. API, sitedeki
+tarayıcı bildirimleriyle aynı olaylarda (yeni talep, mesaj, teklif kabulü…) Expo'nun push servisine
+gönderir. Bildirime dokununca ilgili ekran açılır (`src/lib/notification-routes.ts`).
+
+Bir kez yapılacak kurulum (anahtarlar sohbete ya da depoya yazılmaz):
+
+1. **Firebase** (console.firebase.google.com): proje oluştur, iki Android uygulaması ekle:
+   `app.evdenevenakliyat.firma` ve `app.evdenevenakliyat.musteri`. İkisi eklendikten sonra
+   `google-services.json` dosyasını indir (iki uygulamayı birden içerir).
+2. **expo.dev → evdenevenakliyat-firma → Environment variables**: `GOOGLE_SERVICES_JSON` adıyla,
+   türü **File** olan değişken oluştur, dosyayı yükle, tüm ortamları (development, preview,
+   production) seç. Aynısını `evdenevenakliyat` (müşteri) projesine de yap.
+3. **Firebase → Proje ayarları → Hizmet hesapları → Yeni özel anahtar oluştur**: inen JSON dosyasını
+   **expo.dev → proje → Credentials → Android → FCM V1 service account key** bölümüne yükle.
+   Bu dosya gizlidir; yükledikten sonra bilgisayardan sil.
+4. iPhone için APNs anahtarını EAS, iOS derlemesinde Apple hesabıyla kendisi oluşturur.
+
+İsteğe bağlı: expo.dev'de push için "enhanced security" açılırsa API'ye `EXPO_ACCESS_TOKEN` verilmeli.
+
 ## Kontroller
 
 `pnpm --filter @nakliyat/mobile lint` ve `typecheck` CI'da diğer paketlerle birlikte çalışır.
