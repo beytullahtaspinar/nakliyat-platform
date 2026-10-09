@@ -4,7 +4,7 @@ import { FormError } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
 import { Button } from "@/components/ui/button";
 import { updateCreditSettings } from "@/lib/actions/admin";
-import { CREDIT_SETTING_FIELDS, type CreditSettings } from "@/lib/credits";
+import { CREDIT_SETTING_FIELDS, MAX_BANK_ACCOUNTS, formatIban, type CreditSettings } from "@/lib/credits";
 
 const card = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5";
 const input =
@@ -45,6 +45,46 @@ export function CreditSettingsForm({ settings, defaults }: { settings: CreditSet
           Teklifi geri çeken firmaya iade yapılmaz. Müşteri talebi iptal ederse teklif veren firmalara kredi tamamen iade edilir.
         </p>
       </div>
+
+      <fieldset id="banka-hesaplari" className={`${card} scroll-mt-20`}>
+        <legend className="sr-only">Havale/EFT hesapları</legend>
+        <h2 className="text-base font-semibold text-slate-900" aria-hidden="true">
+          Havale/EFT hesapları
+        </h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Firmalar kredi yüklemek için bu hesaplara havale yapar ve bildirir. Hiç hesap yoksa havale bildirimi kapalıdır. Hesabı
+          kaldırmak için üç alanını da boşalt.
+        </p>
+        <div className="mt-4 space-y-4">
+          {Array.from({ length: MAX_BANK_ACCOUNTS }, (_, i) => {
+            const a = settings.bankAccounts[i];
+            return (
+              <div key={i} className="grid gap-3 rounded-lg bg-slate-50 p-3 sm:grid-cols-2">
+                <label className="block min-w-0">
+                  <span className="text-sm font-medium text-slate-800">{i + 1}. hesap: banka</span>
+                  <input name={`bank_${i}`} defaultValue={a?.bank ?? ""} maxLength={80} className={input} />
+                </label>
+                <label className="block min-w-0">
+                  <span className="text-sm font-medium text-slate-800">Hesap sahibi</span>
+                  <input name={`holder_${i}`} defaultValue={a?.holder ?? ""} maxLength={120} className={input} />
+                </label>
+                <label className="block min-w-0 sm:col-span-2">
+                  <span className="text-sm font-medium text-slate-800">IBAN</span>
+                  <input
+                    name={`iban_${i}`}
+                    defaultValue={a ? formatIban(a.iban) : ""}
+                    maxLength={40}
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder="TR00 0000 0000 0000 0000 0000 00"
+                    className={`${input} font-mono`}
+                  />
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <div className="space-y-3">
         <FormError message={state.error} />

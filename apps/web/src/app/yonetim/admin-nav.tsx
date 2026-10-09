@@ -7,10 +7,12 @@ export function AdminNav({
   pendingCompanies,
   pendingDocuments,
   pendingNameChanges,
+  pendingTransfers,
 }: {
   pendingCompanies: number;
   pendingDocuments: number;
   pendingNameChanges: number;
+  pendingTransfers: number;
 }) {
   return (
     <SideNav
@@ -41,7 +43,12 @@ export function AdminNav({
             { href: "/yonetim/talepler", label: "Talepler", icon: ClipboardIcon },
             { href: "/yonetim/degerlendirmeler", label: "Değerlendirmeler", icon: StarIcon },
             { href: "/yonetim/kullanicilar", label: "Kullanıcılar", icon: UsersIcon },
-            { href: "/yonetim/krediler", label: "Krediler", icon: WalletIcon },
+            {
+              href: "/yonetim/krediler",
+              label: "Krediler",
+              icon: WalletIcon,
+              badge: { count: pendingTransfers, label: "onay bekleyen havale" },
+            },
             { href: "/yonetim/fiyat-hesaplama", label: "Fiyat hesaplayıcı", icon: CalculatorIcon },
           ],
         },

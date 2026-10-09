@@ -192,4 +192,27 @@ export const templates = {
       actionLabel: 'Firma profiline git',
     };
   },
+
+  transferApproved(p: { amountTry: string; credits: number; balance: number }): NotificationContent {
+    const credits = p.credits.toLocaleString('tr-TR');
+    return {
+      type: 'CREDIT_TRANSFER',
+      title: `Havalen onaylandı: ${credits} kredi yüklendi`,
+      body: `${formatTry(p.amountTry)} tutarındaki havalen hesabımıza geçti. Yeni bakiyen ${p.balance.toLocaleString('tr-TR')} kredi.`,
+      details: [`Tutar: ${formatTry(p.amountTry)}`, `Yüklenen: ${credits} kredi`, `Bakiye: ${p.balance.toLocaleString('tr-TR')} kredi`],
+      path: '/firma-paneli/kredi',
+      actionLabel: 'Kredi hareketlerini gör',
+    };
+  },
+
+  transferRejected(p: { amountTry: string; reason: string | null }): NotificationContent {
+    return {
+      type: 'CREDIT_TRANSFER',
+      title: 'Havale bildirimin onaylanmadı',
+      body: `${formatTry(p.amountTry)} tutarındaki havale bildirimin için kredi yüklenmedi. Gerekçeye bakıp bize yazabilir ya da yeniden bildirebilirsin.`,
+      details: p.reason ? [`Gerekçe: ${p.reason}`] : undefined,
+      path: '/firma-paneli/kredi',
+      actionLabel: 'Kredi sayfasına git',
+    };
+  },
 };

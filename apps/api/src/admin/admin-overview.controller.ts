@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator.js';
-import { BookingStatus, RequestStatus, UserRole, VerificationStatus } from '../generated/prisma/enums.js';
+import { BankTransferStatus, BookingStatus, RequestStatus, UserRole, VerificationStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @ApiTags('Admin: özet')
@@ -14,7 +14,7 @@ export class AdminOverviewController {
   /** Yönetim ekranının ilk sayfası: bekleyen işler ve toplamlar */
   @Get()
   async summary() {
-    const [companies, requests, users, scheduledBookings, pendingDocuments, pendingNameChanges] = await this.prisma.$transaction([
+    const [companies, requests, users, scheduledBookings, pendingDocuments, pendingNameChanges, pendingTransfers] = await this.prisma.$transaction([
       this.prisma.company.groupBy({
         by: ['verificationStatus'],
         where: { deletedAt: null },
@@ -40,6 +40,7 @@ export class AdminOverviewController {
       this.prisma.companyNameChange.count({
         where: { status: VerificationStatus.PENDING, company: { deletedAt: null } },
       }),
+      this.prisma.bankTransfer.count({ where: { status: BankTransferStatus.PENDING } }),
     ]);
     const count = <K extends string>(rows: ({ _count: { _all: number } } & Record<string, unknown>)[], key: string) =>
       Object.fromEntries(rows.map((r) => [r[key] as K, r._count._all])) as Partial<Record<K, number>>;
@@ -53,6 +54,7 @@ export class AdminOverviewController {
       bookings: { scheduled: scheduledBookings },
       documents: { pending: pendingDocuments },
       nameChanges: { pending: pendingNameChanges },
+      transfers: { pending: pendingTransfers },
     };
   }
 }

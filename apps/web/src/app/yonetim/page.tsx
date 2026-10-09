@@ -29,7 +29,12 @@ export default async function AdminHomePage() {
     { label: "Teklif bekleyen talep", value: summary.requests.open, href: "/yonetim/talepler?durum=acik" },
     { label: "Planlanmış iş", value: summary.bookings.scheduled, href: "/yonetim/talepler?durum=firma-secildi" },
     { label: "Müşteri", value: summary.users.customers, href: "/yonetim/kullanicilar?rol=musteri" },
-    { label: "Firma hesabı", value: summary.users.companies, href: "/yonetim/kullanicilar?rol=firma" },
+    {
+      label: "Onay bekleyen havale",
+      value: summary.transfers.pending,
+      href: "/yonetim/krediler/havaleler",
+      highlight: summary.transfers.pending > 0,
+    },
   ];
 
   return (

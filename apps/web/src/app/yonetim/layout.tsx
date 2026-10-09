@@ -24,6 +24,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/yonetim">)
           pendingCompanies={summary.companies.pending}
           pendingDocuments={summary.documents.pending}
           pendingNameChanges={summary.nameChanges.pending}
+          pendingTransfers={summary.transfers.pending}
         />
       }
       account={

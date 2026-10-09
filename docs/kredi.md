@@ -1,7 +1,7 @@
 # Kredi sistemi
 
 Firmalar taleplere teklif verirken kredi kullanır. Faz 1: kredi defteri, yönetim ayarları ve elle kredi işleme.
-Kartla ve havale/EFT ile yükleme sonraki fazlarda (öneri: `/mnt/project-files/plan/kredi-ve-odeme-sistemi.md`).
+Faz 2: havale/EFT ile yükleme (bildirim + yönetim onayı). Kartla yükleme sonraki fazda (öneri: `/mnt/project-files/plan/kredi-ve-odeme-sistemi.md`).
 
 ## Kurallar
 
@@ -25,12 +25,21 @@ Kartla ve havale/EFT ile yükleme sonraki fazlarda (öneri: `/mnt/project-files/
 | `welcomeCredits` | 0 | Onaylanan firmaya bir kez |
 | `expiredRefundPercent` | 0 | Seçimsiz süresi dolan talepte iade yüzdesi |
 | `lowBalanceThreshold` | 100 | Firma panelinde düşük bakiye uyarısı |
+| `minTopupTry` | 100 | Havale bildiriminde en az tutar (TL) |
+| `bankAccounts` | [] | En fazla 3 hesap `{ bank, holder, iban }`; IBAN TR + mod 97 denetimli. Boşsa havale bildirimi kapalı |
+
+## Havale/EFT ile yükleme
+
+- Banka hesabı tanımlanınca firmanın Kredi sayfasında hesaplar, **firmaya özel açıklama kodu** (`CreditAccount.transferCode`, ör. `EN-7KQ2MD`, ilk gösterimde üretilir) ve bildirim formu çıkar. Kredi sistemi kapalıyken de çalışır (firmalar önceden yükleyebilir).
+- Firma tutarı, gönderen adını, tarihi (bugün ile 30 gün öncesi arası), gönderdiği hesabı ve isteğe bağlı dekontu (PDF/JPG/PNG/WebP, 10 MB, belge yüklemesiyle aynı akış, `firmalar/<firmaId>/`) bildirir. Aynı anda en fazla 5 bekleyen bildirim; bekleyeni geri alabilir.
+- Yönetim `/yonetim/krediler/havaleler`'de (menüde sayaç) hesaba geçen tutarı düzeltip onaylar ya da gerekçeyle reddeder. Kredi = tutar ÷ **onay anındaki** kredi değeri, aşağı yuvarlanır. Onay `TRANSFER_TOPUP` defter satırı (`transfer:<bildirimId>`) ile aynı işlemde yazılır; iki yönetici aynı anda onaylasa kredi bir kez yüklenir.
+- Karar geçmişi `transfer.approve` / `transfer.reject`; firmaya `CREDIT_TRANSFER` bildirimi (e-posta/push/uygulama içi).
 
 ## Ekranlar
 
 - Firma: `/firma-paneli/kredi` (menüde sistem açıksa ya da bakiye varsa görünür), teklif formunda kredi ve bakiye satırı.
-- Yönetim: `/yonetim/krediler` (pano + hareketler), `/yonetim/krediler/ayarlar`, firma kaydında Kredi kartı.
+- Yönetim: `/yonetim/krediler` (pano + hareketler), `/yonetim/krediler/havaleler`, `/yonetim/krediler/ayarlar` (banka hesapları dahil), firma kaydında Kredi kartı.
 
 ## Testler
 
-Ayar satırı ortak olduğu için testler sistemi veritabanında açmaz: API e2e `CreditsService.getSettings`'i kendi uygulamasında değiştirir, tarayıcı testi sistem kapalıyken elle kredi işler.
+Ayar satırı ortak olduğu için testler sistemi veritabanında açmaz: API e2e `CreditsService.getSettings`'i kendi uygulamasında değiştirir, tarayıcı testi sistem kapalıyken elle kredi işler ve havale onaylar (banka hesabı kaydı ortak ayara yazılır, teklifleri etkilemez).

@@ -56,6 +56,6 @@ export function createFileStorage(config: ConfigService): MediaStorage {
     CompanyShowcaseService,
     { provide: FILE_STORAGE, inject: [ConfigService], useFactory: createFileStorage },
   ],
-  exports: [MediaService, CompanyDocumentsService, CompanyShowcaseService],
+  exports: [MediaService, CompanyDocumentsService, CompanyShowcaseService, FILE_STORAGE],
 })
 export class MediaModule {}

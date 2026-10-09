@@ -540,6 +540,7 @@ export type AdminSummary = {
   bookings: { scheduled: number };
   documents: { pending: number };
   nameChanges: { pending: number };
+  transfers: { pending: number };
 };
 
 type StatsTotals = {

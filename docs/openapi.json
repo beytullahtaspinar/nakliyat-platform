@@ -1240,13 +1240,145 @@
                 "QUOTE_REFUND",
                 "ADMIN_CREDIT",
                 "ADMIN_DEBIT",
-                "WELCOME"
+                "WELCOME",
+                "TRANSFER_TOPUP"
               ]
             }
           }
         ],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      }
+    },
+    "/v1/company/credits/transfers": {
+      "get": {
+        "operationId": "CompanyCreditsController_listTransfers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      },
+      "post": {
+        "operationId": "CompanyCreditsController_createTransfer",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBankTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      }
+    },
+    "/v1/company/credits/transfers/uploads": {
+      "post": {
+        "operationId": "CompanyCreditsController_createUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransferUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      }
+    },
+    "/v1/company/credits/transfers/{id}/cancel": {
+      "post": {
+        "operationId": "CompanyCreditsController_cancelTransfer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -2891,7 +3023,8 @@
                 "QUOTE_REFUND",
                 "ADMIN_CREDIT",
                 "ADMIN_DEBIT",
-                "WELCOME"
+                "WELCOME",
+                "TRANSFER_TOPUP"
               ]
             }
           },
@@ -2973,6 +3106,152 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AdjustCreditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
+    "/v1/admin/credits/transfers": {
+      "get": {
+        "operationId": "AdminCreditsController_listTransfers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Firma adı, havale kodu ya da gönderen adında arar",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
+    "/v1/admin/credits/transfers/{id}/approve": {
+      "post": {
+        "operationId": "AdminCreditsController_approveTransfer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveBankTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
+    "/v1/admin/credits/transfers/{id}/reject": {
+      "post": {
+        "operationId": "AdminCreditsController_rejectTransfer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectBankTransferDto"
               }
             }
           }
@@ -4992,6 +5271,84 @@
           }
         }
       },
+      "CreateTransferUploadDto": {
+        "type": "object",
+        "properties": {
+          "mimeType": {
+            "type": "string",
+            "enum": [
+              "application/pdf",
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          },
+          "sizeBytes": {
+            "type": "number",
+            "description": "Dosya boyutu (bayt)"
+          }
+        },
+        "required": [
+          "mimeType",
+          "sizeBytes"
+        ]
+      },
+      "TransferReceiptDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Yükleme adresiyle birlikte verilen anahtar"
+          },
+          "fileName": {
+            "type": "string",
+            "example": "dekont.pdf"
+          }
+        },
+        "required": [
+          "key",
+          "fileName"
+        ]
+      },
+      "CreateBankTransferDto": {
+        "type": "object",
+        "properties": {
+          "amountTry": {
+            "type": "number",
+            "description": "Gönderilen tutar (TL)",
+            "example": 1500
+          },
+          "senderName": {
+            "type": "string",
+            "description": "Gönderenin adı ya da unvanı (dekonttaki gibi)"
+          },
+          "transferDate": {
+            "type": "string",
+            "example": "2026-10-09"
+          },
+          "iban": {
+            "type": "string",
+            "description": "Gönderilen hesabın IBAN’ı"
+          },
+          "note": {
+            "type": "string"
+          },
+          "receipt": {
+            "description": "İsteğe bağlı dekont",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransferReceiptDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "amountTry",
+          "senderName",
+          "transferDate",
+          "iban"
+        ]
+      },
       "CreateQuoteDto": {
         "type": "object",
         "properties": {
@@ -5288,6 +5645,29 @@
           "reason"
         ]
       },
+      "BankAccountDto": {
+        "type": "object",
+        "properties": {
+          "bank": {
+            "type": "string",
+            "example": "Ziraat Bankası"
+          },
+          "holder": {
+            "type": "string",
+            "description": "Hesap sahibi (şirket unvanı)"
+          },
+          "iban": {
+            "type": "string",
+            "example": "TR330006100519786457841326",
+            "description": "Boşluklu yazılabilir"
+          }
+        },
+        "required": [
+          "bank",
+          "holder",
+          "iban"
+        ]
+      },
       "UpdateCreditSettingsDto": {
         "type": "object",
         "properties": {
@@ -5318,6 +5698,17 @@
           "lowBalanceThreshold": {
             "type": "number",
             "description": "Bakiye bunun altına inince firmaya uyarı"
+          },
+          "minTopupTry": {
+            "type": "number",
+            "description": "Havale bildiriminde en az tutar (TL)"
+          },
+          "bankAccounts": {
+            "description": "Havale/EFT hesapları; boş liste havale bildirimini kapatır",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BankAccountDto"
+            }
           }
         }
       },
@@ -5336,6 +5727,27 @@
         "required": [
           "amount",
           "note"
+        ]
+      },
+      "ApproveBankTransferDto": {
+        "type": "object",
+        "properties": {
+          "amountTry": {
+            "type": "number",
+            "description": "Hesaba geçen tutar; bildirilenden farklıysa yazılır"
+          }
+        }
+      },
+      "RejectBankTransferDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Firmaya gösterilir"
+          }
+        },
+        "required": [
+          "reason"
         ]
       },
       "UpdatePricingDto": {
@@ -5516,7 +5928,8 @@
               "MOVE_REMINDER",
               "REVIEW_REQUEST",
               "NEW_REVIEW",
-              "COMPANY_VERIFICATION"
+              "COMPANY_VERIFICATION",
+              "CREDIT_TRANSFER"
             ]
           },
           "channel": {

@@ -78,6 +78,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | PATCH | `/company/quotes/:id` | Firma | Bekleyen teklifi güncelle. Her fiyat değişikliği geçmişe kaydedilir. |
 | ✅ | POST | `/company/quotes/:id/withdraw` | Firma | Teklifi geri çek (kredi iade edilmez) |
 | ✅ | GET | `/company/credits`, `/company/credits/transactions` | Firma | Kredi bakiyesi, teklif başına kredi, sistemin açık olup olmadığı; hareketler (`type` süzgeci). Talep ayrıntısı `/company/requests/:id` da `credit: { enabled, cost, balance }` döner |
+| ✅ | GET · POST | `/company/credits/transfers`, `/company/credits/transfers/uploads`, `/company/credits/transfers/:id/cancel` | Firma | Havale/EFT bildirimleri; dekont yükleme adresi; bekleyeni geri alma. Özet `/company/credits` banka hesabı varsa `transfer: { code, minTopupTry, bankAccounts }` döner |
 | ✅ | GET | `/company/quotes` | Firma | Verdiği teklifler. Süzgeç: `status=PENDING\|ACCEPTED\|REJECTED\|EXPIRED\|WITHDRAWN` |
 | ✅ | GET · GET | `/company/bookings`, `/company/bookings/:id` | Firma | Kazandığı işler (müşteri iletişim bilgisi ve açık adres burada açılır). Süzgeç: `status`, `q` (müşteri adı/telefonu) |
 | ✅ | GET | `/company/customers?q=` | Firma | Müşterileri: iş sayısı, planlı iş, iptal edilmeyen işlerin toplamı, son iş. Ekran: /firma-paneli/musteriler |
@@ -112,6 +113,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | GET · PATCH | `/admin/credits/settings` | Kredi ayarları (açık/kapalı, teklif kredisi, hoş geldin kredisi, iade oranı); değişiklik `credit.settings.update` |
 | ✅ | GET | `/admin/credits/overview`, `/admin/credits/transactions` | Kredi panosu (toplam bakiye, bu ay TSİ türe göre) ve tüm hareketler (`companyId`, `type`, `q` firma adı) |
 | ✅ | GET · POST | `/admin/companies/:id/credits` | Firmanın bakiyesi ve son hareketleri; elle ekleme/düşme `{ amount, note }` (bakiye eksiye düşmez), `credit.adjust` |
+| ✅ | GET · POST | `/admin/credits/transfers`, `/admin/credits/transfers/:id/approve`, `/admin/credits/transfers/:id/reject` | Havale bildirimleri (`status`, `q` firma/kod/gönderen); onay `{ amountTry? }` krediyi yükler, ret `{ reason }`; `transfer.approve` / `transfer.reject`. `/admin/summary` `transfers.pending` döner |
 | ✅ | GET · PATCH | `/admin/pricing` | Fiyat hesaplayıcı katsayıları: görüntüle (varsayılanlar, dönemdeki anlaşma sayıları, ayarlama) ve değiştir (kısmi; sınırlar `PRICING_SETTING_SPECS`). Değişiklik karar geçmişine `pricing.update` olarak yazılır |
 | ✅ | GET | `/admin/companies?status=&q=` | Firmalar; ad, unvan, vergi no, K3 veya sahip adı/telefonunda arama |
 | ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |
