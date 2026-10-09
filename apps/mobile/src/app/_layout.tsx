@@ -9,6 +9,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AppText, Button } from '@/components/ui';
 import { SessionProvider, useSession } from '@/lib/session';
@@ -24,8 +25,10 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <SessionProvider>{ready ? <RootStack /> : null}</SessionProvider>
+      <KeyboardProvider>
+        <StatusBar style="dark" />
+        <SessionProvider>{ready ? <RootStack /> : null}</SessionProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

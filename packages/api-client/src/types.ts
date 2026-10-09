@@ -152,3 +152,97 @@ export type QuoteInput = {
   includesInsurance: boolean;
   message?: string;
 };
+
+export type BookingStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
+
+/** Müşterinin ve firmanın kendi ekranında gördüğü değerlendirme */
+export type OwnReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  companyReply: string | null;
+  companyReplyAt: string | null;
+  /** Yönetici gizlediyse false */
+  isPublished: boolean;
+  hiddenReason: string | null;
+  createdAt: string;
+};
+
+export type BookingPlace = {
+  cityName: string | null;
+  districtName: string | null;
+  address: string;
+  floor: number;
+  hasElevator: boolean;
+  /** Müşterinin haritada işaretlediği nokta */
+  location: { lat: number; lng: number } | null;
+};
+
+/** GET /company/bookings, /company/bookings/:id: anlaşma sonrası müşteri bilgisi ve açık adres açılır */
+export type CompanyBooking = {
+  id: string;
+  requestId: string;
+  status: BookingStatus;
+  scheduledAt: string;
+  priceTry: string;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  /** Planlanmış ve taşınma günü gelmiş */
+  canComplete: boolean;
+  /** Planlanmış ve taşınma günü geçmemiş */
+  canCancel: boolean;
+  review: OwnReview | null;
+  request: {
+    id: string;
+    from: BookingPlace;
+    to: BookingPlace;
+    routeKm: number | null;
+    routeMinutes: number | null;
+    homeType: string;
+    moveDate: string;
+    notes: string | null;
+  };
+  customer: { fullName: string; phone: string };
+};
+
+export type BookingMessage = {
+  id: string;
+  /** Hesabı silinen kullanıcının mesajı boş döner */
+  body: string;
+  mine: boolean;
+  createdAt: string;
+  readAt: string | null;
+};
+
+/** GET /bookings/:id/messages (eskiden yeniye) */
+export type Conversation = {
+  bookingId: string;
+  requestId: string;
+  /** Firmaya müşteri adı, müşteriye firma adı */
+  counterpart: string;
+  /** İptal edilen işte ya da karşı taraf hesabını kapattıysa false */
+  canSend: boolean;
+  items: BookingMessage[];
+};
+
+/** GET /messages/unread */
+export type UnreadMessages = { total: number; items: { bookingId: string; requestId: string; count: number }[] };
+
+/** GET /company/bookings/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD (en fazla 42 gün) */
+export type CompanyCalendar = {
+  from: string;
+  to: string;
+  items: {
+    id: string;
+    status: BookingStatus;
+    /** Taşınma günü, "2026-10-04" */
+    day: string;
+    scheduledAt: string;
+    priceTry: string;
+    homeType: string;
+    from: { cityName: string | null; districtName: string | null };
+    to: { cityName: string | null; districtName: string | null };
+    customerName: string;
+  }[];
+};

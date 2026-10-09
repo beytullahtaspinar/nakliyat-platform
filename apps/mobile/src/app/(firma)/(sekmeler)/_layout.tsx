@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { CompanyOverview } from '@nakliyat/api-client';
+import type { CompanyOverview, UnreadMessages } from '@nakliyat/api-client';
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import type { ColorValue } from 'react-native';
@@ -14,14 +14,21 @@ const icon =
     <Ionicons name={focused ? active : inactive} color={color} size={size} />
   );
 
-/** Sitedeki firma panelinin menüsü; Gelen talepler sekmesinde teklif vermediğin talep sayısı */
+/** Sitedeki firma panelinin menüsü. Rozetler: teklif vermediğin talepler ve okunmamış mesajlar */
 export default function TabsLayout() {
   const { data, reload } = useApi<CompanyOverview>('/company/overview');
+  const { data: unread, reload: reloadUnread } = useApi<UnreadMessages>('/messages/unread');
   const notQuoted = data?.requests.notQuoted ?? 0;
+  const unreadTotal = unread?.total ?? 0;
 
   return (
     <Tabs
-      screenListeners={{ tabPress: () => void reload() }}
+      screenListeners={{
+        tabPress: () => {
+          void reload();
+          void reloadUnread();
+        },
+      }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.brand700,
@@ -42,6 +49,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen name="teklifler" options={{ title: 'Tekliflerim', tabBarIcon: icon('pricetag', 'pricetag-outline') }} />
+      <Tabs.Screen
+        name="isler"
+        options={{
+          title: 'İşlerim',
+          tabBarIcon: icon('car', 'car-outline'),
+          tabBarBadge: unreadTotal > 0 ? (unreadTotal > 99 ? '99+' : unreadTotal) : undefined,
+          tabBarAccessibilityLabel: unreadTotal > 0 ? `İşlerim, ${unreadTotal} okunmamış mesaj` : 'İşlerim',
+        }}
+      />
     </Tabs>
   );
 }
