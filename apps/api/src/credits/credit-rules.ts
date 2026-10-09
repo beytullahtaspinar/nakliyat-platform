@@ -25,6 +25,8 @@ export interface CreditSettings {
   bankAccounts: BankAccount[];
   /** Kartla ödeme (iyzico anahtarları sunucuda tanımlıysa) */
   cardEnabled: boolean;
+  /** Açıkken her teklif güncellemesi, teklifin ilk kredisi kadar düşer. Kapalıyken güncelleme ücretsizdir. */
+  chargeQuoteUpdates: boolean;
 }
 
 export type BankAccount = {
@@ -34,7 +36,7 @@ export type BankAccount = {
   iban: string;
 };
 
-export type CreditSettingKey = keyof Omit<CreditSettings, 'enabled' | 'bankAccounts' | 'cardEnabled'>;
+export type CreditSettingKey = keyof Omit<CreditSettings, 'enabled' | 'bankAccounts' | 'cardEnabled' | 'chargeQuoteUpdates'>;
 
 export const CREDIT_SETTING_LIMITS: Record<CreditSettingKey, { min: number; max: number; integer: boolean }> = {
   creditValueTry: { min: 0.01, max: 10_000, integer: false },
@@ -60,6 +62,7 @@ export const DEFAULT_CREDIT_SETTINGS: CreditSettings = {
   minTopupTry: 100,
   bankAccounts: [],
   cardEnabled: false,
+  chargeQuoteUpdates: false,
 };
 
 /** Kartla tek seferde en fazla yükleme (TL) */
@@ -71,6 +74,7 @@ export function normalizeCreditSettings(raw: unknown): CreditSettings {
   const out: CreditSettings = { ...DEFAULT_CREDIT_SETTINGS };
   if (typeof src.enabled === 'boolean') out.enabled = src.enabled;
   if (typeof src.cardEnabled === 'boolean') out.cardEnabled = src.cardEnabled;
+  if (typeof src.chargeQuoteUpdates === 'boolean') out.chargeQuoteUpdates = src.chargeQuoteUpdates;
   for (const [key, { min, max, integer }] of Object.entries(CREDIT_SETTING_LIMITS) as [CreditSettingKey, (typeof CREDIT_SETTING_LIMITS)[CreditSettingKey]][]) {
     const v = src[key];
     if (typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max && (!integer || Number.isInteger(v))) out[key] = v;

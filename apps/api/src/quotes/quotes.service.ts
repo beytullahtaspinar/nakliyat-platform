@@ -160,13 +160,29 @@ export class QuotesService {
     const validUntil = dto.validUntil ? resolveValidUntil(dto.validUntil, request) : undefined;
     const priceChanged = dto.priceTry !== undefined && !quote.priceTry.equals(dto.priceTry);
 
-    return this.prisma.quote.update({
-      where: { id: quote.id },
-      data: {
-        ...dto,
-        ...(validUntil && { validUntil }),
-        ...(priceChanged && { revisions: { create: { priceTry: dto.priceTry! } } }),
-      },
+    const updateCost = await this.credits.updateCost(request);
+    const data = {
+      ...dto,
+      ...(validUntil && { validUntil }),
+      ...(priceChanged && { revisions: { create: { priceTry: dto.priceTry! } } }),
+    };
+    if (updateCost === 0) {
+      return this.prisma.quote.update({ where: { id: quote.id }, data });
+    }
+    // Güncelleme ücretliyse düşüm ve teklif değişikliği aynı işlemde yazılır; bakiye yetmezse hiçbiri yazılmaz
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.quote.update({
+        where: { id: quote.id },
+        data: { ...data, creditCost: { increment: updateCost } },
+      });
+      await this.credits.chargeQuoteUpdate(tx, {
+        companyId: quote.companyId,
+        quoteId: quote.id,
+        requestId: request.id,
+        cost: updateCost,
+        updateKey: `${quote.id}:${updated.updatedAt.getTime()}`,
+      });
+      return updated;
     });
   }
 

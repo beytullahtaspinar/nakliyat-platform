@@ -203,6 +203,17 @@ export class CreditsService {
     return this.post(tx, { companyId, type: CreditTransactionType.QUOTE, amount: -cost, quoteId, requestId, idempotencyKey: `quote:${quoteId}` });
   }
 
+  /** Teklif güncellemesi ücreti (ayar kapalıysa ya da sistem kapalıysa 0) */
+  async updateCost(request: { fromCityCode: string; toCityCode: string }): Promise<number> {
+    const { settings } = await this.getSettings();
+    return settings.chargeQuoteUpdates ? quoteCost(request, settings) : 0;
+  }
+
+  /** Teklif güncellemesi işleminin içinde çağrılır; her güncelleme için ayrı bir hareket yazar */
+  chargeQuoteUpdate(tx: Tx, { companyId, quoteId, requestId, cost, updateKey }: { companyId: string; quoteId: string; requestId: string; cost: number; updateKey: string }) {
+    return this.post(tx, { companyId, type: CreditTransactionType.QUOTE, amount: -cost, quoteId, requestId, idempotencyKey: `quote-update:${updateKey}`, note: 'Teklif güncellendi' });
+  }
+
   /** İptal edilen taleplere verilmiş tekliflerin kredisi tam iade edilir (geri çekilmiş teklifler hariç) */
   async refundCancelledRequests(requestIds: string[]) {
     if (!requestIds.length) return 0;

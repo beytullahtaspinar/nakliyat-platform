@@ -102,6 +102,11 @@ export class UpdateCreditSettingsDto implements Partial<CreditSettings> {
   @IsBoolean()
   cardEnabled?: boolean;
 
+  @ApiPropertyOptional({ description: 'Teklif güncellemeleri kredi düşsün mü (kapalı = ücretsiz)' })
+  @IsOptional()
+  @IsBoolean()
+  chargeQuoteUpdates?: boolean;
+
   @ApiPropertyOptional({ description: 'Havale bildiriminde en az tutar (TL)' })
   @IsOptional()
   @IsInt({ message: 'En az yükleme tutarı tam sayı olmalı' })

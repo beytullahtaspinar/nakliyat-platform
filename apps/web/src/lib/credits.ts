@@ -66,6 +66,7 @@ export type CreditSettings = {
   minTopupTry: number;
   bankAccounts: BankAccount[];
   cardEnabled: boolean;
+  chargeQuoteUpdates: boolean;
 };
 
 export type AdminCreditSettings = {
@@ -94,7 +95,7 @@ export type AdminCompanyCredits = {
   recent: { items: CreditTransaction[]; total: number };
 };
 
-type NumberKey = Exclude<keyof CreditSettings, "enabled" | "bankAccounts" | "cardEnabled">;
+type NumberKey = Exclude<keyof CreditSettings, "enabled" | "bankAccounts" | "cardEnabled" | "chargeQuoteUpdates">;
 
 /** Yönetim ayar formu: alanlar, birimleri ve sınırları (API ile aynı) */
 export const CREDIT_SETTING_FIELDS: { key: NumberKey; label: string; unit: string; hint: string; min: number; max: number; decimal?: boolean }[] = [

@@ -54,6 +54,18 @@ export function CreditSettingsForm({
         </p>
       </div>
 
+      <div className={cardClass}>
+        <label className="flex items-start gap-3">
+          <input type="checkbox" name="chargeQuoteUpdates" defaultChecked={settings.chargeQuoteUpdates} className="mt-1 h-5 w-5 accent-brand-700" />
+          <span>
+            <span className="block text-base font-semibold text-slate-900">Teklif güncellemeleri ücretli</span>
+            <span className="block text-sm text-slate-600">
+              Kapalıyken firma teklifini güncellediğinde kredi düşmez (varsayılan). Açıkken her güncelleme, teklifin kredi bedeli kadar düşer.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <div id="kart" className={`${cardClass} scroll-mt-20`}>
         <label className="flex items-start gap-3">
           <input type="checkbox" name="cardEnabled" defaultChecked={settings.cardEnabled} className="mt-1 h-5 w-5 accent-brand-700" />
