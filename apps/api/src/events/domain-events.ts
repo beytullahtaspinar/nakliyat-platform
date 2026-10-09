@@ -30,6 +30,8 @@ export interface DomainEventMap {
   'booking.cancelled': { bookingId: string; cancelledBy: 'CUSTOMER' | 'COMPANY' };
   /** Yönetici firmanın havale bildirimini onayladı veya reddetti */
   'credit.transfer_reviewed': { transferId: string };
+  /** Firmanın kartla ödemesi başarılı oldu, kredi yüklendi */
+  'credit.card_paid': { paymentId: string };
   /** Müşteri tamamlanan işin firmasını değerlendirdi */
   'review.created': { reviewId: string };
 }

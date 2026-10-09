@@ -15,12 +15,14 @@ import {
   formatIban,
   formatTryExact,
   type BankTransfer,
+  type CardPayment,
   type CompanyCreditSummary,
   type CreditTransaction,
 } from "@/lib/credits";
 import { formatDate } from "@/lib/format";
 import { COMPANY } from "@/lib/legal";
 import { oneParam, pageParam } from "@/lib/params";
+import { CardForm } from "./card-form";
 import { TransferForm } from "./transfer-form";
 
 export const metadata: Metadata = { title: "Kredi" };
@@ -39,6 +41,11 @@ export default async function CompanyCreditsPage({ searchParams }: PageProps<"/f
     apiFetch<Paginated<CreditTransaction>>(`/company/credits/transactions${query({ type: filter.type, page, limit: LIMIT })}`, { token }),
     apiFetch<Paginated<BankTransfer>>("/company/credits/transfers?limit=10", { token }),
   ]);
+  const paymentId = oneParam(params.odeme);
+  const payment =
+    paymentId && paymentId !== "bilinmiyor"
+      ? await apiFetch<CardPayment>(`/company/credits/card-payments/${encodeURIComponent(paymentId)}`, { token }).catch(() => null)
+      : null;
   const href = (tur: string, sayfa = 1) => `/firma-paneli/kredi${query({ tur: tur === "tumu" ? undefined : tur, sayfa })}`;
   const low = summary.enabled && summary.balance < summary.lowBalanceThreshold;
 
@@ -76,6 +83,20 @@ export default async function CompanyCreditsPage({ searchParams }: PageProps<"/f
           </div>
         ))}
       </dl>
+
+      {paymentId && <PaymentResult payment={payment} />}
+
+      {summary.card && (
+        <PanelSection
+          id="kart"
+          title="Kartla kredi yükle"
+          description="Ödeme onaylanınca kredin hemen yüklenir."
+          className="mb-6"
+          actions={summary.card.sandbox ? <Badge tone="warning">Deneme ortamı</Badge> : undefined}
+        >
+          <CardForm minTry={summary.card.minTry} maxTry={summary.card.maxTry} creditValueTry={summary.creditValueTry} />
+        </PanelSection>
+      )}
 
       {summary.transfer ? (
         <PanelSection
@@ -175,7 +196,7 @@ export default async function CompanyCreditsPage({ searchParams }: PageProps<"/f
       )}
 
       <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {!summary.transfer && (
+        {!summary.transfer && !summary.card && (
           <PanelSection id="yukleme" title="Kredi yükle">
             <p className="text-sm text-slate-700">
               Kredi kartı ve havale/EFT ile yükleme yakında bu sayfada olacak. Şimdilik kredi için{" "}
@@ -221,5 +242,44 @@ export default async function CompanyCreditsPage({ searchParams }: PageProps<"/f
       />
       <Pager page={page} limit={LIMIT} total={total} href={(p) => href(filter.value, p)} />
     </>
+  );
+}
+
+/** iyzico dönüşünden sonra ödemenin sonucu */
+function PaymentResult({ payment }: { payment: CardPayment | null }) {
+  const box = "mb-5 rounded-xl border px-4 py-3 text-sm";
+  if (!payment) {
+    return (
+      <p role="status" className={`${box} border-amber-300 bg-amber-50 text-amber-900`}>
+        Ödemenin sonucu bulunamadı. Kartından para çekildiyse birkaç dakika içinde kredin yüklenir; yüklenmezse{" "}
+        <a href={`mailto:${COMPANY.supportEmail}`} className="font-medium underline">
+          {COMPANY.supportEmail}
+        </a>{" "}
+        adresine yaz.
+      </p>
+    );
+  }
+  if (payment.status === "SUCCESS") {
+    return (
+      <p role="status" className={`${box} border-green-200 bg-green-50 text-green-900`}>
+        <strong>Ödemen alındı.</strong> {formatTryExact(payment.amountTry)} karşılığı {formatCredits(payment.credits)} hesabına yüklendi.
+      </p>
+    );
+  }
+  if (payment.status === "PENDING") {
+    return (
+      <p role="status" className={`${box} border-amber-300 bg-amber-50 text-amber-900`}>
+        <strong>Ödemen kontrol ediliyor.</strong> Onaylanınca kredin yüklenir ve sana haber veririz.
+      </p>
+    );
+  }
+  return (
+    <p role="alert" className={`${box} border-red-200 bg-red-50 text-red-800`}>
+      <strong>Ödeme alınamadı.</strong> {payment.errorMessage ?? "Ödeme tamamlanmadı."}. Tekrar deneyebilirsin; kartından çekim yapıldıysa{" "}
+      <a href={`mailto:${COMPANY.supportEmail}`} className="font-medium underline">
+        {COMPANY.supportEmail}
+      </a>{" "}
+      adresine yaz.
+    </p>
   );
 }

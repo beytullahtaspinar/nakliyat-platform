@@ -23,7 +23,7 @@ export default async function AdminCreditSettingsPage() {
           </>
         }
       />
-      <CreditSettingsForm settings={view.settings} defaults={view.defaults} />
+      <CreditSettingsForm settings={view.settings} defaults={view.defaults} iyzico={view.card} />
     </>
   );
 }

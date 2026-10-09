@@ -196,7 +196,7 @@ export const templates = {
   transferApproved(p: { amountTry: string; credits: number; balance: number }): NotificationContent {
     const credits = p.credits.toLocaleString('tr-TR');
     return {
-      type: 'CREDIT_TRANSFER',
+      type: 'CREDIT_TOPUP',
       title: `Havalen onaylandı: ${credits} kredi yüklendi`,
       body: `${formatTry(p.amountTry)} tutarındaki havalen hesabımıza geçti. Yeni bakiyen ${p.balance.toLocaleString('tr-TR')} kredi.`,
       details: [`Tutar: ${formatTry(p.amountTry)}`, `Yüklenen: ${credits} kredi`, `Bakiye: ${p.balance.toLocaleString('tr-TR')} kredi`],
@@ -207,12 +207,24 @@ export const templates = {
 
   transferRejected(p: { amountTry: string; reason: string | null }): NotificationContent {
     return {
-      type: 'CREDIT_TRANSFER',
+      type: 'CREDIT_TOPUP',
       title: 'Havale bildirimin onaylanmadı',
       body: `${formatTry(p.amountTry)} tutarındaki havale bildirimin için kredi yüklenmedi. Gerekçeye bakıp bize yazabilir ya da yeniden bildirebilirsin.`,
       details: p.reason ? [`Gerekçe: ${p.reason}`] : undefined,
       path: '/firma-paneli/kredi',
       actionLabel: 'Kredi sayfasına git',
+    };
+  },
+
+  cardPaid(p: { amountTry: string; credits: number; balance: number }): NotificationContent {
+    const credits = p.credits.toLocaleString('tr-TR');
+    return {
+      type: 'CREDIT_TOPUP',
+      title: `Ödemen alındı: ${credits} kredi yüklendi`,
+      body: `${formatTry(p.amountTry)} kartla ödemen başarılı. Yeni bakiyen ${p.balance.toLocaleString('tr-TR')} kredi.`,
+      details: [`Tutar: ${formatTry(p.amountTry)}`, `Yüklenen: ${credits} kredi`, `Bakiye: ${p.balance.toLocaleString('tr-TR')} kredi`],
+      path: '/firma-paneli/kredi',
+      actionLabel: 'Kredi hareketlerini gör',
     };
   },
 };

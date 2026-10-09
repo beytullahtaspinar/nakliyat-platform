@@ -56,6 +56,7 @@ model User {
   auditLogs               AuditLog[]
   creditTransactions      CreditTransaction[]
   reviewedTransfers       BankTransfer[]
+  cardPayments            CardPayment[]
 }
 
 model RefreshToken {
@@ -167,6 +168,7 @@ model Company {
   creditAccount CreditAccount?
   credits       CreditTransaction[]
   bankTransfers BankTransfer[]
+  cardPayments  CardPayment[]
 
   @@index([verificationStatus])
   @@index([cityCode])
@@ -626,6 +628,48 @@ enum CreditTransactionType {
   WELCOME
   /// Havale/EFT bildirimi yönetimce onaylandı (+)
   TRANSFER_TOPUP
+  /// Kartla ödeme (iyzico) başarılı (+)
+  CARD_TOPUP
+}
+
+enum CardPaymentStatus {
+  /// Ödeme formu açıldı, sonuç bekleniyor
+  PENDING
+  SUCCESS
+  FAILED
+  /// Form süresi doldu ya da firma ödemeyi bitirmedi
+  EXPIRED
+}
+
+/// Kartla kredi yükleme. Kart bilgisi sunucuya gelmez: iyzico'nun ödeme sayfasında 3D Secure ile alınır.
+/// Sonuç iyzico'ya sunucudan tekrar sorularak doğrulanır; kredi yalnızca SUCCESS'te ve bir kez yüklenir.
+model CardPayment {
+  id                String            @id @default(cuid())
+  companyId         String
+  /// Ödemeyi başlatan kullanıcı
+  userId            String?
+  provider          String            @default("IYZICO") @db.VarChar(20)
+  /// Ödeme formunun anahtarı (iyzico token)
+  token             String?           @unique @db.VarChar(191)
+  /// Ödenecek tutar (TL, KDV dahil) ve karşılığı kredi (başlatıldığı andaki kredi değeriyle)
+  amountTry         Decimal           @db.Decimal(12, 2)
+  credits           Int
+  creditValueTry    Decimal           @db.Decimal(10, 2)
+  status            CardPaymentStatus @default(PENDING)
+  /// Deneme ortamında (sandbox) alınan ödeme: gerçek para değildir
+  sandbox           Boolean           @default(false)
+  providerPaymentId String?           @db.VarChar(64)
+  errorMessage      String?           @db.VarChar(500)
+  transactionId     String?           @unique
+  createdAt         DateTime          @default(now())
+  completedAt       DateTime?
+
+  company     Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user        User?              @relation(fields: [userId], references: [id])
+  transaction CreditTransaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([companyId, createdAt])
 }
 
 enum BankTransferStatus {
@@ -708,6 +752,7 @@ model CreditTransaction {
   actor   User?          @relation(fields: [actorId], references: [id])
 
   bankTransfer BankTransfer?
+  cardPayment  CardPayment?
 
   @@index([companyId, createdAt])
   @@index([type, createdAt])

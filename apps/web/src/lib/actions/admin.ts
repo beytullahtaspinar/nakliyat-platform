@@ -346,7 +346,7 @@ export async function updatePricing(_prev: AdminActionState, formData: FormData)
 
 /** Kredi ayarları; sistemi açma/kapama da buradan */
 export async function updateCreditSettings(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
-  const body: Partial<CreditSettings> = { enabled: formData.get("enabled") === "on" };
+  const body: Partial<CreditSettings> = { enabled: formData.get("enabled") === "on", cardEnabled: formData.get("cardEnabled") === "on" };
   for (const field of CREDIT_SETTING_FIELDS) {
     const raw = String(formData.get(field.key) ?? "").trim().replace(",", ".");
     const value = Number(raw);

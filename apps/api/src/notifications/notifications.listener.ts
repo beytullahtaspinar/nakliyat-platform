@@ -52,6 +52,7 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
     this.events.on('company.name_change_reviewed', ({ changeId }) => this.onNameChangeReviewed(changeId));
     this.events.on('credit.transfer_reviewed', ({ transferId }) => this.onTransferReviewed(transferId));
+    this.events.on('credit.card_paid', ({ paymentId }) => this.onCardPaid(paymentId));
   }
 
   /** Talebin çıkış veya varış iline hizmet veren doğrulanmış firmalara haber ver. */
@@ -284,5 +285,17 @@ export class NotificationsListener implements OnModuleInit {
         templates.transferRejected({ amountTry: transfer.amountTry.toString(), reason: transfer.rejectReason }),
       );
     }
+  }
+
+  async onCardPaid(paymentId: string) {
+    const payment = await this.prisma.cardPayment.findUnique({
+      where: { id: paymentId },
+      select: { amountTry: true, credits: true, transaction: { select: { balanceAfter: true } }, company: { select: { ownerId: true } } },
+    });
+    if (!payment?.transaction) return;
+    await this.notifications.notify(
+      payment.company.ownerId,
+      templates.cardPaid({ amountTry: payment.amountTry.toString(), credits: payment.credits, balance: payment.transaction.balanceAfter }),
+    );
   }
 }

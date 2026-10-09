@@ -19,7 +19,7 @@ import {
   NotEquals,
   ValidateNested,
 } from 'class-validator';
-import { BankTransferStatus, CreditTransactionType } from '../../generated/prisma/enums.js';
+import { BankTransferStatus, CardPaymentStatus, CreditTransactionType } from '../../generated/prisma/enums.js';
 import { DOCUMENT_RULES } from '../../media/company-document-rules.js';
 import { STORAGE_KEY_PATTERN } from '../../media/media-rules.js';
 import { PaginationDto } from '../../requests/dto/list-requests.dto.js';
@@ -96,6 +96,11 @@ export class UpdateCreditSettingsDto implements Partial<CreditSettings> {
   @Min(L.lowBalanceThreshold.min)
   @Max(L.lowBalanceThreshold.max)
   lowBalanceThreshold?: number;
+
+  @ApiPropertyOptional({ description: 'Kartla ödeme açık (iyzico anahtarları da gerekir)' })
+  @IsOptional()
+  @IsBoolean()
+  cardEnabled?: boolean;
 
   @ApiPropertyOptional({ description: 'Havale bildiriminde en az tutar (TL)' })
   @IsOptional()
@@ -242,4 +247,26 @@ export class RejectBankTransferDto {
   @MinLength(3, { message: 'Gerekçe en az 3 karakter olmalı' })
   @MaxLength(500)
   reason!: string;
+}
+
+export class StartCardPaymentDto {
+  @ApiProperty({ description: 'Ödenecek tutar (TL, KDV dahil)', example: 1000 })
+  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'Tutar en fazla iki ondalıklı bir sayı olmalı' })
+  @Min(1, { message: 'Tutarı yazın' })
+  @Max(1_000_000)
+  amountTry!: number;
+}
+
+export class ListCardPaymentsDto extends PaginationDto {
+  @ApiPropertyOptional({ enum: CardPaymentStatus })
+  @IsOptional()
+  @IsEnum(CardPaymentStatus)
+  status?: CardPaymentStatus;
+
+  @ApiPropertyOptional({ description: 'Firma adında arar' })
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100)
+  q?: string;
 }

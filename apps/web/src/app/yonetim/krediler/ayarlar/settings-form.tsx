@@ -6,15 +6,23 @@ import { Button } from "@/components/ui/button";
 import { updateCreditSettings } from "@/lib/actions/admin";
 import { CREDIT_SETTING_FIELDS, MAX_BANK_ACCOUNTS, formatIban, type CreditSettings } from "@/lib/credits";
 
-const card = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5";
+const cardClass = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5";
 const input =
   "mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:border-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-700/20";
 
-export function CreditSettingsForm({ settings, defaults }: { settings: CreditSettings; defaults: CreditSettings }) {
+export function CreditSettingsForm({
+  settings,
+  defaults,
+  iyzico,
+}: {
+  settings: CreditSettings;
+  defaults: CreditSettings;
+  iyzico: { configured: boolean; sandbox: boolean };
+}) {
   const { state, pending, formProps } = useFormAction(updateCreditSettings, {});
   return (
     <form {...formProps} className="max-w-3xl space-y-5">
-      <div className={card}>
+      <div className={cardClass}>
         <label className="flex items-start gap-3">
           <input type="checkbox" name="enabled" defaultChecked={settings.enabled} className="mt-1 h-5 w-5 accent-brand-700" />
           <span>
@@ -26,7 +34,7 @@ export function CreditSettingsForm({ settings, defaults }: { settings: CreditSet
         </label>
       </div>
 
-      <div className={card}>
+      <div className={cardClass}>
         <h2 className="text-base font-semibold text-slate-900">Değerler</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {CREDIT_SETTING_FIELDS.map((f) => (
@@ -46,7 +54,29 @@ export function CreditSettingsForm({ settings, defaults }: { settings: CreditSet
         </p>
       </div>
 
-      <fieldset id="banka-hesaplari" className={`${card} scroll-mt-20`}>
+      <div id="kart" className={`${cardClass} scroll-mt-20`}>
+        <label className="flex items-start gap-3">
+          <input type="checkbox" name="cardEnabled" defaultChecked={settings.cardEnabled} className="mt-1 h-5 w-5 accent-brand-700" />
+          <span>
+            <span className="block text-base font-semibold text-slate-900">Kartla ödeme açık (iyzico)</span>
+            <span className="block text-sm text-slate-600">
+              Firmalar kredi sayfasında kartla öder; ödeme onaylanınca kredi hemen yüklenir. Kart bilgisi sunucumuza gelmez.
+            </span>
+          </span>
+        </label>
+        <p
+          role="status"
+          className={`mt-3 rounded-lg px-3 py-2 text-sm ${iyzico.configured && !iyzico.sandbox ? "bg-green-50 text-green-900" : "bg-amber-50 text-amber-900"}`}
+        >
+          {!iyzico.configured
+            ? "iyzico anahtarları sunucuda tanımlı değil. Açsan da firmalar kart seçeneğini görmez (kurulum: docs/kredi.md)."
+            : iyzico.sandbox
+              ? "Deneme ortamı (sandbox) anahtarları tanımlı: alınan ödemeler gerçek para değildir. Yalnızca kendi deneme firmanla dene, sonra kapat."
+              : "Canlı iyzico anahtarları tanımlı."}
+        </p>
+      </div>
+
+      <fieldset id="banka-hesaplari" className={`${cardClass} scroll-mt-20`}>
         <legend className="sr-only">Havale/EFT hesapları</legend>
         <h2 className="text-base font-semibold text-slate-900" aria-hidden="true">
           Havale/EFT hesapları

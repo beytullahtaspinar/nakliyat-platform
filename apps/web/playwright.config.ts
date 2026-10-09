@@ -10,6 +10,7 @@ import { defineConfig, devices } from "@playwright/test";
 const WEB_PORT = 3000;
 const API_PORT = 4000;
 const WP_MOCK_PORT = 4100;
+const IYZICO_MOCK_PORT = 4200;
 const CI = Boolean(process.env.CI);
 
 // Anlık bildirim için her çalıştırmada yeni VAPID anahtarı (push servisine gerçek istek atılmaz)
@@ -56,6 +57,10 @@ export default defineConfig({
         API_PUBLIC_URL: `http://127.0.0.1:${API_PORT}`,
         VAPID_PUBLIC_KEY: vapidPublicKey,
         VAPID_PRIVATE_KEY: vapid.d!,
+        // Kartla ödeme sahte iyzico'ya gider (e2e/iyzico-mock.mjs)
+        IYZICO_API_KEY: "e2e-anahtar",
+        IYZICO_SECRET_KEY: "e2e-gizli",
+        IYZICO_BASE_URL: `http://127.0.0.1:${IYZICO_MOCK_PORT}`,
       },
       timeout: 60_000,
     },
@@ -82,6 +87,13 @@ export default defineConfig({
       url: `http://127.0.0.1:${WP_MOCK_PORT}/wp-json/wp/v2/categories`,
       reuseExistingServer: !CI,
       env: { WP_MOCK_PORT: String(WP_MOCK_PORT) },
+      timeout: 10_000,
+    },
+    {
+      command: "node e2e/iyzico-mock.mjs",
+      url: `http://127.0.0.1:${IYZICO_MOCK_PORT}/saglik`,
+      reuseExistingServer: !CI,
+      env: { IYZICO_MOCK_PORT: String(IYZICO_MOCK_PORT) },
       timeout: 10_000,
     },
   ],
