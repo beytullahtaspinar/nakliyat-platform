@@ -23,7 +23,7 @@ const VARIANTS = {
     scheme: 'evdenevenakliyat',
     id: 'app.evdenevenakliyat.musteri',
     background: '#1e3a8a',
-    easProjectId: undefined as string | undefined,
+    easProjectId: '724e123c-2655-4a5a-8541-e3dae4cac277' as string | undefined,
   },
 } as const;
 
