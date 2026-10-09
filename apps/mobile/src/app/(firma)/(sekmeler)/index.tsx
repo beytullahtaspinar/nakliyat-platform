@@ -1,5 +1,6 @@
 import type { CompanyOverview } from '@nakliyat/api-client';
-import { View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, View } from 'react-native';
 import { PanelScreen } from '@/components/panel';
 import { AppText, Card, Notice } from '@/components/ui';
 import { formatTry } from '@/lib/format';
@@ -16,8 +17,14 @@ export default function CompanyHome() {
       {data ? (
         <>
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Stat label="Açık talep" value={data.requests.open} hint={`${data.requests.notQuoted} tanesine teklif vermedin`} highlight />
-            <Stat label="Bekleyen teklif" value={data.quotes.pending} />
+            <Stat
+              label="Açık talep"
+              value={data.requests.open}
+              hint={`${data.requests.notQuoted} tanesine teklif vermedin`}
+              highlight
+              onPress={() => router.navigate('/talepler')}
+            />
+            <Stat label="Bekleyen teklif" value={data.quotes.pending} onPress={() => router.navigate('/teklifler')} />
           </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Stat label="Planlı iş" value={data.bookings.scheduled} hint={`${data.bookings.next7Days} tanesi 7 gün içinde`} />
@@ -43,9 +50,24 @@ export default function CompanyHome() {
   );
 }
 
-function Stat({ label, value, hint, highlight }: { label: string; value: number; hint?: string; highlight?: boolean }) {
+function Stat({
+  label,
+  value,
+  hint,
+  highlight,
+  onPress,
+}: {
+  label: string;
+  value: number;
+  hint?: string;
+  highlight?: boolean;
+  onPress?: () => void;
+}) {
   return (
-    <View
+    <Pressable
+      disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      onPress={onPress}
       style={{
         flex: 1,
         borderRadius: 16,
@@ -60,6 +82,6 @@ function Stat({ label, value, hint, highlight }: { label: string; value: number;
         {value}
       </AppText>
       {hint ? <AppText style={{ fontSize: 13, lineHeight: 18, color: highlight ? colors.brand100 : colors.zinc500 }}>{hint}</AppText> : null}
-    </View>
+    </Pressable>
   );
 }
