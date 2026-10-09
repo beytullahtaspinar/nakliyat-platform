@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHeader } from "@/components/panel/panel-bits";
 import { NotificationSettings } from "@/components/notification-settings";
 import { AppAndPush } from "@/components/pwa/app-and-push";
@@ -36,6 +37,12 @@ export default async function CompanyNotificationsPage() {
         </p>
         <NotificationSettings preferences={preferences} settingsPath="/firma-paneli/bildirimler" />
       </Card>
+      <p className="text-sm text-zinc-600">
+        Platformdan ayrılmak mı istiyorsun?{" "}
+        <Link href="/hesap-silme" className="text-brand-700 underline">
+          Hesabını sil
+        </Link>
+      </p>
     </div>
   );
 }

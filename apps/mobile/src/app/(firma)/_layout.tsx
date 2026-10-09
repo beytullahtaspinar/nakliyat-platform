@@ -23,6 +23,7 @@ export default function Layout() {
       <Stack.Screen name="belgeler" />
       <Stack.Screen name="kredi" />
       <Stack.Screen name="musteriler" />
+      <Stack.Screen name="hesap-sil" />
     </Stack>
   );
 }

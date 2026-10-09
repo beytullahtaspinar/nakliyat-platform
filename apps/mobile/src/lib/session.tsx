@@ -1,7 +1,7 @@
 import { ApiError, type AuthUser } from '@nakliyat/api-client';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, hasStoredSession, setSessionExpiredHandler } from './api';
-import { unregisterPush } from './push';
+import { forgetPushToken, unregisterPush } from './push';
 import { allowedRole, wrongAppMessage } from './variant';
 
 type SessionState =
@@ -15,6 +15,8 @@ type SessionContextValue = {
   state: SessionState;
   signIn(phone: string, password: string): Promise<void>;
   signOut(): Promise<void>;
+  /** Hesabı kalıcı olarak siler (şifresiz hesapta password boş) ve oturumu kapatır */
+  deleteAccount(password?: string): Promise<void>;
   reload(): Promise<void>;
 };
 
@@ -65,7 +67,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setState({ status: 'signedOut' });
   }, []);
 
-  const value = useMemo(() => ({ state, signIn, signOut, reload }), [state, signIn, signOut, reload]);
+  const deleteAccount = useCallback(async (password?: string) => {
+    await api.request('/auth/me', { method: 'DELETE', body: password ? { password } : {} });
+    // Sunucu oturumları ve bildirim kayıtlarını sildi; bu telefonda kalanlar temizlenir
+    await forgetPushToken().catch(() => undefined);
+    await api.logout();
+    setState({ status: 'signedOut' });
+  }, []);
+
+  const value = useMemo(
+    () => ({ state, signIn, signOut, deleteAccount, reload }),
+    [state, signIn, signOut, deleteAccount, reload],
+  );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
 

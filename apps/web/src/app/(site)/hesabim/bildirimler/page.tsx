@@ -39,6 +39,12 @@ export default async function AccountNotificationsPage() {
       <Card className="mt-6 p-6">
         <NotificationSettings preferences={preferences} settingsPath="/hesabim/bildirimler" />
       </Card>
+      <p className="mt-6 text-sm text-zinc-600">
+        Hesabını kapatmak mı istiyorsun?{" "}
+        <Link href="/hesap-silme" className="text-brand-700 underline">
+          Hesabını sil
+        </Link>
+      </p>
     </main>
   );
 }

@@ -11,6 +11,8 @@ export class AuthUserDto {
   @ApiProperty() emailVerified: boolean;
   @ApiProperty({ description: 'Talep yayını, teklif verme ve teklif kabulü için gereken doğrulamalar tamam' })
   verified: boolean;
+  @ApiProperty({ description: 'Şifreyle giriş yapabiliyor (yalnızca Google/Apple ile açılan hesaplarda false)' })
+  hasPassword: boolean;
 }
 
 export class AuthTokensDto {

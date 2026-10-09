@@ -67,3 +67,9 @@ export async function unregisterPush() {
   await api.request('/notifications/push/devices', { method: 'DELETE', body: { token } }).catch(() => undefined);
   await SecureStore.deleteItemAsync(TOKEN_KEY);
 }
+
+/** Hesap silindiğinde: sunucudaki kayıt zaten silindi, yalnızca bu telefondaki adres unutulur */
+export async function forgetPushToken() {
+  if (Platform.OS === 'web') return;
+  await SecureStore.deleteItemAsync(TOKEN_KEY);
+}

@@ -70,6 +70,11 @@ export default function AccountScreen() {
       </Section>
 
       <Button title="Çıkış yap" kind="secondary" onPress={confirmSignOut} />
+      <Pressable accessibilityRole="button" onPress={() => router.push('/hesap-sil')} hitSlop={8} style={{ alignSelf: 'center', padding: 8 }}>
+        <AppText weight="semibold" style={{ color: colors.red700 }}>
+          Hesabımı sil
+        </AppText>
+      </Pressable>
     </PanelScreen>
   );
 }

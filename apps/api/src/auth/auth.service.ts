@@ -200,6 +200,7 @@ export class AuthService {
       phoneVerified: user.phoneVerifiedAt !== null,
       emailVerified: user.emailVerifiedAt !== null,
       verified: this.verification.isComplete(user),
+      hasPassword: user.passwordHash !== OAUTH_ONLY_PASSWORD,
     };
   }
 

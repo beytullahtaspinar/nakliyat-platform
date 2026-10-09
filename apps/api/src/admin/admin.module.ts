@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AccountModule } from '../account/account.module.js';
 import { MediaModule } from '../media/media.module.js';
 import { PricingModule } from '../pricing/pricing.module.js';
 import { ReviewsModule } from '../reviews/reviews.module.js';
@@ -14,7 +15,7 @@ import { AdminStatsController } from './admin-stats.controller.js';
 import { AdminUsersController } from './admin-users.controller.js';
 
 @Module({
-  imports: [MediaModule, PricingModule, ReviewsModule],
+  imports: [AccountModule, MediaModule, PricingModule, ReviewsModule],
   controllers: [AdminOverviewController, AdminCompaniesController, AdminCreditsController, AdminPricingController, AdminDocumentsController, AdminNameChangesController, AdminRequestsController, AdminReviewsController, AdminStatsController, AdminUsersController],
 })
 export class AdminModule {}
