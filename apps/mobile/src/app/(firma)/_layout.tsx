@@ -19,6 +19,11 @@ export default function Layout() {
       <Stack.Screen name="is/[id]/index" />
       <Stack.Screen name="is/[id]/mesajlar" />
       <Stack.Screen name="takvim" />
+      <Stack.Screen name="degerlendirmeler" />
+      <Stack.Screen name="belgeler" />
+      <Stack.Screen name="kredi" />
+      <Stack.Screen name="musteriler" />
+      <Stack.Screen name="hesap-sil" />
     </Stack>
   );
 }

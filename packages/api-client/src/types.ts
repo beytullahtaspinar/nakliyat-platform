@@ -12,6 +12,8 @@ export type AuthUser = {
   emailVerified: boolean;
   /** Talep yayını, teklif verme ve teklif kabulü için gereken doğrulamalar tamam */
   verified: boolean;
+  /** Şifreyle giriş yapabiliyor; yalnızca Google/Apple ile açılan hesaplarda false */
+  hasPassword: boolean;
 };
 
 export type AuthTokens = { accessToken: string; refreshToken: string };
@@ -245,4 +247,207 @@ export type CompanyCalendar = {
     to: { cityName: string | null; districtName: string | null };
     customerName: string;
   }[];
+};
+
+// ─── Firma hesabı: belgeler, kredi, değerlendirmeler, müşteriler ──────────
+
+export type DocumentType = 'K3_LICENSE' | 'TAX_CERTIFICATE' | 'TRADE_REGISTRY' | 'INSURANCE' | 'OTHER';
+
+export type CompanyDocument = {
+  id: string;
+  type: DocumentType;
+  status: VerificationStatus;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  /** YYYY-AA-GG */
+  validUntil: string | null;
+  expired: boolean;
+  reviewNote: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  /** Kısa süreli imzalı görüntüleme adresi */
+  url: string;
+};
+
+export type DocumentRequirement = {
+  type: DocumentType;
+  state: 'VERIFIED' | 'PENDING' | 'REJECTED' | 'EXPIRED' | 'MISSING';
+};
+
+/** GET /company/documents */
+export type CompanyDocumentSummary = { documents: CompanyDocument[]; requirements: DocumentRequirement[] };
+
+/** Dosya yükleme adresi: dosya bu adrese PUT ile gönderilir */
+export type UploadTicket = { key: string; url: string; method: 'PUT'; headers: Record<string, string> };
+
+/** GET /company/credits (uygulamada yalnızca bakiye ve ücretler kullanılır) */
+export type CompanyCreditSummary = {
+  enabled: boolean;
+  balance: number;
+  quoteCostLocal: number;
+  quoteCostIntercity: number;
+  lowBalanceThreshold: number;
+};
+
+export type CreditTransactionType =
+  | 'QUOTE'
+  | 'QUOTE_REFUND'
+  | 'ADMIN_CREDIT'
+  | 'ADMIN_DEBIT'
+  | 'WELCOME'
+  | 'TRANSFER_TOPUP'
+  | 'CARD_TOPUP';
+
+export type CreditTransaction = {
+  id: string;
+  type: CreditTransactionType;
+  amount: number;
+  balanceAfter: number;
+  note: string | null;
+  createdAt: string;
+  request: { id: string; fromCityName: string | null; toCityName: string | null } | null;
+};
+
+export type RatingDistribution = Record<'1' | '2' | '3' | '4' | '5', number>;
+
+/** GET /company/reviews */
+export type CompanyReviews = Paginated<OwnReview & { customerName: string; bookingId: string; route: string; moveDate: string }> & {
+  summary: {
+    ratingAverage: string;
+    ratingCount: number;
+    distribution: RatingDistribution;
+    counts: { total: number; unanswered: number; hidden: number };
+  };
+};
+
+/** GET /company/customers */
+export type CompanyCustomer = {
+  fullName: string;
+  phone: string;
+  bookingCount: number;
+  activeCount: number;
+  totalTry: number;
+  lastBooking: {
+    id: string;
+    status: BookingStatus;
+    scheduledAt: string;
+    from: { cityName: string | null; districtName: string | null };
+    to: { cityName: string | null; districtName: string | null };
+  };
+};
+
+// ─── Müşteri ──────────────────────────────────────────────
+
+/** GET /locations/cities */
+export type City = { code: string; name: string; slug: string };
+/** GET /locations/cities/:code/districts */
+export type District = { name: string; slug: string };
+
+/** GET /auth/verification */
+export type ContactVerification = {
+  email: string | null;
+  emailVerified: boolean;
+  /** Geçerli kodun gönderildiği e-posta */
+  emailCodeSentTo: string | null;
+  emailResendAt: string | null;
+  phone: string;
+  phoneVerified: boolean;
+  /** SMS/WhatsApp sağlayıcısı bağlıysa telefon doğrulaması zorunlu */
+  phoneRequired: boolean;
+  phoneChannel: 'sms' | 'whatsapp' | null;
+  phoneCodeSent: boolean;
+  phoneResendAt: string | null;
+  complete: boolean;
+};
+
+/** GET /requests/:id: müşterinin kendi talebi, açık adresler ve medya dahil */
+export type MovingRequestDetail = MovingRequest & {
+  fromAddress: string;
+  fromFloor: number;
+  fromHasElevator: boolean;
+  toAddress: string;
+  toFloor: number;
+  toHasElevator: boolean;
+  isDateFlexible: boolean;
+  needsPacking: boolean;
+  needsAssembly: boolean;
+  needsStorage: boolean;
+  specialItems: string[];
+  notes: string | null;
+  estimatedCrew: number | null;
+  estimatedHours: number | null;
+  media: RequestMedia[];
+};
+
+/** POST /requests gövdesi */
+export type CreateRequestInput = {
+  fromCityCode: string;
+  fromDistrict: string;
+  fromAddress: string;
+  fromFloor: number;
+  fromHasElevator: boolean;
+  toCityCode: string;
+  toDistrict: string;
+  toAddress: string;
+  toFloor: number;
+  toHasElevator: boolean;
+  homeType: string;
+  /** YYYY-AA-GG */
+  moveDate: string;
+  isDateFlexible: boolean;
+  needsPacking: boolean;
+  needsAssembly: boolean;
+  needsStorage: boolean;
+  specialItems?: string[];
+  notes?: string;
+};
+
+export type BadgeCode = 'DOCUMENTS_VERIFIED' | 'FAST_RESPONSE' | 'TOP_RATED';
+
+export type PublicCompany = {
+  id: string;
+  displayName: string;
+  logoUrl: string | null;
+  cityName: string | null;
+  verified: boolean;
+  ratingAverage: string;
+  ratingCount: number;
+  completedJobs: number;
+  badges?: BadgeCode[];
+};
+
+/** GET /requests/:id/quotes: fiyata göre sıralı */
+export type CustomerQuote = {
+  id: string;
+  status: QuoteStatus;
+  priceTry: string;
+  includesPacking: boolean;
+  includesAssembly: boolean;
+  includesInsurance: boolean;
+  crewSize: number;
+  vehicleType: VehicleType;
+  message: string | null;
+  validUntil: string;
+  isExpired: boolean;
+  company: PublicCompany;
+};
+
+/** GET /bookings: teklif kabulünden sonra firma iletişim bilgisi açılır */
+export type CustomerBooking = {
+  id: string;
+  requestId: string;
+  quoteId: string;
+  status: BookingStatus;
+  scheduledAt: string;
+  priceTry: string;
+  completedAt: string | null;
+  /** Planlanmış ve taşınma günü gelmiş: tamamlandı olarak işaretlenebilir */
+  canComplete: boolean;
+  /** Planlanmış ve taşınma günü geçmemiş: gerekçeyle iptal edilebilir */
+  canCancel: boolean;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  review: OwnReview | null;
+  company: PublicCompany & { contactName: string; contactPhone: string };
 };

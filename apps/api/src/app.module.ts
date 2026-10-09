@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AccountModule } from './account/account.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BookingsModule } from './bookings/bookings.module.js';
@@ -33,6 +34,7 @@ import { ReviewsModule } from './reviews/reviews.module.js';
     PrismaModule,
     EventsModule,
     AuthModule,
+    AccountModule,
     RequestsModule,
     MediaModule,
     CompaniesModule,

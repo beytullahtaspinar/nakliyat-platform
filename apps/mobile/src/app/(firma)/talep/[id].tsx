@@ -1,9 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { CompanyProfile, CompanyRequestDetail, RequestMedia } from '@nakliyat/api-client';
-import * as Linking from 'expo-linking';
+import type { CompanyProfile, CompanyRequestDetail } from '@nakliyat/api-client';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { Alert, View } from 'react-native';
+import { MediaStrip } from '@/components/booking-bits';
 import { DetailScreen, Section } from '@/components/panel';
 import { QuoteForm } from '@/components/quote-form';
 import { AppText, Badge, Button, Notice } from '@/components/ui';
@@ -263,28 +263,5 @@ export default function RequestScreen() {
         )}
       </Section>
     </DetailScreen>
-  );
-}
-
-/** Fotoğraflar küçük resim; dokununca tam boy (videolar dahil) tarayıcıda açılır */
-function MediaStrip({ media }: { media: RequestMedia[] }) {
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-      {media.map((m, i) => (
-        <Pressable
-          key={m.id}
-          accessibilityRole="imagebutton"
-          accessibilityLabel={`${m.type === 'VIDEO' ? 'Video' : 'Fotoğraf'} ${i + 1}, büyük aç`}
-          onPress={() => void Linking.openURL(m.url)}
-          style={{ width: 112, height: 112, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.zinc100, alignItems: 'center', justifyContent: 'center' }}
-        >
-          {m.type === 'PHOTO' ? (
-            <Image source={{ uri: m.url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-          ) : (
-            <Ionicons name="play-circle" size={40} color={colors.brand700} />
-          )}
-        </Pressable>
-      ))}
-    </ScrollView>
   );
 }

@@ -22,11 +22,8 @@ import { CurrentUser, type AuthUser } from '../common/decorators/current-user.de
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { normalizeTrMobile } from '../common/utils/phone.js';
 import type { Prisma } from '../generated/prisma/client.js';
-import { BookingStatus, QuoteStatus, RequestStatus, UserRole, UserStatus } from '../generated/prisma/enums.js';
-import { CompanyDocumentsService } from '../media/company-documents.service.js';
-import { CompanyShowcaseService } from '../media/company-showcase.service.js';
-import { MediaService } from '../media/media.service.js';
-import { CreditsService } from '../credits/credits.service.js';
+import { UserRole, UserStatus } from '../generated/prisma/enums.js';
+import { AccountDeletionService } from '../account/account-deletion.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { IMPERSONATION_TTL_SECONDS } from './admin-companies.controller.js';
 import { newAccountData } from './new-account.js';
@@ -62,11 +59,8 @@ const toUser = ({ _count, ...u }: UserRow) => ({ ...u, requestCount: _count.requ
 export class AdminUsersController {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly media: MediaService,
-    private readonly documents: CompanyDocumentsService,
-    private readonly showcase: CompanyShowcaseService,
     private readonly jwt: JwtService,
-    private readonly credits: CreditsService,
+    private readonly deletion: AccountDeletionService,
   ) {}
 
   /** Kullanıcılar, en yenisi önce. */
@@ -228,10 +222,7 @@ export class AdminUsersController {
   }
 
   /**
-   * Hesabı siler. Talep, teklif, iş ve karar geçmişi kayıtları bozulmasın diye satır silinmez;
-   * ad, telefon, e-posta ve şifre geri dönülemez şekilde silinir, hesap bir daha açılamaz.
-   * Açık talepler iptal edilir, talep fotoğraf/videoları silinir, firmanın bekleyen teklifleri geri çekilir ve firma listelerden kalkar.
-   * Planlanmış işi olan hesap silinmez (karşı taraf ortada kalmasın); o sürede askıya alınabilir.
+   * Hesabı siler (ayrıntı: AccountDeletionService). Planlanmış işi olan hesap silinmez; o sürede askıya alınabilir.
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -244,75 +235,12 @@ export class AdminUsersController {
     if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
     if (user.role === UserRole.ADMIN) throw new BadRequestException('Yönetici hesapları panelden silinemez');
 
-    const companyId = user.company?.id;
-    const scheduled = await this.prisma.booking.count({
-      where: {
-        status: BookingStatus.SCHEDULED,
-        OR: [{ request: { customerId: id } }, ...(companyId ? [{ companyId }] : [])],
-      },
-    });
-    if (scheduled) {
-      throw new ConflictException('Bu hesabın planlanmış bir taşıma işi var, iş bitmeden silinemez. Şimdilik hesabı askıya alabilirsin.');
-    }
-
-    const now = new Date();
-    // İptal edilecek açık talepler: teklif veren firmaların kredisi iade edilir
-    const openRequests = await this.prisma.movingRequest.findMany({
-      where: { customerId: id, status: { in: [RequestStatus.DRAFT, RequestStatus.OPEN] } },
-      select: { id: true },
-    });
-    await this.prisma.$transaction([
-      this.prisma.user.update({
-        where: { id },
-        data: {
-          deletedAt: now,
-          status: UserStatus.SUSPENDED,
-          fullName: 'Silinmiş kullanıcı',
-          phone: `silindi-${id}`,
-          phoneVerifiedAt: null,
-          email: null,
-          // bcrypt özeti olmadığı için hiçbir şifre eşleşmez
-          passwordHash: '!',
-        },
-      }),
-      this.prisma.refreshToken.deleteMany({ where: { userId: id } }),
-      // Telefonlarına artık bildirim gitmesin
-      this.prisma.pushSubscription.deleteMany({ where: { userId: id } }),
-      this.prisma.mobilePushToken.deleteMany({ where: { userId: id } }),
-      // Google/Apple bağlantısı kişisel veridir; silinen hesaba o yolla yeniden girilemez
-      this.prisma.userIdentity.deleteMany({ where: { userId: id } }),
-      // Yazdığı mesajlar da kişisel veri: konuşmada yerleri kalır, içerikleri silinir
-      this.prisma.message.updateMany({ where: { senderId: id }, data: { body: '' } }),
-      // Yorum metni de kişisel veri olabilir: puan firmanın ortalamasında kalır, metin silinir
-      this.prisma.review.updateMany({ where: { customerId: id }, data: { comment: null } }),
-      this.prisma.movingRequest.updateMany({
-        where: { customerId: id, status: { in: [RequestStatus.DRAFT, RequestStatus.OPEN] } },
-        data: { status: RequestStatus.CANCELLED },
-      }),
-      ...(companyId
-        ? [
-            this.prisma.quote.updateMany({
-              where: { companyId, status: QuoteStatus.PENDING },
-              data: { status: QuoteStatus.WITHDRAWN },
-            }),
-            // Vergi no boşa çıkar: firma ileride yeniden kayıt olabilsin
-            this.prisma.company.update({
-              where: { id: companyId },
-              data: { deletedAt: now, taxNumber: `silindi-${companyId}` },
-            }),
-          ]
-        : []),
-      this.prisma.auditLog.create({
-        data: { actorId: admin.id, action: 'user.delete', entityType: 'User', entityId: id, details: { role: user.role } },
-      }),
-    ]);
-    await this.credits.refundCancelledRequests(openRequests.map((r) => r.id));
-    // Talep fotoğraf/videoları da kişisel veri: kayıt silindikten sonra depodan da kaldırılır
-    await this.media.deleteForCustomer(id);
-    if (companyId) {
-      await this.documents.deleteForCompany(companyId);
-      await this.showcase.deleteForCompany(companyId);
-    }
+    const account = { id, role: user.role, companyId: user.company?.id };
+    await this.deletion.assertDeletable(
+      account,
+      'Bu hesabın planlanmış bir taşıma işi var, iş bitmeden silinemez. Şimdilik hesabı askıya alabilirsin.',
+    );
+    await this.deletion.delete(account, admin.id, 'user.delete');
   }
 
   private async requireUser(id: string) {

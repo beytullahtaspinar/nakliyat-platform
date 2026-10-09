@@ -16,6 +16,10 @@ const VARIANTS = {
     background: '#f97316',
     /** expo.dev'deki projenin kimliği (gizli değildir) */
     easProjectId: '084d903b-b052-4101-8a94-e6153827d0b7' as string | undefined,
+    imagePicker: {
+      cameraPermission: 'Firma belgelerinin fotoğrafını çekip yükleyebilmen için kamera izni gerekiyor.',
+      photosPermission: false as string | false,
+    },
   },
   musteri: {
     name: 'Evdenevenakliyat',
@@ -24,6 +28,10 @@ const VARIANTS = {
     id: 'app.evdenevenakliyat.musteri',
     background: '#1e3a8a',
     easProjectId: '724e123c-2655-4a5a-8541-e3dae4cac277' as string | undefined,
+    imagePicker: {
+      cameraPermission: 'Eşyalarının fotoğrafını çekip talebine ekleyebilmen için kamera izni gerekiyor.',
+      photosPermission: 'Eşyalarının fotoğraflarını talebine ekleyebilmen için fotoğraflarına erişim gerekiyor.' as string | false,
+    },
   },
 } as const;
 
@@ -66,6 +74,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-secure-store',
+    // Firma: belgenin fotoğrafını çekmek için kamera. Müşteri: eşyaların fotoğrafı için kamera ve galeri.
+    // Mikrofon kullanılmaz (uygulamadan video yüklenmiyor).
+    ['expo-image-picker', { ...v.imagePicker, microphonePermission: false }],
     ['expo-notifications', { icon: `${assets}/notification-icon.png`, color: v.background, defaultChannel: 'default' }],
     [
       'expo-splash-screen',

@@ -80,6 +80,8 @@ export type AuthUser = {
   emailVerified: boolean;
   /** Talep yayını, teklif verme ve teklif kabulü için gereken doğrulamalar tamam */
   verified: boolean;
+  /** Şifreyle giriş yapabiliyor; yalnızca Google/Apple ile açılan hesaplarda false */
+  hasPassword: boolean;
 };
 
 export type ContactVerification = {

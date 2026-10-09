@@ -20,6 +20,17 @@ export type TokenStore = {
   set(tokens: AuthTokens | null): Promise<void>;
 };
 
+export type RegisterInput = {
+  role: 'CUSTOMER';
+  fullName: string;
+  phone: string;
+  email: string;
+  password: string;
+  /** Kabul edilen kullanım koşulları sürümü (sitedeki LEGAL_VERSION) */
+  termsVersion: string;
+  marketingConsent: boolean;
+};
+
 export type ApiClientOptions = {
   /** Örn. https://api.evdenevenakliyat.app (sonundaki /v1 istemci tarafından eklenir) */
   origin?: string;
@@ -116,6 +127,13 @@ export function createApiClient({ origin = DEFAULT_API_ORIGIN, tokens, onSession
     /** Telefon + şifre ile giriş; anahtarlar depoya yazılır. */
     async login(phone: string, password: string): Promise<AuthUser> {
       const res = await request<AuthResponse>('/auth/login', { method: 'POST', body: { phone, password }, auth: false });
+      await tokens.set({ accessToken: res.accessToken, refreshToken: res.refreshToken });
+      return res.user;
+    },
+
+    /** Müşteri kaydı (firma kaydı sitede yapılır); anahtarlar depoya yazılır. */
+    async register(input: RegisterInput): Promise<AuthUser> {
+      const res = await request<AuthResponse>('/auth/register', { method: 'POST', body: input, auth: false });
       await tokens.set({ accessToken: res.accessToken, refreshToken: res.refreshToken });
       return res.user;
     },

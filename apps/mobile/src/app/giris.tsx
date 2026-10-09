@@ -1,4 +1,5 @@
 import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,7 +42,13 @@ export default function LoginScreen() {
     try {
       await signIn(phone.trim(), password);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Giriş yapılamadı, tekrar dene.');
+      const message = e instanceof Error ? e.message : 'Giriş yapılamadı, tekrar dene.';
+      // Uygulamada Google/Apple düğmesi yok: şifresiz hesaba şifre belirleme yolunu göster
+      setError(
+        message.includes('Google veya Apple')
+          ? 'Bu hesap Google veya Apple ile açıldı. Uygulamaya girmek için aşağıdaki "Şifremi unuttum" ile e-postana gelen kodla bir şifre belirle.'
+          : message,
+      );
       setLoading(false);
     }
   }
@@ -90,7 +97,15 @@ export default function LoginScreen() {
 
           <View style={{ marginTop: 'auto', gap: 4, alignItems: 'center' }}>
             <AppText style={{ color: colors.zinc600 }}>Hesabın yok mu?</AppText>
-            <TextLink label={copy.signupLabel} path={copy.signupPath} />
+            {variant === 'musteri' ? (
+              <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push('/kayit')} style={{ alignSelf: 'center', paddingVertical: 6 }}>
+                <AppText weight="semibold" style={{ color: colors.brand700 }}>
+                  {copy.signupLabel}
+                </AppText>
+              </Pressable>
+            ) : (
+              <TextLink label={copy.signupLabel} path={copy.signupPath} />
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -98,7 +113,7 @@ export default function LoginScreen() {
   );
 }
 
-/** Kayıt ve şifre sıfırlama şimdilik sitede yapılır; uygulamaya sonraki adımda gelecek. */
+/** Şifre sıfırlama ve firma kaydı sitede yapılır */
 function TextLink({ label, path }: { label: string; path: string }) {
   return (
     <Pressable
