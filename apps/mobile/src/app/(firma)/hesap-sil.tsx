@@ -9,7 +9,7 @@ const DELETED = [
   'Adın, telefon numaran, e-posta adresin ve şifren',
   'Google ya da Apple bağlantın ve telefonlarındaki bildirim kayıtları',
   'Firma belgelerin ve tanıtım fotoğrafların',
-  'Mesajlarının ve yanıtlarının metni',
+  'Mesajlarının metni',
   'Bekleyen tekliflerin geri çekilir, firman listelerden kalkar',
 ];
 
