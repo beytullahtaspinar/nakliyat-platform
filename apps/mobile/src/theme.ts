@@ -20,6 +20,12 @@ export const colors = {
   red700: '#b91c1c',
   green50: '#f0fdf4',
   green700: '#15803d',
+  amber50: '#fffbeb',
+  amber300: '#fcd34d',
+  amber500: '#f59e0b',
+  amber900: '#78350f',
+  accent100: '#ffedd5',
+  accent900: '#7c2d12',
 } as const;
 
 /** Inter, kök düzende yüklenir (src/app/_layout.tsx) */

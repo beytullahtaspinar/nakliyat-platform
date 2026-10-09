@@ -59,10 +59,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: `${assets}/android-icon-monochrome.png`,
     },
     predictiveBackGestureEnabled: false,
+    // Anlık bildirim için Firebase dosyası. Gizli değildir ama depoya konmaz: EAS'ta "file" türünde
+    // GOOGLE_SERVICES_JSON ortam değişkeni olarak yüklenir, derleme sırasında dosya yolu buraya gelir.
+    ...(process.env.GOOGLE_SERVICES_JSON && { googleServicesFile: process.env.GOOGLE_SERVICES_JSON }),
   },
   plugins: [
     'expo-router',
     'expo-secure-store',
+    ['expo-notifications', { icon: `${assets}/notification-icon.png`, color: v.background, defaultChannel: 'default' }],
     [
       'expo-splash-screen',
       { image: `${assets}/splash-icon.png`, imageWidth: 160, resizeMode: 'contain', backgroundColor: v.background },

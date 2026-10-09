@@ -1,6 +1,7 @@
 import { ApiError, type AuthUser } from '@nakliyat/api-client';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api, hasStoredSession, setSessionExpiredHandler } from './api';
+import { unregisterPush } from './push';
 import { allowedRole, wrongAppMessage } from './variant';
 
 type SessionState =
@@ -58,6 +59,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // Oturum kapanmadan önce: telefon bu hesabın bildirimlerini almasın
+    await unregisterPush().catch(() => undefined);
     await api.logout();
     setState({ status: 'signedOut' });
   }, []);

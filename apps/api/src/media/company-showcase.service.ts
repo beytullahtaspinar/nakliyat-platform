@@ -176,7 +176,7 @@ export class CompanyShowcaseService {
 
   /** Yönetimin firma inceleme ekranı için: gizlenenler dahil tüm görseller */
   async listForAdmin(companyId: string) {
-    const items = await this.prisma.companyMedia.findMany({ where: { companyId }, orderBy: [{ kind: 'asc' }, { createdAt: 'asc' }] });
+    const items = await this.prisma.companyMedia.findMany({ where: { companyId }, orderBy: [{ kind: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }] });
     return items.map((m) => this.toMediaView(m));
   }
 
@@ -267,7 +267,8 @@ export class CompanyShowcaseService {
   private async view(company: Company) {
     const media = await this.prisma.companyMedia.findMany({
       where: { companyId: company.id },
-      orderBy: { createdAt: 'asc' },
+      // Aynı anda yüklenen fotoğrafların zamanı eşit olabilir: panel ve herkese açık sayfa aynı sırayı göstersin
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     });
     const logo = media.find((m) => m.kind === CompanyMediaKind.LOGO);
     const photos = media.filter((m) => m.kind === CompanyMediaKind.PHOTO);

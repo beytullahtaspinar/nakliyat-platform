@@ -71,21 +71,22 @@ export class NotificationsController {
   /** Kullanıcının rolüne uygun bildirim türleri ve her kanal için açık/kapalı durumu. */
   @Get('preferences')
   async preferences(@CurrentUser() user: AuthUser) {
-    const [account, saved, devices] = await Promise.all([
+    const [account, saved, devices, mobileDevices] = await Promise.all([
       this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { email: true } }),
       this.prisma.notificationPreference.findMany({ where: { userId: user.id } }),
       this.prisma.pushSubscription.count({ where: { userId: user.id } }),
+      this.prisma.mobilePushToken.count({ where: { userId: user.id } }),
     ]);
     const enabled = (type: string, channel: NotificationChannel) =>
       saved.find((p) => p.type === type && p.channel === channel)?.enabled ?? true;
     const publicKey = this.push.publicKey;
-    // VAPID anahtarı tanımlı değilse anlık bildirim seçeneği hiç gösterilmez
-    const channels = OPTIONAL_CHANNELS.filter((c) => c !== NotificationChannel.PUSH || publicKey);
+    // VAPID anahtarı tanımlı değilse ve mobil uygulamada bildirim açılmamışsa anlık bildirim seçeneği gösterilmez
+    const channels = OPTIONAL_CHANNELS.filter((c) => c !== NotificationChannel.PUSH || publicKey || mobileDevices > 0);
     return {
       email: account.email,
       channels,
-      /** Tarayıcının abone olurken kullanacağı açık anahtar ve bildirim açılmış cihaz sayısı */
-      push: { publicKey, devices },
+      /** Tarayıcının abone olurken kullanacağı açık anahtar, bildirim açılmış tarayıcı ve telefon (mobil uygulama) sayısı */
+      push: { publicKey, devices, mobileDevices },
       items: typesForRole(user.role).map((type) => ({
         type,
         label: NOTIFICATION_TYPES[type].label,

@@ -3,6 +3,7 @@ import webpush, { WebPushError } from 'web-push';
 import { UserRole } from '../../generated/prisma/enums.js';
 import type { PrismaService } from '../../prisma/prisma.service.js';
 import { templates } from '../templates.js';
+import type { ExpoPushSender, MobileDelivery } from './expo-push.js';
 import { isPushEndpoint, WebPushChannel } from './web-push.channel.js';
 
 const keys = webpush.generateVAPIDKeys();
@@ -20,6 +21,9 @@ const fakePrisma = (subscriptions: ReturnType<typeof sub>[]) => {
   };
   return { prisma: { pushSubscription } as unknown as PrismaService, pushSubscription };
 };
+/** Mobil uygulama gönderimi: varsayılan olarak kayıtlı telefon yok */
+const fakeMobile = (result: MobileDelivery = { devices: 0, delivered: 0 }) =>
+  ({ hasDevices: vi.fn().mockResolvedValue(result.devices > 0), sendToUser: vi.fn().mockResolvedValue(result) }) as unknown as ExpoPushSender;
 const gone = () => new WebPushError('gone', 410, {}, 'expired', 'x');
 
 describe('isPushEndpoint', () => {
@@ -42,7 +46,7 @@ describe('WebPushChannel', () => {
   it('VAPID anahtarı yoksa göndermez ve kanal kullanılamaz sayılır', async () => {
     const send = vi.spyOn(webpush, 'sendNotification');
     const { prisma } = fakePrisma([sub('s1')]);
-    const channel = new WebPushChannel(new ConfigService({}), prisma);
+    const channel = new WebPushChannel(new ConfigService({}), prisma, fakeMobile());
     expect(channel.publicKey).toBeNull();
     await expect(channel.isAvailable(recipient)).resolves.toBe(false);
     await expect(channel.send(recipient, content)).resolves.toEqual({ status: 'SKIPPED', reason: 'VAPID anahtarları tanımlı değil' });
@@ -52,7 +56,7 @@ describe('WebPushChannel', () => {
   it('tüm cihazlara başlık, metin ve açılacak yolu gönderir', async () => {
     const send = vi.spyOn(webpush, 'sendNotification').mockResolvedValue({ statusCode: 201, body: '', headers: {} });
     const { prisma, pushSubscription } = fakePrisma([sub('s1'), sub('s2')]);
-    const result = await new WebPushChannel(new ConfigService(env), prisma).send(recipient, content);
+    const result = await new WebPushChannel(new ConfigService(env), prisma, fakeMobile()).send(recipient, content);
     expect(result).toEqual({ status: 'SENT' });
     expect(send).toHaveBeenCalledTimes(2);
     const [target, body, options] = send.mock.calls[0];
@@ -72,7 +76,7 @@ describe('WebPushChannel', () => {
       .mockRejectedValueOnce(gone())
       .mockResolvedValueOnce({ statusCode: 201, body: '', headers: {} });
     const { prisma, pushSubscription } = fakePrisma([sub('s1'), sub('s2')]);
-    const result = await new WebPushChannel(new ConfigService(env), prisma).send(recipient, content);
+    const result = await new WebPushChannel(new ConfigService(env), prisma, fakeMobile()).send(recipient, content);
     expect(result).toEqual({ status: 'SENT' });
     expect(pushSubscription.deleteMany).toHaveBeenCalledWith({ where: { id: 's1' } });
   });
@@ -80,14 +84,33 @@ describe('WebPushChannel', () => {
   it('hiçbir cihaza geçici hata yüzünden ulaşamazsa yeniden denensin diye hata fırlatır', async () => {
     vi.spyOn(webpush, 'sendNotification').mockRejectedValue(new WebPushError('down', 503, {}, 'unavailable', 'x'));
     const { prisma, pushSubscription } = fakePrisma([sub('s1')]);
-    await expect(new WebPushChannel(new ConfigService(env), prisma).send(recipient, content)).rejects.toThrow('Push gönderilemedi: 503 unavailable');
+    await expect(new WebPushChannel(new ConfigService(env), prisma, fakeMobile()).send(recipient, content)).rejects.toThrow('Push gönderilemedi: 503 unavailable');
     expect(pushSubscription.deleteMany).not.toHaveBeenCalled();
   });
 
   it('tüm abonelikler geçersizse atlanır, yeniden denenmez', async () => {
     vi.spyOn(webpush, 'sendNotification').mockRejectedValue(gone());
     const { prisma } = fakePrisma([sub('s1')]);
-    const result = await new WebPushChannel(new ConfigService(env), prisma).send(recipient, content);
+    const result = await new WebPushChannel(new ConfigService(env), prisma, fakeMobile()).send(recipient, content);
     expect(result.status).toBe('SKIPPED');
+  });
+
+  it('VAPID anahtarı olmasa da mobil uygulamaya gönderir', async () => {
+    const send = vi.spyOn(webpush, 'sendNotification');
+    const { prisma } = fakePrisma([sub('s1')]);
+    const mobile = fakeMobile({ devices: 1, delivered: 1 });
+    const channel = new WebPushChannel(new ConfigService({}), prisma, mobile);
+    await expect(channel.isAvailable(recipient)).resolves.toBe(true);
+    await expect(channel.send(recipient, content)).resolves.toEqual({ status: 'SENT' });
+    expect(send).not.toHaveBeenCalled();
+    expect(mobile.sendToUser).toHaveBeenCalledWith('u1', expect.objectContaining({ path: '/firma-paneli/isler/b1' }), true);
+  });
+
+  it('telefona ulaşılamadı ama tarayıcıya ulaştıysa gönderildi sayar; ikisi de olmazsa yeniden denenir', async () => {
+    vi.spyOn(webpush, 'sendNotification').mockResolvedValue({ statusCode: 201, body: '', headers: {} });
+    const { prisma } = fakePrisma([sub('s1')]);
+    const failing = fakeMobile({ devices: 1, delivered: 0, error: 'MessageRateExceeded' });
+    await expect(new WebPushChannel(new ConfigService(env), prisma, failing).send(recipient, content)).resolves.toEqual({ status: 'SENT' });
+    await expect(new WebPushChannel(new ConfigService({}), prisma, failing).send(recipient, content)).rejects.toThrow('MessageRateExceeded');
   });
 });

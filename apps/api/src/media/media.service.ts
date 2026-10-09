@@ -226,7 +226,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
 
   /** Talebin dosyaları, kısa süreli görüntüleme adresleriyle */
   async listForRequest(requestId: string) {
-    const media = await this.prisma.requestMedia.findMany({ where: { requestId }, orderBy: { createdAt: 'asc' } });
+    const media = await this.prisma.requestMedia.findMany({ where: { requestId }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] });
     return media.map((m) => this.toView(m));
   }
 

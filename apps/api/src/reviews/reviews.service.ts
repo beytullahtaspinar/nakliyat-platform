@@ -316,7 +316,7 @@ export class ReviewsService {
       where: { id: companyId, ...PUBLIC_COMPANY },
       include: {
         serviceCities: { select: { cityCode: true } },
-        media: { where: { hiddenAt: null, kind: CompanyMediaKind.PHOTO }, orderBy: { createdAt: 'asc' } },
+        media: { where: { hiddenAt: null, kind: CompanyMediaKind.PHOTO }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
       },
     });
     if (!company) throw new NotFoundException('Firma bulunamadı');

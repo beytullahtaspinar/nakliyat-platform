@@ -2,10 +2,14 @@ import { BadRequestException, Body, Controller, Delete, ForbiddenException, Head
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { isExpoPushToken, MAX_MOBILE_DEVICES } from './channels/expo-push.js';
 import { endpointHash, isPushEndpoint, MAX_DEVICES, WebPushChannel } from './channels/web-push.channel.js';
-import { PushEndpointDto, PushSubscriptionDto } from './dto/notifications.dto.js';
+import { MobileDeviceDto, MobileDeviceTokenDto, PushEndpointDto, PushSubscriptionDto } from './dto/notifications.dto.js';
 
-/** Bu cihazda anlık bildirimi açma/kapama. Tarayıcı aboneliği web uygulaması üzerinden buraya gelir. */
+/**
+ * Bu cihazda anlık bildirimi açma/kapama. Tarayıcı aboneliği web uygulamasından (subscriptions),
+ * mobil uygulamanın Expo adresi firma/müşteri uygulamasından (devices) gelir.
+ */
 @ApiTags('Bildirimler')
 @ApiBearerAuth()
 @Controller('notifications/push')
@@ -48,6 +52,32 @@ export class PushController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async unsubscribe(@CurrentUser() user: AuthUser, @Body() dto: PushEndpointDto) {
     await this.prisma.pushSubscription.deleteMany({ where: { userId: user.id, endpointHash: endpointHash(dto.endpoint) } });
+  }
+
+  /** Mobil uygulama girişten sonra telefonun bildirim adresini kaydeder. */
+  @Post('devices')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async registerDevice(@CurrentUser() user: AuthUser, @Body() dto: MobileDeviceDto) {
+    if (user.impersonatorId) throw new ForbiddenException('Yönetici görünümündeyken bu cihaz için bildirim açılamaz');
+    if (!isExpoPushToken(dto.token)) throw new BadRequestException('Geçersiz bildirim adresi');
+
+    const data = { userId: user.id, platform: dto.platform };
+    await this.prisma.mobilePushToken.upsert({ where: { token: dto.token }, create: { ...data, token: dto.token }, update: data });
+
+    const stale = await this.prisma.mobilePushToken.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      skip: MAX_MOBILE_DEVICES,
+      select: { id: true },
+    });
+    if (stale.length) await this.prisma.mobilePushToken.deleteMany({ where: { id: { in: stale.map((s) => s.id) } } });
+  }
+
+  /** Mobil uygulamadan çıkış yapılırken: bu telefona artık bu hesabın bildirimi gitmesin. */
+  @Delete('devices')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unregisterDevice(@CurrentUser() user: AuthUser, @Body() dto: MobileDeviceTokenDto) {
+    await this.prisma.mobilePushToken.deleteMany({ where: { userId: user.id, token: dto.token } });
   }
 
   /** Kullanıcı ayarlardan "deneme bildirimi gönder" dediğinde: tüm cihazlarına kısa bir bildirim. */

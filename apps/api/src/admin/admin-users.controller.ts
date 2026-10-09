@@ -278,6 +278,7 @@ export class AdminUsersController {
       this.prisma.refreshToken.deleteMany({ where: { userId: id } }),
       // Telefonlarına artık bildirim gitmesin
       this.prisma.pushSubscription.deleteMany({ where: { userId: id } }),
+      this.prisma.mobilePushToken.deleteMany({ where: { userId: id } }),
       // Google/Apple bağlantısı kişisel veridir; silinen hesaba o yolla yeniden girilemez
       this.prisma.userIdentity.deleteMany({ where: { userId: id } }),
       // Yazdığı mesajlar da kişisel veri: konuşmada yerleri kalır, içerikleri silinir
