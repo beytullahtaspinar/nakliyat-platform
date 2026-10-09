@@ -6,6 +6,7 @@ import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BookingsModule } from './bookings/bookings.module.js';
 import { CompaniesModule } from './companies/companies.module.js';
+import { CreditsModule } from './credits/credits.module.js';
 import { EventsModule } from './events/domain-events.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
@@ -35,6 +36,7 @@ import { ReviewsModule } from './reviews/reviews.module.js';
     RequestsModule,
     MediaModule,
     CompaniesModule,
+    CreditsModule,
     QuotesModule,
     BookingsModule,
     MessagesModule,

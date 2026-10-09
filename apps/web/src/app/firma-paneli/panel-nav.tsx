@@ -13,12 +13,22 @@ import {
   TagIcon,
   TruckIcon,
   UsersIcon,
+  WalletIcon,
 } from "@/components/ui/icons";
 
 /**
- * Firma paneli menüsü. newRequests: teklif vermediğin açık talepler, unreadMessages: okunmamış mesajlar.
+ * Firma paneli menüsü. newRequests: teklif vermediğin açık talepler, unreadMessages: okunmamış mesajlar,
+ * credits: kredi sistemi açıksa ya da bakiye varsa Kredi sayfası görünür.
  */
-export function PanelNav({ newRequests = 0, unreadMessages = 0 }: { newRequests?: number; unreadMessages?: number }) {
+export function PanelNav({
+  newRequests = 0,
+  unreadMessages = 0,
+  credits = false,
+}: {
+  newRequests?: number;
+  unreadMessages?: number;
+  credits?: boolean;
+}) {
   return (
     <SideNav
       label="Firma paneli"
@@ -42,6 +52,7 @@ export function PanelNav({ newRequests = 0, unreadMessages = 0 }: { newRequests?
             },
             { href: "/firma-paneli/takvim", label: "Takvim", icon: CalendarIcon },
             { href: "/firma-paneli/musteriler", label: "Müşteriler", icon: UsersIcon },
+            ...(credits ? [{ href: "/firma-paneli/kredi", label: "Kredi", icon: WalletIcon }] : []),
           ],
         },
         {

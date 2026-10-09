@@ -26,6 +26,7 @@ import { BookingStatus, QuoteStatus, RequestStatus, UserRole, UserStatus } from 
 import { CompanyDocumentsService } from '../media/company-documents.service.js';
 import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { MediaService } from '../media/media.service.js';
+import { CreditsService } from '../credits/credits.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { IMPERSONATION_TTL_SECONDS } from './admin-companies.controller.js';
 import { newAccountData } from './new-account.js';
@@ -65,6 +66,7 @@ export class AdminUsersController {
     private readonly documents: CompanyDocumentsService,
     private readonly showcase: CompanyShowcaseService,
     private readonly jwt: JwtService,
+    private readonly credits: CreditsService,
   ) {}
 
   /** Kullanıcılar, en yenisi önce. */
@@ -254,6 +256,11 @@ export class AdminUsersController {
     }
 
     const now = new Date();
+    // İptal edilecek açık talepler: teklif veren firmaların kredisi iade edilir
+    const openRequests = await this.prisma.movingRequest.findMany({
+      where: { customerId: id, status: { in: [RequestStatus.DRAFT, RequestStatus.OPEN] } },
+      select: { id: true },
+    });
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id },
@@ -298,6 +305,7 @@ export class AdminUsersController {
         data: { actorId: admin.id, action: 'user.delete', entityType: 'User', entityId: id, details: { role: user.role } },
       }),
     ]);
+    await this.credits.refundCancelledRequests(openRequests.map((r) => r.id));
     // Talep fotoğraf/videoları da kişisel veri: kayıt silindikten sonra depodan da kaldırılır
     await this.media.deleteForCustomer(id);
     if (companyId) {

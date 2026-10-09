@@ -2,6 +2,8 @@
  * API istemcisi. Yalnızca sunucu tarafında (Server Component, Server Action, proxy) kullanılır;
  * erişim anahtarı tarayıcıya hiç inmez.
  */
+import type { RequestCredit } from "./credits";
+
 const API_ORIGIN =
   process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "https://api.evdenevenakliyat.app";
 export const API_BASE = `${API_ORIGIN.replace(/\/$/, "")}/v1`;
@@ -416,7 +418,12 @@ export type CompanyRequestView = {
   createdAt: string;
 };
 
-export type OwnQuote = Omit<CustomerQuote, "company" | "isExpired"> & { createdAt: string };
+export type OwnQuote = Omit<CustomerQuote, "company" | "isExpired"> & {
+  createdAt: string;
+  /** Teklif verilirken düşülen kredi; iade edildiyse creditRefundedAt dolu */
+  creditCost: number;
+  creditRefundedAt: string | null;
+};
 
 export type CompanyRequest = CompanyRequestView & {
   quoteCount: number;
@@ -426,7 +433,7 @@ export type CompanyRequest = CompanyRequestView & {
 };
 
 /** Firma talep ayrıntısı: müşterinin eklediği fotoğraf ve videolarla */
-export type CompanyRequestDetail = CompanyRequest & { media: RequestMedia[] };
+export type CompanyRequestDetail = CompanyRequest & { media: RequestMedia[]; credit: RequestCredit };
 
 export type CompanyQuote = OwnQuote & { request: CompanyRequestView };
 

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { getCityByCode, getDistanceKm, getDistrict } from '@nakliyat/locations';
 import type { MovingRequest } from '../generated/prisma/client.js';
+import { CreditsService } from '../credits/credits.service.js';
 import { MediaService } from '../media/media.service.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { RequestStatus } from '../generated/prisma/enums.js';
@@ -55,6 +56,7 @@ export class RequestsService {
     private readonly media: MediaService,
     private readonly verification: VerificationService,
     private readonly routes: RouteService,
+    private readonly credits: CreditsService,
   ) {}
 
   async create(customerId: string, dto: CreateRequestDto) {
@@ -165,6 +167,8 @@ export class RequestsService {
       where: { id },
       data: { status: RequestStatus.CANCELLED },
     });
+    // Teklif veren firmaların kredisi iade edilir (geri çekilmiş teklifler hariç)
+    await this.credits.refundCancelledRequests([id]);
     return toRequestResponse(request, _count.quotes);
   }
 

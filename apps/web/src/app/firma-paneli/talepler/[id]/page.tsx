@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/card";
 import { CheckIcon, CloseIcon } from "@/components/ui/icons";
 import { withdrawQuote } from "@/lib/actions/company";
 import { ApiError, apiFetch, type CompanyRequestDetail } from "@/lib/api";
+import { formatCredits } from "@/lib/credits";
 import { MediaGallery } from "@/components/media/media-gallery";
 import { getCompanyContext } from "@/lib/company";
 import { floorLabel, formatDate, formatMoney, place } from "@/lib/format";
@@ -262,6 +263,7 @@ export default async function CompanyRequestPage({ params }: PageProps<"/firma-p
                 <QuoteForm
                   request={request}
                   quote={quote}
+                  credit={request.credit}
                   minDate={turkeyDate(1)}
                   maxDate={request.expiresAt.slice(0, 10)}
                 />
@@ -270,7 +272,9 @@ export default async function CompanyRequestPage({ params }: PageProps<"/firma-p
                     <ConfirmButton
                       action={withdrawQuote.bind(null, quote.id)}
                       label="Teklifi geri çek"
-                      confirmText="Teklifin müşterinin listesinden kalkacak ve bu talebe yeniden teklif veremeyeceksin."
+                      confirmText={`Teklifin müşterinin listesinden kalkacak ve bu talebe yeniden teklif veremeyeceksin.${
+                        quote.creditCost > 0 ? ` Bu teklif için düşülen ${formatCredits(quote.creditCost)} iade edilmez.` : ""
+                      }`}
                       confirmLabel="Evet, geri çek"
                       variant="quiet"
                     />

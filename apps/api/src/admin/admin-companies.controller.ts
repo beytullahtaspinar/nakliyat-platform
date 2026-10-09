@@ -28,6 +28,7 @@ import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { HideShowcaseMediaDto } from '../media/dto/company-showcase.dto.js';
 import { CompaniesService } from '../companies/companies.service.js';
 import { CompanyNameChangesService } from '../companies/company-name-changes.service.js';
+import { CreditsService } from '../credits/credits.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AdminCreateCompanyDto, ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
 import { newAccountData } from './new-account.js';
@@ -49,6 +50,7 @@ export class AdminCompaniesController {
     private readonly companies: CompaniesService,
     private readonly nameChanges: CompanyNameChangesService,
     private readonly jwt: JwtService,
+    private readonly credits: CreditsService,
   ) {}
 
   /**
@@ -322,6 +324,7 @@ export class AdminCompaniesController {
     if (company.verificationStatus !== status) {
       this.events.emit('company.verification_changed', { companyId: id });
     }
+    if (status === VerificationStatus.VERIFIED) await this.credits.grantWelcome(id);
     return toProfile(updated);
   }
 }

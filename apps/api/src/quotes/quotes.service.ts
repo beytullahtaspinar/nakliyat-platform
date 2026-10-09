@@ -14,6 +14,8 @@ import {
   toPublicCompany,
 } from '../companies/companies.service.js';
 import { CompanyBadgesService } from '../companies/company-badges.service.js';
+import { CreditsService } from '../credits/credits.service.js';
+import { quoteCost } from '../credits/credit-rules.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -30,6 +32,7 @@ export class QuotesService {
     private readonly media: MediaService,
     private readonly verification: VerificationService,
     private readonly badges: CompanyBadgesService,
+    private readonly credits: CreditsService,
   ) {}
 
   // ─── Firma tarafı ─────────────────────────────────────────────
@@ -96,6 +99,7 @@ export class QuotesService {
     const { quotes, _count, ...r } = request;
     return {
       ...toCompanyRequestView(r),
+      credit: await this.credits.forRequest(company.id, r),
       quoteCount: _count.quotes,
       mediaCount: _count.media,
       myQuote: quotes[0] ?? null,
@@ -119,16 +123,23 @@ export class QuotesService {
     if (!request) throw new NotFoundException('Talep bulunamadı');
     assertAcceptingQuotes(request);
     const validUntil = resolveValidUntil(dto.validUntil, request);
+    const cost = quoteCost(request, (await this.credits.getSettings()).settings);
 
     try {
-      const quote = await this.prisma.quote.create({
-        data: {
-          ...dto,
-          validUntil,
-          requestId,
-          companyId: company.id,
-          revisions: { create: { priceTry: dto.priceTry } },
-        },
+      // Teklif ve kredi düşümü tek işlemde: bakiye yetmezse teklif de oluşmaz
+      const quote = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.quote.create({
+          data: {
+            ...dto,
+            validUntil,
+            requestId,
+            companyId: company.id,
+            creditCost: cost,
+            revisions: { create: { priceTry: dto.priceTry } },
+          },
+        });
+        if (cost > 0) await this.credits.chargeQuote(tx, { companyId: company.id, quoteId: created.id, requestId, cost });
+        return created;
       });
       this.events.emit('quote.created', { quoteId: quote.id });
       return quote;
