@@ -28,6 +28,8 @@ export interface DomainEventMap {
   'booking.completed': { bookingId: string; completedBy: 'CUSTOMER' | 'COMPANY' };
   /** Müşteri ya da firma anlaşılan işi iptal etti */
   'booking.cancelled': { bookingId: string; cancelledBy: 'CUSTOMER' | 'COMPANY' };
+  /** Yönetici firmanın havale bildirimini onayladı veya reddetti */
+  'credit.transfer_reviewed': { transferId: string };
   /** Müşteri tamamlanan işin firmasını değerlendirdi */
   'review.created': { reviewId: string };
 }

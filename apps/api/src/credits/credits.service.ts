@@ -1,12 +1,15 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { randomInt } from 'node:crypto';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { getCityByCode } from '@nakliyat/locations';
 import { Prisma } from '../generated/prisma/client.js';
-import { CreditTransactionType, QuoteStatus, RequestStatus } from '../generated/prisma/enums.js';
+import { BankTransferStatus, CreditTransactionType, QuoteStatus, RequestStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   DEFAULT_CREDIT_SETTINGS,
   EXPIRED_REFUND_WINDOW_DAYS,
   expiredRefund,
+  isValidTrIban,
+  makeTransferCode,
   normalizeCreditSettings,
   quoteCost,
   type CreditSettings,
@@ -85,6 +88,8 @@ export class CreditsService {
   }
 
   async updateSettings(adminId: string, changes: Partial<CreditSettings>) {
+    const invalid = changes.bankAccounts?.find((a) => !isValidTrIban(a.iban));
+    if (invalid) throw new BadRequestException(`IBAN geçersiz: ${invalid.iban}. TR ile başlayan 26 karakterli IBAN'ı kontrol edin.`);
     const { settings: before } = await this.getSettings();
     const after = normalizeCreditSettings({ ...before, ...changes });
     await this.prisma.$transaction([
@@ -107,7 +112,7 @@ export class CreditsService {
     return account?.balance ?? 0;
   }
 
-  /** Firma paneli: bakiye ve teklif başına kredi */
+  /** Firma paneli: bakiye, teklif başına kredi ve (banka hesabı tanımlıysa) havale bilgileri */
   async summary(companyId: string) {
     const [{ settings }, balance] = await Promise.all([this.getSettings(), this.balance(companyId)]);
     return {
@@ -117,7 +122,31 @@ export class CreditsService {
       quoteCostLocal: settings.quoteCostLocal,
       quoteCostIntercity: settings.quoteCostIntercity,
       lowBalanceThreshold: settings.lowBalanceThreshold,
+      transfer: settings.bankAccounts.length
+        ? { code: await this.transferCode(companyId), minTopupTry: settings.minTopupTry, bankAccounts: settings.bankAccounts }
+        : null,
     };
+  }
+
+  /** Firmanın havale açıklama kodu; yoksa üretilir (çakışırsa yeniden denenir) */
+  async transferCode(companyId: string): Promise<string> {
+    const account = await this.prisma.creditAccount.upsert({ where: { companyId }, create: { companyId }, update: {} });
+    if (account.transferCode) return account.transferCode;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const claimed = await this.prisma.creditAccount.updateMany({
+          where: { companyId, transferCode: null },
+          data: { transferCode: makeTransferCode(randomInt) },
+        });
+        if (claimed.count === 0) break; // aynı anda başka istek üretti
+      } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') continue;
+        throw e;
+      }
+    }
+    const { transferCode } = await this.prisma.creditAccount.findUniqueOrThrow({ where: { companyId } });
+    if (!transferCode) throw new Error('Havale kodu üretilemedi');
+    return transferCode;
   }
 
   /** Talep ayrıntısında: bu talebe teklif kaç kredi, bakiye yetiyor mu */
@@ -143,11 +172,12 @@ export class CreditsService {
   /** Yönetim panosu: firmalardaki toplam bakiye, bu ay ve tüm zamanlar türe göre toplamlar */
   async overview(now = new Date()) {
     const since = monthStartTr(now);
-    const [{ settings }, balances, month, allTime] = await Promise.all([
+    const [{ settings }, balances, month, allTime, transfersPending] = await Promise.all([
       this.getSettings(),
       this.prisma.creditAccount.aggregate({ _sum: { balance: true }, _count: { _all: true }, where: { balance: { gt: 0 } } }),
       this.prisma.creditTransaction.groupBy({ by: ['type'], where: { createdAt: { gte: since } }, _sum: { amount: true }, _count: { _all: true } }),
       this.prisma.creditTransaction.groupBy({ by: ['type'], _sum: { amount: true }, _count: { _all: true } }),
+      this.prisma.bankTransfer.count({ where: { status: BankTransferStatus.PENDING } }),
     ]);
     const byType = (rows: typeof month) =>
       Object.fromEntries(Object.values(CreditTransactionType).map((t) => {
@@ -162,6 +192,7 @@ export class CreditsService {
       monthStart: since,
       month: byType(month),
       allTime: byType(allTime),
+      transfersPending,
     };
   }
 
@@ -247,6 +278,11 @@ export class CreditsService {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return null;
       throw e;
     }
+  }
+
+  /** Onaylanan havale; havale onay işleminin içinde çağrılır */
+  topUpFromTransfer(tx: Tx, { companyId, transferId, credits, actorId, note }: { companyId: string; transferId: string; credits: number; actorId: string; note: string }) {
+    return this.post(tx, { companyId, type: CreditTransactionType.TRANSFER_TOPUP, amount: credits, idempotencyKey: `transfer:${transferId}`, actorId, note });
   }
 
   // ─── İç ──────────────────────────────────────────────────────

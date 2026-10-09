@@ -55,6 +55,7 @@ model User {
   identities              UserIdentity[]
   auditLogs               AuditLog[]
   creditTransactions      CreditTransaction[]
+  reviewedTransfers       BankTransfer[]
 }
 
 model RefreshToken {
@@ -165,6 +166,7 @@ model Company {
   nameChanges   CompanyNameChange[]
   creditAccount CreditAccount?
   credits       CreditTransaction[]
+  bankTransfers BankTransfer[]
 
   @@index([verificationStatus])
   @@index([cityCode])
@@ -359,7 +361,7 @@ model MovingRequest {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  customer User           @relation(fields: [customerId], references: [id])
+  customer User                @relation(fields: [customerId], references: [id])
   media    RequestMedia[]
   quotes   Quote[]
   booking  Booking?
@@ -622,15 +624,65 @@ enum CreditTransactionType {
   ADMIN_DEBIT
   /// Onaylanan firmaya hoş geldin kredisi (+)
   WELCOME
+  /// Havale/EFT bildirimi yönetimce onaylandı (+)
+  TRANSFER_TOPUP
+}
+
+enum BankTransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  /// Firma onaydan önce geri aldı
+  CANCELLED
 }
 
 /// Firmanın kredi bakiyesi. Her zaman CreditTransaction toplamına eşittir; yalnızca credits modülü değiştirir.
 model CreditAccount {
-  companyId String   @id
-  balance   Int      @default(0)
-  updatedAt DateTime @updatedAt
+  companyId    String   @id
+  balance      Int      @default(0)
+  /// Havale açıklamasına yazılan firmaya özel kod (ör. EN-7KQ2MD); ilk ihtiyaçta üretilir
+  transferCode String?  @unique @db.VarChar(20)
+  updatedAt    DateTime @updatedAt
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+/// Firmanın "havale/EFT yaptım" bildirimi. Yönetim hesaba geçen tutarı görünce onaylar, kredi o anda yüklenir.
+model BankTransfer {
+  id                String             @id @default(cuid())
+  companyId         String
+  /// Firmanın bildirdiği tutar (TL)
+  amountTry         Decimal            @db.Decimal(12, 2)
+  senderName        String             @db.VarChar(120)
+  /// Havalenin yapıldığı gün (Türkiye saatiyle)
+  transferDate      DateTime           @db.Date
+  /// Gönderilen hesabın IBAN'ı (ayarlardaki hesaplardan biri)
+  iban              String             @db.VarChar(34)
+  note              String?            @db.VarChar(500)
+  /// İsteğe bağlı dekont: firmalar/<firmaId>/ altında
+  receiptKey        String?            @unique @db.VarChar(300)
+  receiptStorage    StorageLocation?
+  receiptMimeType   String?            @db.VarChar(100)
+  receiptSizeBytes  Int?
+  receiptFileName   String?            @db.VarChar(200)
+  status            BankTransferStatus @default(PENDING)
+  /// Onayda hesaba geçen tutar (bildirilenden farklı olabilir) ve yüklenen kredi
+  approvedAmountTry Decimal?           @db.Decimal(12, 2)
+  credits           Int?
+  /// Onay anındaki 1 kredi değeri (TL)
+  creditValueTry    Decimal?           @db.Decimal(10, 2)
+  rejectReason      String?            @db.VarChar(500)
+  reviewedById      String?
+  reviewedAt        DateTime?
+  transactionId     String?            @unique
+  createdAt         DateTime           @default(now())
+
+  company     Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  reviewedBy  User?              @relation(fields: [reviewedById], references: [id])
+  transaction CreditTransaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([companyId, createdAt])
 }
 
 /// Kredi defteri: satırlar silinmez ve değiştirilmez, düzeltme yeni satırla yapılır.
@@ -654,6 +706,8 @@ model CreditTransaction {
   quote   Quote?         @relation(fields: [quoteId], references: [id])
   request MovingRequest? @relation(fields: [requestId], references: [id])
   actor   User?          @relation(fields: [actorId], references: [id])
+
+  bankTransfer BankTransfer?
 
   @@index([companyId, createdAt])
   @@index([type, createdAt])

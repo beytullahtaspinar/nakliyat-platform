@@ -50,6 +50,11 @@ export const NOTIFICATION_TYPES = {
     description: 'Firma hesabın ya da ad değişikliğin onaylandığında veya reddedildiğinde',
     roles: [UserRole.COMPANY],
   },
+  CREDIT_TRANSFER: {
+    label: 'Kredi yüklemesi',
+    description: 'Havale/EFT bildirimin onaylanıp kredin yüklendiğinde ya da reddedildiğinde',
+    roles: [UserRole.COMPANY],
+  },
 } as const satisfies Record<string, { label: string; description: string; roles: UserRole[] }>;
 
 export type NotificationType = keyof typeof NOTIFICATION_TYPES;

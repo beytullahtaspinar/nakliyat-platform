@@ -2,8 +2,16 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
+import { BankTransfersService } from '../credits/bank-transfers.service.js';
 import { CreditsService } from '../credits/credits.service.js';
-import { AdjustCreditDto, AdminCreditTransactionsDto, UpdateCreditSettingsDto } from '../credits/dto/credit.dto.js';
+import {
+  AdjustCreditDto,
+  AdminCreditTransactionsDto,
+  ApproveBankTransferDto,
+  ListBankTransfersDto,
+  RejectBankTransferDto,
+  UpdateCreditSettingsDto,
+} from '../credits/dto/credit.dto.js';
 import { UserRole } from '../generated/prisma/enums.js';
 
 @ApiTags('Admin: kredi')
@@ -11,7 +19,10 @@ import { UserRole } from '../generated/prisma/enums.js';
 @Roles(UserRole.ADMIN)
 @Controller('admin')
 export class AdminCreditsController {
-  constructor(private readonly credits: CreditsService) {}
+  constructor(
+    private readonly credits: CreditsService,
+    private readonly transfers: BankTransfersService,
+  ) {}
 
   /** Pano: firmalardaki toplam bakiye, bu ay (TSİ) ve tüm zamanlar türe göre toplamlar */
   @Get('credits/overview')
@@ -54,5 +65,22 @@ export class AdminCreditsController {
   @Post('companies/:id/credits')
   adjust(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: AdjustCreditDto) {
     return this.credits.adjust(admin.id, id, dto.amount, dto.note);
+  }
+
+  /** Havale/EFT bildirimleri; bekleyenler en eski önce */
+  @Get('credits/transfers')
+  listTransfers(@Query() dto: ListBankTransfersDto) {
+    return this.transfers.listForAdmin(dto);
+  }
+
+  /** Onay: kredi hesaba geçen tutar ÷ kredi değeri kadar yüklenir (aşağı yuvarlanır) */
+  @Post('credits/transfers/:id/approve')
+  approveTransfer(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: ApproveBankTransferDto) {
+    return this.transfers.approve(admin.id, id, dto.amountTry);
+  }
+
+  @Post('credits/transfers/:id/reject')
+  rejectTransfer(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: RejectBankTransferDto) {
+    return this.transfers.reject(admin.id, id, dto.reason);
   }
 }

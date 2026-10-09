@@ -39,6 +39,8 @@ const HISTORY_LABELS: Record<string, string> = {
   "company.name_change.approve": "Ad değişikliği onaylandı",
   "company.name_change.reject": "Ad değişikliği reddedildi",
   "credit.adjust": "Kredi elle işlendi",
+  "transfer.approve": "Havale onaylandı, kredi yüklendi",
+  "transfer.reject": "Havale bildirimi reddedildi",
 };
 
 /** Firma panelinde yapılan değişikliğin hangi bölüme ait olduğu (API yolundan) */

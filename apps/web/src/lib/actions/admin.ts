@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { PRICING_SETTING_SPECS, type PricingSettingKey } from "@nakliyat/pricing";
 import { ApiError, apiFetch } from "@/lib/api";
 import { companyProfileBody } from "@/lib/company-form";
-import { CREDIT_SETTING_FIELDS, type CreditSettings } from "@/lib/credits";
+import { CREDIT_SETTING_FIELDS, MAX_BANK_ACCOUNTS, parseTryAmount, type BankAccount, type CreditSettings } from "@/lib/credits";
 import { PRICING_CACHE_TAG } from "@/lib/pricing";
 import { COMPANY_CACHE_TAG } from "@/lib/reviews";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
@@ -357,6 +357,16 @@ export async function updateCreditSettings(_prev: AdminActionState, formData: Fo
     }
     body[field.key] = value;
   }
+  const accounts: BankAccount[] = [];
+  for (let i = 0; i < MAX_BANK_ACCOUNTS; i++) {
+    const bank = String(formData.get(`bank_${i}`) ?? "").trim();
+    const holder = String(formData.get(`holder_${i}`) ?? "").trim();
+    const iban = String(formData.get(`iban_${i}`) ?? "").replace(/\s+/g, "").toUpperCase();
+    if (!bank && !holder && !iban) continue;
+    if (!bank || !holder || !iban) return { error: `${i + 1}. hesapta banka, hesap sahibi ve IBAN birlikte yazılmalı (hesabı kaldırmak için üçünü de boşalt).` };
+    accounts.push({ bank, holder, iban });
+  }
+  body.bankAccounts = accounts;
   try {
     await apiFetch("/admin/credits/settings", { method: "PATCH", token: await adminToken(), body });
   } catch (err) {
@@ -365,6 +375,36 @@ export async function updateCreditSettings(_prev: AdminActionState, formData: Fo
   revalidatePath("/yonetim/krediler", "layout");
   revalidatePath("/firma-paneli", "layout");
   return { notice: body.enabled ? "Kaydedildi. Kredi sistemi açık: teklifler kredi düşüyor." : "Kaydedildi. Kredi sistemi kapalı: teklif vermek ücretsiz." };
+}
+
+/** Havale bildirimini onaylar; hesaba geçen tutar farklıysa düzeltilmiş tutarla */
+export async function approveTransfer(transferId: string, _prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const amountTry = parseTryAmount(String(formData.get("amountTry") ?? ""));
+  if (!Number.isFinite(amountTry) || amountTry <= 0) return { error: "Hesaba geçen tutarı yaz (ör. 1500 ya da 1.500,50)." };
+  let credits: number;
+  try {
+    ({ credits } = await apiFetch<{ credits: number }>(`/admin/credits/transfers/${encodeURIComponent(transferId)}/approve`, {
+      method: "POST",
+      token: await adminToken(),
+      body: { amountTry },
+    }));
+  } catch (err) {
+    return failure(err, "Bildirim onaylanamadı.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: `Onaylandı: ${credits.toLocaleString("tr-TR")} kredi yüklendi.` };
+}
+
+export async function rejectTransfer(transferId: string, _prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length < 3) return { error: "Firmaya gösterilecek gerekçeyi yaz (en az 3 karakter)." };
+  try {
+    await apiFetch(`/admin/credits/transfers/${encodeURIComponent(transferId)}/reject`, { method: "POST", token: await adminToken(), body: { reason } });
+  } catch (err) {
+    return failure(err, "Bildirim reddedilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Reddedildi; firmaya gerekçeyle haber verildi." };
 }
 
 /** Firmaya elle kredi ekleme (artı) ya da düşme (eksi); gerekçe firmanın hareket listesinde görünür */

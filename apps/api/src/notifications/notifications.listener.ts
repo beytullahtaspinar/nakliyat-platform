@@ -3,7 +3,7 @@ import { getCityByCode, getDistrict } from '@nakliyat/locations';
 import { formatTrPhone } from '../common/utils/phone.js';
 import { DomainEvents } from '../events/domain-events.js';
 import type { MovingRequest } from '../generated/prisma/client.js';
-import { UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
+import { BankTransferStatus, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from './notifications.service.js';
 import { templates } from './templates.js';
@@ -51,6 +51,7 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('review.created', ({ reviewId }) => this.onReviewCreated(reviewId));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
     this.events.on('company.name_change_reviewed', ({ changeId }) => this.onNameChangeReviewed(changeId));
+    this.events.on('credit.transfer_reviewed', ({ transferId }) => this.onTransferReviewed(transferId));
   }
 
   /** Talebin çıkış veya varış iline hizmet veren doğrulanmış firmalara haber ver. */
@@ -250,6 +251,37 @@ export class NotificationsListener implements OnModuleInit {
       await this.notifications.notify(
         change.company.ownerId,
         templates.companyNameRejected({ newName: change.newName, reason: change.reviewNote }),
+      );
+    }
+  }
+
+  async onTransferReviewed(transferId: string) {
+    const transfer = await this.prisma.bankTransfer.findUnique({
+      where: { id: transferId },
+      select: {
+        status: true,
+        amountTry: true,
+        approvedAmountTry: true,
+        credits: true,
+        rejectReason: true,
+        transaction: { select: { balanceAfter: true } },
+        company: { select: { ownerId: true } },
+      },
+    });
+    if (!transfer) return;
+    if (transfer.status === BankTransferStatus.APPROVED && transfer.credits && transfer.transaction) {
+      await this.notifications.notify(
+        transfer.company.ownerId,
+        templates.transferApproved({
+          amountTry: (transfer.approvedAmountTry ?? transfer.amountTry).toString(),
+          credits: transfer.credits,
+          balance: transfer.transaction.balanceAfter,
+        }),
+      );
+    } else if (transfer.status === BankTransferStatus.REJECTED) {
+      await this.notifications.notify(
+        transfer.company.ownerId,
+        templates.transferRejected({ amountTry: transfer.amountTry.toString(), reason: transfer.rejectReason }),
       );
     }
   }

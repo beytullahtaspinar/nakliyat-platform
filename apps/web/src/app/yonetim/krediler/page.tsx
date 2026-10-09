@@ -48,9 +48,17 @@ export default async function AdminCreditsPage({ searchParams }: PageProps<"/yon
           )
         }
         actions={
-          <Link href="/yonetim/krediler/ayarlar" className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800">
-            Kredi ayarları
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/yonetim/krediler/havaleler"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-50"
+            >
+              Havale bildirimleri{overview.transfersPending > 0 && ` (${overview.transfersPending} bekliyor)`}
+            </Link>
+            <Link href="/yonetim/krediler/ayarlar" className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800">
+              Kredi ayarları
+            </Link>
+          </div>
         }
       />
 
@@ -63,14 +71,19 @@ export default async function AdminCreditsPage({ searchParams }: PageProps<"/yon
             hint: `${overview.companiesWithBalance} firma · yaklaşık ${toTry(overview.totalBalance)}`,
             href: "/yonetim/firmalar",
           },
+          {
+            label: `${month} ayında havaleyle yüklenen`,
+            value: formatCredits(m.TRANSFER_TOPUP.amount),
+            hint: `${m.TRANSFER_TOPUP.count} havale${overview.transfersPending > 0 ? ` · ${overview.transfersPending} onay bekliyor` : ""}`,
+            href: "/yonetim/krediler/havaleler?durum=onaylanan",
+          },
           { label: `${month} ayında harcanan`, value: formatCredits(spent), hint: `${m.QUOTE.count} teklif, ${m.QUOTE_REFUND.count} iade`, href: href("teklif") },
           {
             label: `${month} ayında yönetimin eklediği`,
             value: formatCredits(m.ADMIN_CREDIT.amount + m.WELCOME.amount),
-            hint: `${m.WELCOME.count} hoş geldin kredisi dahil`,
+            hint: `${m.WELCOME.count} hoş geldin dahil · ${formatCredits(-m.ADMIN_DEBIT.amount)} düşüldü`,
             href: href("eklenen"),
           },
-          { label: `${month} ayında yönetimin düştüğü`, value: formatCredits(-m.ADMIN_DEBIT.amount), hint: `${m.ADMIN_DEBIT.count} işlem`, href: href("dusulen") },
         ]}
       />
 
