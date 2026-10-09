@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Badge, Card } from "@/components/ui/card";
 import { getAdminContext } from "@/lib/admin";
 import { ApiError, apiFetch, type AdminCompanyDetail } from "@/lib/api";
+import { CREDIT_TYPE_LABELS, formatCredits, signedCredits, type AdminCompanyCredits } from "@/lib/credits";
 import {
   DOCUMENT_LABELS,
   DOCUMENT_TYPES,
@@ -16,6 +17,7 @@ import { formatDate, formatDateTime, formatPhone } from "@/lib/format";
 import { PageHeader, VERIFICATION, VerificationBadge } from "../../admin-bits";
 import { NameChangeReview } from "../../name-change-review";
 import { CompanyDecision } from "./company-decision";
+import { CreditAdjust } from "./credit-adjust";
 import { DocumentReview } from "./document-review";
 import { ImpersonateButton } from "./impersonate-button";
 import { MediaModeration } from "./media-moderation";
@@ -36,6 +38,7 @@ const HISTORY_LABELS: Record<string, string> = {
   "company.name_change.request": "Firma yeni ad istedi",
   "company.name_change.approve": "Ad değişikliği onaylandı",
   "company.name_change.reject": "Ad değişikliği reddedildi",
+  "credit.adjust": "Kredi elle işlendi",
 };
 
 /** Firma panelinde yapılan değişikliğin hangi bölüme ait olduğu (API yolundan) */
@@ -64,7 +67,10 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
   const { token } = await getAdminContext();
   const { id } = await params;
   const created = Boolean((await searchParams).yeni);
-  const c = await load(token, id);
+  const [c, credits] = await Promise.all([
+    load(token, id),
+    apiFetch<AdminCompanyCredits>(`/admin/companies/${encodeURIComponent(id)}/credits`, { token }),
+  ]);
   const missing = c.requirements.filter((r) => r.state !== "VERIFIED").map((r) => DOCUMENT_LABELS[r.type]);
   const pendingName = c.nameChanges.find((n) => n.status === "PENDING");
 
@@ -269,6 +275,39 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
             <p className="mt-3 text-sm text-zinc-600">
               {c.quoteCount} teklif · {c.bookingCount} iş
             </p>
+          </Card>
+
+          <Card className="p-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-semibold">Kredi</h2>
+              <Link href={`/yonetim/krediler?firma=${c.id}`} className="text-sm font-semibold text-brand-700 hover:underline">
+                Tüm hareketler
+              </Link>
+            </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900">{formatCredits(credits.balance)}</p>
+            {credits.recent.items.length > 0 ? (
+              <ul className="mt-3 divide-y divide-slate-100 text-sm">
+                {credits.recent.items.slice(0, 5).map((t) => (
+                  <li key={t.id} className="flex items-start justify-between gap-3 py-2">
+                    <span className="min-w-0">
+                      <span className="block font-medium text-slate-900">{CREDIT_TYPE_LABELS[t.type]}</span>
+                      <span className="block text-xs text-slate-500">
+                        {formatDate(t.createdAt)}
+                        {t.note && ` · ${t.note}`}
+                      </span>
+                    </span>
+                    <span className={`shrink-0 font-semibold tabular-nums ${t.amount > 0 ? "text-green-700" : "text-slate-900"}`}>
+                      {signedCredits(t.amount)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-sm text-slate-600">Henüz hareket yok.</p>
+            )}
+            <div className="mt-4 border-t border-slate-200 pt-4">
+              <CreditAdjust companyId={c.id} />
+            </div>
           </Card>
 
           <Card className="p-5">

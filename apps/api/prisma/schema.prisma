@@ -54,6 +54,7 @@ model User {
   verificationCodes       VerificationCode[]
   identities              UserIdentity[]
   auditLogs               AuditLog[]
+  creditTransactions      CreditTransaction[]
 }
 
 model RefreshToken {
@@ -162,6 +163,8 @@ model Company {
   bookings      Booking[]
   reviews       Review[]
   nameChanges   CompanyNameChange[]
+  creditAccount CreditAccount?
+  credits       CreditTransaction[]
 
   @@index([verificationStatus])
   @@index([cityCode])
@@ -360,6 +363,7 @@ model MovingRequest {
   media    RequestMedia[]
   quotes   Quote[]
   booking  Booking?
+  credits  CreditTransaction[]
 
   @@index([status, fromCityCode])
   @@index([status, toCityCode])
@@ -422,14 +426,19 @@ model Quote {
   vehicleType       VehicleType
   message           String?     @db.Text
   validUntil        DateTime
+  /// Teklif verilirken düşülen kredi (kredi sistemi kapalıyken 0)
+  creditCost        Int         @default(0)
+  /// Kredi iade edildiyse zamanı; teklif başına en fazla bir iade
+  creditRefundedAt  DateTime?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
-  request   MovingRequest   @relation(fields: [requestId], references: [id])
-  company   Company         @relation(fields: [companyId], references: [id])
+  request   MovingRequest       @relation(fields: [requestId], references: [id])
+  company   Company             @relation(fields: [companyId], references: [id])
   booking   Booking?
   messages  Message[]
   revisions QuoteRevision[]
+  credits   CreditTransaction[]
 
   // Bir firma bir talebe yalnızca bir teklif verebilir
   @@unique([requestId, companyId])
@@ -598,6 +607,65 @@ model PushSubscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ─── Kredi ──────────────────────────────────────────────────────
+
+enum CreditTransactionType {
+  /// Teklif verildi (−)
+  QUOTE
+  /// Teklif kredisi iade edildi (+): talep iptali, hesap silme ya da seçimsiz süre dolumu
+  QUOTE_REFUND
+  /// Yönetim ekledi (+)
+  ADMIN_CREDIT
+  /// Yönetim düştü (−)
+  ADMIN_DEBIT
+  /// Onaylanan firmaya hoş geldin kredisi (+)
+  WELCOME
+}
+
+/// Firmanın kredi bakiyesi. Her zaman CreditTransaction toplamına eşittir; yalnızca credits modülü değiştirir.
+model CreditAccount {
+  companyId String   @id
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+/// Kredi defteri: satırlar silinmez ve değiştirilmez, düzeltme yeni satırla yapılır.
+model CreditTransaction {
+  id             String                @id @default(cuid())
+  companyId      String
+  type           CreditTransactionType
+  /// Artı yükleme/iade, eksi harcama
+  amount         Int
+  balanceAfter   Int
+  quoteId        String?
+  requestId      String?
+  /// Aynı olay iki kez işlenmesin (ör. quote:<id>, refund:<id>, welcome:<firmaId>)
+  idempotencyKey String?               @unique @db.VarChar(191)
+  /// Yönetim işlemlerinde işlemi yapan
+  actorId        String?
+  note           String?               @db.VarChar(500)
+  createdAt      DateTime              @default(now())
+
+  company Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  quote   Quote?         @relation(fields: [quoteId], references: [id])
+  request MovingRequest? @relation(fields: [requestId], references: [id])
+  actor   User?          @relation(fields: [actorId], references: [id])
+
+  @@index([companyId, createdAt])
+  @@index([type, createdAt])
+  @@index([createdAt])
+}
+
+/// Kredi ayarları (tek satır, id = 1). Şekli ve sınırları credits/credit-rules.ts'te; değişiklikler AuditLog'a yazılır.
+model CreditSettings {
+  id          Int      @id @default(1)
+  settings    Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
 }
 
 // ─── Yönetim ────────────────────────────────────────────────────

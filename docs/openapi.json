@@ -1179,6 +1179,87 @@
         ]
       }
     },
+    "/v1/company/credits": {
+      "get": {
+        "operationId": "CompanyCreditsController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      }
+    },
+    "/v1/company/credits/transactions": {
+      "get": {
+        "operationId": "CompanyCreditsController_transactions",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "QUOTE",
+                "QUOTE_REFUND",
+                "ADMIN_CREDIT",
+                "ADMIN_DEBIT",
+                "WELCOME"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      }
+    },
     "/v1/company/requests": {
       "get": {
         "operationId": "CompanyQuotesController_listRequests",
@@ -2453,7 +2534,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateCompanyProfileDto"
+                "$ref": "#/components/schemas/AdminUpdateCompanyDto"
               }
             }
           }
@@ -2703,6 +2784,214 @@
         ]
       }
     },
+    "/v1/admin/credits/overview": {
+      "get": {
+        "operationId": "AdminCreditsController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
+    "/v1/admin/credits/settings": {
+      "get": {
+        "operationId": "AdminCreditsController_settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminCreditsController_updateSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCreditSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
+    "/v1/admin/credits/transactions": {
+      "get": {
+        "operationId": "AdminCreditsController_transactions",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "QUOTE",
+                "QUOTE_REFUND",
+                "ADMIN_CREDIT",
+                "ADMIN_DEBIT",
+                "WELCOME"
+              ]
+            }
+          },
+          {
+            "name": "companyId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Firma adında arar",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
+    "/v1/admin/companies/{id}/credits": {
+      "get": {
+        "operationId": "AdminCreditsController_companyCredits",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      },
+      "post": {
+        "operationId": "AdminCreditsController_adjust",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustCreditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
     "/v1/admin/pricing": {
       "get": {
         "operationId": "AdminPricingController_view",
@@ -2803,6 +3092,141 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/name-changes": {
+      "get": {
+        "operationId": "AdminNameChangesController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "VERIFIED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Firma adı, unvan, vergi no veya yetkili telefonunda arar",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/name-changes/{id}/approve": {
+      "post": {
+        "operationId": "AdminNameChangesController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: firmalar"
+        ]
+      }
+    },
+    "/v1/admin/name-changes/{id}/reject": {
+      "post": {
+        "operationId": "AdminNameChangesController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectNameChangeDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -4532,10 +4956,6 @@
       "UpdateCompanyProfileDto": {
         "type": "object",
         "properties": {
-          "legalName": {
-            "type": "string",
-            "example": "Örnek Nakliyat Taşımacılık Ltd. Şti."
-          },
           "displayName": {
             "type": "string",
             "example": "Örnek Nakliyat",
@@ -4801,6 +5221,49 @@
           "password"
         ]
       },
+      "AdminUpdateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string",
+            "example": "Örnek Nakliyat Taşımacılık Ltd. Şti."
+          },
+          "displayName": {
+            "type": "string",
+            "example": "Örnek Nakliyat",
+            "description": "Müşterilere görünen ad"
+          },
+          "taxNumber": {
+            "type": "string",
+            "example": "1234567890",
+            "description": "Vergi kimlik no (10 hane) veya şahıs şirketi için TCKN (11 hane)"
+          },
+          "k3LicenseNumber": {
+            "type": "string",
+            "example": "K3.34.123456"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cityCode": {
+            "type": "string",
+            "example": "34",
+            "description": "Merkez ili plaka kodu"
+          },
+          "serviceCityCodes": {
+            "example": [
+              "34",
+              "41",
+              "16"
+            ],
+            "description": "Hizmet verilen iller (plaka kodu)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "HideShowcaseMediaDto": {
         "type": "object",
         "properties": {
@@ -4823,6 +5286,56 @@
         },
         "required": [
           "reason"
+        ]
+      },
+      "UpdateCreditSettingsDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Kapalıyken teklif ücretsizdir"
+          },
+          "creditValueTry": {
+            "type": "number",
+            "description": "1 kredinin TL karşılığı (KDV dahil)"
+          },
+          "quoteCostLocal": {
+            "type": "number",
+            "description": "Aynı il içindeki talebe teklif kredisi"
+          },
+          "quoteCostIntercity": {
+            "type": "number",
+            "description": "İller arası talebe teklif kredisi"
+          },
+          "welcomeCredits": {
+            "type": "number",
+            "description": "Onaylanan firmaya bir kez verilen kredi"
+          },
+          "expiredRefundPercent": {
+            "type": "number",
+            "description": "Seçimsiz süresi dolan talepte iade yüzdesi (0-100)"
+          },
+          "lowBalanceThreshold": {
+            "type": "number",
+            "description": "Bakiye bunun altına inince firmaya uyarı"
+          }
+        }
+      },
+      "AdjustCreditDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "description": "Artı ekler, eksi düşer"
+          },
+          "note": {
+            "type": "string",
+            "description": "Gerekçe; firmanın hareket listesinde görünür"
+          }
+        },
+        "required": [
+          "amount",
+          "note"
         ]
       },
       "UpdatePricingDto": {
@@ -4895,6 +5408,18 @@
             "maximum": 1095
           }
         }
+      },
+      "RejectNameChangeDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Yeni ad vergi levhasındaki unvanla ilgisiz görünüyor."
+          }
+        },
+        "required": [
+          "reason"
+        ]
       },
       "HideReviewDto": {
         "type": "object",

@@ -5,6 +5,7 @@ import { PanelShell } from "@/components/panel/panel-shell";
 import { ExternalIcon } from "@/components/ui/icons";
 import { apiFetch, type CompanyOverview, type CompanyProfile, type UnreadMessages } from "@/lib/api";
 import { cityOptions, getCompanyContext } from "@/lib/company";
+import type { CompanyCreditSummary } from "@/lib/credits";
 import { companyPath } from "@/lib/reviews";
 import { isImpersonating } from "@/lib/session";
 import { AppPrompt } from "@/components/pwa/app-prompt";
@@ -49,9 +50,10 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
   }
 
   // Sayaçlar yüklenemezse panel yine açılsın
-  const [unread, overview] = await Promise.all([
+  const [unread, overview, credits] = await Promise.all([
     apiFetch<UnreadMessages>("/messages/unread", { token }).catch(() => null),
     apiFetch<CompanyOverview>("/company/overview", { token }).catch(() => null),
+    apiFetch<CompanyCreditSummary>("/company/credits", { token }).catch(() => null),
   ]);
   const verified = profile.verificationStatus === "VERIFIED";
 
@@ -60,7 +62,13 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
       home="/firma-paneli"
       title={profile.displayName}
       subtitle="Firma paneli"
-      nav={<PanelNav newRequests={overview?.requests.notQuoted} unreadMessages={unread?.total} />}
+      nav={
+        <PanelNav
+          newRequests={overview?.requests.notQuoted}
+          unreadMessages={unread?.total}
+          credits={!!credits && (credits.enabled || credits.balance > 0)}
+        />
+      }
       account={
         <>
           <p className="truncate text-sm font-medium text-slate-900">{user.fullName}</p>

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { PRICING_SETTING_SPECS, type PricingSettingKey } from "@nakliyat/pricing";
 import { ApiError, apiFetch } from "@/lib/api";
 import { companyProfileBody } from "@/lib/company-form";
+import { CREDIT_SETTING_FIELDS, type CreditSettings } from "@/lib/credits";
 import { PRICING_CACHE_TAG } from "@/lib/pricing";
 import { COMPANY_CACHE_TAG } from "@/lib/reviews";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
@@ -341,4 +342,48 @@ export async function updatePricing(_prev: AdminActionState, formData: FormData)
   updateTag(PRICING_CACHE_TAG);
   revalidatePath("/yonetim/fiyat-hesaplama");
   return { notice: "Katsayılar kaydedildi; fiyat hesaplama sayfası güncellendi." };
+}
+
+/** Kredi ayarları; sistemi açma/kapama da buradan */
+export async function updateCreditSettings(_prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const body: Partial<CreditSettings> = { enabled: formData.get("enabled") === "on" };
+  for (const field of CREDIT_SETTING_FIELDS) {
+    const raw = String(formData.get(field.key) ?? "").trim().replace(",", ".");
+    const value = Number(raw);
+    if (!raw || !Number.isFinite(value) || value < field.min || value > field.max || (!field.decimal && !Number.isInteger(value))) {
+      return {
+        error: `${field.label} ${field.min.toLocaleString("tr-TR")} ile ${field.max.toLocaleString("tr-TR")} arasında ${field.decimal ? "bir sayı" : "tam sayı"} olmalı.`,
+      };
+    }
+    body[field.key] = value;
+  }
+  try {
+    await apiFetch("/admin/credits/settings", { method: "PATCH", token: await adminToken(), body });
+  } catch (err) {
+    return failure(err, "Kredi ayarları kaydedilemedi.");
+  }
+  revalidatePath("/yonetim/krediler", "layout");
+  revalidatePath("/firma-paneli", "layout");
+  return { notice: body.enabled ? "Kaydedildi. Kredi sistemi açık: teklifler kredi düşüyor." : "Kaydedildi. Kredi sistemi kapalı: teklif vermek ücretsiz." };
+}
+
+/** Firmaya elle kredi ekleme (artı) ya da düşme (eksi); gerekçe firmanın hareket listesinde görünür */
+export async function adjustCredits(companyId: string, _prev: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const amount = Number(String(formData.get("amount") ?? "").trim());
+  const note = String(formData.get("note") ?? "").trim();
+  if (!Number.isInteger(amount) || amount === 0) return { error: "Miktar 0 dışında bir tam sayı olmalı (düşmek için eksi yaz)." };
+  if (note.length < 3) return { error: "Gerekçe yaz (en az 3 karakter)." };
+  let balance: number;
+  try {
+    ({ balance } = await apiFetch<{ balance: number }>(`/admin/companies/${encodeURIComponent(companyId)}/credits`, {
+      method: "POST",
+      token: await adminToken(),
+      body: { amount, note },
+    }));
+  } catch (err) {
+    return failure(err, "Kredi işlenemedi.");
+  }
+  revalidatePath(`/yonetim/firmalar/${companyId}`);
+  revalidatePath("/yonetim/krediler");
+  return { notice: `${amount > 0 ? "Eklendi" : "Düşüldü"}. Yeni bakiye: ${balance.toLocaleString("tr-TR")} kredi.` };
 }

@@ -74,9 +74,10 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ✅ | PATCH | `/company/profile` | Firma | Profili güncelle. Unvan, vergi no veya K3 no değişirse firma yeniden doğrulamaya düşer. |
 | ✅ | GET · POST · DELETE | `/company/documents`, `/company/documents/uploads` | Firma | Doğrulama belgeleri: K3 (geçerlilik tarihiyle), vergi levhası, ticaret sicil zorunlu; sigorta ve ek belge isteğe bağlı. PDF/JPG/PNG/WebP, en fazla 10 MB. Yükleme akışı talep medyasıyla aynı (docs/dosya-yukleme.md). Onaylı belge silinmez, yenisi onaylanınca yerini alır. |
 | ✅ | GET · GET | `/company/requests`, `/company/requests/:id` | Firma | Hizmet bölgesindeki açık talepler. Müşteri adı ve açık adres gizli. Süzgeç: `quoted=yes\|no`, `city=34` |
-| ✅ | POST | `/company/requests/:id/quotes` | Doğrulanmış firma | Teklif ver (talep başına bir teklif, yalnızca hizmet bölgesindeki taleplere) |
+| ✅ | POST | `/company/requests/:id/quotes` | Doğrulanmış firma | Teklif ver (talep başına bir teklif, yalnızca hizmet bölgesindeki taleplere). Kredi sistemi açıksa teklif kredisi aynı işlemde düşer; bakiye yetmezse 409 ve teklif oluşmaz ([kredi.md](kredi.md)) |
 | ✅ | PATCH | `/company/quotes/:id` | Firma | Bekleyen teklifi güncelle. Her fiyat değişikliği geçmişe kaydedilir. |
-| ✅ | POST | `/company/quotes/:id/withdraw` | Firma | Teklifi geri çek |
+| ✅ | POST | `/company/quotes/:id/withdraw` | Firma | Teklifi geri çek (kredi iade edilmez) |
+| ✅ | GET | `/company/credits`, `/company/credits/transactions` | Firma | Kredi bakiyesi, teklif başına kredi, sistemin açık olup olmadığı; hareketler (`type` süzgeci). Talep ayrıntısı `/company/requests/:id` da `credit: { enabled, cost, balance }` döner |
 | ✅ | GET | `/company/quotes` | Firma | Verdiği teklifler. Süzgeç: `status=PENDING\|ACCEPTED\|REJECTED\|EXPIRED\|WITHDRAWN` |
 | ✅ | GET · GET | `/company/bookings`, `/company/bookings/:id` | Firma | Kazandığı işler (müşteri iletişim bilgisi ve açık adres burada açılır). Süzgeç: `status`, `q` (müşteri adı/telefonu) |
 | ✅ | GET | `/company/customers?q=` | Firma | Müşterileri: iş sayısı, planlı iş, iptal edilmeyen işlerin toplamı, son iş. Ekran: /firma-paneli/musteriler |
@@ -108,6 +109,9 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 |---|---|---|---|
 | ✅ | GET | `/admin/summary` | Yönetim özeti: bekleyen firma, açık talep, kullanıcı, planlanmış iş sayıları |
 | ✅ | GET | `/admin/stats?days=7\|30\|90` | İstatistikler (varsayılan 30 gün, Türkiye saatiyle gün): önceki eşit dönemle karşılaştırılan toplamlar, dönemde açılan taleplerin teklif → iş → tamamlanma hunisi, talep başına teklif, anlaşma tutarı, puan dağılımı, en çok talep gelen 10 il, günlük talep/teklif/iş. Taslak talepler sayılmaz |
+| ✅ | GET · PATCH | `/admin/credits/settings` | Kredi ayarları (açık/kapalı, teklif kredisi, hoş geldin kredisi, iade oranı); değişiklik `credit.settings.update` |
+| ✅ | GET | `/admin/credits/overview`, `/admin/credits/transactions` | Kredi panosu (toplam bakiye, bu ay TSİ türe göre) ve tüm hareketler (`companyId`, `type`, `q` firma adı) |
+| ✅ | GET · POST | `/admin/companies/:id/credits` | Firmanın bakiyesi ve son hareketleri; elle ekleme/düşme `{ amount, note }` (bakiye eksiye düşmez), `credit.adjust` |
 | ✅ | GET · PATCH | `/admin/pricing` | Fiyat hesaplayıcı katsayıları: görüntüle (varsayılanlar, dönemdeki anlaşma sayıları, ayarlama) ve değiştir (kısmi; sınırlar `PRICING_SETTING_SPECS`). Değişiklik karar geçmişine `pricing.update` olarak yazılır |
 | ✅ | GET | `/admin/companies?status=&q=` | Firmalar; ad, unvan, vergi no, K3 veya sahip adı/telefonunda arama |
 | ✅ | GET | `/admin/companies/:id` | Firma inceleme: sahibi, belgeleri, teklif/iş sayısı, karar geçmişi |

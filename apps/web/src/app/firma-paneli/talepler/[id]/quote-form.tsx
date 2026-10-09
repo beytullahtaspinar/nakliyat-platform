@@ -1,14 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { Checkbox, Field, FormError, Input, SubmitButton, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
 import { submitQuote } from "@/lib/actions/company";
 import type { CompanyRequestView, OwnQuote } from "@/lib/api";
+import { formatCredits, type RequestCredit } from "@/lib/credits";
 import { VEHICLE_LABELS } from "@/lib/request-options";
 
 type Props = {
   request: CompanyRequestView;
   quote: OwnQuote | null;
+  /** Bu talebe teklifin kredisi ve bakiye; güncellemede kredi düşmez */
+  credit: RequestCredit;
   minDate: string;
   maxDate: string;
 };
@@ -23,8 +27,10 @@ const withWish = (label: string, wanted: boolean) =>
     label
   );
 
-export function QuoteForm({ request, quote, minDate, maxDate }: Props) {
+export function QuoteForm({ request, quote, credit, minDate, maxDate }: Props) {
   const { state, pending, formProps } = useFormAction(submitQuote.bind(null, request.id), {});
+  const charged = !quote && credit.enabled && credit.cost > 0;
+  const short = charged && credit.balance < credit.cost;
   return (
     <form {...formProps} className="space-y-4">
       {quote && <input type="hidden" name="quoteId" value={quote.id} />}
@@ -93,13 +99,30 @@ export function QuoteForm({ request, quote, minDate, maxDate }: Props) {
           className={inputClass}
         />
       </Field>
+      {charged && (
+        <p className={`rounded-lg border px-3 py-2 text-sm ${short ? "border-amber-300 bg-amber-50 text-amber-950" : "border-slate-200 bg-slate-50 text-slate-700"}`}>
+          Bu teklif <strong>{formatCredits(credit.cost)}</strong>. Bakiyen: {formatCredits(credit.balance)}.
+          {short && (
+            <>
+              {" "}
+              Bakiyen yetmiyor,{" "}
+              <Link href="/firma-paneli/kredi" className="font-semibold underline">
+                kredi yükle
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      )}
       <FormError message={state.error} />
       {state.notice && (
         <p role="status" className="text-sm font-medium text-green-700">
           {state.notice}
         </p>
       )}
-      <SubmitButton pending={pending}>{quote ? "Teklifi güncelle" : "Teklifi gönder"}</SubmitButton>
+      <SubmitButton pending={pending} disabled={short}>
+        {quote ? "Teklifi güncelle" : charged ? `Teklifi gönder (${formatCredits(credit.cost)})` : "Teklifi gönder"}
+      </SubmitButton>
     </form>
   );
 }
