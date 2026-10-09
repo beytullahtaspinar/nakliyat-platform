@@ -336,3 +336,118 @@ export type CompanyCustomer = {
     to: { cityName: string | null; districtName: string | null };
   };
 };
+
+// ─── Müşteri ──────────────────────────────────────────────
+
+/** GET /locations/cities */
+export type City = { code: string; name: string; slug: string };
+/** GET /locations/cities/:code/districts */
+export type District = { name: string; slug: string };
+
+/** GET /auth/verification */
+export type ContactVerification = {
+  email: string | null;
+  emailVerified: boolean;
+  /** Geçerli kodun gönderildiği e-posta */
+  emailCodeSentTo: string | null;
+  emailResendAt: string | null;
+  phone: string;
+  phoneVerified: boolean;
+  /** SMS/WhatsApp sağlayıcısı bağlıysa telefon doğrulaması zorunlu */
+  phoneRequired: boolean;
+  phoneChannel: 'sms' | 'whatsapp' | null;
+  phoneCodeSent: boolean;
+  phoneResendAt: string | null;
+  complete: boolean;
+};
+
+/** GET /requests/:id: müşterinin kendi talebi, açık adresler ve medya dahil */
+export type MovingRequestDetail = MovingRequest & {
+  fromAddress: string;
+  fromFloor: number;
+  fromHasElevator: boolean;
+  toAddress: string;
+  toFloor: number;
+  toHasElevator: boolean;
+  isDateFlexible: boolean;
+  needsPacking: boolean;
+  needsAssembly: boolean;
+  needsStorage: boolean;
+  specialItems: string[];
+  notes: string | null;
+  estimatedCrew: number | null;
+  estimatedHours: number | null;
+  media: RequestMedia[];
+};
+
+/** POST /requests gövdesi */
+export type CreateRequestInput = {
+  fromCityCode: string;
+  fromDistrict: string;
+  fromAddress: string;
+  fromFloor: number;
+  fromHasElevator: boolean;
+  toCityCode: string;
+  toDistrict: string;
+  toAddress: string;
+  toFloor: number;
+  toHasElevator: boolean;
+  homeType: string;
+  /** YYYY-AA-GG */
+  moveDate: string;
+  isDateFlexible: boolean;
+  needsPacking: boolean;
+  needsAssembly: boolean;
+  needsStorage: boolean;
+  specialItems?: string[];
+  notes?: string;
+};
+
+export type BadgeCode = 'DOCUMENTS_VERIFIED' | 'FAST_RESPONSE' | 'TOP_RATED';
+
+export type PublicCompany = {
+  id: string;
+  displayName: string;
+  logoUrl: string | null;
+  cityName: string | null;
+  verified: boolean;
+  ratingAverage: string;
+  ratingCount: number;
+  completedJobs: number;
+  badges?: BadgeCode[];
+};
+
+/** GET /requests/:id/quotes: fiyata göre sıralı */
+export type CustomerQuote = {
+  id: string;
+  status: QuoteStatus;
+  priceTry: string;
+  includesPacking: boolean;
+  includesAssembly: boolean;
+  includesInsurance: boolean;
+  crewSize: number;
+  vehicleType: VehicleType;
+  message: string | null;
+  validUntil: string;
+  isExpired: boolean;
+  company: PublicCompany;
+};
+
+/** GET /bookings: teklif kabulünden sonra firma iletişim bilgisi açılır */
+export type CustomerBooking = {
+  id: string;
+  requestId: string;
+  quoteId: string;
+  status: BookingStatus;
+  scheduledAt: string;
+  priceTry: string;
+  completedAt: string | null;
+  /** Planlanmış ve taşınma günü gelmiş: tamamlandı olarak işaretlenebilir */
+  canComplete: boolean;
+  /** Planlanmış ve taşınma günü geçmemiş: gerekçeyle iptal edilebilir */
+  canCancel: boolean;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  review: OwnReview | null;
+  company: PublicCompany & { contactName: string; contactPhone: string };
+};

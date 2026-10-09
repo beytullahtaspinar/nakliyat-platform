@@ -21,6 +21,15 @@ export function companyRoute(path: string, tag = ''): Href {
   return '/';
 }
 
+/** Müşteri bildirimleri: /hesabim/talepler/abc(#mesajlar) → talep ekranı, /talep-olustur → teklif al */
+export function customerRoute(path: string): Href {
+  const clean = path.split('#')[0];
+  const id = clean.match(/^\/hesabim\/talepler\/([^/?]+)/)?.[1];
+  if (id) return { pathname: '/taleplerim/[id]', params: { id } };
+  if (clean.startsWith('/talep-olustur')) return '/teklif-al';
+  return '/';
+}
+
 /**
  * Bildirime dokununca ilgili ekranı açar. Uygulama kapalıyken dokunulduysa açılışta, oturum
  * kapalıyken dokunulduysa girişten sonra açılır (bu kanca yalnızca oturum açık ekranlarda çalışır).

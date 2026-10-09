@@ -1,14 +1,14 @@
 import { useLocalSearchParams } from 'expo-router';
 import { ConversationScreen } from '@/components/conversation-screen';
 
-/** Müşteriyle yazışma */
+/** Anlaşılan firmayla yazışma */
 export default function MessagesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
     <ConversationScreen
       id={id}
-      backLabel="İş"
-      emptyText="Henüz mesaj yok. Taşınma günüyle ilgili sorularını buradan müşteriye yazabilirsin."
+      backLabel="Talep"
+      emptyText="Henüz mesaj yok. Taşınma günü, eşyalar ya da adresle ilgili sorularını buradan firmaya yazabilirsin."
     />
   );
 }
