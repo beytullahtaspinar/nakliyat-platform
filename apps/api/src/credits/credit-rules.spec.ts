@@ -72,3 +72,15 @@ describe('kredi kuralları', () => {
     expect(code).toBe('EN-234567');
   });
 });
+
+describe('teklif güncelleme ücreti', () => {
+  it('varsayılanı kapalı: güncelleme ücretsiz', () => {
+    expect(DEFAULT_CREDIT_SETTINGS.chargeQuoteUpdates).toBe(false);
+    expect(normalizeCreditSettings({}).chargeQuoteUpdates).toBe(false);
+  });
+
+  it('açık ayar kaydedilir, bozuk değer varsayılana döner', () => {
+    expect(normalizeCreditSettings({ chargeQuoteUpdates: true }).chargeQuoteUpdates).toBe(true);
+    expect(normalizeCreditSettings({ chargeQuoteUpdates: 'evet' }).chargeQuoteUpdates).toBe(false);
+  });
+});

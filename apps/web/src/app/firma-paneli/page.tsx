@@ -11,9 +11,11 @@ import {
   type CompanyRequest,
   type Paginated,
 } from "@/lib/api";
+import { CreditTable } from "@/components/credits/credit-table";
 import { BADGE_KEYS, BADGE_ORDER } from "@/lib/badges";
 import { getCompanyContext } from "@/lib/company";
 import { formatDate, formatMoney, formatPhone, place } from "@/lib/format";
+import { formatCredits, type CompanyCreditSummary, type CreditTransaction } from "@/lib/credits";
 import { homeTypeLabel } from "@/lib/request-options";
 import { RequestFlags, route } from "./request-bits";
 
@@ -27,12 +29,16 @@ const monthName = (month: string) =>
 export default async function CompanyDashboardPage() {
   const { token, profile, user } = await getCompanyContext();
   if (!profile) return null;
-  const [overview, fresh, upcoming, badges] = await Promise.all([
+  const [overview, fresh, upcoming, badges, credits, recentCredits] = await Promise.all([
     apiFetch<CompanyOverview>("/company/overview", { token }),
     apiFetch<Paginated<CompanyRequest>>("/company/requests?quoted=no&limit=5", { token }),
     apiFetch<Paginated<CompanyBooking>>("/company/bookings?status=SCHEDULED&limit=5", { token }),
     apiFetch<BadgeProgress>("/company/profile/badges", { token }).catch(() => null),
+    apiFetch<CompanyCreditSummary>("/company/credits", { token }).catch(() => null),
+    apiFetch<Paginated<CreditTransaction>>("/company/credits/transactions?limit=5", { token }).catch(() => null),
   ]);
+  // Kredi sekmesiyle aynı kural: sistem açıksa ya da bakiye varsa kredi takibi gösterilir
+  const showCredits = !!credits && (credits.enabled || credits.balance > 0);
   const earned = badges ? BADGE_ORDER.filter((code) => badges[BADGE_KEYS[code]].earned) : [];
   const { requests, quotes, bookings, revenue, rating } = overview;
 
@@ -77,6 +83,28 @@ export default async function CompanyDashboardPage() {
         }
       />
       <StatGrid stats={stats} />
+
+      {showCredits && credits && (
+        <section aria-labelledby="kredi-takibi" className="mt-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 id="kredi-takibi" className="text-lg font-semibold text-slate-900">
+              Kredi takibi
+            </h2>
+            <p className="text-sm text-slate-600">
+              Bakiye <span className="font-semibold tabular-nums text-slate-900">{formatCredits(credits.balance)}</span>
+              {credits.balance < credits.lowBalanceThreshold && <span className="ml-2 text-amber-800">· düşük bakiye</span>}
+            </p>
+          </div>
+          <div className="mt-3">
+            <CreditTable items={recentCredits?.items ?? []} empty="Henüz kredi hareketi yok." />
+          </div>
+          <p className="mt-2 text-sm">
+            <Link href="/firma-paneli/kredi" className="font-semibold text-brand-700 hover:underline">
+              Tüm hareketler ve kredi yükleme
+            </Link>
+          </p>
+        </section>
+      )}
 
       <div className="mt-8 grid grid-cols-1 gap-6 2xl:grid-cols-2">
         <section aria-labelledby="yeni-talepler">
