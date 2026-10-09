@@ -1,0 +1,30 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "firma-deneme": {
+      "distribution": "internal",
+      "env": { "APP_VARIANT": "firma" },
+      "android": { "buildType": "apk" }
+    },
+    "musteri-deneme": {
+      "distribution": "internal",
+      "env": { "APP_VARIANT": "musteri" },
+      "android": { "buildType": "apk" }
+    },
+    "firma": {
+      "autoIncrement": true,
+      "env": { "APP_VARIANT": "firma" }
+    },
+    "musteri": {
+      "autoIncrement": true,
+      "env": { "APP_VARIANT": "musteri" }
+    }
+  },
+  "submit": {
+    "firma": {},
+    "musteri": {}
+  }
+}

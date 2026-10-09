@@ -1,0 +1,37 @@
+{
+  "name": "@nakliyat/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Firma ve müşteri mobil uygulamaları (Expo). Aynı kod, APP_VARIANT ile iki ayrı uygulama.",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start:firma": "pnpm --filter @nakliyat/api-client build && APP_VARIANT=firma expo start --clear",
+    "start:musteri": "pnpm --filter @nakliyat/api-client build && APP_VARIANT=musteri expo start --clear",
+    "eas-build-post-install": "pnpm --filter @nakliyat/api-client build",
+    "lint": "oxlint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo/log-box": "^57.0.4",
+    "@expo/metro-runtime": "^57.0.16",
+    "@nakliyat/api-client": "workspace:*",
+    "expo": "~57.0.27",
+    "expo-constants": "~57.0.21",
+    "expo-font": "~57.0.4",
+    "expo-linking": "~57.0.12",
+    "expo-router": "~57.0.25",
+    "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.9",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.2"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "oxlint": "^1.58.0",
+    "typescript": "~6.0.3"
+  }
+}
