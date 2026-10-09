@@ -23,6 +23,8 @@ export interface CreditSettings {
   minTopupTry: number;
   /** Havale/EFT yapılacak hesaplar; boşsa firma havale bildiremez */
   bankAccounts: BankAccount[];
+  /** Kartla ödeme (iyzico anahtarları sunucuda tanımlıysa) */
+  cardEnabled: boolean;
 }
 
 export type BankAccount = {
@@ -32,7 +34,7 @@ export type BankAccount = {
   iban: string;
 };
 
-export type CreditSettingKey = keyof Omit<CreditSettings, 'enabled' | 'bankAccounts'>;
+export type CreditSettingKey = keyof Omit<CreditSettings, 'enabled' | 'bankAccounts' | 'cardEnabled'>;
 
 export const CREDIT_SETTING_LIMITS: Record<CreditSettingKey, { min: number; max: number; integer: boolean }> = {
   creditValueTry: { min: 0.01, max: 10_000, integer: false },
@@ -57,13 +59,18 @@ export const DEFAULT_CREDIT_SETTINGS: CreditSettings = {
   lowBalanceThreshold: 100,
   minTopupTry: 100,
   bankAccounts: [],
+  cardEnabled: false,
 };
+
+/** Kartla tek seferde en fazla yükleme (TL) */
+export const CARD_MAX_TRY = 50_000;
 
 /** Kayıttaki ayar eksik ya da bozuksa o alan için varsayılan kullanılır */
 export function normalizeCreditSettings(raw: unknown): CreditSettings {
   const src = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   const out: CreditSettings = { ...DEFAULT_CREDIT_SETTINGS };
   if (typeof src.enabled === 'boolean') out.enabled = src.enabled;
+  if (typeof src.cardEnabled === 'boolean') out.cardEnabled = src.cardEnabled;
   for (const [key, { min, max, integer }] of Object.entries(CREDIT_SETTING_LIMITS) as [CreditSettingKey, (typeof CREDIT_SETTING_LIMITS)[CreditSettingKey]][]) {
     const v = src[key];
     if (typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max && (!integer || Number.isInteger(v))) out[key] = v;

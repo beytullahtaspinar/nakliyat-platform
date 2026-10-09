@@ -1241,7 +1241,8 @@
                 "ADMIN_CREDIT",
                 "ADMIN_DEBIT",
                 "WELCOME",
-                "TRANSFER_TOPUP"
+                "TRANSFER_TOPUP",
+                "CARD_TOPUP"
               ]
             }
           }
@@ -1379,6 +1380,63 @@
         ],
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      }
+    },
+    "/v1/company/credits/card-payments": {
+      "post": {
+        "operationId": "CompanyCreditsController_startCardPayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartCardPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Firma: kredi"
+        ]
+      }
+    },
+    "/v1/company/credits/card-payments/{id}": {
+      "get": {
+        "operationId": "CompanyCreditsController_cardPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -3024,7 +3082,8 @@
                 "ADMIN_CREDIT",
                 "ADMIN_DEBIT",
                 "WELCOME",
-                "TRANSFER_TOPUP"
+                "TRANSFER_TOPUP",
+                "CARD_TOPUP"
               ]
             }
           },
@@ -3258,6 +3317,76 @@
         },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin: kredi"
+        ]
+      }
+    },
+    "/v1/admin/credits/card-payments": {
+      "get": {
+        "operationId": "AdminCreditsController_listCardPayments",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "SUCCESS",
+                "FAILED",
+                "EXPIRED"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Firma adında arar",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -5349,6 +5478,19 @@
           "iban"
         ]
       },
+      "StartCardPaymentDto": {
+        "type": "object",
+        "properties": {
+          "amountTry": {
+            "type": "number",
+            "description": "Ödenecek tutar (TL, KDV dahil)",
+            "example": 1000
+          }
+        },
+        "required": [
+          "amountTry"
+        ]
+      },
       "CreateQuoteDto": {
         "type": "object",
         "properties": {
@@ -5699,6 +5841,10 @@
             "type": "number",
             "description": "Bakiye bunun altına inince firmaya uyarı"
           },
+          "cardEnabled": {
+            "type": "boolean",
+            "description": "Kartla ödeme açık (iyzico anahtarları da gerekir)"
+          },
           "minTopupTry": {
             "type": "number",
             "description": "Havale bildiriminde en az tutar (TL)"
@@ -5929,7 +6075,7 @@
               "REVIEW_REQUEST",
               "NEW_REVIEW",
               "COMPANY_VERIFICATION",
-              "CREDIT_TRANSFER"
+              "CREDIT_TOPUP"
             ]
           },
           "channel": {

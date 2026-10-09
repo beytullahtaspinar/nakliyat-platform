@@ -1,6 +1,6 @@
 /** Kredi defteri: türler, etiketler ve biçimler (API: /company/credits, /admin/credits) */
 
-export type CreditTransactionType = "QUOTE" | "QUOTE_REFUND" | "ADMIN_CREDIT" | "ADMIN_DEBIT" | "WELCOME" | "TRANSFER_TOPUP";
+export type CreditTransactionType = "QUOTE" | "QUOTE_REFUND" | "ADMIN_CREDIT" | "ADMIN_DEBIT" | "WELCOME" | "TRANSFER_TOPUP" | "CARD_TOPUP";
 
 export const CREDIT_TYPE_LABELS: Record<CreditTransactionType, string> = {
   QUOTE: "Teklif",
@@ -9,12 +9,14 @@ export const CREDIT_TYPE_LABELS: Record<CreditTransactionType, string> = {
   ADMIN_DEBIT: "Yönetim düştü",
   WELCOME: "Hoş geldin kredisi",
   TRANSFER_TOPUP: "Havale/EFT",
+  CARD_TOPUP: "Kartla ödeme",
 };
 
 /** Liste süzgeçleri: adres çubuğundaki değer → API türü */
 export const CREDIT_FILTERS: { value: string; label: string; type?: CreditTransactionType }[] = [
   { value: "tumu", label: "Tümü" },
   { value: "teklif", label: "Teklif", type: "QUOTE" },
+  { value: "kart", label: "Kart", type: "CARD_TOPUP" },
   { value: "havale", label: "Havale/EFT", type: "TRANSFER_TOPUP" },
   { value: "iade", label: "İade", type: "QUOTE_REFUND" },
   { value: "eklenen", label: "Yönetim ekledi", type: "ADMIN_CREDIT" },
@@ -46,6 +48,8 @@ export type CompanyCreditSummary = {
   lowBalanceThreshold: number;
   /** Banka hesabı tanımlı değilse null: havale bildirimi kapalı */
   transfer: { code: string; minTopupTry: number; bankAccounts: BankAccount[] } | null;
+  /** Kartla ödeme kapalıysa ya da iyzico anahtarları yoksa null */
+  card: { minTry: number; maxTry: number; sandbox: boolean } | null;
 };
 
 /** Talep ayrıntısında: bu talebe teklif kaç kredi */
@@ -61,9 +65,16 @@ export type CreditSettings = {
   lowBalanceThreshold: number;
   minTopupTry: number;
   bankAccounts: BankAccount[];
+  cardEnabled: boolean;
 };
 
-export type AdminCreditSettings = { settings: CreditSettings; defaults: CreditSettings; updatedAt: string | null };
+export type AdminCreditSettings = {
+  settings: CreditSettings;
+  defaults: CreditSettings;
+  updatedAt: string | null;
+  /** iyzico anahtarları sunucuda tanımlı mı, deneme ortamı mı */
+  card: { configured: boolean; sandbox: boolean };
+};
 
 type TypeTotals = Record<CreditTransactionType, { amount: number; count: number }>;
 
@@ -83,7 +94,7 @@ export type AdminCompanyCredits = {
   recent: { items: CreditTransaction[]; total: number };
 };
 
-type NumberKey = Exclude<keyof CreditSettings, "enabled" | "bankAccounts">;
+type NumberKey = Exclude<keyof CreditSettings, "enabled" | "bankAccounts" | "cardEnabled">;
 
 /** Yönetim ayar formu: alanlar, birimleri ve sınırları (API ile aynı) */
 export const CREDIT_SETTING_FIELDS: { key: NumberKey; label: string; unit: string; hint: string; min: number; max: number; decimal?: boolean }[] = [
@@ -185,3 +196,47 @@ export function parseTryAmount(raw: string) {
   const normalized = s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : /^\d{1,3}(\.\d{3})+$/.test(s) ? s.replace(/\./g, "") : s;
   return /^\d+(\.\d{1,2})?$/.test(normalized) ? Number(normalized) : NaN;
 }
+
+// ─── Kartla ödeme (iyzico) ───────────────────────────────────
+
+export type CardPaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | "EXPIRED";
+
+export const CARD_STATUS: Record<CardPaymentStatus, { label: string; tone: "warning" | "success" | "danger" | "neutral" }> = {
+  PENDING: { label: "Bekliyor", tone: "warning" },
+  SUCCESS: { label: "Başarılı", tone: "success" },
+  FAILED: { label: "Başarısız", tone: "danger" },
+  EXPIRED: { label: "Tamamlanmadı", tone: "neutral" },
+};
+
+export const CARD_FILTERS: { value: string; label: string; status?: CardPaymentStatus }[] = [
+  { value: "tumu", label: "Tümü" },
+  { value: "basarili", label: "Başarılı", status: "SUCCESS" },
+  { value: "basarisiz", label: "Başarısız", status: "FAILED" },
+  { value: "bekleyen", label: "Bekleyen", status: "PENDING" },
+  { value: "tamamlanmayan", label: "Tamamlanmadı", status: "EXPIRED" },
+];
+
+/** Kart formunda hızlı seçim tutarları (TL) */
+export const CARD_PRESETS = [500, 1000, 2500, 5000];
+
+export type CardPayment = {
+  id: string;
+  status: CardPaymentStatus;
+  amountTry: string;
+  credits: number;
+  sandbox: boolean;
+  providerPaymentId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+export type AdminCardPaymentList = {
+  items: (CardPayment & { company: { id: string; displayName: string }; user: { id: string; fullName: string } | null })[];
+  total: number;
+  page: number;
+  limit: number;
+  last30Days: { count: number; amountTry: string; credits: number };
+  configured: boolean;
+  sandbox: boolean;
+};

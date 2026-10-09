@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
-import type { BankTransfer } from "@/lib/credits";
+import { parseTryAmount, type BankTransfer } from "@/lib/credits";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 import type { UploadTicket } from "./media";
 
@@ -64,4 +65,23 @@ export async function cancelTransfer(transferId: string): Promise<{ error?: stri
   if (!result.ok) return { error: result.error };
   revalidatePath("/firma-paneli/kredi");
   return {};
+}
+
+export type CardPaymentState = { error?: string };
+
+/** Kartla ödemeyi başlatır ve iyzico ödeme sayfasına yönlendirir */
+export async function startCardPayment(_prev: CardPaymentState, formData: FormData): Promise<CardPaymentState> {
+  const amountTry = parseTryAmount(String(formData.get("amountTry") ?? ""));
+  if (!Number.isFinite(amountTry) || amountTry <= 0) return { error: "Tutarı yaz (ör. 1000 ya da 1.000)." };
+  const result = await run(
+    async () =>
+      apiFetch<{ id: string; paymentPageUrl: string }>("/company/credits/card-payments", {
+        method: "POST",
+        token: await companyToken(),
+        body: { amountTry },
+      }),
+    "Ödeme başlatılamadı, lütfen tekrar dene.",
+  );
+  if (!result.ok) return { error: result.error };
+  redirect(result.data.paymentPageUrl);
 }

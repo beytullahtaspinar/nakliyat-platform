@@ -70,6 +70,8 @@ test("firma havaleyi dekontla bildirir, yönetim tutarı düzeltip onaylar, kred
   await adminPage.getByRole("button", { name: "Kaydet" }).click();
   await expect(adminPage.getByText(/IBAN geçersiz/)).toBeVisible();
   await iban.fill(IBAN);
+  // Kart ayarı da ortak kayıtta: kart testiyle aynı değeri yazar (paralel testler birbirini bozmasın)
+  await adminPage.getByLabel("Kartla ödeme açık (iyzico)").check();
   await adminPage.getByRole("button", { name: "Kaydet" }).click();
   await expect(adminPage.getByText("Kaydedildi. Kredi sistemi kapalı: teklif vermek ücretsiz.")).toBeVisible();
   await expectAccessible(adminPage);

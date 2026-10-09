@@ -3,11 +3,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { BankTransfersService } from '../credits/bank-transfers.service.js';
+import { CardPaymentsService } from '../payments/card-payments.service.js';
 import { CreditsService } from '../credits/credits.service.js';
 import {
   AdjustCreditDto,
   AdminCreditTransactionsDto,
   ApproveBankTransferDto,
+  ListCardPaymentsDto,
   ListBankTransfersDto,
   RejectBankTransferDto,
   UpdateCreditSettingsDto,
@@ -22,6 +24,7 @@ export class AdminCreditsController {
   constructor(
     private readonly credits: CreditsService,
     private readonly transfers: BankTransfersService,
+    private readonly cardPayments: CardPaymentsService,
   ) {}
 
   /** Pano: firmalardaki toplam bakiye, bu ay (TSİ) ve tüm zamanlar türe göre toplamlar */
@@ -30,15 +33,16 @@ export class AdminCreditsController {
     return this.credits.overview();
   }
 
+  /** Ayarlar; `card` iyzico anahtarlarının sunucuda tanımlı olup olmadığını söyler (anahtarların kendisi dönmez) */
   @Get('credits/settings')
-  settings() {
-    return this.credits.adminSettings();
+  async settings() {
+    return { ...(await this.credits.adminSettings()), card: this.cardPayments.status() };
   }
 
   /** Önceki ve yeni değerler karar geçmişine yazılır */
   @Patch('credits/settings')
-  updateSettings(@CurrentUser() admin: AuthUser, @Body() dto: UpdateCreditSettingsDto) {
-    return this.credits.updateSettings(admin.id, { ...dto });
+  async updateSettings(@CurrentUser() admin: AuthUser, @Body() dto: UpdateCreditSettingsDto) {
+    return { ...(await this.credits.updateSettings(admin.id, { ...dto })), card: this.cardPayments.status() };
   }
 
   /** Tüm kredi hareketleri; firma, tür ve firma adıyla süzülür */
@@ -82,5 +86,11 @@ export class AdminCreditsController {
   @Post('credits/transfers/:id/reject')
   rejectTransfer(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: RejectBankTransferDto) {
     return this.transfers.reject(admin.id, id, dto.reason);
+  }
+
+  /** Kart ödemeleri (başarısız ve yarım kalanlar dahil); son 30 günün gerçek tahsilatı */
+  @Get('credits/card-payments')
+  listCardPayments(@Query() dto: ListCardPaymentsDto) {
+    return this.cardPayments.listForAdmin(dto);
   }
 }

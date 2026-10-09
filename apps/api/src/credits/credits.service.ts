@@ -285,6 +285,11 @@ export class CreditsService {
     return this.post(tx, { companyId, type: CreditTransactionType.TRANSFER_TOPUP, amount: credits, idempotencyKey: `transfer:${transferId}`, actorId, note });
   }
 
+  /** Başarılı kart ödemesi; ödeme onay işleminin içinde çağrılır */
+  topUpFromCard(tx: Tx, { companyId, paymentId, credits, note }: { companyId: string; paymentId: string; credits: number; note: string }) {
+    return this.post(tx, { companyId, type: CreditTransactionType.CARD_TOPUP, amount: credits, idempotencyKey: `card:${paymentId}`, note });
+  }
+
   // ─── İç ──────────────────────────────────────────────────────
 
   private refundQuote(q: { id: string; companyId: string; requestId: string }, amount: number, note: string) {

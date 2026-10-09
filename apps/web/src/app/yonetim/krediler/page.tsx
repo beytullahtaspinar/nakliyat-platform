@@ -50,6 +50,12 @@ export default async function AdminCreditsPage({ searchParams }: PageProps<"/yon
         actions={
           <div className="flex flex-wrap gap-2">
             <Link
+              href="/yonetim/krediler/kart-odemeleri"
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-50"
+            >
+              Kart ödemeleri
+            </Link>
+            <Link
               href="/yonetim/krediler/havaleler"
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-50"
             >
@@ -72,10 +78,10 @@ export default async function AdminCreditsPage({ searchParams }: PageProps<"/yon
             href: "/yonetim/firmalar",
           },
           {
-            label: `${month} ayında havaleyle yüklenen`,
-            value: formatCredits(m.TRANSFER_TOPUP.amount),
-            hint: `${m.TRANSFER_TOPUP.count} havale${overview.transfersPending > 0 ? ` · ${overview.transfersPending} onay bekliyor` : ""}`,
-            href: "/yonetim/krediler/havaleler?durum=onaylanan",
+            label: `${month} ayında satılan`,
+            value: formatCredits(m.CARD_TOPUP.amount + m.TRANSFER_TOPUP.amount),
+            hint: `${m.CARD_TOPUP.count} kart, ${m.TRANSFER_TOPUP.count} havale${overview.transfersPending > 0 ? ` · ${overview.transfersPending} havale onay bekliyor` : ""}`,
+            href: "/yonetim/krediler/kart-odemeleri?durum=basarili",
           },
           { label: `${month} ayında harcanan`, value: formatCredits(spent), hint: `${m.QUOTE.count} teklif, ${m.QUOTE_REFUND.count} iade`, href: href("teklif") },
           {

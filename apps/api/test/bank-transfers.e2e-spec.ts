@@ -184,7 +184,7 @@ describe('Havale bildirimi (e2e)', () => {
     expect(txs.body.items[0]).toMatchObject({ amount: 2900, balanceAfter: 2900, note: 'Havale/EFT 1.450,00 TL' });
 
     await app.get(DomainEvents).drain();
-    const note = await prisma.notification.findFirst({ where: { user: { phone: phones.companyA }, type: 'CREDIT_TRANSFER' } });
+    const note = await prisma.notification.findFirst({ where: { user: { phone: phones.companyA }, type: 'CREDIT_TOPUP' } });
     expect(note?.title).toBe('Havalen onaylandı: 2.900 kredi yüklendi');
     const log = await prisma.auditLog.findFirst({ where: { action: 'transfer.approve', entityId: companyIds.companyA } });
     expect(log?.details).toMatchObject({ reportedTry: 1500, amountTry: 1450, credits: 2900 });
@@ -202,7 +202,7 @@ describe('Havale bildirimi (e2e)', () => {
     expect((await http().get('/v1/company/credits').set(auth('companyB')).expect(200)).body.balance).toBe(0);
     await http().post(`/v1/company/credits/transfers/${pending.id}/cancel`).set(auth('companyB')).expect(409);
     await app.get(DomainEvents).drain();
-    const note = await prisma.notification.findFirst({ where: { user: { phone: phones.companyB }, type: 'CREDIT_TRANSFER' } });
+    const note = await prisma.notification.findFirst({ where: { user: { phone: phones.companyB }, type: 'CREDIT_TOPUP' } });
     expect(note?.title).toBe('Havale bildirimin onaylanmadı');
 
     const second = (await report('companyB', { amountTry: 250 })).body;
