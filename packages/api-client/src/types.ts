@@ -246,3 +246,91 @@ export type CompanyCalendar = {
     customerName: string;
   }[];
 };
+
+// ─── Firma hesabı: belgeler, kredi, değerlendirmeler, müşteriler ──────────
+
+export type DocumentType = 'K3_LICENSE' | 'TAX_CERTIFICATE' | 'TRADE_REGISTRY' | 'INSURANCE' | 'OTHER';
+
+export type CompanyDocument = {
+  id: string;
+  type: DocumentType;
+  status: VerificationStatus;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  /** YYYY-AA-GG */
+  validUntil: string | null;
+  expired: boolean;
+  reviewNote: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  /** Kısa süreli imzalı görüntüleme adresi */
+  url: string;
+};
+
+export type DocumentRequirement = {
+  type: DocumentType;
+  state: 'VERIFIED' | 'PENDING' | 'REJECTED' | 'EXPIRED' | 'MISSING';
+};
+
+/** GET /company/documents */
+export type CompanyDocumentSummary = { documents: CompanyDocument[]; requirements: DocumentRequirement[] };
+
+/** Dosya yükleme adresi: dosya bu adrese PUT ile gönderilir */
+export type UploadTicket = { key: string; url: string; method: 'PUT'; headers: Record<string, string> };
+
+/** GET /company/credits (uygulamada yalnızca bakiye ve ücretler kullanılır) */
+export type CompanyCreditSummary = {
+  enabled: boolean;
+  balance: number;
+  quoteCostLocal: number;
+  quoteCostIntercity: number;
+  lowBalanceThreshold: number;
+};
+
+export type CreditTransactionType =
+  | 'QUOTE'
+  | 'QUOTE_REFUND'
+  | 'ADMIN_CREDIT'
+  | 'ADMIN_DEBIT'
+  | 'WELCOME'
+  | 'TRANSFER_TOPUP'
+  | 'CARD_TOPUP';
+
+export type CreditTransaction = {
+  id: string;
+  type: CreditTransactionType;
+  amount: number;
+  balanceAfter: number;
+  note: string | null;
+  createdAt: string;
+  request: { id: string; fromCityName: string | null; toCityName: string | null } | null;
+};
+
+export type RatingDistribution = Record<'1' | '2' | '3' | '4' | '5', number>;
+
+/** GET /company/reviews */
+export type CompanyReviews = Paginated<OwnReview & { customerName: string; bookingId: string; route: string; moveDate: string }> & {
+  summary: {
+    ratingAverage: string;
+    ratingCount: number;
+    distribution: RatingDistribution;
+    counts: { total: number; unanswered: number; hidden: number };
+  };
+};
+
+/** GET /company/customers */
+export type CompanyCustomer = {
+  fullName: string;
+  phone: string;
+  bookingCount: number;
+  activeCount: number;
+  totalTry: number;
+  lastBooking: {
+    id: string;
+    status: BookingStatus;
+    scheduledAt: string;
+    from: { cityName: string | null; districtName: string | null };
+    to: { cityName: string | null; districtName: string | null };
+  };
+};

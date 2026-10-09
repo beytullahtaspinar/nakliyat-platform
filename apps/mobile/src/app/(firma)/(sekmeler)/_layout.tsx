@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { CompanyOverview, UnreadMessages } from '@nakliyat/api-client';
+import type { CompanyOverview, CompanyReviews, UnreadMessages } from '@nakliyat/api-client';
 import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import type { ColorValue } from 'react-native';
@@ -14,10 +14,12 @@ const icon =
     <Ionicons name={focused ? active : inactive} color={color} size={size} />
   );
 
-/** Sitedeki firma panelinin menüsü. Rozetler: teklif vermediğin talepler ve okunmamış mesajlar */
+/** Sitedeki firma panelinin menüsü. Rozetler: teklif vermediğin talepler, okunmamış mesajlar, yanıt bekleyen yorumlar */
 export default function TabsLayout() {
   const { data, reload } = useApi<CompanyOverview>('/company/overview');
   const { data: unread, reload: reloadUnread } = useApi<UnreadMessages>('/messages/unread');
+  const { data: reviews, reload: reloadReviews } = useApi<CompanyReviews>('/company/reviews?limit=1&reply=unanswered');
+  const unanswered = reviews?.summary.counts.unanswered ?? 0;
   const notQuoted = data?.requests.notQuoted ?? 0;
   const unreadTotal = unread?.total ?? 0;
 
@@ -27,6 +29,7 @@ export default function TabsLayout() {
         tabPress: () => {
           void reload();
           void reloadUnread();
+          void reloadReviews();
         },
       }}
       screenOptions={{
@@ -56,6 +59,15 @@ export default function TabsLayout() {
           tabBarIcon: icon('car', 'car-outline'),
           tabBarBadge: unreadTotal > 0 ? (unreadTotal > 99 ? '99+' : unreadTotal) : undefined,
           tabBarAccessibilityLabel: unreadTotal > 0 ? `İşlerim, ${unreadTotal} okunmamış mesaj` : 'İşlerim',
+        }}
+      />
+      <Tabs.Screen
+        name="hesap"
+        options={{
+          title: 'Hesap',
+          tabBarIcon: icon('person-circle', 'person-circle-outline'),
+          tabBarBadge: unanswered > 0 ? (unanswered > 99 ? '99+' : unanswered) : undefined,
+          tabBarAccessibilityLabel: unanswered > 0 ? `Hesap, ${unanswered} yorum yanıt bekliyor` : 'Hesap',
         }}
       />
     </Tabs>

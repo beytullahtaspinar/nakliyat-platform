@@ -13,6 +13,11 @@ export function companyRoute(path: string, tag = ''): Href {
     if (!id) return '/isler';
     return tag.startsWith('NEW_MESSAGE') ? { pathname: '/is/[id]/mesajlar', params: { id } } : { pathname: '/is/[id]', params: { id } };
   }
+  if (section === 'degerlendirmeler') return '/degerlendirmeler';
+  if (section === 'kredi') return '/kredi';
+  if (section === 'belgeler') return '/belgeler';
+  // Firma onayı ve ad değişikliği bildirimleri: durum Hesap sekmesinde görünür
+  if (section === 'profil') return '/hesap';
   return '/';
 }
 

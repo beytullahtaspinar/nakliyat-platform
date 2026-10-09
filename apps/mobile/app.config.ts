@@ -66,6 +66,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     'expo-secure-store',
+    // Belgenin fotoğrafını çekmek için kamera; galeri ve mikrofon kullanılmaz
+    [
+      'expo-image-picker',
+      {
+        cameraPermission: 'Firma belgelerinin fotoğrafını çekip yükleyebilmen için kamera izni gerekiyor.',
+        photosPermission: false,
+        microphonePermission: false,
+      },
+    ],
     ['expo-notifications', { icon: `${assets}/notification-icon.png`, color: v.background, defaultChannel: 'default' }],
     [
       'expo-splash-screen',
