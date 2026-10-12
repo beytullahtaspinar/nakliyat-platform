@@ -14,7 +14,8 @@ describe('Anlık bildirim (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let notifications: NotificationsService;
-  const phones = { company: '+905320000401', customer: '+905320000402' };
+  // Numaralar diğer e2e dosyalarıyla çakışmamalı (dosyalar paralel koşar)
+  const phones = { company: '+905320000411', customer: '+905320000412' };
   const tokens: Record<string, string> = {};
   const endpoint = 'https://fcm.googleapis.com/fcm/send/e2e-cihaz-1';
   const subscription = { endpoint, keys: { p256dh: 'BOr-p256dh-anahtari', auth: 'auth-anahtari' } };
