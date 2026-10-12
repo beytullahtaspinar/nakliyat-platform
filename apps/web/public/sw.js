@@ -6,7 +6,7 @@
  *
  * Bu dosya değişince SURUM'ü artır: tarayıcı yeni sürümü kurar ve çevrimdışı sayfayı yeniler.
  */
-const SURUM = "1";
+const SURUM = "2";
 const ONBELLEK = `cevrimdisi-${SURUM}`;
 const CEVRIMDISI = "/cevrimdisi.html";
 
