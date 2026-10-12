@@ -17,7 +17,7 @@ import { useDialog } from '@/components/dialog';
 import { RouteMapView } from '@/components/map';
 import { DetailScreen, Section } from '@/components/panel';
 import { Stars } from '@/components/review';
-import { AppText, Badge, Button, Field, Notice } from '@/components/ui';
+import { AppText, Badge, Badges, Button, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { formatPhone } from '@/lib/bookings';
 import { formatDate, REQUEST_STATUS } from '@/lib/format';
@@ -106,22 +106,25 @@ export default function RequestScreen() {
       });
   }
 
+  const services = [request.needsPacking && 'Paketleme', request.needsAssembly && 'Söküm/kurulum', request.needsStorage && 'Depolama'].filter(
+    (x): x is string => !!x,
+  );
   const fromPin = request.fromLat != null && request.fromLng != null ? { lat: request.fromLat, lng: request.fromLng } : null;
   const toPin = request.toLat != null && request.toLng != null ? { lat: request.toLat, lng: request.toLng } : null;
 
   return (
     <DetailScreen backLabel="Taleplerim" onRefresh={refresh}>
-      <View style={{ gap: 6 }}>
+      <View style={{ gap: 10 }}>
         <AppText weight="bold" accessibilityRole="header" style={{ fontSize: 22, lineHeight: 28, letterSpacing: -0.3 }}>
           {place(request.fromCityName, request.fromDistrictName)} → {place(request.toCityName, request.toDistrictName)}
         </AppText>
-        <AppText style={{ color: colors.zinc600 }}>
-          {homeTypeLabel(request.homeType)} · {formatDate(request.moveDate)}
-          {request.isDateFlexible ? ' (esnek)' : ''}
-          {request.routeKm != null || request.distanceKm ? ` · ${distanceText(request)}` : ''}
-          {request.estimatedVolumeM3 ? ` · yaklaşık ${request.estimatedVolumeM3} m³` : ''}
-        </AppText>
-        <Badge tone={status.tone}>{status.label}</Badge>
+        <Badges>
+          <Badge tone={status.tone}>{status.label}</Badge>
+          <Badge icon="home-outline">{homeTypeLabel(request.homeType)}</Badge>
+          <Badge icon="calendar-outline">{`${formatDate(request.moveDate)}${request.isDateFlexible ? ' (esnek)' : ''}`}</Badge>
+          {request.routeKm != null || request.distanceKm ? <Badge icon="navigate-outline">{distanceText(request)}</Badge> : null}
+          {request.estimatedVolumeM3 ? <Badge icon="cube-outline">{`yaklaşık ${request.estimatedVolumeM3} m³`}</Badge> : null}
+        </Badges>
       </View>
 
       {notice ? <Notice tone="info">{notice}</Notice> : null}
@@ -175,14 +178,36 @@ export default function RequestScreen() {
 
       <Section title="Talep bilgilerin" description="Açık adresin ve haritadaki işaretin yalnızca teklifini kabul ettiğin firmayla paylaşılır.">
         <RouteMapView from={fromPin} to={toPin} />
-        <Row label="Çıkış">{stopLine(request.fromAddress, request.fromFloor, request.fromHasElevator)}</Row>
-        <Row label="Varış">{stopLine(request.toAddress, request.toFloor, request.toHasElevator)}</Row>
-        <Row label="Hizmetler">
-          {[request.needsPacking && 'Paketleme', request.needsAssembly && 'Söküm/kurulum', request.needsStorage && 'Depolama']
-            .filter(Boolean)
-            .join(', ') || 'Yok'}
+        <Row label="Çıkış">
+          <StopInfo address={request.fromAddress} floor={request.fromFloor} elevator={request.fromHasElevator} />
         </Row>
-        {request.specialItems.length ? <Row label="Özel eşya">{request.specialItems.join(', ')}</Row> : null}
+        <Row label="Varış">
+          <StopInfo address={request.toAddress} floor={request.toFloor} elevator={request.toHasElevator} />
+        </Row>
+        <Row label="Hizmetler">
+          {services.length ? (
+            <Badges>
+              {services.map((label) => (
+                <Badge key={label} icon="checkmark-circle" tone="success">
+                  {label}
+                </Badge>
+              ))}
+            </Badges>
+          ) : (
+            'Yok'
+          )}
+        </Row>
+        {request.specialItems.length ? (
+          <Row label="Özel eşya">
+            <Badges>
+              {request.specialItems.map((item) => (
+                <Badge key={item} icon="alert-circle-outline" tone="warning">
+                  {item}
+                </Badge>
+              ))}
+            </Badges>
+          </Row>
+        ) : null}
         {request.notes ? <Row label="Notun">{request.notes}</Row> : null}
       </Section>
 
@@ -549,5 +574,14 @@ function PhotosSection({
   );
 }
 
-const stopLine = (address: string, floor: number, elevator: boolean) =>
-  `${address || 'Açık adres yazılmadı'} · ${floorLabel(floor)}, ${elevator ? 'asansörlü' : 'asansörsüz'}`;
+function StopInfo({ address, floor, elevator }: { address: string; floor: number; elevator: boolean }) {
+  return (
+    <View style={{ gap: 6 }}>
+      <AppText style={address ? undefined : { color: colors.zinc500 }}>{address || 'Açık adres yazılmadı'}</AppText>
+      <Badges>
+        <Badge icon="layers-outline">{floorLabel(floor)}</Badge>
+        <Badge icon={elevator ? 'arrow-up-circle-outline' : 'walk-outline'}>{elevator ? 'Asansörlü' : 'Asansörsüz'}</Badge>
+      </Badges>
+    </View>
+  );
+}
