@@ -149,7 +149,7 @@ export default function Home() {
                   ))}
                 </select>
               </label>
-              <button type="submit" className={buttonClass({ size: "lg", className: "w-full" })}>
+              <button type="submit" className={buttonClass({ variant: "accent", size: "lg", className: "w-full" })}>
                 Teklifleri görmeye başla <ArrowRightIcon className="h-5 w-5" />
               </button>
             </form>

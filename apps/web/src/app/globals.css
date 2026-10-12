@@ -7,11 +7,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * evdenevenakliyat.app görsel kimliği
+ * evdenevenakliyat.app görsel kimliği (marka kimliği panosu, 2026-10-12)
  *
- * brand  : gece mavisi; güven ve kurumsallık. Birincil eylemler, bağlantılar, vurgu yüzeyleri.
- * accent : turuncu; enerji ve hareket. Az kullanılır (logo noktası, ikon, küçük vurgular), buton rengi değildir.
- *          Açık zeminde metin için en az accent-700 (WCAG AA 4.5:1), koyu zeminde accent-300/400.
+ * brand  : lacivert, panodaki ana renk #1B2F6E = brand-700. Birincil eylemler, bağlantılar, koyu yüzeyler.
+ * accent : turuncu, panodaki vurgu rengi #FF8A00 = accent-500. Logo, ikon, öne çıkan "Teklif al" düğmesi.
+ *          Turuncu zeminde metin her zaman koyu lacivert (brand-950, 7.7:1); beyaz metin okunmaz (2.4:1).
+ *          Açık zeminde turuncu metin için en az accent-700 (WCAG AA 4.5:1), koyu zeminde accent-300/400.
  * zinc   : nötrler, hafif mavimsi (slate) tona çekildi.
  *
  * Mevcut ekranlar `blue-*` ve `zinc-*` sınıflarını kullanıyor. Aşağıdaki eşlemeyle bu sınıflar
@@ -19,29 +20,29 @@
  * belli olsun diye `brand-*` / `accent-*` tercih edilir.
  */
 @theme {
-  --color-brand-50: #eff4ff;
-  --color-brand-100: #dbe6fe;
-  --color-brand-200: #bfd3fe;
-  --color-brand-300: #93b4fd;
-  --color-brand-400: #6090fa;
-  --color-brand-500: #3b6ef6;
-  --color-brand-600: #1d4ed8;
-  --color-brand-700: #1e3a8a;
-  --color-brand-800: #1b2f6e;
-  --color-brand-900: #172554;
-  --color-brand-950: #0f1838;
+  --color-brand-50: #eef2fb;
+  --color-brand-100: #dce4f6;
+  --color-brand-200: #bccbee;
+  --color-brand-300: #8fa6de;
+  --color-brand-400: #6080cb;
+  --color-brand-500: #4361b8;
+  --color-brand-600: #2e4a9c;
+  --color-brand-700: #1b2f6e;
+  --color-brand-800: #16275c;
+  --color-brand-900: #111e48;
+  --color-brand-950: #0a1330;
 
-  --color-accent-50: #fff7ed;
-  --color-accent-100: #ffedd5;
-  --color-accent-200: #fed7aa;
-  --color-accent-300: #fdba74;
-  --color-accent-400: #fb923c;
-  --color-accent-500: #f97316;
-  --color-accent-600: #ea580c;
-  --color-accent-700: #c2410c;
-  --color-accent-800: #9a3412;
-  --color-accent-900: #7c2d12;
-  --color-accent-950: #431407;
+  --color-accent-50: #fff6ea;
+  --color-accent-100: #ffead0;
+  --color-accent-200: #ffd3a0;
+  --color-accent-300: #ffb862;
+  --color-accent-400: #ff9f2b;
+  --color-accent-500: #ff8a00;
+  --color-accent-600: #e27100;
+  --color-accent-700: #a34c00;
+  --color-accent-800: #843f00;
+  --color-accent-900: #6a3300;
+  --color-accent-950: #3a1b00;
 
   --color-zinc-50: #f8fafc;
   --color-zinc-100: #f1f5f9;
