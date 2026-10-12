@@ -1,6 +1,7 @@
 import type { CompanyDocument, CompanyDocumentSummary, DocumentRequirement, DocumentType, UploadTicket } from '@nakliyat/api-client';
 import type { Tone } from './requests';
 import { api } from './api';
+import { putBytes, readFileBytes } from './upload';
 
 /** Sitedeki apps/web/src/lib/company-documents.ts ile aynı kurallar ve metinler */
 export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
@@ -81,13 +82,12 @@ export const mimeOf = (f: PickedFile) => f.mimeType || BY_EXTENSION[f.name.split
 /** Dosyayı yükleme adresine gönderir ve belge olarak kaydeder (sitedeki akışın aynısı) */
 export async function uploadDocument(file: PickedFile, type: DocumentType, validUntil?: string) {
   const mimeType = mimeOf(file);
-  const blob = await (await fetch(file.uri)).blob();
+  const bytes = await readFileBytes(file.uri);
   const ticket = await api.request<UploadTicket>('/company/documents/uploads', {
     method: 'POST',
-    body: { mimeType, sizeBytes: blob.size },
+    body: { mimeType, sizeBytes: bytes.byteLength },
   });
-  const res = await fetch(ticket.url, { method: ticket.method, headers: ticket.headers, body: blob });
-  if (!res.ok) throw new Error('Dosya yüklenemedi, bağlantını kontrol edip tekrar dene.');
+  if (!(await putBytes(ticket, bytes))) throw new Error('Dosya yüklenemedi, bağlantını kontrol edip tekrar dene.');
   return api.request<CompanyDocumentSummary>('/company/documents', {
     method: 'POST',
     body: { type, key: ticket.key, fileName: file.name, ...(validUntil && { validUntil }) },
