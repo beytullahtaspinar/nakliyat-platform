@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
@@ -25,6 +25,19 @@ export class MessagesController {
   @Post('bookings/:id/messages')
   send(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: SendMessageDto) {
     return this.messages.send(user, id, dto.body);
+  }
+
+  /** Karşı tarafı engeller: engel kalkana kadar iki taraf da mesaj gönderemez. Güncel konuşmayı döner. */
+  @Post('bookings/:id/block')
+  @HttpCode(HttpStatus.OK)
+  block(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.messages.block(user, id);
+  }
+
+  /** Kendi koyduğu engeli kaldırır */
+  @Delete('bookings/:id/block')
+  unblock(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.messages.unblock(user, id);
   }
 
   /** Okunmamış mesaj sayıları: toplam ve iş başına */

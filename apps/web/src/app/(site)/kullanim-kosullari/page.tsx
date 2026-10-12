@@ -186,8 +186,19 @@ export default function TermsPage() {
           Firmalar kendileri veya rakipleri hakkında yorum yazdıramaz, yorum karşılığında indirim veya menfaat sunamaz.
         </li>
         <li>
-          Platform, bu kurallara veya mevzuata aykırı içerikleri kaldırabilir. Hukuka aykırı olduğunu düşündüğünüz bir
-          içeriği <a href={`mailto:${COMPANY.supportEmail}`}>{COMPANY.supportEmail}</a> adresine bildirebilirsiniz.
+          Yorumlar, firma yanıtları ve müşteri ile firma arasındaki mesajlar için de aynı kurallar geçerlidir. Platform
+          hakaret, küfür, tehdit, taciz, ayrımcılık, müstehcenlik veya dolandırıcılık içeren içeriğe hiçbir şekilde
+          izin vermez; bu tür içerik paylaşan kullanıcıların hesabı uyarı yapılmaksızın askıya alınabilir veya kapatılabilir.
+        </li>
+        <li>
+          Gönderilen metinler uygunsuz ifadelere karşı otomatik olarak süzülür. Uygunsuz bulduğunuz bir mesajı, yorumu
+          veya firma yanıtını sitede ve mobil uygulamalarda yanındaki &quot;Bildir&quot; bağlantısıyla bildirebilir; mesajlaştığınız
+          kişiyi &quot;Engelle&quot; ile engelleyebilirsiniz. Engellenen kişiyle o iş üzerinden karşılıklı mesajlaşma kapanır.
+        </li>
+        <li>
+          Bildirimler en geç 24 saat içinde incelenir; kurallara aykırı içerik kaldırılır ve gerekirse içeriği gönderen
+          hesap kapatılır. Hukuka aykırı olduğunu düşündüğünüz bir içeriği{" "}
+          <a href={`mailto:${COMPANY.supportEmail}`}>{COMPANY.supportEmail}</a> adresine de bildirebilirsiniz.
         </li>
       </ul>
 

@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { OwnReview } from '@nakliyat/api-client';
 import { useState } from 'react';
 import { View } from 'react-native';
+import { ReportButton } from '@/components/report';
 import { AppText, Button, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
@@ -44,7 +45,10 @@ export function ReviewBlock({ review, onReplied }: { review: OwnReview; onReplie
     <View style={{ gap: 8 }}>
       <Stars rating={review.rating} />
       <AppText style={{ color: review.comment ? colors.zinc900 : colors.zinc600 }}>{review.comment || 'Yorum yazılmadı.'}</AppText>
-      <AppText style={{ color: colors.zinc500, fontSize: 13 }}>{formatDate(review.createdAt)}</AppText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <AppText style={{ color: colors.zinc500, fontSize: 13 }}>{formatDate(review.createdAt)}</AppText>
+        {review.comment && review.isPublished ? <ReportButton target="REVIEW" targetId={review.id} compact /> : null}
+      </View>
       {!review.isPublished ? (
         <Notice tone="info">
           {`Bu yorum yönetim tarafından yayından kaldırıldı ve puan ortalamana girmiyor.${

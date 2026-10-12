@@ -1,4 +1,5 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, Logger } from '@nestjs/common';
+import { OAUTH_PROVIDERS, type OAuthProvider } from '../auth/oauth/provider.js';
 import { BookingStatus, QuoteStatus, RequestStatus, UserStatus } from '../generated/prisma/enums.js';
 import { CreditsService } from '../credits/credits.service.js';
 import { CompanyDocumentsService } from '../media/company-documents.service.js';
@@ -21,12 +22,15 @@ export interface AccountToDelete {
  */
 @Injectable()
 export class AccountDeletionService {
+  private readonly logger = new Logger(AccountDeletionService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
     private readonly documents: CompanyDocumentsService,
     private readonly showcase: CompanyShowcaseService,
     private readonly credits: CreditsService,
+    @Inject(OAUTH_PROVIDERS) private readonly oauthProviders: OAuthProvider[],
   ) {}
 
   /** Planlanmış taşıma işi varsa ConflictException; mesajı çağıran kendi kitlesine göre verir */
@@ -48,6 +52,11 @@ export class AccountDeletionService {
     const openRequests = await this.prisma.movingRequest.findMany({
       where: { customerId: id, status: { in: [RequestStatus.DRAFT, RequestStatus.OPEN] } },
       select: { id: true },
+    });
+    // Apple ile giriş yetkisi silmeden önce okunur, kayıt silindikten sonra Apple'da iptal edilir
+    const identities = await this.prisma.userIdentity.findMany({
+      where: { userId: id, revokeToken: { not: null } },
+      select: { provider: true, revokeToken: true },
     });
     await this.prisma.$transaction([
       this.prisma.user.update({
@@ -94,12 +103,22 @@ export class AccountDeletionService {
         data: { actorId, action, entityType: 'User', entityId: id, details: { role: user.role } },
       }),
     ]);
+    await this.revokeIdentities(identities);
     await this.credits.refundCancelledRequests(openRequests.map((r) => r.id));
     // Talep fotoğraf/videoları da kişisel veri: kayıt silindikten sonra depodan da kaldırılır
     await this.media.deleteForCustomer(id);
     if (companyId) {
       await this.documents.deleteForCompany(companyId);
       await this.showcase.deleteForCompany(companyId);
+    }
+  }
+
+  /** App Store kuralı 5.1.1(v): Apple ile giriş yetkisi hesap silinince Apple'da da kaldırılır. Hata silmeyi durdurmaz. */
+  private async revokeIdentities(identities: { provider: string; revokeToken: string | null }[]) {
+    for (const identity of identities) {
+      const provider = this.oauthProviders.find((p) => p.identity === identity.provider);
+      if (!provider?.revoke || !identity.revokeToken) continue;
+      await provider.revoke(identity.revokeToken).catch((err: Error) => this.logger.warn(`${provider.id} yetkisi kaldırılamadı: ${err.message}`));
     }
   }
 }

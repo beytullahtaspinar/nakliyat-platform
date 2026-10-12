@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReportButton } from "@/components/report-button";
 import { notFound } from "next/navigation";
 import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
 import { ConfirmButton } from "@/components/forms/confirm-button";
@@ -92,6 +93,11 @@ export default async function CompanyBookingPage({ params }: PageProps<"/firma-p
                     </p>
                   )}
                   {!booking.review.companyReply && <ReplyForm reviewId={booking.review.id} />}
+                  {booking.review.comment && booking.review.isPublished && (
+                    <p className="mt-2 text-right">
+                      <ReportButton target="REVIEW" targetId={booking.review.id} />
+                    </p>
+                  )}
                 </ReviewCard>
               )}
             </PanelSection>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReportButton } from "@/components/report-button";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
@@ -379,6 +380,11 @@ function ReviewSection({ booking }: { booking: CustomerBooking }) {
               <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
                 Yorumun site kurallarına uymadığı için yayından kaldırıldı.
                 {review.hiddenReason && ` Gerekçe: ${review.hiddenReason}`}
+              </p>
+            )}
+            {review.companyReply && (
+              <p className="mt-2 text-right">
+                <ReportButton target="REVIEW_REPLY" targetId={review.id} />
               </p>
             )}
           </ReviewCard>

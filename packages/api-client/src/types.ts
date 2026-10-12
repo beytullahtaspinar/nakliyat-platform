@@ -223,10 +223,41 @@ export type Conversation = {
   requestId: string;
   /** Firmaya müşteri adı, müşteriye firma adı */
   counterpart: string;
-  /** İptal edilen işte ya da karşı taraf hesabını kapattıysa false */
+  /** İptal edilen işte, karşı taraf hesabını kapattıysa ya da taraflardan biri engellediyse false */
   canSend: boolean;
+  /** byMe: bu kullanıcı karşı tarafı engelledi (kaldırabilir); byThem: karşı taraf engelledi */
+  blocked: { byMe: boolean; byThem: boolean };
   items: BookingMessage[];
 };
+
+/** Uygunsuz içerik bildirimi (App Store 1.2, Google Play kullanıcı içeriği kuralı) */
+export type ReportTarget = 'MESSAGE' | 'REVIEW' | 'REVIEW_REPLY';
+export type ReportReason = 'SPAM' | 'ABUSE' | 'INAPPROPRIATE' | 'FRAUD' | 'OTHER';
+export type ReportStatus = 'OPEN' | 'RESOLVED' | 'DISMISSED';
+
+export type CreateReportInput = { target: ReportTarget; targetId: string; reason: ReportReason; note?: string };
+
+export type ReportPerson = { id: string; name: string; role: 'CUSTOMER' | 'COMPANY' | 'ADMIN'; deleted: boolean };
+
+export type AdminReport = {
+  id: string;
+  target: ReportTarget;
+  targetId: string;
+  reason: ReportReason;
+  note: string | null;
+  /** Bildirildiği andaki metin */
+  content: string;
+  status: ReportStatus;
+  resolution: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  reporter: ReportPerson | null;
+  author: ReportPerson | null;
+  /** İlgili talep (yönetimde bağlantı için) */
+  requestId: string | null;
+};
+
+export type AdminReportList = Paginated<AdminReport> & { counts: { open: number } };
 
 /** GET /messages/unread */
 export type UnreadMessages = { total: number; items: { bookingId: string; requestId: string; count: number }[] };

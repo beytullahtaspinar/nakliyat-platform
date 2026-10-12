@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Length, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
+import { IsCleanText } from '../../common/utils/content-filter.js';
 import { PaginationDto } from '../../requests/dto/list-requests.dto.js';
 import { COMMENT_MAX_LENGTH, COMMENT_MIN_LENGTH, REPLY_MAX_LENGTH } from '../review-rules.js';
 
@@ -28,6 +29,7 @@ export class CreateReviewDto {
   @Length(COMMENT_MIN_LENGTH, COMMENT_MAX_LENGTH, {
     message: `Yorum ${COMMENT_MIN_LENGTH}-${COMMENT_MAX_LENGTH} karakter olmalı`,
   })
+  @IsCleanText()
   comment?: string;
 }
 
@@ -36,6 +38,7 @@ export class ReplyReviewDto {
   @Transform(trim)
   @IsString()
   @Length(2, REPLY_MAX_LENGTH, { message: `Yanıt 2-${REPLY_MAX_LENGTH} karakter olmalı` })
+  @IsCleanText()
   body!: string;
 }
 

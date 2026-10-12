@@ -239,6 +239,14 @@ export default function KvkkPage() {
               <td>Yurt dışı</td>
             </tr>
             <tr>
+              <td>Expo, Google (Firebase Cloud Messaging), Apple (APNs)</td>
+              <td>
+                Mobil uygulamalara anlık bildirim iletimi (cihaz bildirim anahtarı ile bildirim başlığı ve kısa metni;
+                yalnızca bildirimlere izin verenler için)
+              </td>
+              <td>Yurt dışı (ABD)</td>
+            </tr>
+            <tr>
               <td>Photon (Komoot), Nominatim (OpenStreetMap)</td>
               <td>Adres arama ve konum önerisi (yazdığınız adres metni gönderilir)</td>
               <td>Yurt dışı (AB)</td>

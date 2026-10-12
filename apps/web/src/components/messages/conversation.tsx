@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from "react";
 import type { BookingMessage, Conversation as ConversationData } from "@/lib/api";
-import { loadConversation, sendMessage } from "@/lib/actions/messages";
+import { loadConversation, sendMessage, setBlocked } from "@/lib/actions/messages";
+import { ReportButton } from "@/components/report-button";
 import { inputClass } from "@/components/forms/fields";
 import { Button } from "@/components/ui/button";
 
@@ -36,6 +37,8 @@ export function Conversation({
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string>();
   const [sending, startSending] = useTransition();
+  const [blocking, startBlocking] = useTransition();
+  const [confirmBlock, setConfirmBlock] = useState(false);
   const listRef = useRef<HTMLOListElement>(null);
   const lastId = data.items.at(-1)?.id;
 
@@ -93,6 +96,17 @@ export function Conversation({
     });
   };
 
+  // Engel iki taraf için de yazışmayı kapatır; yalnız koyan kaldırabilir
+  const toggleBlock = (block: boolean) => {
+    setError(undefined);
+    startBlocking(async () => {
+      const result = await setBlocked(initial.bookingId, block);
+      if (result.conversation) setData(result.conversation);
+      else setError(result.error);
+      setConfirmBlock(false);
+    });
+  };
+
   // Masaüstünde Enter gönderir, Shift+Enter alt satıra geçer
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing && window.matchMedia("(pointer: fine)").matches) {
@@ -102,6 +116,27 @@ export function Conversation({
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white">
+      <div className="flex flex-wrap items-center justify-end gap-2 border-b border-zinc-200 px-4 py-2 text-sm">
+        {data.blocked.byMe ? (
+          <button type="button" onClick={() => toggleBlock(false)} disabled={blocking} className="text-zinc-700 underline-offset-2 hover:underline">
+            {blocking ? "Kaldırılıyor…" : "Engeli kaldır"}
+          </button>
+        ) : confirmBlock ? (
+          <>
+            <span className="text-zinc-700">Bu işte iki taraf da yazamaz. Engellensin mi?</span>
+            <button type="button" onClick={() => toggleBlock(true)} disabled={blocking} className="font-medium text-red-800 underline-offset-2 hover:underline">
+              {blocking ? "Engelleniyor…" : "Engelle"}
+            </button>
+            <button type="button" onClick={() => setConfirmBlock(false)} className="text-zinc-700 underline-offset-2 hover:underline">
+              Vazgeç
+            </button>
+          </>
+        ) : (
+          <button type="button" onClick={() => setConfirmBlock(true)} className="text-zinc-700 underline-offset-2 hover:underline">
+            Engelle
+          </button>
+        )}
+      </div>
       {data.items.length === 0 ? (
         <p className="px-4 py-6 text-sm text-zinc-600">
           Henüz mesaj yok. Taşınma saati, eşyalar ya da adres tarifi gibi konuları buradan {data.counterpart} ile
@@ -132,6 +167,7 @@ export function Conversation({
                   <time dateTime={m.createdAt}>{timeFormat.format(new Date(m.createdAt))}</time>
                   {m.mine && m.readAt && " · Görüldü"}
                 </p>
+                {!m.mine && m.body && <ReportButton target="MESSAGE" targetId={m.id} />}
               </div>
             </li>
           ))}
@@ -166,9 +202,20 @@ export function Conversation({
           </div>
         </form>
       ) : (
-        <p className="border-t border-zinc-200 px-4 py-3 text-sm text-zinc-600">
-          Bu konuşma kapandı, yeni mesaj gönderilemez.
-        </p>
+        <>
+          {error && (
+            <p role="alert" className="border-t border-zinc-200 px-4 pt-3 text-sm text-red-800">
+              {error}
+            </p>
+          )}
+          <p className="border-t border-zinc-200 px-4 py-3 text-sm text-zinc-600">
+            {data.blocked.byMe
+              ? "Bu kişiyi engelledin; engeli yukarıdan kaldırabilirsin."
+              : data.blocked.byThem
+                ? "Karşı taraf yazışmayı kapattı."
+                : "Bu konuşma kapandı, yeni mesaj gönderilemez."}
+          </p>
+        </>
       )}
     </div>
   );

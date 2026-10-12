@@ -16,6 +16,7 @@ import { CancelForm, MediaStrip, QuickAction, Row } from '@/components/booking-b
 import { useDialog } from '@/components/dialog';
 import { RouteMapView } from '@/components/map';
 import { DetailScreen, Section } from '@/components/panel';
+import { ReportButton } from '@/components/report';
 import { Stars } from '@/components/review';
 import { AppText, Badge, Badges, Button, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
@@ -445,6 +446,7 @@ function ReviewSection({ booking, onSaved }: { booking: CustomerBooking; onSaved
               {company.displayName} yanıtı
             </AppText>
             <AppText>{review.companyReply}</AppText>
+            <ReportButton target="REVIEW_REPLY" targetId={review.id} compact />
           </View>
         ) : null}
       </Section>

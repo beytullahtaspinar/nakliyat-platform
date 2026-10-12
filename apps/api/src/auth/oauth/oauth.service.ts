@@ -30,6 +30,7 @@ interface SignupClaims {
   email: string | null;
   emailVerified: boolean;
   name: string | null;
+  revokeToken?: string | null;
 }
 
 type SignupResult = {
@@ -144,7 +145,13 @@ export class OAuthService {
       where: { provider_subject: { provider: provider.identity, subject: profile.subject } },
       include: { user: true },
     });
-    if (linked) return { user: linked.user };
+    if (linked) {
+      // Her girişte Apple yeni belirteç verir; hesap silinirken iptal edilecek olan en son geçerli olandır
+      if (profile.revokeToken) {
+        await this.prisma.userIdentity.update({ where: { id: linked.id }, data: { revokeToken: profile.revokeToken } });
+      }
+      return { user: linked.user };
+    }
 
     if (profile.email && profile.emailVerified) {
       const existing = await this.prisma.user.findUnique({ where: { email: profile.email } });
@@ -157,7 +164,13 @@ export class OAuthService {
           );
         }
         await this.prisma.userIdentity.create({
-          data: { userId: existing.id, provider: provider.identity, subject: profile.subject, email: profile.email },
+          data: {
+            userId: existing.id,
+            provider: provider.identity,
+            subject: profile.subject,
+            email: profile.email,
+            revokeToken: profile.revokeToken ?? null,
+          },
         });
         return { user: existing };
       }
@@ -208,7 +221,9 @@ export class OAuthService {
           emailVerifiedAt: claims.email && claims.emailVerified ? new Date() : null,
           passwordHash: OAUTH_ONLY_PASSWORD,
           ...consentData(dto),
-          identities: { create: { provider: claims.provider, subject: claims.subject, email: claims.email } },
+          identities: {
+            create: { provider: claims.provider, subject: claims.subject, email: claims.email, revokeToken: claims.revokeToken ?? null },
+          },
         },
       });
     } catch (e) {

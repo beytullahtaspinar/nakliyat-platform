@@ -29,10 +29,10 @@ const googleClaims = (extra: Record<string, unknown> = {}) => ({
 });
 
 /** Token ucu id_token döner, JWKS ucu test anahtarını */
-function stubProvider(token: string) {
-  const fetchMock = vi.fn(async (url: string) =>
+function stubProvider(token: string, extra: Record<string, string> = {}) {
+  const fetchMock = vi.fn(async (url: string, _init?: RequestInit) =>
     url.includes('token')
-      ? new Response(JSON.stringify({ id_token: token }), { status: 200 })
+      ? new Response(JSON.stringify({ id_token: token, ...extra }), { status: 200 })
       : new Response(JSON.stringify({ keys: [jwk] }), { status: 200 }),
   );
   vi.stubGlobal('fetch', fetchMock);
@@ -101,10 +101,30 @@ describe('Google / Apple girişi', () => {
     const ok = createVerify('sha256').update(`${h}.${p}`).verify({ key: ec.publicKey, dsaEncoding: 'ieee-p1363' }, Buffer.from(s, 'base64url'));
     expect(ok).toBe(true);
 
-    stubProvider(idToken({ iss: 'https://appleid.apple.com', aud: 'app.evdenevenakliyat.giris', sub: '001.abc', exp: now() + 600, nonce: 'n'.repeat(20), email: 'x@privaterelay.appleid.com', email_verified: 'true' }));
+    stubProvider(
+      idToken({ iss: 'https://appleid.apple.com', aud: 'app.evdenevenakliyat.giris', sub: '001.abc', exp: now() + 600, nonce: 'n'.repeat(20), email: 'x@privaterelay.appleid.com', email_verified: 'true' }),
+      { refresh_token: 'apple-refresh' },
+    );
     await expect(
       apple.exchange({ ...exchange, appleUser: JSON.stringify({ name: { firstName: 'Ayşe', lastName: 'Yılmaz' } }) }),
-    ).resolves.toEqual({ subject: '001.abc', email: 'x@privaterelay.appleid.com', emailVerified: true, name: 'Ayşe Yılmaz' });
+    ).resolves.toEqual({ subject: '001.abc', email: 'x@privaterelay.appleid.com', emailVerified: true, name: 'Ayşe Yılmaz', revokeToken: 'apple-refresh' });
+  });
+
+  it("Apple: hesap silinince refresh_token Apple'da iptal edilir", async () => {
+    const apple = new AppleProvider({ clientId: 'app.evdenevenakliyat.giris', teamId: 'TEAM123456', keyId: 'KEY1234567', privateKey: p8 });
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await apple.revoke('apple-refresh');
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe('https://appleid.apple.com/auth/revoke');
+    const form = new URLSearchParams(String(init?.body));
+    expect(form.get('token')).toBe('apple-refresh');
+    expect(form.get('token_type_hint')).toBe('refresh_token');
+    expect(form.get('client_id')).toBe('app.evdenevenakliyat.giris');
+    expect(form.get('client_secret')?.split('.')).toHaveLength(3);
+
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 400 }));
+    await expect(apple.revoke('eski')).rejects.toThrow('Apple revoke 400');
   });
 
   it('anahtarı eksik sağlayıcı açılmaz; test sağlayıcısı canlıda kapalı', () => {

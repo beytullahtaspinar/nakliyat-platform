@@ -169,6 +169,13 @@ export const BellIcon = (p: P) => (
   </Icon>
 );
 
+export const FlagIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5 21V4" />
+    <path d="M5 4.5c4.5-2.5 7.5 2.5 14 0v9c-6.5 2.5-9.5-2.5-14 0" />
+  </Icon>
+);
+
 export const TagIcon = (p: P) => (
   <Icon {...p}>
     <path d="M3.5 12.1V4.5a1 1 0 0 1 1-1h7.6a1 1 0 0 1 .7.3l8 8a1 1 0 0 1 0 1.4l-7.6 7.6a1 1 0 0 1-1.4 0l-8-8a1 1 0 0 1-.3-.7z" />

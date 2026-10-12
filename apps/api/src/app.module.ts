@@ -16,6 +16,7 @@ import { HealthController } from './health/health.controller.js';
 import { LocationsController } from './locations/locations.controller.js';
 import { MediaModule } from './media/media.module.js';
 import { MessagesModule } from './messages/messages.module.js';
+import { ModerationModule } from './moderation/moderation.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { ObservabilityModule } from './observability/observability.module.js';
 import { PricingModule } from './pricing/pricing.module.js';
@@ -42,6 +43,7 @@ import { ReviewsModule } from './reviews/reviews.module.js';
     QuotesModule,
     BookingsModule,
     MessagesModule,
+    ModerationModule,
     ReviewsModule,
     PricingModule,
     AdminModule,
