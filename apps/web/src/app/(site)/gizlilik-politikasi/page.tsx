@@ -112,7 +112,8 @@ export default function PrivacyPage() {
 
       <h2 id="silme">6. Hesabınızı ve verilerinizi silme</h2>
       <p>
-        Hesabınızın silinmesini istediğinizde, kayıtlı e-posta adresinizden{" "}
+        Hesabınızı <Link href="/hesap-silme">Hesabını sil</Link> sayfasından ya da uygulamalardaki Hesap bölümünden
+        kendiniz silebilirsiniz. Hesabınıza giremiyorsanız kayıtlı e-posta adresinizden{" "}
         <a href={`mailto:${COMPANY.kvkkEmail}`}>{COMPANY.kvkkEmail}</a> adresine yazabilirsiniz. Hesap silindiğinde
         ad, telefon, e-posta ve adres bilgileriniz silinir; talep fotoğraf/videoları ve firma belgeleri depodan kalıcı
         olarak kaldırılır. Planlanmış bir taşıma işi varsa silme işlemi iş tamamlandıktan veya iptal edildikten sonra

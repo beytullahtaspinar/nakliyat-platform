@@ -12,13 +12,17 @@ import { colors } from '@/theme';
 export function PanelScreen({
   title,
   onRefresh,
+  form,
   children,
 }: {
   title: string;
   onRefresh?: () => Promise<unknown>;
+  /** Form ekranı: odaklanan alan klavyenin üstüne kayar */
+  form?: boolean;
   children: ReactNode;
 }) {
   const user = useUser();
+  const Scroll = form ? KeyboardAwareScrollView : ScrollView;
   const { signOut } = useSession();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -53,7 +57,9 @@ export function PanelScreen({
           </AppText>
         </Pressable>
       </View>
-      <ScrollView
+      <Scroll
+        bottomOffset={form ? 24 : undefined}
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }}
         refreshControl={
           onRefresh ? (
@@ -73,7 +79,7 @@ export function PanelScreen({
           {title}
         </AppText>
         {children}
-      </ScrollView>
+      </Scroll>
     </SafeAreaView>
   );
 }

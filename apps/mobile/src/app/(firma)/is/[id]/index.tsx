@@ -1,12 +1,12 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import type { BookingPlace, CompanyBooking, UnreadMessages } from '@nakliyat/api-client';
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState, type ComponentProps, type ReactNode } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, View } from 'react-native';
+import { CancelForm, QuickAction, Row } from '@/components/booking-bits';
 import { DetailScreen, Section } from '@/components/panel';
 import { ReviewBlock } from '@/components/review';
-import { AppText, Badge, Button, Field, Notice } from '@/components/ui';
+import { AppText, Badge, Button, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { BOOKING_STATUS, bookingRoute, directionsUrl, formatPhone, mapUrl } from '@/lib/bookings';
 import { formatDate } from '@/lib/format';
@@ -136,55 +136,13 @@ export default function BookingScreen() {
             <CancelForm
               bookingId={booking.id}
               consequence={`${customer.fullName} müşterisinin taşıması iptal edilecek ve müşteriye haber verilecek.`}
+              placeholder="Örnek: Aracımız arızalandı, bu tarihte taşıma yapamıyoruz."
               onCancelled={() => done('İş iptal edildi, müşteriye haber verildi.')}
             />
           ) : null}
         </Section>
       ) : null}
     </DetailScreen>
-  );
-}
-
-function QuickAction({
-  icon,
-  label,
-  highlight,
-  onPress,
-}: {
-  icon: ComponentProps<typeof Ionicons>['name'];
-  label: string;
-  highlight?: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => ({
-        flex: 1,
-        alignItems: 'center',
-        gap: 4,
-        paddingVertical: 12,
-        borderRadius: 14,
-        borderWidth: 1,
-        borderColor: highlight ? colors.accent500 : colors.zinc200,
-        backgroundColor: pressed ? colors.zinc100 : highlight ? colors.accent50 : colors.white,
-      })}
-    >
-      <Ionicons name={icon} size={22} color={highlight ? colors.accent700 : colors.brand700} />
-      <AppText weight="semibold" style={{ fontSize: 13, color: highlight ? colors.accent700 : colors.brand700 }}>
-        {label}
-      </AppText>
-    </Pressable>
-  );
-}
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <View style={{ flexDirection: 'row', gap: 12 }}>
-      <AppText style={{ width: 80, color: colors.zinc500 }}>{label}</AppText>
-      <View style={{ flex: 1 }}>{typeof children === 'string' ? <AppText>{children}</AppText> : children}</View>
-    </View>
   );
 }
 
@@ -207,56 +165,6 @@ function Stop({ title, place }: { title: string; place: BookingPlace }) {
       >
         Haritada aç
       </AppText>
-    </View>
-  );
-}
-
-/** İptal gerekçeyle yapılır; önce düğmeyle açılır */
-function CancelForm({ bookingId, consequence, onCancelled }: { bookingId: string; consequence: string; onCancelled: () => Promise<void> }) {
-  const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  if (!open) return <Button title="İşi iptal et" kind="secondary" onPress={() => setOpen(true)} />;
-
-  async function submit() {
-    if (reason.trim().length < 5) return setError('İptal nedenini en az 5 karakterle yaz.');
-    setError(null);
-    setSaving(true);
-    try {
-      await api.request(`/bookings/${bookingId}/cancel`, { method: 'POST', body: { reason: reason.trim() } });
-      await onCancelled();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'İptal edilemedi, tekrar dene.');
-      setSaving(false);
-    }
-  }
-
-  return (
-    <View style={{ gap: 10, backgroundColor: colors.red50, borderRadius: 12, padding: 12 }}>
-      <AppText style={{ color: colors.red700 }}>{consequence}</AppText>
-      <Field
-        label="İptal nedeni"
-        value={reason}
-        onChangeText={setReason}
-        multiline
-        maxLength={500}
-        placeholder="Örnek: Aracımız arızalandı, bu tarihte taşıma yapamıyoruz."
-        style={{ minHeight: 80, paddingTop: 12, textAlignVertical: 'top' }}
-      />
-      {error ? <Notice>{error}</Notice> : null}
-      <Button
-        title="İşi iptal et"
-        loading={saving}
-        onPress={() =>
-          Alert.alert('İşi iptal et', 'Bu işlem geri alınamaz.', [
-            { text: 'Vazgeç', style: 'cancel' },
-            { text: 'Evet, iptal et', style: 'destructive', onPress: () => void submit() },
-          ])
-        }
-      />
-      <Button title="Vazgeç" kind="secondary" onPress={() => setOpen(false)} />
     </View>
   );
 }
