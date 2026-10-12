@@ -101,6 +101,15 @@ describe('Taşıma talepleri (e2e)', () => {
     expect(res.body.estimatedHours).toBeGreaterThan(6);
   });
 
+  it('açık adres isteğe bağlı: yazılmazsa boş kaydedilir', async () => {
+    const { fromAddress: _f, toAddress: _t, ...body } = validBody();
+    const res = await request(app.getHttpServer()).post('/v1/requests').set(auth(customerToken)).send(body).expect(201);
+    const detail = await request(app.getHttpServer()).get(`/v1/requests/${res.body.id}`).set(auth(customerToken)).expect(200);
+    expect(detail.body).toMatchObject({ fromAddress: '', toAddress: '' });
+    // Sonraki testler müşterinin tek talebi olduğunu varsayar
+    await prisma.movingRequest.delete({ where: { id: res.body.id } });
+  });
+
   it('ilçe ile uyuşmayan il reddedilir', () => {
     return request(app.getHttpServer())
       .post('/v1/requests')

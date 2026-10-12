@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -11,13 +11,14 @@ import {
   IsLongitude,
   IsOptional,
   IsString,
-  Length,
   Matches,
   Max,
   MaxLength,
   Min,
 } from 'class-validator';
 import { HomeType } from '../../generated/prisma/enums.js';
+
+const trimString = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
 /** Türkiye'yi kapsayan kutu; dışındaki işaretler reddedilir */
 export const TURKEY_BOUNDS = { minLat: 35.8, maxLat: 42.2, minLng: 25.6, maxLng: 44.9 };
@@ -31,10 +32,12 @@ export class CreateRequestDto {
   @IsString()
   fromDistrict: string;
 
-  @ApiProperty({ example: 'Caferağa Mah. Moda Cad. No:1 D:5' })
+  @ApiPropertyOptional({ example: 'Caferağa Mah. Moda Cad. No:1 D:5', description: 'Açık adres (isteğe bağlı; boş bırakılabilir)' })
+  @IsOptional()
+  @Transform(trimString)
   @IsString()
-  @Length(5, 300)
-  fromAddress: string;
+  @MaxLength(300)
+  fromAddress?: string;
 
   @ApiProperty({ example: 3, description: 'Kat (bodrum için -1)' })
   @IsInt()
@@ -68,10 +71,12 @@ export class CreateRequestDto {
   @IsString()
   toDistrict: string;
 
-  @ApiProperty({ example: 'Kızılay Mah. Atatürk Blv. No:10 D:2' })
+  @ApiPropertyOptional({ example: 'Kızılay Mah. Atatürk Blv. No:10 D:2', description: 'Açık adres (isteğe bağlı; boş bırakılabilir)' })
+  @IsOptional()
+  @Transform(trimString)
   @IsString()
-  @Length(5, 300)
-  toAddress: string;
+  @MaxLength(300)
+  toAddress?: string;
 
   @ApiProperty({ example: 2 })
   @IsInt()

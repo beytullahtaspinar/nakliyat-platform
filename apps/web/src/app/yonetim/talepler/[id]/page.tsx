@@ -45,8 +45,8 @@ export default async function AdminRequestPage({ params }: PageProps<"/yonetim/t
           <Card className="p-5">
             <h2 className="font-semibold">Taşınma bilgileri</h2>
             <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-              <Row label="Nereden" value={`${r.fromAddress}, ${place(r.fromCityName, r.fromDistrictName)}`} sub={`${floorLabel(r.fromFloor)}, ${r.fromHasElevator ? "asansörlü" : "asansörsüz"}`} />
-              <Row label="Nereye" value={`${r.toAddress}, ${place(r.toCityName, r.toDistrictName)}`} sub={`${floorLabel(r.toFloor)}, ${r.toHasElevator ? "asansörlü" : "asansörsüz"}`} />
+              <Row label="Nereden" value={[r.fromAddress, place(r.fromCityName, r.fromDistrictName)].filter(Boolean).join(", ")} sub={`${floorLabel(r.fromFloor)}, ${r.fromHasElevator ? "asansörlü" : "asansörsüz"}`} />
+              <Row label="Nereye" value={[r.toAddress, place(r.toCityName, r.toDistrictName)].filter(Boolean).join(", ")} sub={`${floorLabel(r.toFloor)}, ${r.toHasElevator ? "asansörlü" : "asansörsüz"}`} />
               <Row label="Ev tipi" value={homeTypeLabel(r.homeType)} />
               <Row label="Taşınma tarihi" value={`${formatDate(r.moveDate)}${r.isDateFlexible ? " (esnek)" : ""}`} />
               <Row

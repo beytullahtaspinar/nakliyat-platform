@@ -35,3 +35,6 @@ export const api = createApiClient({
 });
 
 export const hasStoredSession = async () => (await secureTokens.get()) !== null;
+
+/** Şifre değişince sunucunun verdiği yeni anahtarlar bu cihazda saklanır (eski oturumlar kapanır) */
+export const storeTokens = (tokens: AuthTokens) => secureTokens.set(tokens);

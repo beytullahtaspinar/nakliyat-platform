@@ -21,11 +21,19 @@ export function companyRoute(path: string, tag = ''): Href {
   return '/';
 }
 
-/** Müşteri bildirimleri: /hesabim/talepler/abc(#mesajlar) → talep ekranı, /talep-olustur → teklif al */
-export function customerRoute(path: string): Href {
+/**
+ * Müşteri bildirimleri: /hesabim/talepler/abc → talep ekranı; yeni mesaj bildiriminde talep ekranı
+ * anlaşmayı yükleyip yazışmayı açar (bildirimde talep kimliği var, yazışma anlaşma kimliğiyle açılır).
+ * /talep-olustur → teklif al
+ */
+export function customerRoute(path: string, tag = ''): Href {
   const clean = path.split('#')[0];
   const id = clean.match(/^\/hesabim\/talepler\/([^/?]+)/)?.[1];
-  if (id) return { pathname: '/taleplerim/[id]', params: { id } };
+  if (id) {
+    return tag.startsWith('NEW_MESSAGE')
+      ? { pathname: '/taleplerim/[id]', params: { id, mesajlar: '1' } }
+      : { pathname: '/taleplerim/[id]', params: { id } };
+  }
   if (clean.startsWith('/talep-olustur')) return '/teklif-al';
   return '/';
 }

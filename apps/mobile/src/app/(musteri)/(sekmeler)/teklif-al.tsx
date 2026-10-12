@@ -2,12 +2,15 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { City, CreateRequestInput, District, MovingRequest } from '@nakliyat/api-client';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
+import { useDialog } from '@/components/dialog';
+import { LocationPicker, RouteMapView } from '@/components/map';
 import { PanelScreen, Section } from '@/components/panel';
 import { DateField, SelectField, type Option } from '@/components/pickers';
 import { AppText, Button, Checkbox, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
-import { addDays, todayInTurkey } from '@/lib/calendar';
+import type { LatLng } from '@/lib/geo';
+import { addDays, formatDayTitle, todayInTurkey } from '@/lib/calendar';
 import { MAX_PHOTOS, pickPhotos, uploadPhotos, type PreparedPhoto } from '@/lib/request-media';
 import { colors } from '@/theme';
 
@@ -28,11 +31,20 @@ const FLOORS: Option<number>[] = [
   ...Array.from({ length: 30 }, (_, i) => ({ value: i + 1, label: `${i + 1}. kat` })),
 ];
 
-type Stop = { cityCode: string | null; district: string | null; address: string; floor: number | null; elevator: boolean };
-const emptyStop = (): Stop => ({ cityCode: null, district: null, address: '', floor: null, elevator: false });
+type Stop = {
+  cityCode: string | null;
+  district: string | null;
+  address: string;
+  /** Haritada işaretlenen nokta (isteğe bağlı); il veya ilçe değişince silinir */
+  pin: (LatLng & { label: string | null }) | null;
+  floor: number | null;
+  elevator: boolean;
+};
+const emptyStop = (): Stop => ({ cityCode: null, district: null, address: '', pin: null, floor: null, elevator: false });
 
 /** Taşıma talebi formu (sitedeki /talep-olustur). Doğrulanmamış hesapta talep taslak kalır. */
 export default function NewRequestScreen() {
+  const dialog = useDialog();
   const [cities, setCities] = useState<City[]>([]);
   const [from, setFrom] = useState<Stop>(emptyStop);
   const [to, setTo] = useState<Stop>(emptyStop);
@@ -81,7 +93,6 @@ export default function NewRequestScreen() {
       ['Varış', to],
     ] as const) {
       if (!s.cityCode || !s.district) return `${label} için il ve ilçe seç.`;
-      if (s.address.trim().length < 5) return `${label} için açık adresi yaz (mahalle, sokak, bina ve daire no).`;
       if (s.floor === null) return `${label} için kat seç.`;
     }
     if (!homeType) return 'Ev tipini seç.';
@@ -94,12 +105,14 @@ export default function NewRequestScreen() {
     return {
       fromCityCode: from.cityCode!,
       fromDistrict: from.district!,
-      fromAddress: from.address.trim(),
+      ...(from.address.trim() && { fromAddress: from.address.trim() }),
+      ...(from.pin && { fromLat: round(from.pin.lat), fromLng: round(from.pin.lng) }),
       fromFloor: from.floor!,
       fromHasElevator: from.elevator,
       toCityCode: to.cityCode!,
       toDistrict: to.district!,
-      toAddress: to.address.trim(),
+      ...(to.address.trim() && { toAddress: to.address.trim() }),
+      ...(to.pin && { toLat: round(to.pin.lat), toLng: round(to.pin.lng) }),
       toFloor: to.floor!,
       toHasElevator: to.elevator,
       homeType,
@@ -158,15 +171,15 @@ export default function NewRequestScreen() {
   return (
     <PanelScreen title="Teklif al" form>
       <AppText style={{ color: colors.zinc600 }}>
-        Taşınma bilgilerini gir, bölgendeki onaylı nakliyat firmaları sana ücretsiz teklif göndersin. Açık adresin ve
-        telefonun yalnızca teklifini kabul ettiğin firmayla paylaşılır.
+        Taşınma bilgilerini gir, bölgendeki onaylı nakliyat firmaları sana ücretsiz teklif göndersin. Açık adresin, konumun
+        ve telefonun yalnızca teklifini kabul ettiğin firmayla paylaşılır.
       </AppText>
 
       <Section title="Nereden taşınıyorsun?">
-        <StopFields stop={from} onChange={setFrom} cities={cityOptions} />
+        <StopFields title="Çıkış konumu" stop={from} onChange={setFrom} cities={cityOptions} />
       </Section>
       <Section title="Nereye taşınıyorsun?">
-        <StopFields stop={to} onChange={setTo} cities={cityOptions} />
+        <StopFields title="Varış konumu" stop={to} onChange={setTo} cities={cityOptions} />
       </Section>
 
       <Section title="Ev tipi ve tarih">
@@ -223,10 +236,10 @@ export default function NewRequestScreen() {
         {photos.length < MAX_PHOTOS ? (
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
-              <Button title="Galeriden seç" kind="secondary" loading={preparing} disabled={busy} onPress={() => void addPhotos('library')} />
+              <Button title="Galeri" icon="images-outline" kind="secondary" loading={preparing} disabled={busy} onPress={() => void addPhotos('library')} />
             </View>
             <View style={{ flex: 1 }}>
-              <Button title="Fotoğraf çek" kind="secondary" disabled={busy || preparing} onPress={() => void addPhotos('camera')} />
+              <Button title="Kamera" icon="camera-outline" kind="secondary" disabled={busy || preparing} onPress={() => void addPhotos('camera')} />
             </View>
           </View>
         ) : null}
@@ -257,21 +270,34 @@ export default function NewRequestScreen() {
         title="Ücretsiz teklif iste"
         loading={busy}
         disabled={preparing}
-        onPress={() =>
-          Alert.alert('Talebi gönder', 'Talebin bölgendeki onaylı firmalara iletilecek. Bilgiler doğru mu?', [
-            { text: 'Kontrol et', style: 'cancel' },
-            { text: 'Gönder', onPress: () => void submit() },
-          ])
-        }
+        onPress={() => {
+          const input = validate();
+          if (typeof input === 'string') return setError(input);
+          setError(null);
+          void dialog
+            .confirm({
+              title: 'Talebin gönderilsin mi?',
+              message: `${summary(input, cities)}\n\nTalebin bölgendeki onaylı firmalara iletilecek. Teklifler geldikçe sana haber vereceğiz.`,
+              confirmLabel: 'Gönder',
+              cancelLabel: 'Kontrol et',
+              icon: 'paper-plane-outline',
+            })
+            .then((ok) => {
+              if (ok) void submit();
+            });
+        }}
       />
     </PanelScreen>
   );
 }
 
 /** İl, ilçe, açık adres, kat ve asansör. İl değişince ilçe listesi yeniden yüklenir. */
-function StopFields({ stop, onChange, cities }: { stop: Stop; onChange: (s: Stop) => void; cities: Option<string>[] }) {
+function StopFields({ title, stop, onChange, cities }: { title: string; stop: Stop; onChange: (s: Stop) => void; cities: Option<string>[] }) {
   const [districts, setDistricts] = useState<District[]>([]);
   const [failed, setFailed] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const districtName = districts.find((d) => d.slug === stop.district)?.name;
+  const cityName = cities.find((c) => c.value === stop.cityCode)?.label;
 
   useEffect(() => {
     setDistricts([]);
@@ -295,7 +321,7 @@ function StopFields({ stop, onChange, cities }: { stop: Stop; onChange: (s: Stop
         options={cities}
         placeholder="İl seç"
         searchable
-        onChange={(cityCode) => onChange({ ...stop, cityCode, district: null })}
+        onChange={(cityCode) => onChange({ ...stop, cityCode, district: null, pin: null })}
       />
       <SelectField
         label="İlçe"
@@ -304,18 +330,94 @@ function StopFields({ stop, onChange, cities }: { stop: Stop; onChange: (s: Stop
         placeholder={stop.cityCode ? 'İlçe seç' : 'Önce il seç'}
         disabled={!stop.cityCode || districts.length === 0}
         searchable
-        onChange={(district) => onChange({ ...stop, district })}
+        onChange={(district) => onChange({ ...stop, district, pin: district === stop.district ? stop.pin : null })}
       />
       {failed ? <Notice>İlçeler yüklenemedi, ili yeniden seç.</Notice> : null}
       <Field
-        label="Açık adres"
+        label="Açık adres (isteğe bağlı)"
         placeholder="Mahalle, cadde/sokak, bina ve daire no"
         value={stop.address}
         onChangeText={(address) => onChange({ ...stop, address })}
         maxLength={300}
       />
+      {stop.pin ? (
+        <View style={{ gap: 8 }}>
+          <RouteMapView from={stop.pin} to={null} height={140} />
+          <AppText style={{ color: colors.zinc600, fontSize: 13, lineHeight: 18 }} numberOfLines={2}>
+            {stop.pin.label ? `İşaretlenen yer: ${stop.pin.label}` : 'Konum işaretlendi.'}
+          </AppText>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
+            <TextLink label="Konumu değiştir" onPress={() => setPicking(true)} />
+            <TextLink label="İşareti kaldır" onPress={() => onChange({ ...stop, pin: null })} />
+          </View>
+        </View>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          disabled={!stop.district}
+          onPress={() => setPicking(true)}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            padding: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderStyle: 'dashed',
+            borderColor: colors.zinc300,
+            backgroundColor: pressed ? colors.brand50 : colors.white,
+            opacity: stop.district ? 1 : 0.5,
+          })}
+        >
+          <Ionicons name="map-outline" size={22} color={colors.brand700} />
+          <View style={{ flex: 1 }}>
+            <AppText weight="semibold" style={{ color: colors.brand700 }}>
+              Haritada işaretle (isteğe bağlı)
+            </AppText>
+            <AppText style={{ color: colors.zinc600, fontSize: 13, lineHeight: 18 }}>
+              {stop.district ? 'Gerçek yol mesafesi hesaplanır, firman kapını kolay bulur.' : 'Önce il ve ilçe seç.'}
+            </AppText>
+          </View>
+        </Pressable>
+      )}
+      <LocationPicker
+        visible={picking}
+        title={title}
+        value={stop.pin}
+        address={stop.address}
+        area={[districtName, cityName].filter(Boolean).join(', ')}
+        onClose={() => setPicking(false)}
+        onPick={(p) =>
+          onChange({
+            ...stop,
+            pin: { lat: p.lat, lng: p.lng, label: p.label },
+            // Açık adres boşsa haritada bulunan sokak yazılır; müşteri sonra düzenleyebilir
+            address: stop.address.trim() || !p.street ? stop.address : p.street,
+          })
+        }
+      />
       <SelectField label="Kat" value={stop.floor} options={FLOORS} placeholder="Kat seç" onChange={(floor) => onChange({ ...stop, floor })} />
       <Checkbox label="Binada asansör var" checked={stop.elevator} onChange={(elevator) => onChange({ ...stop, elevator })} />
     </>
   );
+}
+
+function TextLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" hitSlop={8} onPress={onPress}>
+      <AppText weight="semibold" style={{ color: colors.brand700, fontSize: 14 }}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
+
+/** API'ye 6 basamak yeter (~10 cm) */
+const round = (n: number) => Math.round(n * 1e6) / 1e6;
+
+/** Onay penceresindeki kısa özet: Kadıköy, İstanbul → Çankaya, Ankara · 3+1 · 14 Kasım */
+function summary(input: CreateRequestInput, cities: City[]) {
+  const city = (code: string) => cities.find((c) => c.code === code)?.name ?? '';
+  const home = HOME_TYPES.find((h) => h.value === input.homeType)?.label ?? '';
+  return `${city(input.fromCityCode)} → ${city(input.toCityCode)} · ${home} · ${formatDayTitle(input.moveDate)}`;
 }

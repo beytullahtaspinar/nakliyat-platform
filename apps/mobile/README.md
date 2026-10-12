@@ -78,6 +78,16 @@ Bir kez yapılacak kurulum (anahtarlar sohbete ya da depoya yazılmaz):
 
 İsteğe bağlı: expo.dev'de push için "enhanced security" açılırsa API'ye `EXPO_ACCESS_TOKEN` verilmeli.
 
+## Harita
+
+Talep formunda konum işaretleme ve talep/iş ekranlarındaki küçük harita, sitedeki ile aynı ücretsiz servisleri kullanır
+(MapLibre + OpenFreeMap, adres arama Photon; anahtar gerekmez). Harita `react-native-webview` içinde çalışır,
+MapLibre unpkg'den yüklenir (`src/components/map.tsx`). Konum izni istenmez; kişi haritaya dokunarak işaretler.
+
+## Google ve Apple ile giriş
+
+Ayrı anahtar gerekmez, sitedeki akış kullanılır. Ayrıntı: docs/google-apple-giris.md → "Mobil uygulamalar".
+
 ## Kontroller
 
 `pnpm --filter @nakliyat/mobile lint` ve `typecheck` CI'da diğer paketlerle birlikte çalışır.

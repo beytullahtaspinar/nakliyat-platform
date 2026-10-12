@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
@@ -6,7 +6,7 @@ import { Public } from '../common/decorators/public.decorator.js';
 import { AuthService } from './auth.service.js';
 import { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-response.dto.js';
 import { LoginDto } from './dto/login.dto.js';
-import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
+import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 
@@ -61,6 +61,20 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.auth.resetPassword(dto);
+  }
+
+  /**
+   * Oturum açıkken şifre değiştirme: şu anki şifre doğrulanır, tüm oturumlar kapanır ve bu cihaz için
+   * yeni anahtarlar döner. Şifresi olmayan (Google/Apple) hesap "Şifremi unuttum" ile belirler.
+   */
+  @ApiBearerAuth()
+  @Throttle(AUTH_THROTTLE)
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AuthTokensDto })
+  changePassword(@CurrentUser() user: AuthUser, @Body() dto: ChangePasswordDto) {
+    if (user.impersonatorId) throw new ForbiddenException('Yönetici görünümündeyken şifre değiştirilemez');
+    return this.auth.changePassword(user.id, dto);
   }
 
   @Public()

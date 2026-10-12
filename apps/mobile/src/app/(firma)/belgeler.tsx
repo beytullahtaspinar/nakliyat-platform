@@ -3,7 +3,8 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import * as Linking from 'expo-linking';
 import { useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { useDialog } from '@/components/dialog';
 import { DetailScreen, Section } from '@/components/panel';
 import { AppText, Badge, Button, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
@@ -94,22 +95,23 @@ export default function DocumentsScreen() {
 }
 
 function DocumentRow({ document: d, showState, onRemoved }: { document: CompanyDocument; showState: boolean; onRemoved: () => Promise<void> }) {
+  const dialog = useDialog();
   const state = REQUIREMENT_STATES[documentState(d)];
   const soon = d.status === 'VERIFIED' && !d.expired && expiresSoon(d.validUntil);
 
   function remove() {
-    Alert.alert('Belgeyi sil', 'Bu belge silinecek.', [
-      { text: 'Vazgeç', style: 'cancel' },
-      {
-        text: 'Sil',
-        style: 'destructive',
-        onPress: () =>
-          void api
-            .request(`/company/documents/${encodeURIComponent(d.id)}`, { method: 'DELETE' })
-            .then(onRemoved)
-            .catch((e: unknown) => Alert.alert('Silinemedi', e instanceof Error ? e.message : 'Tekrar dene.')),
-      },
-    ]);
+    void dialog
+      .confirm({
+        title: 'Belge silinsin mi?',
+        message: `${d.fileName} silinecek.`,
+        confirmLabel: 'Sil',
+        destructive: true,
+        icon: 'trash-outline',
+        action: () => api.request(`/company/documents/${encodeURIComponent(d.id)}`, { method: 'DELETE' }),
+      })
+      .then((ok) => {
+        if (ok) void onRemoved();
+      });
   }
 
   return (

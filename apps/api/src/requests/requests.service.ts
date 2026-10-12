@@ -70,6 +70,9 @@ export class RequestsService {
     const request = await this.prisma.movingRequest.create({
       data: {
         ...dto,
+        // Açık adres isteğe bağlı; yazılmadıysa boş kalır (firma kabulden sonra mesajla ya da telefonla öğrenir)
+        fromAddress: dto.fromAddress ?? '',
+        toAddress: dto.toAddress ?? '',
         status: verified ? RequestStatus.OPEN : RequestStatus.DRAFT,
         publishedAt: verified ? now : null,
         specialItems: dto.specialItems ?? [],

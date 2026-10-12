@@ -1,8 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { Alert, Pressable, View } from 'react-native';
-import { PanelScreen, Section } from '@/components/panel';
+import { Pressable, View } from 'react-native';
+import { PanelScreen, Section, useSignOutPrompt } from '@/components/panel';
 import { AppText, Badge, Button } from '@/components/ui';
 import { formatPhone } from '@/lib/bookings';
 import { LEGAL_PAGES, openWebPage } from '@/lib/legal';
@@ -12,14 +12,8 @@ import { colors } from '@/theme';
 /** Müşteri hesabı: iletişim bilgileri, doğrulama, yasal metinler, çıkış ve hesap silme */
 export default function AccountScreen() {
   const user = useUser();
-  const { signOut, reload } = useSession();
-
-  function confirmSignOut() {
-    Alert.alert('Çıkış yap', 'Bu cihazdaki oturumun kapanacak.', [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Çıkış yap', style: 'destructive', onPress: () => void signOut() },
-    ]);
-  }
+  const { reload } = useSession();
+  const confirmSignOut = useSignOutPrompt();
 
   return (
     <PanelScreen title="Hesabım" onRefresh={reload}>
@@ -35,8 +29,8 @@ export default function AccountScreen() {
 
       <Section title="Hesap">
         {!user.verified ? <Row icon="shield-checkmark-outline" label="Hesabını doğrula" hint="Taleplerinin firmalara iletilmesi için gerekli" to="/dogrulama" /> : null}
-        <Row icon="notifications-outline" label="Bildirim tercihleri" external onPress={() => openWebPage('/hesabim/bildirimler')} />
-        <Row icon="key-outline" label="Şifremi değiştir" external onPress={() => openWebPage('/sifre-sifirla')} />
+        <Row icon="notifications-outline" label="Bildirim tercihleri" to="/bildirimler" />
+        <Row icon="key-outline" label={user.hasPassword ? 'Şifremi değiştir' : 'Şifre belirle'} to="/sifre" />
       </Section>
 
       <Section title="Yasal metinler">

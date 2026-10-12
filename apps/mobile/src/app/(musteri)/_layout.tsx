@@ -19,6 +19,8 @@ export default function Layout() {
       <Stack.Screen name="mesajlar/[id]" />
       <Stack.Screen name="dogrulama" />
       <Stack.Screen name="hesabimi-sil" />
+      <Stack.Screen name="bildirimler" />
+      <Stack.Screen name="sifre" />
     </Stack>
   );
 }

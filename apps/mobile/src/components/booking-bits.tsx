@@ -2,7 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { RequestMedia } from '@nakliyat/api-client';
 import * as Linking from 'expo-linking';
 import { useState, type ComponentProps, type ReactNode } from 'react';
-import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
+import { useDialog } from '@/components/dialog';
 import { AppText, Button, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { colors } from '@/theme';
@@ -68,6 +69,7 @@ export function CancelForm({
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const dialog = useDialog();
 
   if (!open) return <Button title="Taşımayı iptal et" kind="secondary" onPress={() => setOpen(true)} />;
 
@@ -99,12 +101,20 @@ export function CancelForm({
       {error ? <Notice>{error}</Notice> : null}
       <Button
         title="Taşımayı iptal et"
+        kind="danger"
         loading={saving}
         onPress={() =>
-          Alert.alert('Taşımayı iptal et', 'Bu işlem geri alınamaz.', [
-            { text: 'Vazgeç', style: 'cancel' },
-            { text: 'Evet, iptal et', style: 'destructive', onPress: () => void submit() },
-          ])
+          void dialog
+            .confirm({
+              title: 'Taşıma iptal edilsin mi?',
+              message: 'Bu işlem geri alınamaz.',
+              confirmLabel: 'Evet, iptal et',
+              cancelLabel: 'Vazgeç',
+              destructive: true,
+            })
+            .then((ok) => {
+              if (ok) void submit();
+            })
         }
       />
       <Button title="Vazgeç" kind="secondary" onPress={() => setOpen(false)} />

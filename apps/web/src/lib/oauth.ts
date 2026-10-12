@@ -12,11 +12,21 @@ export type OAuthPending = {
   verifier: string;
   next?: string;
   role?: "CUSTOMER" | "COMPANY";
+  /** Mobil uygulamadan başlatıldıysa: dönüşte uygulamaya gidilecek adres şeması ve uygulamanın PKCE değeri */
+  app?: { scheme: string; challenge: string };
 };
+
+/** Mobil uygulamaların adres şemaları (apps/mobile/app.config.ts); başka şemaya yönlendirilmez */
+export const APP_SCHEMES: Record<string, string> = { firma: "evdenevenakliyat-firma", musteri: "evdenevenakliyat" };
+
+/** Uygulamaya dönüş: giriş penceresi bu adresi görünce kapanır, uygulama sonucu okur */
+export const appReturn = (scheme: string, params: Record<string, string>) =>
+  seeOther(`${scheme}://oauth?${new URLSearchParams(params)}`);
 
 export type OAuthResult =
   | ({ status: "signed_in" } & AuthResponse)
-  | { status: "signup_required"; signupToken: string; profile: { fullName: string | null; email: string | null } };
+  | { status: "signup_required"; signupToken: string; profile: { fullName: string | null; email: string | null } }
+  | { status: "app_handoff"; handoff: string };
 
 export const PROVIDER_LABELS: Record<string, string> = { google: "Google", apple: "Apple", test: "Test" };
 

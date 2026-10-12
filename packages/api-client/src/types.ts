@@ -363,9 +363,15 @@ export type ContactVerification = {
 
 /** GET /requests/:id: müşterinin kendi talebi, açık adresler ve medya dahil */
 export type MovingRequestDetail = MovingRequest & {
+  /** Açık adres; isteğe bağlı olduğu için boş olabilir */
   fromAddress: string;
   fromFloor: number;
   fromHasElevator: boolean;
+  /** Haritada işaretlenen nokta; işaret yoksa null */
+  fromLat: number | null;
+  fromLng: number | null;
+  toLat: number | null;
+  toLng: number | null;
   toAddress: string;
   toFloor: number;
   toHasElevator: boolean;
@@ -384,14 +390,20 @@ export type MovingRequestDetail = MovingRequest & {
 export type CreateRequestInput = {
   fromCityCode: string;
   fromDistrict: string;
-  fromAddress: string;
+  /** İsteğe bağlı; boş bırakılabilir */
+  fromAddress?: string;
   fromFloor: number;
   fromHasElevator: boolean;
+  /** Haritada işaretlenen nokta (enlem ve boylam birlikte) */
+  fromLat?: number;
+  fromLng?: number;
   toCityCode: string;
   toDistrict: string;
-  toAddress: string;
+  toAddress?: string;
   toFloor: number;
   toHasElevator: boolean;
+  toLat?: number;
+  toLng?: number;
   homeType: string;
   /** YYYY-AA-GG */
   moveDate: string;
@@ -450,4 +462,19 @@ export type CustomerBooking = {
   cancelReason: string | null;
   review: OwnReview | null;
   company: PublicCompany & { contactName: string; contactPhone: string };
+};
+
+/** GET/PATCH /notifications/preferences */
+export type NotificationPreferences = {
+  email: string | null;
+  /** Kullanıcının açıp kapatabildiği kanallar (EMAIL, PUSH) */
+  channels: ('EMAIL' | 'PUSH')[];
+  /** Anlık bildirim: bildirimi açık tarayıcı ve telefon sayısı */
+  push?: { publicKey: string | null; devices: number; mobileDevices: number };
+  items: {
+    type: string;
+    label: string;
+    description: string;
+    channels: Partial<Record<'EMAIL' | 'PUSH', boolean>>;
+  }[];
 };

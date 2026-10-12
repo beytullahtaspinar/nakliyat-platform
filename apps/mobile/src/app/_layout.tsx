@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { DialogProvider } from '@/components/dialog';
 import { AppText, Button } from '@/components/ui';
 import { SessionProvider, useSession } from '@/lib/session';
 import { variant } from '@/lib/variant';
@@ -27,7 +28,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <KeyboardProvider>
         <StatusBar style="dark" />
-        <SessionProvider>{ready ? <RootStack /> : null}</SessionProvider>
+        <DialogProvider>
+          <SessionProvider>{ready ? <RootStack /> : null}</SessionProvider>
+        </DialogProvider>
       </KeyboardProvider>
     </SafeAreaProvider>
   );
@@ -50,6 +53,7 @@ function RootStack() {
         <Stack.Screen name="giris" />
         {/* Kayıt yalnızca müşteri uygulamasında; firma kaydı sitede */}
         <Stack.Screen name="kayit" />
+        <Stack.Screen name="kayit-tamamla" />
       </Stack.Protected>
       {/* Her uygulama yalnızca kendi rolünün ekranlarını içerir; giriş ekranı rolü zaten doğrular. */}
       <Stack.Protected guard={signedIn && variant === 'firma'}>

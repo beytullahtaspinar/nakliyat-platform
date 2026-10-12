@@ -2,7 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import type { CompanyProfile, CompanyRequestDetail } from '@nakliyat/api-client';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
+import { useDialog } from '@/components/dialog';
 import { MediaStrip } from '@/components/booking-bits';
 import { DetailScreen, Section } from '@/components/panel';
 import { QuoteForm } from '@/components/quote-form';
@@ -52,6 +53,7 @@ function flagHint(flag: RequestFlag, request: CompanyRequestDetail): string | nu
 
 /** Sitedeki /firma-paneli/talepler/[id]: talep ayrıntısı ve teklif formu */
 export default function RequestScreen() {
+  const dialog = useDialog();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: request, error, reload } = useApi<CompanyRequestDetail>(`/company/requests/${encodeURIComponent(id)}`);
   const { data: profile, reload: reloadProfile } = useApi<CompanyProfile>('/company/profile');
@@ -108,27 +110,21 @@ export default function RequestScreen() {
   }
 
   function confirmWithdraw(quoteId: string, creditCost: number) {
-    Alert.alert(
-      'Teklifi geri çek',
-      `Teklifin müşterinin listesinden kalkacak ve bu talebe yeniden teklif veremeyeceksin.${
-        creditCost > 0 ? ` Bu teklif için düşülen ${formatCredits(creditCost)} iade edilmez.` : ''
-      }`,
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Evet, geri çek',
-          style: 'destructive',
-          onPress: () => {
-            setWithdrawing(true);
-            api
-              .request(`/company/quotes/${quoteId}/withdraw`, { method: 'POST' })
-              .then(() => saved('Teklifin geri çekildi.'))
-              .catch((e: unknown) => Alert.alert('Geri çekilemedi', e instanceof Error ? e.message : 'Tekrar dene.'))
-              .finally(() => setWithdrawing(false));
-          },
-        },
-      ],
-    );
+    setWithdrawing(true);
+    void dialog
+      .confirm({
+        title: 'Teklif geri çekilsin mi?',
+        message: `Teklifin müşterinin listesinden kalkacak ve bu talebe yeniden teklif veremeyeceksin.${
+          creditCost > 0 ? ` Bu teklif için düşülen ${formatCredits(creditCost)} iade edilmez.` : ''
+        }`,
+        confirmLabel: 'Evet, geri çek',
+        destructive: true,
+        action: () => api.request(`/company/quotes/${quoteId}/withdraw`, { method: 'POST' }),
+      })
+      .then((ok) => {
+        if (ok) void saved('Teklifin geri çekildi.');
+      })
+      .finally(() => setWithdrawing(false));
   }
 
   return (
