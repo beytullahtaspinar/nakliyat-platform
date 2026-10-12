@@ -13,7 +13,7 @@ const VARIANTS = {
     slug: 'evdenevenakliyat-firma',
     scheme: 'evdenevenakliyat-firma',
     id: 'app.evdenevenakliyat.firma',
-    background: '#f97316',
+    background: '#ff8a00',
     /** expo.dev'deki projenin kimliği (gizli değildir) */
     easProjectId: '084d903b-b052-4101-8a94-e6153827d0b7' as string | undefined,
     imagePicker: {
@@ -26,7 +26,7 @@ const VARIANTS = {
     slug: 'evdenevenakliyat',
     scheme: 'evdenevenakliyat',
     id: 'app.evdenevenakliyat.musteri',
-    background: '#1e3a8a',
+    background: '#1b2f6e',
     easProjectId: '724e123c-2655-4a5a-8541-e3dae4cac277' as string | undefined,
     imagePicker: {
       cameraPermission: 'Eşyalarının fotoğrafını çekip talebine ekleyebilmen için kamera izni gerekiyor.',

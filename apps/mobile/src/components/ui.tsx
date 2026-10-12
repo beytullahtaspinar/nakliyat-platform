@@ -234,7 +234,7 @@ const MARKS = {
   musteri: require('../../assets/musteri/icon.png'),
 } as const;
 
-/** Marka işareti: kalın "e" ve nokta; firma uygulamasında turuncu zemin */
+/** Marka işareti: hız çizgili "e"; müşteri uygulamasında lacivert, firma uygulamasında turuncu zemin */
 export function LogoMark({ size = 40 }: { size?: number }) {
   return (
     <Image
@@ -245,13 +245,20 @@ export function LogoMark({ size = 40 }: { size?: number }) {
   );
 }
 
+const LOGO = require('../../assets/logo.png');
+const LOGO_RATIO = 1200 / 161;
+
+/** Giriş ekranındaki tam logo (sitedekiyle aynı); firma uygulamasında altında "Firma" etiketi */
 export function Wordmark() {
+  const height = 30;
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <LogoMark size={36} />
-      <AppText weight="bold" style={{ fontSize: 17, color: colors.zinc900, letterSpacing: -0.3 }}>
-        evdenevenakliyat<AppText weight="bold" style={{ color: colors.accent700 }}>.app</AppText>
-      </AppText>
+    <View accessible accessibilityRole="image" accessibilityLabel={variant === 'firma' ? 'Evden Eve Nakliyat Firma' : 'Evden Eve Nakliyat'} style={{ gap: 6 }}>
+      <Image source={LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
+      {variant === 'firma' ? (
+        <AppText weight="semibold" style={{ color: colors.accent700, fontSize: 13, letterSpacing: 1 }}>
+          FİRMA UYGULAMASI
+        </AppText>
+      ) : null}
     </View>
   );
 }
