@@ -1,10 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import type { MovingRequest, Paginated, UnreadMessages } from '@nakliyat/api-client';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { EmptyState, PanelScreen } from '@/components/panel';
 import { PushPrompt } from '@/components/push-prompt';
-import { AppText, Badge, Button, Notice } from '@/components/ui';
+import { AppText, Badge, Badges, Button, Notice } from '@/components/ui';
 import { formatDate, REQUEST_STATUS } from '@/lib/format';
 import { homeTypeLabel, place } from '@/lib/requests';
 import { useUser } from '@/lib/session';
@@ -60,7 +59,7 @@ export default function MyRequestsScreen() {
               borderWidth: 1,
               borderColor: colors.zinc200,
               padding: 16,
-              gap: 6,
+              gap: 10,
             })}
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
@@ -69,24 +68,20 @@ export default function MyRequestsScreen() {
               </AppText>
               <Badge tone={status.tone}>{status.label}</Badge>
             </View>
-            <AppText style={{ color: colors.zinc600, fontSize: 14 }}>
-              {homeTypeLabel(r.homeType)} · {formatDate(r.moveDate)}
-            </AppText>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Badges>
+              <Badge icon="home-outline">{homeTypeLabel(r.homeType)}</Badge>
+              <Badge icon="calendar-outline">{formatDate(r.moveDate)}</Badge>
               {r.status === 'OPEN' || r.quoteCount > 0 ? (
-                <AppText weight="semibold" style={{ color: r.quoteCount > 0 ? colors.brand700 : colors.zinc500, fontSize: 14 }}>
-                  {r.quoteCount > 0 ? `${r.quoteCount} teklif` : 'Henüz teklif yok'}
-                </AppText>
+                <Badge icon="pricetags-outline" tone={r.quoteCount > 0 ? 'brand' : 'neutral'}>
+                  {r.quoteCount > 0 ? `${r.quoteCount} teklif` : 'Teklif bekleniyor'}
+                </Badge>
               ) : null}
               {messages > 0 ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="chatbubble" size={14} color={colors.accent700} />
-                  <AppText weight="semibold" style={{ color: colors.accent700, fontSize: 14 }}>
-                    {messages} yeni mesaj
-                  </AppText>
-                </View>
+                <Badge icon="chatbubble" tone="accent">
+                  {`${messages} yeni mesaj`}
+                </Badge>
               ) : null}
-            </View>
+            </Badges>
           </Pressable>
         );
       })}

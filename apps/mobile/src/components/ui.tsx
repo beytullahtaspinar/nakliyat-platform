@@ -147,16 +147,25 @@ const BADGE_TONES: Record<Tone, { bg: string; fg: string; border: string }> = {
   success: { bg: colors.green50, fg: colors.green700, border: colors.green50 },
 };
 
-export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: ReactNode }) {
+type IconName = ComponentProps<typeof Ionicons>['name'];
+
+/** Durum ya da bilgi rozeti; simgeyle verilirse simge rozetin renginde gösterilir */
+export function Badge({ tone = 'neutral', icon, children }: { tone?: Tone; icon?: IconName; children: ReactNode }) {
   const t = BADGE_TONES[tone];
   return (
-    <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }]}>
+    <View style={[styles.badge, { backgroundColor: t.bg, borderColor: t.border }, icon ? styles.badgeWithIcon : null]}>
+      {icon ? <Ionicons name={icon} size={14} color={t.fg} /> : null}
       <AppText weight="semibold" style={{ color: t.fg, fontSize: 13, lineHeight: 18 }}>
-        {tone === 'warning' ? '! ' : ''}
+        {tone === 'warning' && !icon ? '! ' : ''}
         {children}
       </AppText>
     </View>
   );
+}
+
+/** Rozetleri yan yana dizer, sığmayan alt satıra iner */
+export function Badges({ children }: { children: ReactNode }) {
+  return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>{children}</View>;
 }
 
 /** Liste süzgeci: yatay kayan seçenekler, seçili olan dolu */
@@ -279,6 +288,7 @@ const styles = StyleSheet.create({
   },
   notice: { borderRadius: radius.md, padding: 12 },
   badge: { borderRadius: 999, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 2, alignSelf: 'flex-start' },
+  badgeWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingLeft: 8, paddingVertical: 3 },
   segment: {
     minHeight: 40,
     justifyContent: 'center',
