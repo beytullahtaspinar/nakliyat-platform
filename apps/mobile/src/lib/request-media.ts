@@ -2,6 +2,7 @@ import type { RequestMedia, UploadTicket } from '@nakliyat/api-client';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from './api';
+import { putBytes, readFileBytes } from './upload';
 
 // Sitedeki apps/web/src/lib/media/rules.ts ile aynı sınırlar. Uygulamadan yalnızca fotoğraf eklenir:
 // telefon videoları (iPhone'da HEVC/.mov) API'nin kabul ettiği MP4/WebM'e burada çevrilemiyor.
@@ -60,18 +61,20 @@ export async function pickPhotos(source: 'library' | 'camera', limit: number): P
  */
 export async function uploadPhotos(requestId: string, photos: PreparedPhoto[]): Promise<{ added: RequestMedia[]; failed: number }> {
   if (photos.length === 0) return { added: [], failed: 0 };
-  const blobs = await Promise.all(photos.map(async (p) => (await fetch(p.uri)).blob()));
-  const usable = photos.map((p, i) => ({ photo: p, blob: blobs[i] })).filter((x) => x.blob.size <= MAX_PHOTO_BYTES);
+  const files = await Promise.all(photos.map(async (p) => readFileBytes(p.uri).catch(() => null)));
+  const usable = photos
+    .map((p, i) => ({ photo: p, bytes: files[i] }))
+    .filter((x): x is { photo: PreparedPhoto; bytes: ArrayBuffer } => !!x.bytes && x.bytes.byteLength <= MAX_PHOTO_BYTES);
+  if (usable.length === 0) return { added: [], failed: photos.length };
   const base = `/requests/${encodeURIComponent(requestId)}/media`;
   const { uploads } = await api.request<{ uploads: UploadTicket[] }>(`${base}/uploads`, {
     method: 'POST',
-    body: { files: usable.map((x) => ({ mimeType: 'image/jpeg', sizeBytes: x.blob.size })) },
+    body: { files: usable.map((x) => ({ mimeType: 'image/jpeg', sizeBytes: x.bytes.byteLength })) },
   });
   const items: { key: string; width: number; height: number }[] = [];
   for (const [i, ticket] of uploads.entries()) {
-    const { photo, blob } = usable[i];
-    const res = await fetch(ticket.url, { method: ticket.method, headers: ticket.headers, body: blob }).catch(() => null);
-    if (res?.ok) items.push({ key: ticket.key, width: photo.width, height: photo.height });
+    const { photo, bytes } = usable[i]!;
+    if (await putBytes(ticket, bytes)) items.push({ key: ticket.key, width: photo.width, height: photo.height });
   }
   const added = items.length ? await api.request<RequestMedia[]>(base, { method: 'POST', body: { items } }) : [];
   return { added, failed: photos.length - added.length };
