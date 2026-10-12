@@ -525,8 +525,10 @@ export type Conversation = {
   requestId: string;
   /** Karşı taraf: müşteriye firma adı, firmaya müşteri adı */
   counterpart: string;
-  /** İptal edilen işte ya da karşı taraf hesabını kapattıysa false */
+  /** İptal edilen işte, karşı taraf hesabını kapattıysa ya da taraflardan biri engellediyse false */
   canSend: boolean;
+  /** byMe: bu kullanıcı karşı tarafı engelledi; byThem: karşı taraf engelledi */
+  blocked: { byMe: boolean; byThem: boolean };
   items: BookingMessage[];
 };
 
@@ -543,7 +545,32 @@ export type AdminSummary = {
   documents: { pending: number };
   nameChanges: { pending: number };
   transfers: { pending: number };
+  reports: { open: number };
 };
+
+export type ReportTarget = "MESSAGE" | "REVIEW" | "REVIEW_REPLY";
+export type ReportReason = "SPAM" | "ABUSE" | "INAPPROPRIATE" | "FRAUD" | "OTHER";
+export type ReportStatus = "OPEN" | "RESOLVED" | "DISMISSED";
+type ReportPerson = { id: string; name: string; role: UserRole; deleted: boolean };
+
+/** GET /admin/reports: kullanıcıların bildirdiği mesaj, yorum ve firma yanıtları */
+export type AdminReport = {
+  id: string;
+  target: ReportTarget;
+  targetId: string;
+  reason: ReportReason;
+  note: string | null;
+  /** Bildirildiği andaki metin */
+  content: string;
+  status: ReportStatus;
+  resolution: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  reporter: ReportPerson | null;
+  author: ReportPerson | null;
+  requestId: string | null;
+};
+export type AdminReportList = Paginated<AdminReport> & { counts: { open: number } };
 
 type StatsTotals = {
   requests: number;

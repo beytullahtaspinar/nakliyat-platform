@@ -33,7 +33,26 @@ export async function sendMessage(bookingId: string, body: string): Promise<Send
       }),
     };
   } catch (err) {
-    if (err instanceof ApiError && err.status === 400) return { error: "Mesaj boş olamaz ve en fazla 2000 karakter olabilir." };
+    // Küfür süzgecinin iletisi olduğu gibi gösterilir; diğer 400'ler uzunluk/boşluk hatasıdır
+    if (err instanceof ApiError && err.status === 400 && !err.message.includes("uygunsuz")) {
+      return { error: "Mesaj boş olamaz ve en fazla 2000 karakter olabilir." };
+    }
     return { error: err instanceof ApiError ? err.message : "Mesaj gönderilemedi, lütfen tekrar dene." };
+  }
+}
+
+/** Karşı tarafı bu işte engeller ya da kendi koyduğu engeli kaldırır; engelliyken iki taraf da yazamaz. */
+export async function setBlocked(bookingId: string, blocked: boolean): Promise<ConversationResult> {
+  const token = await getAccessToken();
+  if (!token) return { error: SESSION_ENDED };
+  try {
+    return {
+      conversation: await apiFetch<Conversation>(`/bookings/${encodeURIComponent(bookingId)}/block`, {
+        method: blocked ? "POST" : "DELETE",
+        token,
+      }),
+    };
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "İşlem yapılamadı, lütfen tekrar dene." };
   }
 }

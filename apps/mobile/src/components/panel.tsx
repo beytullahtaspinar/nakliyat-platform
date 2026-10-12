@@ -132,7 +132,7 @@ export function DetailScreen({
 }
 
 /** Ayrıntı ekranlarının üst çubuğu: geri düğmesi, isteğe bağlı başlık */
-export function BackHeader({ label, title }: { label: string; title?: string }) {
+export function BackHeader({ label, title, right }: { label: string; title?: string; right?: ReactNode }) {
   return (
     <View
       style={{
@@ -163,6 +163,7 @@ export function BackHeader({ label, title }: { label: string; title?: string }) 
           {title}
         </AppText>
       ) : null}
+      {right ? <View style={{ marginLeft: 'auto' }}>{right}</View> : null}
     </View>
   );
 }

@@ -87,6 +87,9 @@ model UserIdentity {
   subject   String           @db.VarChar(191)
   /// Sağlayıcının bildirdiği e-posta (Apple'da gizli yönlendirme adresi olabilir)
   email     String?          @db.VarChar(191)
+  /// Apple'ın son girişte verdiği refresh_token. Hesap silinince Apple'da iptal edilir (App Store kuralı 5.1.1(v)).
+  /// Yalnızca bizim .p8 anahtarımızla imzalanan istemci sırrıyla kullanılabilir.
+  revokeToken String?        @db.Text
   createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -523,6 +526,65 @@ model Review {
 }
 
 // ─── Mesajlaşma ve bildirimler ──────────────────────────────────
+
+/// Mesajlaşma engeli. Müşteri firmayı ya da firma müşteriyi engeller; engel varken iki taraf da
+/// birbirine mesaj gönderemez. Engeli yalnızca koyan taraf kaldırır. (Mağaza kuralı: kullanıcı engellenebilmeli)
+model MessagingBlock {
+  id         String   @id @default(cuid())
+  customerId String
+  companyId  String
+  /// Engelleyen taraf: CUSTOMER ya da COMPANY
+  blockedBy  UserRole
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, companyId, blockedBy])
+  @@index([companyId])
+}
+
+enum ReportTarget {
+  MESSAGE
+  REVIEW
+  REVIEW_REPLY
+}
+
+enum ReportReason {
+  SPAM
+  ABUSE
+  INAPPROPRIATE
+  FRAUD
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+/// Kullanıcının uygunsuz bulduğu içerik (mesaj, yorum, firma yanıtı) bildirimi. Yönetici /yonetim/sikayetler
+/// ekranında inceler, gerekirse içeriği kaldırır. (Mağaza kuralı: kullanıcı içeriği bildirilebilmeli)
+model ContentReport {
+  id           String       @id @default(cuid())
+  reporterId   String
+  target       ReportTarget
+  /// Bildirilen mesaj ya da değerlendirme
+  targetId     String
+  bookingId    String?
+  /// İçeriği yazan kullanıcı
+  authorId     String?
+  /// Bildirildiği andaki metin: içerik sonradan silinse de incelenebilsin
+  content      String       @db.Text
+  reason       ReportReason
+  note         String?      @db.VarChar(500)
+  status       ReportStatus @default(OPEN)
+  resolution   String?      @db.VarChar(500)
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime     @default(now())
+
+  @@index([status, createdAt])
+  @@index([target, targetId])
+}
 
 model Message {
   id        String    @id @default(cuid())

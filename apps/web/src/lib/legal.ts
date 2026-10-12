@@ -8,8 +8,8 @@
  * LEGAL_VERSION, kayıtta kullanıcının kabul ettiği sürüm olarak API'ye gönderilir ve saklanır.
  * Koşullarda esaslı bir değişiklik yapıldığında hem bu sürüm hem LEGAL_UPDATED güncellenir.
  */
-export const LEGAL_VERSION = "2026-10-05";
-export const LEGAL_UPDATED = "5 Ekim 2026";
+export const LEGAL_VERSION = "2026-10-12";
+export const LEGAL_UPDATED = "12 Ekim 2026";
 
 export const COMPANY = {
   /** Veri sorumlusu ve hizmet sağlayıcı (şahıs işletmesi sahibi) */

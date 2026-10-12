@@ -6,6 +6,7 @@ import type { ComponentProps } from 'react';
 import { Pressable, View } from 'react-native';
 import { PanelScreen, Section, useSignOutPrompt } from '@/components/panel';
 import { AppText, Badge, Button, Notice } from '@/components/ui';
+import { LEGAL_PAGES, openSupportMail, openWebPage, SUPPORT_EMAIL } from '@/lib/legal';
 import { formatCredits, type Tone } from '@/lib/requests';
 import { useUser } from '@/lib/session';
 import { useApi } from '@/lib/use-api';
@@ -65,6 +66,16 @@ export default function AccountScreen() {
       <Section title="Sitede düzenle" description="Bu bölümler evdenevenakliyat.app firma panelinde açılır.">
         <Row icon="business-outline" label="Firma profili" external onPress={() => void Linking.openURL(`${WEB_ORIGIN}/firma-paneli/profil`)} />
         <Row icon="images-outline" label="Tanıtım sayfası" external onPress={() => void Linking.openURL(`${WEB_ORIGIN}/firma-paneli/tanitim`)} />
+      </Section>
+
+      <Section title="Yasal metinler">
+        <Row icon="document-text-outline" label="Kullanım koşulları" external onPress={() => openWebPage(LEGAL_PAGES.terms)} />
+        <Row icon="lock-closed-outline" label="Gizlilik politikası" external onPress={() => openWebPage(LEGAL_PAGES.privacy)} />
+        <Row icon="information-circle-outline" label="KVKK aydınlatma metni" external onPress={() => openWebPage(LEGAL_PAGES.kvkk)} />
+      </Section>
+
+      <Section title="Yardım">
+        <Row icon="mail-outline" label="Destek ve iletişim" hint={SUPPORT_EMAIL} external onPress={openSupportMail} />
       </Section>
 
       <Button title="Çıkış yap" kind="secondary" onPress={confirmSignOut} />

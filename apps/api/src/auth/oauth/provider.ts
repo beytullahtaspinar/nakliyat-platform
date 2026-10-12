@@ -7,6 +7,8 @@ export interface OAuthProfile {
   emailVerified: boolean;
   /** Apple adı yalnızca ilk girişte, id_token dışında gönderir */
   name: string | null;
+  /** Hesap silinince sağlayıcıda iptal edilecek belirteç (Apple refresh_token) */
+  revokeToken?: string | null;
 }
 
 export interface AuthorizationParams {
@@ -38,11 +40,14 @@ export interface OAuthProvider {
   readonly identity: IdentityProvider;
   authorizationUrl(params: AuthorizationParams): string;
   exchange(params: ExchangeParams): Promise<OAuthProfile>;
+  /** Hesap silinince uygulamanın sağlayıcıdaki yetkisini kaldırır (Apple'da zorunlu) */
+  revoke?(token: string): Promise<void>;
 }
 
 /** Yapılandırılmış sağlayıcılar; anahtarı olmayan listede yer almaz ve düğmesi görünmez */
 export const OAUTH_PROVIDERS = Symbol('OAUTH_PROVIDERS');
 
+/** Belirteç uç noktasına form gönderir; gövdede id_token yoksa hata fırlatır */
 export async function postForm(url: string, form: Record<string, string>, label: string) {
   const res = await fetch(url, {
     method: 'POST',
@@ -55,5 +60,5 @@ export async function postForm(url: string, form: Record<string, string>, label:
     // Gövdede yalnızca hata kodu olur (ör. invalid_grant); gizli anahtar içermez
     throw new Error(`${label} ${res.status}: ${String(body?.error ?? 'id_token yok')}`);
   }
-  return body.id_token;
+  return body as Record<string, unknown> & { id_token: string };
 }

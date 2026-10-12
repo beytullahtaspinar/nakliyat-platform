@@ -7,6 +7,7 @@ const AUTH_URL = 'https://appleid.apple.com/auth/authorize';
 const TOKEN_URL = 'https://appleid.apple.com/auth/token';
 const JWKS_URL = 'https://appleid.apple.com/auth/keys';
 const ISSUER = 'https://appleid.apple.com';
+const REVOKE_URL = 'https://appleid.apple.com/auth/revoke';
 
 export interface AppleConfig {
   /** Services ID (ör. app.evdenevenakliyat.giris) */
@@ -45,7 +46,7 @@ export class AppleProvider implements OAuthProvider {
   }
 
   async exchange({ code, redirectUri, nonce, appleUser }: ExchangeParams): Promise<OAuthProfile> {
-    const idToken = await postForm(
+    const tokens = await postForm(
       TOKEN_URL,
       {
         code,
@@ -56,14 +57,34 @@ export class AppleProvider implements OAuthProvider {
       },
       'Apple',
     );
-    const claims = await verifyIdToken(idToken, { jwksUrl: JWKS_URL, issuers: [ISSUER], audience: this.cfg.clientId, nonce });
+    const claims = await verifyIdToken(tokens.id_token, { jwksUrl: JWKS_URL, issuers: [ISSUER], audience: this.cfg.clientId, nonce });
     return {
       subject: claims.sub,
       email: typeof claims.email === 'string' ? claims.email.toLowerCase() : null,
       // Apple bu alanı metin ("true") ya da mantıksal değer olarak gönderebilir
       emailVerified: claims.email_verified === true || claims.email_verified === 'true',
       name: nameFrom(appleUser),
+      revokeToken: typeof tokens.refresh_token === 'string' ? tokens.refresh_token : null,
     };
+  }
+
+  /**
+   * Apple'daki "Apple ile giriş" yetkisini kaldırır. App Store kuralı 5.1.1(v): Apple ile giriş sunan uygulama
+   * hesap silinince belirteci iptal etmeli. Başarısızlık hesap silmeyi durdurmaz; çağıran günlüğe yazar.
+   */
+  async revoke(token: string) {
+    const res = await fetch(REVOKE_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: this.cfg.clientId,
+        client_secret: this.clientSecret(),
+        token,
+        token_type_hint: 'refresh_token',
+      }).toString(),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`Apple revoke ${res.status}`);
   }
 
   /** Apple'ın istediği client_secret: 5 dakika geçerli ES256 JWT */

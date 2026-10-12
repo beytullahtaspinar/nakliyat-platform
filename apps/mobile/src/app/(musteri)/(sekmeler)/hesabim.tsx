@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 import { PanelScreen, Section, useSignOutPrompt } from '@/components/panel';
 import { AppText, Badge, Button } from '@/components/ui';
 import { formatPhone } from '@/lib/bookings';
-import { LEGAL_PAGES, openWebPage } from '@/lib/legal';
+import { LEGAL_PAGES, openSupportMail, openWebPage, SUPPORT_EMAIL } from '@/lib/legal';
 import { useSession, useUser } from '@/lib/session';
 import { colors } from '@/theme';
 
@@ -37,6 +37,10 @@ export default function AccountScreen() {
         <Row icon="document-text-outline" label="Kullanım koşulları" external onPress={() => openWebPage(LEGAL_PAGES.terms)} />
         <Row icon="lock-closed-outline" label="Gizlilik politikası" external onPress={() => openWebPage(LEGAL_PAGES.privacy)} />
         <Row icon="information-circle-outline" label="KVKK aydınlatma metni" external onPress={() => openWebPage(LEGAL_PAGES.kvkk)} />
+      </Section>
+
+      <Section title="Yardım">
+        <Row icon="mail-outline" label="Destek ve iletişim" hint={SUPPORT_EMAIL} external onPress={openSupportMail} />
       </Section>
 
       <Button title="Çıkış yap" kind="secondary" onPress={confirmSignOut} />

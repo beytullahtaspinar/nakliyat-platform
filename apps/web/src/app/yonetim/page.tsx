@@ -25,6 +25,12 @@ export default async function AdminHomePage() {
       href: "/yonetim/ad-degisiklikleri",
       highlight: summary.nameChanges.pending > 0,
     },
+    {
+      label: "Açık şikayet",
+      value: summary.reports.open,
+      href: "/yonetim/sikayetler",
+      highlight: summary.reports.open > 0,
+    },
     { label: "Onaylı firma", value: summary.companies.verified, href: "/yonetim/firmalar?durum=onayli" },
     { label: "Teklif bekleyen talep", value: summary.requests.open, href: "/yonetim/talepler?durum=acik" },
     { label: "Planlanmış iş", value: summary.bookings.scheduled, href: "/yonetim/talepler?durum=firma-secildi" },
@@ -40,7 +46,7 @@ export default async function AdminHomePage() {
   return (
     <>
       <PageHeader title="Pano" description={`Hoş geldin ${user.fullName.split(" ")[0]}. Bekleyen işler ve genel durum.`} />
-      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-8">
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-9">
         {stats.map((s) => (
           <li key={s.label}>
             <Link

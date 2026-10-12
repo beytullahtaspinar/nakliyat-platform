@@ -67,13 +67,22 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: `${assets}/android-icon-monochrome.png`,
     },
     predictiveBackGestureEnabled: false,
+    // Kullanılmayan izinler mağaza formunda gerekçe ister ve kullanıcıyı ürkütür: kütüphanelerin eklediklerini çıkar.
+    // Galeri ve belge seçimi sistem seçicisiyle izin gerektirmeden çalışır.
+    blockedPermissions: [
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.READ_EXTERNAL_STORAGE',
+      'android.permission.WRITE_EXTERNAL_STORAGE',
+      'android.permission.RECORD_AUDIO',
+    ],
     // Anlık bildirim için Firebase dosyası. Gizli değildir ama depoya konmaz: EAS'ta "file" türünde
     // GOOGLE_SERVICES_JSON ortam değişkeni olarak yüklenir, derleme sırasında dosya yolu buraya gelir.
     ...(process.env.GOOGLE_SERVICES_JSON && { googleServicesFile: process.env.GOOGLE_SERVICES_JSON }),
   },
   plugins: [
     'expo-router',
-    'expo-secure-store',
+    // Oturum anahtarı yalnızca güvenli depoda tutulur; Face ID kullanılmaz (İngilizce izin metni eklenmesin)
+    ['expo-secure-store', { faceIDPermission: false }],
     // Firma: belgenin fotoğrafını çekmek için kamera. Müşteri: eşyaların fotoğrafı için kamera ve galeri.
     // Mikrofon kullanılmaz (uygulamadan video yüklenmiyor).
     ['expo-image-picker', { ...v.imagePicker, microphonePermission: false }],

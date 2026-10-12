@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReportButton } from "@/components/report-button";
 import { PageHeader } from "@/components/panel/panel-bits";
 import Link from "next/link";
 import { BadgePill } from "@/components/company-badges";
@@ -164,7 +165,10 @@ export default async function CompanyReviewsPage({ searchParams }: PageProps<"/f
                   </Link>
                 </p>
                 {r.comment ? (
-                  <p className="mt-2 whitespace-pre-line text-zinc-900">{r.comment}</p>
+                  <>
+                    <p className="mt-2 whitespace-pre-line text-zinc-900">{r.comment}</p>
+                    {r.isPublished && <ReportButton target="REVIEW" targetId={r.id} />}
+                  </>
                 ) : (
                   <p className="mt-2 text-sm text-zinc-600">Yorum yazılmadan puan verildi.</p>
                 )}

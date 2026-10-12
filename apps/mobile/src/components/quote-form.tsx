@@ -56,7 +56,7 @@ export function QuoteForm({
       else await api.request(`/company/requests/${request.id}/quotes`, { method: 'POST', body });
       await onSaved(quote ? 'Teklifin güncellendi.' : 'Teklifin müşteriye gönderildi.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Teklif kaydedilemedi, tekrar dene.');
+      setError(e instanceof Error ? quoteError(e.message) : 'Teklif kaydedilemedi, tekrar dene.');
     } finally {
       setSaving(false);
     }
@@ -132,4 +132,12 @@ export function QuoteForm({
       />
     </View>
   );
+}
+
+/**
+ * Sunucunun "Kredi yükledikten sonra tekrar deneyin" iletisi uygulamada gösterilmez: mağaza kuralı gereği
+ * uygulama dijital ürün satın almaya yönlendirmez (App Store 3.1.1, Google Play ödeme kuralı).
+ */
+function quoteError(message: string) {
+  return /kredi/i.test(message) && /yetersiz/i.test(message) ? 'Bakiyen bu teklif için yetmiyor.' : message;
 }

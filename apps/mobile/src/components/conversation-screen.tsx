@@ -6,6 +6,8 @@ import { AppState, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BackHeader } from '@/components/panel';
+import { useDialog } from '@/components/dialog';
+import { ReportButton } from '@/components/report';
 import { AppText, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { formatMessageTime } from '@/lib/bookings';
@@ -26,6 +28,7 @@ export function ConversationScreen({ id, backLabel, emptyText }: { id: string; b
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const dialog = useDialog();
 
   const load = useCallback(async () => {
     try {
@@ -74,9 +77,57 @@ export function ConversationScreen({ id, backLabel, emptyText }: { id: string; b
     }
   }
 
+  // Engelleme yazışmayı iki taraf için de kapatır; yalnız engelleyen kaldırabilir (App Store 1.2)
+  function toggleBlock() {
+    if (!data) return;
+    const url = `/bookings/${encodeURIComponent(id)}/block`;
+    if (data.blocked.byMe) {
+      void dialog.confirm({
+        title: 'Engel kaldırılsın mı?',
+        message: `${data.counterpart} sana yeniden mesaj yazabilir.`,
+        confirmLabel: 'Engeli kaldır',
+        icon: 'lock-open-outline',
+        action: async () => setData(await api.request<Conversation>(url, { method: 'DELETE' })),
+      });
+      return;
+    }
+    void dialog.confirm({
+      title: `${data.counterpart} engellensin mi?`,
+      message:
+        'Bu işte iki taraf da birbirine mesaj yazamaz. Uygunsuz bir mesaj aldıysan ayrıca mesajın altındaki "Bildir" ile yönetime bildir.',
+      confirmLabel: 'Engelle',
+      destructive: true,
+      icon: 'ban',
+      action: async () => setData(await api.request<Conversation>(url, { method: 'POST' })),
+    });
+  }
+
+  const closedText = data?.blocked.byMe
+    ? 'Bu kişiyi engelledin. Engeli sağ üstten kaldırabilirsin.'
+    : data?.blocked.byThem
+      ? 'Karşı taraf yazışmayı kapattı.'
+      : 'Bu işte artık mesaj gönderilemiyor.';
+
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: colors.zinc50 }}>
-      <BackHeader label={backLabel} title={data ? `${data.counterpart} ile mesajlar` : 'Mesajlar'} />
+      <BackHeader
+        label={backLabel}
+        title={data ? `${data.counterpart} ile mesajlar` : 'Mesajlar'}
+        right={
+          data ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={data.blocked.byMe ? 'Engeli kaldır' : 'Engelle'}
+              hitSlop={8}
+              onPress={toggleBlock}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, paddingLeft: 8 }}
+            >
+              <Ionicons name={data.blocked.byMe ? 'lock-open-outline' : 'ban'} size={18} color={colors.zinc600} />
+              <AppText style={{ color: colors.zinc600, fontSize: 14 }}>{data.blocked.byMe ? 'Engeli kaldır' : 'Engelle'}</AppText>
+            </Pressable>
+          ) : null
+        }
+      />
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView
           ref={scrollRef}
@@ -100,7 +151,7 @@ export function ConversationScreen({ id, backLabel, emptyText }: { id: string; b
 
         {data && !data.canSend ? (
           <View style={{ padding: 16, paddingBottom: 16 + insets.bottom, borderTopWidth: 1, borderTopColor: colors.zinc200, backgroundColor: colors.white }}>
-            <AppText style={{ color: colors.zinc600, textAlign: 'center' }}>Bu işte artık mesaj gönderilemiyor.</AppText>
+            <AppText style={{ color: colors.zinc600, textAlign: 'center' }}>{closedText}</AppText>
           </View>
         ) : (
           <View
@@ -189,6 +240,7 @@ function Bubble({ message: m }: { message: BookingMessage }) {
         {formatMessageTime(m.createdAt)}
         {m.mine && m.readAt ? ' · Okundu' : ''}
       </AppText>
+      {!m.mine && m.body ? <ReportButton target="MESSAGE" targetId={m.id} compact /> : null}
     </View>
   );
 }

@@ -30,7 +30,7 @@ export class GoogleProvider implements OAuthProvider {
   }
 
   async exchange({ code, redirectUri, codeVerifier, nonce }: ExchangeParams): Promise<OAuthProfile> {
-    const idToken = await postForm(
+    const { id_token: idToken } = await postForm(
       TOKEN_URL,
       {
         code,
