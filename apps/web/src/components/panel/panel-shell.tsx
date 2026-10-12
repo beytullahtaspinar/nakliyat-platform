@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LogoutForm } from "@/components/logout-form";
 import { LogOutIcon } from "@/components/ui/icons";
-import { LogoMark } from "@/components/ui/logo";
+import { LogoAppIcon } from "@/components/ui/logo";
 import { LEGAL_LINKS } from "@/lib/legal";
 
 /**
@@ -32,7 +32,7 @@ export function PanelShell({
       <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-b-0">
         <div className="flex items-center justify-between gap-3 px-4 py-3 lg:py-5">
           <Link href={home} className="flex min-w-0 items-center gap-2.5">
-            <LogoMark className="h-8 w-8 shrink-0" />
+            <LogoAppIcon className="h-8 w-8 shrink-0" />
             <span className="min-w-0 leading-tight">
               <span className="block truncate text-sm font-bold text-slate-900">{title}</span>
               <span className="block truncate text-xs text-slate-500">{subtitle}</span>

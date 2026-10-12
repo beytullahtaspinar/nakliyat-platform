@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { citySlug } from "@nakliyat/locations";
-import { LogoMark } from "@/components/ui/logo";
+import { Logo } from "@/components/ui/logo";
 import { LEGAL_LINKS } from "@/lib/legal";
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
@@ -42,10 +42,10 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40">
       <div className="site-footer-columns mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <LogoMark />
-            <span className="font-display font-bold text-zinc-900 dark:text-white">evdenevenakliyat.app</span>
-          </div>
+          <p>
+            <Logo />
+            <span className="sr-only">Evden Eve Nakliyat (evdenevenakliyat.app)</span>
+          </p>
           <p className="mt-4 max-w-xs text-sm font-semibold text-zinc-800 dark:text-zinc-200">
             {BRAND_SLOGAN}
           </p>

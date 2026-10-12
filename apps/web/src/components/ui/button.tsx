@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "inverse";
+type Variant = "primary" | "accent" | "secondary" | "ghost" | "inverse";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -10,6 +10,8 @@ const base =
 
 const variants: Record<Variant, string> = {
   primary: "bg-brand-700 text-white shadow-sm hover:bg-brand-800",
+  // Turuncu zeminde beyaz metin okunmaz (2.4:1); metin koyu lacivert (7.7:1). Sayfada tek ana eylem için.
+  accent: "bg-accent-500 text-brand-950 shadow-sm hover:bg-accent-400",
   secondary:
     "border border-zinc-300 bg-white text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 " +
     "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800",

@@ -131,7 +131,7 @@ export function RequestCta() {
     );
   }
   return (
-    <ButtonLink href="/talep-olustur" size="sm">
+    <ButtonLink href="/talep-olustur" size="sm" variant="accent">
       Teklif al
     </ButtonLink>
   );
