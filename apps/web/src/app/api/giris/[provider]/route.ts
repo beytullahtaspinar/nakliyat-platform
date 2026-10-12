@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { ApiError, apiFetch } from "@/lib/api";
-import { OAUTH_COOKIE, oauthErrorCode, type OAuthPending } from "@/lib/oauth";
+import { APP_SCHEMES, OAUTH_COOKIE, appReturn, oauthErrorCode, type OAuthPending } from "@/lib/oauth";
 import { safeNext } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,10 @@ const random = () => randomBytes(32).toString("base64url");
 export async function GET(request: NextRequest, { params }: RouteContext<"/api/giris/[provider]">) {
   const { provider } = await params;
   const query = request.nextUrl.searchParams;
+  // Mobil uygulama: ?uygulama=musteri&kod=<base64url(sha256(gizli değer))>
+  const scheme = APP_SCHEMES[query.get("uygulama") ?? ""];
+  const challenge = query.get("kod") ?? "";
+  const app = scheme && /^[A-Za-z0-9_-]{43,128}$/.test(challenge) ? { scheme, challenge } : undefined;
   const pending: OAuthPending = {
     provider,
     state: random(),
@@ -22,6 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/g
     verifier: random(),
     next: safeNext(query.get("next")),
     role: query.get("rol") === "firma" ? "COMPANY" : "CUSTOMER",
+    ...(app && { app }),
   };
   const codeChallenge = createHash("sha256").update(pending.verifier).digest("base64url");
   const loginHint = query.get("login_hint") ?? undefined;
@@ -34,6 +39,7 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/g
     }));
   } catch (err) {
     const code = err instanceof ApiError ? oauthErrorCode(err.status) : "genel";
+    if (app) return appReturn(app.scheme, { hata: code });
     return new NextResponse(null, { status: 303, headers: { Location: `/giris?hata=${code}` } });
   }
 

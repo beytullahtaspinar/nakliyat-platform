@@ -1,12 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ApiError, apiFetch } from "@/lib/api";
-import { OAUTH_COOKIE, SIGNUP_COOKIE, oauthErrorCode, seeOther, type OAuthErrorCode, type OAuthPending, type OAuthResult } from "@/lib/oauth";
+import {
+  OAUTH_COOKIE,
+  SIGNUP_COOKIE,
+  appReturn,
+  oauthErrorCode,
+  seeOther,
+  type OAuthErrorCode,
+  type OAuthPending,
+  type OAuthResult,
+} from "@/lib/oauth";
 import { sessionCookies } from "@/lib/session-cookies";
 import { homeFor, verificationPath } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-const failed = (code: OAuthErrorCode) => seeOther(`/giris?hata=${code}`);
+const failed = (code: OAuthErrorCode, pending?: OAuthPending | null) =>
+  pending?.app ? appReturn(pending.app.scheme, { hata: code }) : seeOther(`/giris?hata=${code}`);
 
 /**
  * Apple ad ve e-posta istendiğinde dönüşü başka siteden form POST'u ile yapar. Bu istekte
@@ -28,10 +38,10 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/g
   const pending = readPending(request.cookies.get(OAUTH_COOKIE)?.value);
 
   // Kişi sağlayıcının ekranında vazgeçtiyse
-  if (query.get("error")) return clearPending(failed("iptal"));
+  if (query.get("error")) return clearPending(failed("iptal", pending));
   const code = query.get("code");
   if (!pending || pending.provider !== provider || !code || query.get("state") !== pending.state) {
-    return clearPending(failed("sure"));
+    return clearPending(failed("sure", pending));
   }
 
   let result: OAuthResult;
@@ -43,10 +53,16 @@ export async function GET(request: NextRequest, { params }: RouteContext<"/api/g
         codeVerifier: pending.verifier,
         nonce: pending.nonce,
         ...(query.get("user") && { appleUser: query.get("user") }),
+        ...(pending.app && { appChallenge: pending.app.challenge }),
       },
     });
   } catch (err) {
-    return clearPending(failed(err instanceof ApiError ? oauthErrorCode(err.status) : "genel"));
+    return clearPending(failed(err instanceof ApiError ? oauthErrorCode(err.status) : "genel", pending));
+  }
+
+  // Mobil uygulama: oturum sitede açılmaz, belirteç uygulamaya gider
+  if (result.status === "app_handoff") {
+    return clearPending(pending.app ? appReturn(pending.app.scheme, { handoff: result.handoff }) : failed("genel"));
   }
 
   if (result.status === "signup_required") {

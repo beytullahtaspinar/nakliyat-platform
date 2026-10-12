@@ -1,6 +1,6 @@
-import { ApiError, type AuthUser, type RegisterInput } from '@nakliyat/api-client';
+import { ApiError, type AuthResponse, type AuthUser, type RegisterInput } from '@nakliyat/api-client';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, hasStoredSession, setSessionExpiredHandler } from './api';
+import { api, hasStoredSession, setSessionExpiredHandler, storeTokens } from './api';
 import { forgetPushToken, unregisterPush } from './push';
 import { allowedRole, wrongAppMessage } from './variant';
 
@@ -14,6 +14,8 @@ type SessionState =
 type SessionContextValue = {
   state: SessionState;
   signIn(phone: string, password: string): Promise<void>;
+  /** Google / Apple girişinden ya da kaydından gelen oturumu bu cihazda açar (rol uygulamaya uymalı) */
+  adopt(response: AuthResponse): Promise<void>;
   /** Müşteri kaydı (yalnızca müşteri uygulamasında); kayıttan sonra oturum açık */
   signUp(input: Omit<RegisterInput, 'role'>): Promise<void>;
   signOut(): Promise<void>;
@@ -62,6 +64,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setState({ status: 'signedIn', user });
   }, []);
 
+  const adopt = useCallback(async ({ user, accessToken, refreshToken }: AuthResponse) => {
+    await storeTokens({ accessToken, refreshToken });
+    if (user.role !== allowedRole) {
+      await api.logout();
+      throw new ApiError(403, wrongAppMessage(user.role));
+    }
+    setState({ status: 'signedIn', user });
+  }, []);
+
   const signUp = useCallback(async (input: Omit<RegisterInput, 'role'>) => {
     const user = await api.register({ ...input, role: 'CUSTOMER' });
     setState({ status: 'signedIn', user });
@@ -83,8 +94,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ state, signIn, signUp, signOut, deleteAccount, reload }),
-    [state, signIn, signUp, signOut, deleteAccount, reload],
+    () => ({ state, signIn, adopt, signUp, signOut, deleteAccount, reload }),
+    [state, signIn, adopt, signUp, signOut, deleteAccount, reload],
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

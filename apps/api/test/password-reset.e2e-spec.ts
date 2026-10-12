@@ -10,7 +10,7 @@ import { EMAIL_CODE_SENDER, type CodePurpose, type CodeSender } from './../src/v
 describe('Şifremi unuttum (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  const phone = '+905320000801';
+  const phone = '+905320000851';
   const address = 'sifre@test.local';
 
   const sent: { to: string; code: string; purpose?: CodePurpose }[] = [];
@@ -139,5 +139,36 @@ describe('Şifremi unuttum (e2e)', () => {
       .send({ email: 'yok@test.local', code: last().code, password: 'BaskaSifre123' })
       .expect(400);
     await login('YeniSifre123').expect(200);
+  });
+
+  it('oturum açıkken şifre değişir: şu anki şifre gerekir, eski oturumlar kapanır, yeni anahtar döner', async () => {
+    const other = await login('YeniSifre123').expect(200);
+    const current = await login('YeniSifre123').expect(200);
+    const auth = { Authorization: `Bearer ${current.body.accessToken}` };
+
+    const wrong = await http()
+      .post('/v1/auth/change-password')
+      .set(auth)
+      .send({ currentPassword: 'Yanlis12345', newPassword: 'DegisenSifre123' })
+      .expect(400);
+    expect(wrong.body.message).toBe('Şu anki şifren hatalı');
+    await http().post('/v1/auth/change-password').set(auth).send({ currentPassword: 'YeniSifre123', newPassword: 'kisa' }).expect(400);
+
+    const changed = await http()
+      .post('/v1/auth/change-password')
+      .set(auth)
+      .send({ currentPassword: 'YeniSifre123', newPassword: 'DegisenSifre123' })
+      .expect(200);
+    await login('YeniSifre123').expect(401);
+    await login('DegisenSifre123').expect(200);
+    await http().post('/v1/auth/refresh').send({ refreshToken: changed.body.refreshToken }).expect(200);
+    // Eski anahtarlar geçersiz (iptal edilmiş anahtar gelince güvenlik için tüm oturumlar kapanır; en sona bırakıldı)
+    await http().post('/v1/auth/refresh').send({ refreshToken: other.body.refreshToken }).expect(401);
+    await http().post('/v1/auth/refresh').send({ refreshToken: current.body.refreshToken }).expect(401);
+    expect(await audit('password.change')).toBe(1);
+  });
+
+  it('oturum açmadan şifre değiştirilemez', async () => {
+    await http().post('/v1/auth/change-password').send({ currentPassword: 'DegisenSifre123', newPassword: 'BaskaSifre123' }).expect(401);
   });
 });

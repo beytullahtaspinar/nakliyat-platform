@@ -21,6 +21,20 @@ Anahtarlar tanımlı değilse düğmeler görünmez; telefon + şifreyle giriş 
 Güvenlik: state (CSRF) ve nonce kontrolü, Google'da PKCE, id_token imza / yayıncı / alıcı / süre doğrulaması.
 Giriş sayfasındaki hata mesajları adreste kod olarak taşınır (`/giris?hata=sure`), serbest metin gösterilmez.
 
+## Mobil uygulamalar
+
+Uygulamalar ayrı Google/Apple anahtarı istemez; sitedeki akışı uygulama içi tarayıcı penceresinde çalıştırır.
+
+1. Uygulama rastgele bir gizli değer üretir, özetini (`kod`) adrese koyar:
+   `https://evdenevenakliyat.app/api/giris/<google|apple>?uygulama=<firma|musteri>&kod=...`
+2. Akış sitedeki gibi ilerler. Dönüşte site oturum açmaz; API'den 3 dakika geçerli bir **devir belirteci** alır ve
+   pencereyi `evdenevenakliyat://oauth?handoff=...` (firma: `evdenevenakliyat-firma://`) adresine yönlendirir.
+3. Uygulama belirteci gizli değerle birlikte `POST /v1/auth/oauth/app/exchange`'e gönderir; değer özetle eşleşirse
+   oturum açılır ya da kayıt belirteci döner. Belirteci ele geçiren başka bir uygulama gizli değeri bilmediği için kullanamaz.
+4. Hesabı olmayan kişi müşteri uygulamasında "Kaydını tamamla" ekranında telefonunu girer. Firma kaydı sitede yapılır.
+
+Hatalar uygulamaya kod olarak döner (`evdenevenakliyat://oauth?hata=sure`).
+
 ## Google kurulumu (ücretsiz)
 
 1. [Google Cloud Console](https://console.cloud.google.com) → yeni proje (ör. `evdenevenakliyat`).

@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { forwardRef, type ReactNode } from 'react';
+import { forwardRef, useState, type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -22,33 +22,48 @@ export function AppText({ weight = 'regular', style, ...props }: TextProps & { w
   return <Text {...props} style={[styles.text, { fontFamily: fonts[weight] }, style]} />;
 }
 
+type ButtonKind = 'primary' | 'secondary' | 'danger';
+
+const BUTTON_FG: Record<ButtonKind, string> = { primary: colors.white, secondary: colors.brand700, danger: colors.white };
+
 export function Button({
   title,
   loading,
   kind = 'primary',
+  icon,
   disabled,
   ...props
-}: Omit<PressableProps, 'children'> & { title: string; loading?: boolean; kind?: 'primary' | 'secondary' }) {
-  const primary = kind === 'primary';
+}: Omit<PressableProps, 'children'> & {
+  title: string;
+  loading?: boolean;
+  kind?: ButtonKind;
+  icon?: ComponentProps<typeof Ionicons>['name'];
+}) {
+  const fg = BUTTON_FG[kind];
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={title}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.button,
-        primary ? styles.buttonPrimary : styles.buttonSecondary,
+        kind === 'primary' ? styles.buttonPrimary : kind === 'danger' ? styles.buttonDanger : styles.buttonSecondary,
         (pressed || loading) && { opacity: 0.85 },
         disabled && !loading && { opacity: 0.5 },
       ]}
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={primary ? colors.white : colors.brand700} />
+        <ActivityIndicator color={fg} />
       ) : (
-        <AppText weight="semibold" style={{ color: primary ? colors.white : colors.brand700, fontSize: 16 }}>
-          {title}
-        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, maxWidth: '100%' }}>
+          {icon ? <Ionicons name={icon} size={20} color={fg} /> : null}
+          {/* Dar düğmede iki satıra bölünmesin; sığmazsa yazı biraz küçülür */}
+          <AppText weight="semibold" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} style={{ color: fg, fontSize: 16, flexShrink: 1 }}>
+            {title}
+          </AppText>
+        </View>
       )}
     </Pressable>
   );
@@ -67,6 +82,42 @@ export const Field = forwardRef<TextInput, TextInputProps & { label: string }>(f
         style={[styles.input, style]}
         {...props}
       />
+    </View>
+  );
+});
+
+/** Şifre alanı: sağdaki göz düğmesiyle yazılan şifre gösterilir/gizlenir */
+export const PasswordField = forwardRef<TextInput, Omit<TextInputProps, 'secureTextEntry'> & { label: string }>(function PasswordField(
+  { label, style, ...props },
+  ref,
+) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <View style={{ gap: 6 }}>
+      <AppText weight="medium" style={{ color: colors.zinc900 }}>
+        {label}
+      </AppText>
+      <View>
+        <TextInput
+          ref={ref}
+          placeholderTextColor={colors.zinc500}
+          accessibilityLabel={label}
+          secureTextEntry={!visible}
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={[styles.input, { paddingRight: 52 }, style]}
+          {...props}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={visible ? 'Şifreyi gizle' : 'Şifreyi göster'}
+          onPress={() => setVisible((v) => !v)}
+          hitSlop={6}
+          style={{ position: 'absolute', right: 4, top: 0, bottom: 0, width: 44, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Ionicons name={visible ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.zinc600} />
+        </Pressable>
+      </View>
     </View>
   );
 });
@@ -207,6 +258,7 @@ const styles = StyleSheet.create({
   },
   buttonPrimary: { backgroundColor: colors.brand700 },
   buttonSecondary: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.zinc300 },
+  buttonDanger: { backgroundColor: colors.red700 },
   input: {
     minHeight: 50,
     borderWidth: 1,

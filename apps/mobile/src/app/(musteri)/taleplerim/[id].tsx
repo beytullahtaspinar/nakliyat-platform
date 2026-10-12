@@ -10,9 +10,11 @@ import type {
 } from '@nakliyat/api-client';
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Image, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Image, View } from 'react-native';
 import { CancelForm, MediaStrip, QuickAction, Row } from '@/components/booking-bits';
+import { useDialog } from '@/components/dialog';
+import { RouteMapView } from '@/components/map';
 import { DetailScreen, Section } from '@/components/panel';
 import { Stars } from '@/components/review';
 import { AppText, Badge, Button, Field, Notice } from '@/components/ui';
@@ -31,8 +33,9 @@ const COMMENT_MAX = 2000;
 
 /** Sitedeki /hesabim/talepler/[id]: teklifler, anlaşma, mesajlar, değerlendirme, talep bilgileri */
 export default function RequestScreen() {
-  const { id, yeni, medya } = useLocalSearchParams<{ id: string; yeni?: string; medya?: string }>();
+  const { id, yeni, medya, mesajlar } = useLocalSearchParams<{ id: string; yeni?: string; medya?: string; mesajlar?: string }>();
   const user = useUser();
+  const dialog = useDialog();
   const path = `/requests/${encodeURIComponent(id)}`;
   const { data: request, error, reload } = useApi<MovingRequestDetail>(path);
   const { data: quotes, reload: reloadQuotes } = useApi<CustomerQuote[]>(`${path}/quotes`);
@@ -40,6 +43,15 @@ export default function RequestScreen() {
   const { data: bookings, reload: reloadBookings } = useApi<Paginated<CustomerBooking>>(hasBooking ? '/bookings?limit=50' : null);
   const { data: unread, reload: reloadUnread } = useApi<UnreadMessages>('/messages/unread');
   const [notice, setNotice] = useState<string | null>(yeni ? 'Talebin oluşturuldu.' : null);
+  const booking = request ? bookings?.items.find((b) => b.requestId === request.id) : undefined;
+
+  // Mesaj bildirimine dokununca: anlaşma yüklenince yazışma açılır (bir kez)
+  const openedMessages = useRef(false);
+  useEffect(() => {
+    if (!mesajlar || !booking || openedMessages.current) return;
+    openedMessages.current = true;
+    router.push({ pathname: '/mesajlar/[id]', params: { id: booking.id } });
+  }, [mesajlar, booking]);
 
   const refresh = () => Promise.all([reload(), reloadQuotes(), reloadBookings(), reloadUnread()]);
 
@@ -51,7 +63,6 @@ export default function RequestScreen() {
     );
   }
 
-  const booking = bookings?.items.find((b) => b.requestId === request.id);
   const status = REQUEST_STATUS[request.status];
   const acceptable = request.status === 'OPEN';
   const draft = request.status === 'DRAFT';
@@ -68,37 +79,35 @@ export default function RequestScreen() {
   }
 
   function accept(q: CustomerQuote) {
-    Alert.alert(
-      'Teklifi kabul et',
-      `${q.company.displayName} firmasının ${formatMoney(q.priceTry)} teklifini kabul ediyorsun. Diğer teklifler kapanacak, firmayla iletişim bilgilerin paylaşılacak.`,
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Evet, kabul et',
-          onPress: () =>
-            void api
-              .request(`/quotes/${encodeURIComponent(q.id)}/accept`, { method: 'POST' })
-              .then(() => done('Teklifi kabul ettin, taşıman planlandı. Firmayla aşağıdan iletişime geçebilirsin.'))
-              .catch((e: unknown) => Alert.alert('Kabul edilemedi', e instanceof Error ? e.message : 'Tekrar dene.')),
-        },
-      ],
-    );
+    void dialog
+      .confirm({
+        title: 'Teklif kabul edilsin mi?',
+        message: `${q.company.displayName} firmasının ${formatMoney(q.priceTry)} teklifini kabul ediyorsun. Diğer teklifler kapanacak, firmayla iletişim bilgilerin paylaşılacak.`,
+        confirmLabel: 'Evet, kabul et',
+        icon: 'checkmark-circle-outline',
+        action: () => api.request(`/quotes/${encodeURIComponent(q.id)}/accept`, { method: 'POST' }),
+      })
+      .then((ok) => {
+        if (ok) void done('Teklifi kabul ettin, taşıman planlandı. Firmayla aşağıdan iletişime geçebilirsin.');
+      });
   }
 
   function cancelRequest() {
-    Alert.alert('Talebi iptal et', 'Talebin iptal edilecek ve firmalar artık teklif veremeyecek. Emin misin?', [
-      { text: 'Vazgeç', style: 'cancel' },
-      {
-        text: 'Evet, iptal et',
-        style: 'destructive',
-        onPress: () =>
-          void api
-            .request(`${path}/cancel`, { method: 'POST' })
-            .then(() => done('Talebin iptal edildi.'))
-            .catch((e: unknown) => Alert.alert('İptal edilemedi', e instanceof Error ? e.message : 'Tekrar dene.')),
-      },
-    ]);
+    void dialog
+      .confirm({
+        title: 'Talep iptal edilsin mi?',
+        message: 'Talebin iptal edilecek ve firmalar artık teklif veremeyecek.',
+        confirmLabel: 'Evet, iptal et',
+        destructive: true,
+        action: () => api.request(`${path}/cancel`, { method: 'POST' }),
+      })
+      .then((ok) => {
+        if (ok) void done('Talebin iptal edildi.');
+      });
   }
+
+  const fromPin = request.fromLat != null && request.fromLng != null ? { lat: request.fromLat, lng: request.fromLng } : null;
+  const toPin = request.toLat != null && request.toLng != null ? { lat: request.toLat, lng: request.toLng } : null;
 
   return (
     <DetailScreen backLabel="Taleplerim" onRefresh={refresh}>
@@ -164,9 +173,10 @@ export default function RequestScreen() {
         )}
       </Section>
 
-      <Section title="Talep bilgilerin" description="Açık adresin yalnızca teklifini kabul ettiğin firmayla paylaşılır.">
-        <Row label="Çıkış">{`${request.fromAddress} · ${floorLabel(request.fromFloor)}, ${request.fromHasElevator ? 'asansörlü' : 'asansörsüz'}`}</Row>
-        <Row label="Varış">{`${request.toAddress} · ${floorLabel(request.toFloor)}, ${request.toHasElevator ? 'asansörlü' : 'asansörsüz'}`}</Row>
+      <Section title="Talep bilgilerin" description="Açık adresin ve haritadaki işaretin yalnızca teklifini kabul ettiğin firmayla paylaşılır.">
+        <RouteMapView from={fromPin} to={toPin} />
+        <Row label="Çıkış">{stopLine(request.fromAddress, request.fromFloor, request.fromHasElevator)}</Row>
+        <Row label="Varış">{stopLine(request.toAddress, request.toFloor, request.toHasElevator)}</Row>
         <Row label="Hizmetler">
           {[request.needsPacking && 'Paketleme', request.needsAssembly && 'Söküm/kurulum', request.needsStorage && 'Depolama']
             .filter(Boolean)
@@ -188,40 +198,65 @@ export default function RequestScreen() {
 function CompanyLine({ company }: { company: PublicCompany }) {
   const rating = Number(company.ratingAverage);
   return (
-    <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+    <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
       {company.verified && company.logoUrl ? (
-        <Image
-          source={{ uri: company.logoUrl.startsWith('http') ? company.logoUrl : `${WEB_ORIGIN}${company.logoUrl}` }}
-          style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: colors.zinc100 }}
-        />
+        // Logonun tamamı görünsün: kırpılmadan beyaz kutuya sığdırılır
+        <View
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: colors.zinc200,
+            backgroundColor: colors.white,
+            padding: 4,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Image
+            source={{ uri: company.logoUrl.startsWith('http') ? company.logoUrl : `${WEB_ORIGIN}${company.logoUrl}` }}
+            resizeMode="contain"
+            accessibilityIgnoresInvertColors
+            style={{ width: '100%', height: '100%' }}
+          />
+        </View>
       ) : (
-        <View style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: colors.brand50, alignItems: 'center', justifyContent: 'center' }}>
-          <AppText weight="bold" style={{ color: colors.brand700, fontSize: 18 }}>
+        <View style={{ width: 56, height: 56, borderRadius: 12, backgroundColor: colors.brand50, alignItems: 'center', justifyContent: 'center' }}>
+          <AppText weight="bold" style={{ color: colors.brand700, fontSize: 22, lineHeight: 28 }}>
             {company.displayName.charAt(0)}
           </AppText>
         </View>
       )}
-      <View style={{ flex: 1, gap: 2 }}>
-        <AppText weight="semibold" style={{ fontSize: 16 }}>
+      <View style={{ flex: 1, gap: 3 }}>
+        <AppText weight="semibold" numberOfLines={2} style={{ fontSize: 16, lineHeight: 21 }}>
           {company.displayName}
         </AppText>
         {company.verified ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Ionicons name="shield-checkmark" size={14} color={colors.green700} />
-            <AppText weight="semibold" style={{ color: colors.green700, fontSize: 13 }}>
+            <AppText weight="semibold" style={{ color: colors.green700, fontSize: 13, lineHeight: 18 }}>
               {company.badges?.includes('DOCUMENTS_VERIFIED') ? 'Belgeleri doğrulandı' : 'Doğrulanmış firma'}
             </AppText>
           </View>
         ) : null}
-        <AppText style={{ color: colors.zinc600, fontSize: 14, lineHeight: 20 }}>
-          {[
-            company.cityName,
-            company.ratingCount > 0 ? `★ ${rating.toFixed(1).replace('.', ',')} (${company.ratingCount} yorum)` : 'Henüz yorum yok',
-            company.completedJobs > 0 ? `${company.completedJobs} tamamlanan iş` : null,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </AppText>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10, rowGap: 2 }}>
+          {company.ratingCount > 0 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+              <Ionicons name="star" size={13} color={colors.amber500} />
+              <AppText weight="semibold" style={{ fontSize: 13, lineHeight: 18 }}>
+                {rating.toFixed(1).replace('.', ',')}
+              </AppText>
+              <AppText style={{ color: colors.zinc600, fontSize: 13, lineHeight: 18 }}>({company.ratingCount} yorum)</AppText>
+            </View>
+          ) : (
+            <AppText style={{ color: colors.zinc600, fontSize: 13, lineHeight: 18 }}>Henüz yorum yok</AppText>
+          )}
+          {company.completedJobs > 0 ? (
+            <AppText style={{ color: colors.zinc600, fontSize: 13, lineHeight: 18 }}>{company.completedJobs} tamamlanan iş</AppText>
+          ) : null}
+          {company.cityName ? <AppText style={{ color: colors.zinc600, fontSize: 13, lineHeight: 18 }}>{company.cityName}</AppText> : null}
+        </View>
       </View>
     </View>
   );
@@ -274,6 +309,7 @@ function BookingCard({
   onChanged: (message: string) => Promise<void>;
 }) {
   const { company } = booking;
+  const dialog = useDialog();
 
   if (booking.status === 'CANCELLED') {
     return (
@@ -289,21 +325,17 @@ function BookingCard({
   }
 
   function confirmComplete() {
-    Alert.alert(
-      'Taşınma tamamlandı mı?',
-      `${company.displayName} taşımanı bitirdi mi? Onaylarsan iş tamamlandı olarak kapanır ve firmayı değerlendirebilirsin.`,
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Evet, tamamlandı',
-          onPress: () =>
-            void api
-              .request(`/bookings/${booking.id}/complete`, { method: 'POST' })
-              .then(() => onChanged('Taşıman tamamlandı olarak işaretlendi. Firmayı aşağıdan değerlendirebilirsin.'))
-              .catch((e: unknown) => Alert.alert('İşaretlenemedi', e instanceof Error ? e.message : 'Tekrar dene.')),
-        },
-      ],
-    );
+    void dialog
+      .confirm({
+        title: 'Taşınma tamamlandı mı?',
+        message: `${company.displayName} taşımanı bitirdi mi? Onaylarsan iş tamamlandı olarak kapanır ve firmayı değerlendirebilirsin.`,
+        confirmLabel: 'Evet, tamamlandı',
+        icon: 'checkmark-circle-outline',
+        action: () => api.request(`/bookings/${booking.id}/complete`, { method: 'POST' }),
+      })
+      .then((ok) => {
+        if (ok) void onChanged('Taşıman tamamlandı olarak işaretlendi. Firmayı aşağıdan değerlendirebilirsin.');
+      });
   }
 
   return (
@@ -455,6 +487,7 @@ function PhotosSection({
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dialog = useDialog();
   const photoCount = media.filter((m) => m.type === 'PHOTO').length;
 
   async function add(source: 'library' | 'camera') {
@@ -475,17 +508,18 @@ function PhotosSection({
   }
 
   function remove(m: RequestMedia) {
-    Alert.alert('Fotoğrafı sil', 'Bu dosya talepten kaldırılacak.', [
-      { text: 'Vazgeç', style: 'cancel' },
-      {
-        text: 'Sil',
-        style: 'destructive',
-        onPress: () =>
-          void removePhoto(requestId, m.id)
-            .then(onChanged)
-            .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Silinemedi.')),
-      },
-    ]);
+    void dialog
+      .confirm({
+        title: 'Fotoğraf silinsin mi?',
+        message: 'Bu dosya talepten kaldırılacak.',
+        confirmLabel: 'Sil',
+        destructive: true,
+        icon: 'trash-outline',
+        action: () => removePhoto(requestId, m.id),
+      })
+      .then((ok) => {
+        if (ok) void onChanged();
+      });
   }
 
   return (
@@ -504,13 +538,16 @@ function PhotosSection({
       {editable && photoCount < MAX_PHOTOS ? (
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
-            <Button title="Galeriden ekle" kind="secondary" loading={busy} onPress={() => void add('library')} />
+            <Button title="Galeri" icon="images-outline" kind="secondary" loading={busy} onPress={() => void add('library')} />
           </View>
           <View style={{ flex: 1 }}>
-            <Button title="Fotoğraf çek" kind="secondary" disabled={busy} onPress={() => void add('camera')} />
+            <Button title="Kamera" icon="camera-outline" kind="secondary" disabled={busy} onPress={() => void add('camera')} />
           </View>
         </View>
       ) : null}
     </Section>
   );
 }
+
+const stopLine = (address: string, floor: number, elevator: boolean) =>
+  `${address || 'Açık adres yazılmadı'} · ${floorLabel(floor)}, ${elevator ? 'asansörlü' : 'asansörsüz'}`;

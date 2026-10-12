@@ -24,3 +24,16 @@ export class ResetPasswordDto extends ForgotPasswordDto {
   @MaxLength(72)
   password: string;
 }
+
+export class ChangePasswordDto {
+  @ApiProperty({ description: 'Şu anki şifre' })
+  @IsString()
+  @MaxLength(72)
+  currentPassword: string;
+
+  @ApiProperty({ example: 'YeniGucluSifre123', minLength: 8 })
+  @IsString()
+  @MinLength(8, { message: 'Yeni şifre en az 8 karakter olmalı' })
+  @MaxLength(72)
+  newPassword: string;
+}

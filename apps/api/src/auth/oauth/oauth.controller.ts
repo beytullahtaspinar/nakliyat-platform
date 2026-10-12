@@ -3,7 +3,7 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../../common/decorators/public.decorator.js';
 import { AuthResponseDto } from '../dto/auth-response.dto.js';
-import { OAuthCallbackDto, OAuthCompleteDto, OAuthStartDto, SignupTokenDto } from './oauth.dto.js';
+import { OAuthAppExchangeDto, OAuthCallbackDto, OAuthCompleteDto, OAuthStartDto, SignupTokenDto } from './oauth.dto.js';
 import { OAuthService } from './oauth.service.js';
 
 const THROTTLE = { default: { limit: Number(process.env.AUTH_RATE_LIMIT) || 20, ttl: 60_000 } };
@@ -32,6 +32,14 @@ export class OAuthController {
   @HttpCode(HttpStatus.OK)
   callback(@Param('provider') provider: string, @Body() dto: OAuthCallbackDto) {
     return this.oauth.callback(provider, dto);
+  }
+
+  /** Mobil uygulama: web dönüşünden gelen devir belirtecini, uygulamanın gizli değeriyle oturuma çevirir */
+  @Throttle(THROTTLE)
+  @Post('app/exchange')
+  @HttpCode(HttpStatus.OK)
+  exchange(@Body() dto: OAuthAppExchangeDto) {
+    return this.oauth.exchangeForApp(dto);
   }
 
   @Throttle(THROTTLE)

@@ -43,7 +43,7 @@ export default async function CompanyBookingPage({ params }: PageProps<"/firma-p
   const { request: r, customer } = booking;
   const stop = (s: Stop) => (
     <>
-      {s.address}
+      {s.address || <span className="text-slate-500">Açık adres yazılmadı; müşteriye sor.</span>}
       <span className="block text-slate-500">
         {place(s.cityName, s.districtName)} · {floorLabel(s.floor)}, {s.hasElevator ? "asansörlü" : "asansörsüz"}
       </span>

@@ -1,12 +1,27 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDialog } from '@/components/dialog';
 import { AppText, LogoMark } from '@/components/ui';
 import { useSession, useUser } from '@/lib/session';
 import { colors } from '@/theme';
+
+/** Çıkış onayı; panel başlığı ve hesap sekmeleri aynı pencereyi kullanır */
+export function useSignOutPrompt() {
+  const { signOut } = useSession();
+  const dialog = useDialog();
+  return () =>
+    void dialog.confirm({
+      title: 'Çıkış yapılsın mı?',
+      message: 'Bu cihazdaki oturumun kapanacak ve bildirimler bu telefona gelmeyecek.',
+      confirmLabel: 'Çıkış yap',
+      icon: 'log-out-outline',
+      action: signOut,
+    });
+}
 
 /** Oturum açık ekranların ortak kabuğu: üstte işaret + ad + çıkış, altta yenilenebilir içerik. */
 export function PanelScreen({
@@ -23,15 +38,8 @@ export function PanelScreen({
 }) {
   const user = useUser();
   const Scroll = form ? KeyboardAwareScrollView : ScrollView;
-  const { signOut } = useSession();
+  const confirmSignOut = useSignOutPrompt();
   const [refreshing, setRefreshing] = useState(false);
-
-  function confirmSignOut() {
-    Alert.alert('Çıkış yap', 'Bu cihazdaki oturumun kapanacak.', [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Çıkış yap', style: 'destructive', onPress: () => void signOut() },
-    ]);
-  }
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: colors.zinc50 }}>

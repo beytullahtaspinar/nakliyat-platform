@@ -2,7 +2,9 @@ import type { BookingPlace, CompanyBooking, UnreadMessages } from '@nakliyat/api
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
+import { useDialog } from '@/components/dialog';
+import { RouteMapView } from '@/components/map';
 import { CancelForm, QuickAction, Row } from '@/components/booking-bits';
 import { DetailScreen, Section } from '@/components/panel';
 import { ReviewBlock } from '@/components/review';
@@ -16,6 +18,7 @@ import { colors } from '@/theme';
 
 /** Sitedeki /firma-paneli/isler/[id]: müşteri bilgileri, adresler, değerlendirme ve işlemler */
 export default function BookingScreen() {
+  const dialog = useDialog();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: booking, error, reload } = useApi<CompanyBooking>(`/company/bookings/${encodeURIComponent(id)}`);
   const { data: unread, reload: reloadUnread } = useApi<UnreadMessages>('/messages/unread');
@@ -41,21 +44,17 @@ export default function BookingScreen() {
   }
 
   function confirmComplete() {
-    Alert.alert(
-      'İş tamamlandı mı?',
-      `${customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`,
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Evet, tamamlandı',
-          onPress: () =>
-            void api
-              .request(`/bookings/${booking!.id}/complete`, { method: 'POST' })
-              .then(() => done('İş tamamlandı olarak işaretlendi.'))
-              .catch((e: unknown) => Alert.alert('İşaretlenemedi', e instanceof Error ? e.message : 'Tekrar dene.')),
-        },
-      ],
-    );
+    void dialog
+      .confirm({
+        title: 'İş tamamlandı mı?',
+        message: `${customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`,
+        confirmLabel: 'Evet, tamamlandı',
+        icon: 'checkmark-circle-outline',
+        action: () => api.request(`/bookings/${booking!.id}/complete`, { method: 'POST' }),
+      })
+      .then((ok) => {
+        if (ok) void done('İş tamamlandı olarak işaretlendi.');
+      });
   }
 
   return (
@@ -124,6 +123,7 @@ export default function BookingScreen() {
       </Section>
 
       <Section title="Adresler">
+        <RouteMapView from={r.from.location} to={r.to.location} />
         <Stop title="Çıkış" place={r.from} />
         <View style={{ height: 1, backgroundColor: colors.zinc100 }} />
         <Stop title="Varış" place={r.to} />
@@ -152,7 +152,9 @@ function Stop({ title, place }: { title: string; place: BookingPlace }) {
       <AppText weight="semibold" style={{ fontSize: 13, color: colors.zinc600 }}>
         {title}
       </AppText>
-      <AppText>{place.address}</AppText>
+      <AppText style={place.address ? undefined : { color: colors.zinc600 }}>
+        {place.address || 'Açık adres yazılmadı; müşteriye sor.'}
+      </AppText>
       <AppText style={{ color: colors.zinc600, fontSize: 14, lineHeight: 20 }}>
         {[place.cityName, place.districtName].filter(Boolean).join(', ')} · {floorLabel(place.floor)},{' '}
         {place.hasElevator ? 'asansörlü' : 'asansörsüz'}

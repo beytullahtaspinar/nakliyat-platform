@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { Pressable, View, type TextInput } from 'react-native';
 import { DetailScreen } from '@/components/panel';
-import { AppText, Button, Checkbox, Field, Notice } from '@/components/ui';
+import { SocialSignIn } from '@/components/social-sign-in';
+import { AppText, Button, Checkbox, Field, Notice, PasswordField } from '@/components/ui';
 import { LEGAL_PAGES, LEGAL_VERSION, openWebPage } from '@/lib/legal';
 import { useSession } from '@/lib/session';
 import { colors } from '@/theme';
@@ -13,6 +14,7 @@ export default function RegisterScreen() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
   const [terms, setTerms] = useState(false);
   const [marketing, setMarketing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,12 +22,14 @@ export default function RegisterScreen() {
   const phoneRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
+  const password2Ref = useRef<TextInput>(null);
 
   async function submit() {
     if (fullName.trim().length < 3) return setError('Adını ve soyadını yaz.');
     if (!phone.trim()) return setError('Cep telefonu numaranı yaz.');
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Geçerli bir e-posta adresi yaz.');
     if (password.length < 8) return setError('Şifre en az 8 karakter olmalı.');
+    if (password !== password2) return setError('Şifreler aynı değil. İki alana da aynı şifreyi yaz.');
     if (!terms) return setError('Devam etmek için kullanım koşullarını kabul et.');
     setError(null);
     setLoading(true);
@@ -53,6 +57,7 @@ export default function RegisterScreen() {
         </AppText>
         <AppText style={{ color: colors.zinc600 }}>Taşınma talebini oluştur, onaylı firmalardan ücretsiz teklif al.</AppText>
       </View>
+      <SocialSignIn onError={setError} dividerFirst={false} />
       <Field
         label="Ad soyad"
         value={fullName}
@@ -91,16 +96,30 @@ export default function RegisterScreen() {
         onSubmitEditing={() => passwordRef.current?.focus()}
         submitBehavior="submit"
       />
-      <Field
+      <PasswordField
         ref={passwordRef}
         label="Şifre (en az 8 karakter)"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        autoComplete="new-password"
+        textContentType="newPassword"
+        maxLength={72}
+        returnKeyType="next"
+        onSubmitEditing={() => password2Ref.current?.focus()}
+        submitBehavior="submit"
+      />
+      <PasswordField
+        ref={password2Ref}
+        label="Şifre tekrar"
+        value={password2}
+        onChangeText={setPassword2}
         autoComplete="new-password"
         textContentType="newPassword"
         maxLength={72}
       />
+      {password2 && password !== password2 ? (
+        <AppText style={{ color: colors.red700, fontSize: 13, marginTop: -8 }}>Şifreler aynı değil.</AppText>
+      ) : null}
       <View style={{ gap: 4 }}>
         <Checkbox label="Kullanım koşullarını kabul ediyorum, KVKK aydınlatma metnini okudum." checked={terms} onChange={setTerms} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16, paddingLeft: 36 }}>

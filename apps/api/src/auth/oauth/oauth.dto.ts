@@ -46,6 +46,27 @@ export class OAuthCallbackDto {
   @IsString()
   @MaxLength(2000)
   appleUser?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Mobil uygulamadan başlatılan girişte uygulamanın PKCE değeri: base64url(sha256(appVerifier)). Verilirse oturum yerine uygulamaya devir belirteci döner.',
+  })
+  @IsOptional()
+  @IsString()
+  @Length(43, 128)
+  appChallenge?: string;
+}
+
+export class OAuthAppExchangeDto {
+  @ApiProperty({ description: 'Web dönüşünün uygulamaya ilettiği devir belirteci' })
+  @IsString()
+  @MaxLength(4096)
+  handoff: string;
+
+  @ApiProperty({ description: 'Uygulamanın girişi başlatırken ürettiği gizli değer (appChallenge bundan üretilir)' })
+  @IsString()
+  @Length(43, 128)
+  appVerifier: string;
 }
 
 export class SignupTokenDto {

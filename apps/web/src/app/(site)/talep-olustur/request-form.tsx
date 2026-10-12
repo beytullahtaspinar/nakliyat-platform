@@ -243,16 +243,14 @@ function AddressFields({
         </select>
       </Field>
       <Field
-        label="Açık adres"
-        hint="Mahalle, cadde/sokak, bina ve daire no."
+        label="Açık adres (isteğe bağlı)"
+        hint="Mahalle, cadde/sokak, bina ve daire no. Yazmazsan teklifini kabul ettiğin firma sana sorar."
         className="sm:col-span-2"
       >
         <Input
           name={`${prefix}Address`}
           autoComplete={prefix === "from" ? "street-address" : "off"}
-          minLength={5}
           maxLength={300}
-          required
           value={address}
           onChange={(e) => setAddress(e.target.value)}
         />

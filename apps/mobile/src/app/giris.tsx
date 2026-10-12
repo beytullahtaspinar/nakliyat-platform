@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppText, Button, Field, Notice, Wordmark } from '@/components/ui';
+import { SocialSignIn } from '@/components/social-sign-in';
+import { AppText, Button, Field, Notice, PasswordField, Wordmark } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { variant, WEB_ORIGIN } from '@/lib/variant';
 import { colors } from '@/theme';
@@ -43,12 +44,7 @@ export default function LoginScreen() {
       await signIn(phone.trim(), password);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Giriş yapılamadı, tekrar dene.';
-      // Uygulamada Google/Apple düğmesi yok: şifresiz hesaba şifre belirleme yolunu göster
-      setError(
-        message.includes('Google veya Apple')
-          ? 'Bu hesap Google veya Apple ile açıldı. Uygulamaya girmek için aşağıdaki "Şifremi unuttum" ile e-postana gelen kodla bir şifre belirle.'
-          : message,
-      );
+      setError(message.includes('Google veya Apple') ? 'Bu hesap Google veya Apple ile açıldı. Aşağıdaki düğmeyle devam et.' : message);
       setLoading(false);
     }
   }
@@ -79,12 +75,11 @@ export default function LoginScreen() {
               onSubmitEditing={() => passwordRef.current?.focus()}
               submitBehavior="submit"
             />
-            <Field
+            <PasswordField
               ref={passwordRef}
               label="Şifre"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
               autoComplete="current-password"
               textContentType="password"
               returnKeyType="go"
@@ -93,6 +88,7 @@ export default function LoginScreen() {
             {error ? <Notice>{error}</Notice> : null}
             <Button title="Giriş yap" loading={loading} onPress={() => void submit()} />
             <TextLink label="Şifremi unuttum" path="/sifre-sifirla" />
+            <SocialSignIn onError={setError} />
           </View>
 
           <View style={{ marginTop: 'auto', gap: 4, alignItems: 'center' }}>

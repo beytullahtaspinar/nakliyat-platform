@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
@@ -128,6 +129,27 @@ describe('Google / Apple ile giriş (e2e)', () => {
     const refused = await callback().expect(409);
     expect(refused.body.message).toMatch(/Telefon numaran ve şifrenle giriş yap/);
     expect(await prisma.userIdentity.count({ where: { subject: 'g-baskasi' } })).toBe(0);
+  });
+
+  it('mobil uygulama: devir belirteci yalnızca uygulamanın gizli değeriyle oturuma çevrilir', async () => {
+    const appVerifier = 'a'.repeat(43);
+    const appChallenge = createHash('sha256').update(appVerifier).digest('base64url');
+
+    // Kayıtlı kişi (önceki testte bağlanan Google hesabı)
+    nextProfile = { subject: 'g-yeni', email: emails[0]!, emailVerified: true, name: 'Ayşe Google' };
+    const handoff = await http().post('/v1/auth/oauth/google/callback').send({ code: 'gecerli-kod', ...pkce, appChallenge }).expect(200);
+    expect(handoff.body).toEqual({ status: 'app_handoff', handoff: expect.any(String) });
+    // Belirteç erişim anahtarı yerine geçmez; başka gizli değerle kullanılamaz
+    await http().get('/v1/auth/me').set('Authorization', `Bearer ${handoff.body.handoff}`).expect(401);
+    await http().post('/v1/auth/oauth/app/exchange').send({ handoff: handoff.body.handoff, appVerifier: 'b'.repeat(43) }).expect(401);
+    const signedIn = await http().post('/v1/auth/oauth/app/exchange').send({ handoff: handoff.body.handoff, appVerifier }).expect(200);
+    expect(signedIn.body).toMatchObject({ status: 'signed_in', user: { phone: phones[0] }, accessToken: expect.any(String) });
+
+    // Yeni kişi: kayıt belirteci döner, kayıt uygulamada tamamlanır
+    nextProfile = { subject: 'g-uygulama', email: null, emailVerified: false, name: 'Uygulama Kişisi' };
+    const fresh = await http().post('/v1/auth/oauth/google/callback').send({ code: 'gecerli-kod', ...pkce, appChallenge }).expect(200);
+    const signup = await http().post('/v1/auth/oauth/app/exchange').send({ handoff: fresh.body.handoff, appVerifier }).expect(200);
+    expect(signup.body).toMatchObject({ status: 'signup_required', signupToken: expect.any(String), profile: { fullName: 'Uygulama Kişisi' } });
   });
 
   it('süresi geçmiş ya da bozuk kayıt belirteci reddedilir', async () => {

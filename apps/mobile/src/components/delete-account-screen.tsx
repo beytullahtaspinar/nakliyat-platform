@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { View } from 'react-native';
+import { useDialog } from '@/components/dialog';
 import { DetailScreen, Section } from '@/components/panel';
-import { AppText, Button, Field, Notice } from '@/components/ui';
+import { AppText, Button, Notice, PasswordField } from '@/components/ui';
 import { useSession, useUser } from '@/lib/session';
 import { colors } from '@/theme';
 
@@ -9,28 +10,22 @@ import { colors } from '@/theme';
 export function DeleteAccountScreen({ backLabel, deleted, kept }: { backLabel: string; deleted: string[]; kept: string }) {
   const user = useUser();
   const { deleteAccount } = useSession();
+  const dialog = useDialog();
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function run() {
-    setBusy(true);
-    setError(null);
-    try {
-      // Başarılıysa oturum kapanır ve giriş ekranına dönülür
-      await deleteAccount(user.hasPassword ? password : undefined);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Hesap silinemedi, tekrar dene.');
-      setBusy(false);
-    }
-  }
 
   function confirm() {
     if (user.hasPassword && !password) return setError('Hesabın sana ait olduğunu doğrulamak için şifreni yaz.');
-    Alert.alert('Hesabın kalıcı olarak silinsin mi?', 'Bu işlem geri alınamaz.', [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Hesabımı sil', style: 'destructive', onPress: () => void run() },
-    ]);
+    setError(null);
+    // Başarılıysa oturum kapanır ve giriş ekranına dönülür; hata pencerede gösterilir
+    void dialog.confirm({
+      title: 'Hesabın kalıcı olarak silinsin mi?',
+      message: 'Bu işlem geri alınamaz.',
+      confirmLabel: 'Hesabımı sil',
+      destructive: true,
+      icon: 'trash-outline',
+      action: () => deleteAccount(user.hasPassword ? password : undefined),
+    });
   }
 
   return (
@@ -58,18 +53,17 @@ export function DeleteAccountScreen({ backLabel, deleted, kept }: { backLabel: s
       </Section>
 
       {user.hasPassword ? (
-        <Field
+        <PasswordField
           label="Şifren"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
           autoComplete="current-password"
           textContentType="password"
           maxLength={72}
         />
       ) : null}
       {error ? <Notice>{error}</Notice> : null}
-      <Button title="Hesabımı kalıcı olarak sil" loading={busy} onPress={confirm} />
+      <Button title="Hesabımı kalıcı olarak sil" kind="danger" onPress={confirm} />
     </DetailScreen>
   );
 }

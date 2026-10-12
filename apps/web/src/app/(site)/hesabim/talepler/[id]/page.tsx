@@ -430,8 +430,8 @@ function RequestDetails({ request }: { request: MovingRequestDetail }) {
     <section className="mt-10">
       <h2 className="text-xl font-semibold">Talep bilgilerin</h2>
       <dl className="mt-3 divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-        {row("Çıkış adresi", `${request.fromAddress} · ${floorLabel(request.fromFloor)}, ${elevator(request.fromHasElevator)}`)}
-        {row("Varış adresi", `${request.toAddress} · ${floorLabel(request.toFloor)}, ${elevator(request.toHasElevator)}`)}
+        {row("Çıkış adresi", `${request.fromAddress || "Açık adres yazılmadı"} · ${floorLabel(request.fromFloor)}, ${elevator(request.fromHasElevator)}`)}
+        {row("Varış adresi", `${request.toAddress || "Açık adres yazılmadı"} · ${floorLabel(request.toFloor)}, ${elevator(request.toHasElevator)}`)}
         {request.routeKm != null && row("Yol", `${routeText(request)} (haritadaki işaretlerine göre, kamyonla)`)}
         {row("Ek hizmetler", services.length > 0 ? services.join(", ") : "Yok")}
         {request.specialItems.length > 0 && row("Özel eşyalar", request.specialItems.join(", "))}

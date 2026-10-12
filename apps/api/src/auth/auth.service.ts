@@ -15,7 +15,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { VerificationService } from '../verification/verification.service.js';
 import type { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-response.dto.js';
 import type { LoginDto } from './dto/login.dto.js';
-import type { ResetPasswordDto } from './dto/password-reset.dto.js';
+import type { ChangePasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 import { consentData } from './dto/consent.js';
 
@@ -130,6 +130,26 @@ export class AuthService {
         },
       }),
     ]);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<AuthTokensDto> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (user.passwordHash === OAUTH_ONLY_PASSWORD) {
+      throw new BadRequestException('Hesabının şifresi yok. Şifre belirlemek için e-postana kod gönder.');
+    }
+    if (!(await bcrypt.compare(dto.currentPassword, user.passwordHash))) {
+      throw new BadRequestException('Şu anki şifren hatalı');
+    }
+    const passwordHash = await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS);
+    // Şifreyi bilen biri başka cihazda oturum açmışsa düşer; bu cihaz yeni anahtarlarla devam eder
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+      this.prisma.refreshToken.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: new Date() } }),
+      this.prisma.auditLog.create({
+        data: { actorId: userId, action: 'password.change', entityType: 'User', entityId: userId },
+      }),
+    ]);
+    return this.issueTokens(user);
   }
 
   /** Yenileme anahtarını tek kullanımlık olarak döndürür (rotation). */

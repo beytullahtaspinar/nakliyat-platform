@@ -10,7 +10,8 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Prisma } from '../../generated/prisma/client.js';
+import { createHash } from 'node:crypto';
+import { Prisma, type User } from '../../generated/prisma/client.js';
 import { IdentityProvider } from '../../generated/prisma/enums.js';
 import { ErrorReporterService } from '../../observability/error-reporter.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -19,7 +20,7 @@ import { VerificationService } from '../../verification/verification.service.js'
 import { AuthService, OAUTH_ONLY_PASSWORD } from '../auth.service.js';
 import type { AuthResponseDto } from '../dto/auth-response.dto.js';
 import { consentData } from '../dto/consent.js';
-import type { OAuthCallbackDto, OAuthCompleteDto, OAuthStartDto } from './oauth.dto.js';
+import type { OAuthAppExchangeDto, OAuthCallbackDto, OAuthCompleteDto, OAuthStartDto } from './oauth.dto.js';
 import { OAUTH_PROVIDERS, type OAuthProfile, type OAuthProvider } from './provider.js';
 
 /** Sağlayıcıdan dönen ama henüz hesabı olmayan kişi: telefon ve rol sorulana kadar bu belirteçte bekler */
@@ -31,9 +32,23 @@ interface SignupClaims {
   name: string | null;
 }
 
+type SignupResult = {
+  status: 'signup_required';
+  signupToken: string;
+  profile: { fullName: string | null; email: string | null };
+};
+
 export type OAuthResult =
   | ({ status: 'signed_in' } & AuthResponseDto)
-  | { status: 'signup_required'; signupToken: string; profile: { fullName: string | null; email: string | null } };
+  | SignupResult
+  /** Mobil uygulamadan başlatılan giriş: web dönüşü bu belirteci uygulamaya iletir (bkz. exchangeForApp) */
+  | { status: 'app_handoff'; handoff: string };
+
+/** Devir belirtecinin içeriği: oturum açılacak kullanıcı ya da kayıt belirteci, uygulamanın PKCE değerine bağlı */
+type HandoffClaims = { ch: string } & ({ uid: string } | { signup: Omit<SignupResult, 'status'> });
+
+const HANDOFF_TTL = '3m';
+const s256 = (value: string) => createHash('sha256').update(value).digest('base64url');
 
 const SIGNUP_TTL = '20m';
 const PROVIDER_NAMES: Record<IdentityProvider, string> = { GOOGLE: 'Google', APPLE: 'Apple' };
@@ -43,6 +58,7 @@ export class OAuthService {
   private readonly logger = new Logger(OAuthService.name);
   private readonly webUrl: string;
   private readonly signupSecret: string;
+  private readonly handoffSecret: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -56,6 +72,7 @@ export class OAuthService {
     this.webUrl = (config.get<string>('WEB_URL') ?? 'https://evdenevenakliyat.app').replace(/\/$/, '');
     // Erişim anahtarından farklı gizli anahtar: kayıt belirteci oturum açmak için kullanılamaz
     this.signupSecret = `${config.getOrThrow<string>('JWT_ACCESS_SECRET')}:oauth-signup`;
+    this.handoffSecret = `${config.getOrThrow<string>('JWT_ACCESS_SECRET')}:oauth-app-handoff`;
   }
 
   /** Düğmesi gösterilecek sağlayıcılar (testte kullanılan "test" hariç) */
@@ -74,6 +91,45 @@ export class OAuthService {
   }
 
   async callback(providerId: string, dto: OAuthCallbackDto): Promise<OAuthResult> {
+    const result = await this.resolve(providerId, dto);
+    if (dto.appChallenge) {
+      // Mobil uygulama: oturum burada açılmaz; belirteç uygulamaya gider, uygulama gizli değeriyle oturum açar
+      const claims: HandoffClaims =
+        'user' in result
+          ? { ch: dto.appChallenge, uid: result.user.id }
+          : { ch: dto.appChallenge, signup: result.signup };
+      const handoff = await this.jwt.signAsync(claims, { secret: this.handoffSecret, expiresIn: HANDOFF_TTL });
+      return { status: 'app_handoff', handoff };
+    }
+    if ('signup' in result) return { status: 'signup_required', ...result.signup };
+    return { status: 'signed_in', ...(await this.auth.signIn(result.user)) };
+  }
+
+  /**
+   * Mobil uygulama: devir belirteci uygulamanın gizli değeriyle eşleşirse oturum açılır ya da kayıt belirteci verilir.
+   * Belirteci ele geçiren başka bir uygulama gizli değeri bilmediği için kullanamaz.
+   */
+  async exchangeForApp(dto: OAuthAppExchangeDto): Promise<OAuthResult> {
+    let claims: HandoffClaims;
+    try {
+      claims = await this.jwt.verifyAsync<HandoffClaims>(dto.handoff, { secret: this.handoffSecret });
+    } catch {
+      throw new UnauthorizedException('Giriş süresi doldu, lütfen tekrar dene.');
+    }
+    if (s256(dto.appVerifier) !== claims.ch) {
+      throw new UnauthorizedException('Giriş doğrulanamadı, lütfen tekrar dene.');
+    }
+    if ('signup' in claims) return { status: 'signup_required', ...claims.signup };
+    const user = await this.prisma.user.findUnique({ where: { id: claims.uid } });
+    if (!user) throw new UnauthorizedException('Giriş doğrulanamadı, lütfen tekrar dene.');
+    return { status: 'signed_in', ...(await this.auth.signIn(user)) };
+  }
+
+  /** Sağlayıcı kodunu doğrular; bağlı ya da birleşen hesabı veya yeni kişi için kayıt belirtecini bulur */
+  private async resolve(
+    providerId: string,
+    dto: OAuthCallbackDto,
+  ): Promise<{ user: User } | { signup: Omit<SignupResult, 'status'> }> {
     const provider = this.provider(providerId);
     let profile: OAuthProfile;
     try {
@@ -88,7 +144,7 @@ export class OAuthService {
       where: { provider_subject: { provider: provider.identity, subject: profile.subject } },
       include: { user: true },
     });
-    if (linked) return { status: 'signed_in', ...(await this.auth.signIn(linked.user)) };
+    if (linked) return { user: linked.user };
 
     if (profile.email && profile.emailVerified) {
       const existing = await this.prisma.user.findUnique({ where: { email: profile.email } });
@@ -103,13 +159,13 @@ export class OAuthService {
         await this.prisma.userIdentity.create({
           data: { userId: existing.id, provider: provider.identity, subject: profile.subject, email: profile.email },
         });
-        return { status: 'signed_in', ...(await this.auth.signIn(existing)) };
+        return { user: existing };
       }
     }
 
     const claims: SignupClaims = { provider: provider.identity, ...profile };
     const signupToken = await this.jwt.signAsync(claims, { secret: this.signupSecret, expiresIn: SIGNUP_TTL });
-    return { status: 'signup_required', signupToken, profile: { fullName: profile.name, email: profile.email } };
+    return { signup: { signupToken, profile: { fullName: profile.name, email: profile.email } } };
   }
 
   /** Kayıt tamamlama ekranı için: sağlayıcıdan gelen ad ve e-posta */
