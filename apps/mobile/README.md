@@ -4,8 +4,8 @@ Tek Expo kod tabanından iki uygulama çıkar:
 
 | Uygulama | Kimin için | Paket kimliği | Simge |
 | --- | --- | --- | --- |
-| **Evdenevenakliyat Firma** | Nakliyat firmaları (COMPANY) | `app.evdenevenakliyat.firma` | turuncu zemin |
-| **Evdenevenakliyat** | Taşınacak kişiler (CUSTOMER) | `app.evdenevenakliyat.musteri` | gece mavisi zemin |
+| **Evdenevenakliyat Firma** | Nakliyat firmaları (COMPANY) | `app.evdenevenakliyat.firma` | turuncu zemin, beyaz "e" |
+| **Evdenevenakliyat** | Taşınacak kişiler (CUSTOMER) | `app.evdenevenakliyat.musteri` | lacivert zemin, turuncu "e" |
 
 Hangisinin derleneceğini `APP_VARIANT` (`firma` / `musteri`) belirler (`app.config.ts`).
 Giriş ikisinde de aynı (telefon + şifre, `POST /v1/auth/login`); hesabın rolü uygulamaya

@@ -1,13 +1,13 @@
 /** Web'deki görsel kimlikle aynı renkler (apps/web/src/app/globals.css). */
 export const colors = {
-  brand50: '#eff4ff',
-  brand100: '#dbe6fe',
-  brand600: '#1d4ed8',
-  brand700: '#1e3a8a',
-  brand900: '#172554',
-  accent50: '#fff7ed',
-  accent500: '#f97316',
-  accent700: '#c2410c',
+  brand50: '#eef2fb',
+  brand100: '#dce4f6',
+  brand600: '#2e4a9c',
+  brand700: '#1b2f6e',
+  brand900: '#111e48',
+  accent50: '#fff6ea',
+  accent500: '#ff8a00',
+  accent700: '#a34c00',
   zinc50: '#fafafa',
   zinc100: '#f4f4f5',
   zinc200: '#e4e4e7',
@@ -24,8 +24,8 @@ export const colors = {
   amber300: '#fcd34d',
   amber500: '#f59e0b',
   amber900: '#78350f',
-  accent100: '#ffedd5',
-  accent900: '#7c2d12',
+  accent100: '#ffead0',
+  accent900: '#6a3300',
 } as const;
 
 /** Inter, kök düzende yüklenir (src/app/_layout.tsx) */
