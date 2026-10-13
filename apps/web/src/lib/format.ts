@@ -7,6 +7,11 @@ const dateFormat = new Intl.DateTimeFormat("tr-TR", {
 
 export const formatDate = (iso: string) => dateFormat.format(new Date(iso));
 
+const monthFormat = new Intl.DateTimeFormat("tr-TR", { month: "long", year: "numeric", timeZone: "Europe/Istanbul" });
+
+/** "Ekim 2026" */
+export const formatMonth = (iso: string) => monthFormat.format(new Date(iso));
+
 const dateTimeFormat = new Intl.DateTimeFormat("tr-TR", {
   day: "numeric",
   month: "long",

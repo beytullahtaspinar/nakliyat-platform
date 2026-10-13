@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/components/local/breadcrumbs";
 import { Faq } from "@/components/local/faq";
 import { LinkGrid } from "@/components/local/link-grid";
 import { LocalCompanies } from "@/components/local/local-companies";
+import { LatestReviews } from "@/components/reviews/latest-reviews";
 import { ButtonLink } from "@/components/ui/button";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import {
@@ -24,6 +25,7 @@ import {
   localPageTitle,
 } from "@/lib/local-seo";
 import { getLocalCompanies } from "@/lib/local-companies";
+import { getLocalReviews } from "@/lib/latest-reviews";
 import { getLocalStats } from "@/lib/local-stats";
 import { calculatorHref } from "@/lib/pricing";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
@@ -83,7 +85,7 @@ function serviceJsonLd(page: LocalPage) {
 
 export default async function LocalLandingPage({ params }: Props) {
   const page = await loadPage(params);
-  const [stats, companies] = await Promise.all([getLocalStats(page), getLocalCompanies(page)]);
+  const [stats, companies, reviews] = await Promise.all([getLocalStats(page), getLocalCompanies(page), getLocalReviews(page)]);
   // İlçe sayfasında da il geneli: firmalar il bazında hizmet verir
   const region = page.kind === "route" ? `${page.from.name} - ${page.to.name} arasında` : `${page.city.name} ilinde`;
 
@@ -134,6 +136,18 @@ export default async function LocalLandingPage({ params }: Props) {
         items={companies.items}
         total={companies.total}
       />
+
+      {reviews.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-semibold">
+            {page.kind === "route" ? `${page.from.name} - ${page.to.name} taşınan müşterilerin yorumları` : `${page.city.name} taşımalarından son yorumlar`}
+          </h2>
+          <p className="mt-2 text-zinc-600">
+            Firmayla platform üzerinden anlaşıp taşınması tamamlanan müşterilerin yorumları.
+          </p>
+          <LatestReviews reviews={reviews} wide={false} className="mt-4" />
+        </section>
+      )}
 
       <section className="mt-12">
         <h2 className="text-2xl font-semibold">Nasıl çalışır?</h2>

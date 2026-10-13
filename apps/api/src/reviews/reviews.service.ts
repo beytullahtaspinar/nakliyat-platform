@@ -1,5 +1,4 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { getCityByCode } from '@nakliyat/locations';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { CompaniesService, PUBLIC_COMPANY, toPublicCompany } from '../companies/companies.service.js';
 import { servicesOf } from '../companies/showcase-rules.js';
@@ -10,17 +9,19 @@ import { DomainEvents } from '../events/domain-events.js';
 import { Prisma, type Review } from '../generated/prisma/client.js';
 import { BookingStatus, CompanyMediaKind, RequestStatus, UserRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { AdminListReviewsDto, CreateReviewDto, ListReviewsDto, PublicCompaniesDto, ReviewSort } from './dto/review.dto.js';
-import { maskName, moveDayPassed, moveDayReached } from './review-rules.js';
+import type {
+  AdminListReviewsDto,
+  CreateReviewDto,
+  LatestReviewsDto,
+  ListReviewsDto,
+  PublicCompaniesDto,
+  ReviewSort,
+} from './dto/review.dto.js';
+import { moveDayPassed, moveDayReached, replyOutdated } from './review-rules.js';
+import { AUTHOR_AND_ROUTE, routeOf, toPublicReview } from './review-snippets.js';
 
 /** Arama motoruna açık firma sayfası: yorumu var ya da tanıtım yazısı ve fotoğrafları yeterli */
 const INDEXABLE_COMPANY = { OR: [{ ratingCount: { gt: 0 } }, { showcaseComplete: true }] } satisfies Prisma.CompanyWhereInput;
-
-const AUTHOR_AND_ROUTE = {
-  customer: { select: { fullName: true, deletedAt: true } },
-  booking: { select: { requestId: true, scheduledAt: true, request: { select: { fromCityCode: true, toCityCode: true } } } },
-} satisfies Prisma.ReviewInclude;
-type ReviewWithAuthor = Prisma.ReviewGetPayload<{ include: typeof AUTHOR_AND_ROUTE }>;
 
 const SORT_ORDER: Record<ReviewSort, Prisma.ReviewOrderByWithRelationInput[]> = {
   newest: [{ createdAt: 'desc' }],
@@ -46,28 +47,10 @@ export function toReviewView(review: Review) {
     companyReplyAt: review.companyReplyAt,
     isPublished: review.isPublished,
     hiddenReason: review.hiddenReason,
+    editedAt: review.editedAt,
     createdAt: review.createdAt,
-  };
-}
-
-/** "İzmir → Ankara": yalnızca il adları, ilçe ve adres yok */
-const routeOf = (r: { fromCityCode: string; toCityCode: string }) => {
-  const from = getCityByCode(r.fromCityCode)?.name ?? r.fromCityCode;
-  const to = getCityByCode(r.toCityCode)?.name ?? r.toCityCode;
-  return from === to ? `${from} içi` : `${from} → ${to}`;
-};
-
-/** Herkese açık firma sayfasındaki yorum: müşterinin adı kısaltılır, gizlenme bilgisi yok */
-function toPublicReview(review: ReviewWithAuthor) {
-  return {
-    id: review.id,
-    rating: review.rating,
-    comment: review.comment,
-    authorName: maskName(review.customer.fullName, !!review.customer.deletedAt),
-    route: routeOf(review.booking.request),
-    createdAt: review.createdAt,
-    companyReply: review.companyReply,
-    companyReplyAt: review.companyReplyAt,
+    /** Müşteri yorumu firmanın yanıtından sonra düzenledi; firma yanıtını güncelleyebilir */
+    replyOutdated: replyOutdated(review),
   };
 }
 
@@ -174,7 +157,7 @@ export class ReviewsService {
     return { id: booking.id, status: BookingStatus.CANCELLED, cancelledAt, cancelReason: reason, cancelledBy };
   }
 
-  /** Müşteri tamamlanan işin firmasını puanlar; iş başına bir değerlendirme, sonradan değiştirilemez. */
+  /** Müşteri tamamlanan işin firmasını puanlar; iş başına bir değerlendirme (sonradan düzenlenebilir). */
   async create(customerId: string, bookingId: string, dto: CreateReviewDto) {
     const booking = await this.prisma.booking.findFirst({
       where: { id: bookingId, request: { customerId } },
@@ -201,6 +184,46 @@ export class ReviewsService {
     await this.refreshRating(booking.companyId);
     this.events.emit('review.created', { reviewId: review.id });
     return toReviewView(review);
+  }
+
+  /**
+   * Müşteri puanını ve yorumunu sonradan düzenler. Firmanın yanıtı korunur; yorumda "düzenlendi" görünür,
+   * firmaya haber verilir ve firma yanıtını güncelleyebilir. Yönetimce gizlenen yorum düzenlenemez
+   * (gizleme gerekçesi o metne ait). Önceki puan ve metin denetim kaydında kalır.
+   */
+  async update(customerId: string, bookingId: string, dto: CreateReviewDto) {
+    const review = await this.prisma.review.findFirst({ where: { bookingId, customerId } });
+    if (!review) throw new NotFoundException('Değerlendirme bulunamadı');
+    if (!review.isPublished) {
+      throw new ConflictException('Yayından kaldırılan değerlendirme düzenlenemez; itirazın varsa destek@evdenevenakliyat.app adresine yaz');
+    }
+    const comment = dto.comment ?? null;
+    if (review.rating === dto.rating && review.comment === comment) return toReviewView(review);
+
+    await this.prisma.$transaction(async (tx) => {
+      // Yönetici aynı anda gizlediyse düzenleme yapılmaz
+      const done = await tx.review.updateMany({
+        where: { id: review.id, isPublished: true },
+        data: { rating: dto.rating, comment, editedAt: new Date() },
+      });
+      if (done.count !== 1) throw new ConflictException('Bu değerlendirmenin durumu değişti, sayfayı yenile');
+      await tx.auditLog.create({
+        data: {
+          actorId: customerId,
+          action: 'review.edit',
+          entityType: 'Review',
+          entityId: review.id,
+          details: {
+            companyId: review.companyId,
+            before: { rating: review.rating, comment: review.comment },
+            after: { rating: dto.rating, comment },
+          },
+        },
+      });
+    });
+    if (review.rating !== dto.rating) await this.refreshRating(review.companyId);
+    this.events.emit('review.updated', { reviewId: review.id, previousRating: review.rating });
+    return toReviewView(await this.prisma.review.findUniqueOrThrow({ where: { id: review.id } }));
   }
 
   /** Firmanın kendi değerlendirmeleri (gizlenenler dahil), en yeni önce, puan dağılımıyla */
@@ -248,13 +271,18 @@ export class ReviewsService {
     };
   }
 
-  /** Firma yoruma bir kez yanıt verir; yanıt herkese açık sayfada yorumun altında görünür. */
+  /**
+   * Firma yoruma bir kez yanıt verir; yanıt herkese açık sayfada yorumun altında görünür.
+   * Müşteri yorumunu yanıttan sonra düzenlediyse firma yanıtını bir kez daha güncelleyebilir.
+   */
   async reply(ownerId: string, reviewId: string, body: string) {
     const company = await this.companies.requireCompany(ownerId);
     const review = await this.prisma.review.findFirst({ where: { id: reviewId, companyId: company.id } });
     if (!review) throw new NotFoundException('Değerlendirme bulunamadı');
+    if (review.companyReply !== null && !replyOutdated(review)) throw new ConflictException('Bu yoruma zaten yanıt verdin');
+    // Okunan yanıt zamanı değişmediyse yazılır: aynı anda iki gönderimden yalnızca biri geçer
     const updated = await this.prisma.review.updateMany({
-      where: { id: review.id, companyReply: null },
+      where: { id: review.id, companyReplyAt: review.companyReplyAt },
       data: { companyReply: body, companyReplyAt: new Date() },
     });
     if (updated.count !== 1) throw new ConflictException('Bu yoruma zaten yanıt verdin');
@@ -366,6 +394,32 @@ export class ReviewsService {
       this.prisma.review.count({ where }),
     ]);
     return { items: items.map(toPublicReview), total, page, limit };
+  }
+
+  /**
+   * Sitedeki en yeni yorumlar (ana sayfa ve il sayfaları): yalnızca yazılı, yayındaki yorumlar ve
+   * herkese açık firmalar. city verilirse çıkışı ya da varışı o il olan taşımalar. Puana göre süzülmez.
+   */
+  async latestPublic({ limit, city }: LatestReviewsDto) {
+    const items = await this.prisma.review.findMany({
+      where: {
+        isPublished: true,
+        comment: { not: null },
+        company: PUBLIC_COMPANY,
+        ...(city && { booking: { request: { OR: [{ fromCityCode: city }, { toCityCode: city }] } } }),
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: { ...AUTHOR_AND_ROUTE, company: { select: { id: true, displayName: true, logoUrl: true } } },
+    });
+    return {
+      items: items.map((r) => ({
+        ...toPublicReview(r),
+        // İl sayfaları kendi bölgesinin yorumlarını süzer
+        cityCodes: [...new Set([r.booking.request.fromCityCode, r.booking.request.toCityCode])],
+        company: { id: r.company.id, displayName: r.company.displayName, logoUrl: r.company.logoUrl },
+      })),
+    };
   }
 
   // ─── Yönetim ─────────────────────────────────────────────────

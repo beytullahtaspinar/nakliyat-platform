@@ -170,6 +170,17 @@ export type PublicCompany = {
   completedJobs: number;
   /** Teklif listesinde ve firma sayfasında gelir (bkz. lib/badges.ts) */
   badges?: BadgeCode[];
+  /** Teklif listesinde: firmanın en yeni yazılı yorumu, kısaltılmış (yoksa null) */
+  latestReview?: ReviewExcerpt | null;
+};
+
+/** Yorum alıntısı: teklif kartında firma satırının altında */
+export type ReviewExcerpt = {
+  rating: number;
+  excerpt: string;
+  authorName: string;
+  route: string;
+  moveDate: string;
 };
 
 export type CompanyContact = PublicCompany & { contactName: string; contactPhone: string };
@@ -203,7 +214,11 @@ export type OwnReview = {
   /** Yönetici gizlediyse false; gizli yorum firma sayfasında ve ortalamada yok */
   isPublished: boolean;
   hiddenReason: string | null;
+  /** Müşterinin son düzenlemesi; null ise hiç düzenlenmedi */
+  editedAt: string | null;
   createdAt: string;
+  /** Müşteri yorumu firmanın yanıtından sonra düzenledi: firma yanıtını güncelleyebilir */
+  replyOutdated: boolean;
 };
 
 /** Değerlendirme, "iş tamamlandı" ve "işi iptal et" düğmeleri için iş alanları */
@@ -269,9 +284,19 @@ export type PublicReview = {
   authorName: string;
   /** "İzmir → Ankara" ya da "İzmir içi" */
   route: string;
+  /** Taşınma günü: "doğrulanmış taşıma" rozetinde ay ve yıl gösterilir */
+  moveDate: string;
   createdAt: string;
+  editedAt: string | null;
   companyReply: string | null;
   companyReplyAt: string | null;
+};
+
+/** GET /reviews/latest: sitedeki en yeni yazılı yorumlar (ana sayfa, il sayfaları) */
+export type LatestReview = PublicReview & {
+  /** Çıkış ve varış illeri */
+  cityCodes: string[];
+  company: { id: string; displayName: string; logoUrl: string | null };
 };
 
 /** GET /companies: site haritası ve listeler için */

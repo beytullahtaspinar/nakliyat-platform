@@ -4,14 +4,14 @@ import { useState } from "react";
 import { Field, FormError, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
 import { Button } from "@/components/ui/button";
-import { submitReview, type ReviewActionState } from "@/lib/actions/reviews";
+import { submitReview, updateReview, type ReviewActionState } from "@/lib/actions/reviews";
 import { COMMENT_MAX_LENGTH, COMMENT_MIN_LENGTH, RATING_LABELS } from "@/lib/reviews";
 
 const STAR = "m12 3.8 2.5 5.1 5.6.8-4 4 1 5.5-5.1-2.7-5 2.7.9-5.5-4-4 5.6-.8L12 3.8Z";
 
 /** Yıldızlarla puan seçimi: altta gerçek radyo düğmeleri (klavye ve ekran okuyucu için) */
-function RatingInput() {
-  const [value, setValue] = useState(0);
+function RatingInput({ initial = 0 }: { initial?: number }) {
+  const [value, setValue] = useState(initial);
   const [hover, setHover] = useState(0);
   const shown = hover || value;
   return (
@@ -54,17 +54,37 @@ function RatingInput() {
   );
 }
 
-/** Müşterinin tamamlanan iş için firmayı değerlendirdiği form */
-export function ReviewForm({ bookingId, pagePath, companyName }: { bookingId: string; pagePath: string; companyName: string }) {
-  const { state, pending, formProps } = useFormAction(submitReview.bind(null, bookingId, pagePath), {} as ReviewActionState);
+/**
+ * Müşterinin tamamlanan iş için firmayı değerlendirdiği form. initial verilirse mevcut değerlendirme
+ * düzenlenir (puan ve yorum dolu gelir; yorum silinirse yalnızca puan kalır).
+ */
+export function ReviewForm({
+  bookingId,
+  pagePath,
+  companyName,
+  initial,
+}: {
+  bookingId: string;
+  pagePath: string;
+  companyName: string;
+  initial?: { rating: number; comment: string | null };
+}) {
+  const action = initial ? updateReview : submitReview;
+  const { state, pending, formProps } = useFormAction(action.bind(null, bookingId, pagePath), {} as ReviewActionState);
   return (
     <form {...formProps} className="space-y-4">
-      <RatingInput />
+      <RatingInput initial={initial?.rating} />
       <Field
         label={`${companyName} ile deneyimin (isteğe bağlı)`}
         hint={`Ekip zamanında geldi mi, eşyalarına özen gösterdi mi, fiyat konuşulduğu gibi miydi? En az ${COMMENT_MIN_LENGTH} karakter. Yorumun adının baş harfiyle (ör. "Ayşe Y.") firma sayfasında yayımlanır; telefon, adres gibi kişisel bilgi yazma.`}
       >
-        <textarea name="comment" rows={4} maxLength={COMMENT_MAX_LENGTH} className={inputClass} />
+        <textarea
+          name="comment"
+          rows={4}
+          maxLength={COMMENT_MAX_LENGTH}
+          defaultValue={initial?.comment ?? ""}
+          className={inputClass}
+        />
       </Field>
       <FormError message={state.error} />
       {state.notice && (
@@ -73,7 +93,7 @@ export function ReviewForm({ bookingId, pagePath, companyName }: { bookingId: st
         </p>
       )}
       <Button type="submit" disabled={pending}>
-        {pending ? "Gönderiliyor…" : "Değerlendirmeyi gönder"}
+        {pending ? "Kaydediliyor…" : initial ? "Değişiklikleri kaydet" : "Değerlendirmeyi gönder"}
       </Button>
     </form>
   );

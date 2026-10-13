@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { OwnReview } from '@nakliyat/api-client';
+import type { OwnReview, ReviewExcerpt as Excerpt } from '@nakliyat/api-client';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { ReportButton } from '@/components/report';
@@ -18,9 +18,38 @@ export function Stars({ rating }: { rating: number }) {
   );
 }
 
+const monthFormat = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' });
+
+/**
+ * Teklif kartında firmanın en yeni yorumundan alıntı: fiyatın yanında firmayla gerçekten taşınan
+ * birinin sözü. Puana göre seçilmez (iyi ya da kötü, en güncel yorum).
+ */
+export function ReviewExcerpt({ review }: { review: Excerpt }) {
+  return (
+    <View style={{ borderLeftWidth: 3, borderLeftColor: colors.amber500, backgroundColor: colors.zinc50, borderRadius: 8, padding: 10, gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <Stars rating={review.rating} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+          <Ionicons name="shield-checkmark" size={14} color={colors.green700} />
+          <AppText weight="semibold" style={{ color: colors.green700, fontSize: 12 }}>
+            Doğrulanmış taşıma
+          </AppText>
+        </View>
+      </View>
+      <AppText style={{ fontSize: 14, lineHeight: 20 }}>{`“${review.excerpt}”`}</AppText>
+      <AppText style={{ color: colors.zinc600, fontSize: 12 }}>
+        {`${review.authorName} · ${review.route} · ${monthFormat.format(new Date(review.moveDate))}`}
+      </AppText>
+    </View>
+  );
+}
+
 const REPLY_MAX = 1000;
 
-/** Değerlendirme ve firmanın tek yanıtı (sonradan değiştirilemez) */
+/**
+ * Değerlendirme ve firmanın tek yanıtı. Müşteri yorumunu yanıttan sonra düzenlediyse firma yanıtını
+ * bir kez daha güncelleyebilir.
+ */
 export function ReviewBlock({ review, onReplied }: { review: OwnReview; onReplied: () => Promise<void> }) {
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState('');
@@ -46,7 +75,10 @@ export function ReviewBlock({ review, onReplied }: { review: OwnReview; onReplie
       <Stars rating={review.rating} />
       <AppText style={{ color: review.comment ? colors.zinc900 : colors.zinc600 }}>{review.comment || 'Yorum yazılmadı.'}</AppText>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <AppText style={{ color: colors.zinc500, fontSize: 13 }}>{formatDate(review.createdAt)}</AppText>
+        <AppText style={{ color: colors.zinc500, fontSize: 13 }}>
+          {formatDate(review.createdAt)}
+          {review.editedAt ? ` · düzenlendi ${formatDate(review.editedAt)}` : ''}
+        </AppText>
         {review.comment && review.isPublished ? <ReportButton target="REVIEW" targetId={review.id} compact /> : null}
       </View>
       {!review.isPublished ? (
@@ -62,8 +94,14 @@ export function ReviewBlock({ review, onReplied }: { review: OwnReview; onReplie
             Yanıtın
           </AppText>
           <AppText>{review.companyReply}</AppText>
+          {review.replyOutdated ? (
+            <AppText style={{ color: colors.zinc600, fontSize: 13 }}>
+              Müşteri yorumunu yanıtından sonra düzenledi; yanıtını yeni metne göre güncelleyebilirsin.
+            </AppText>
+          ) : null}
         </View>
-      ) : open ? (
+      ) : null}
+      {review.companyReply && !review.replyOutdated ? null : open ? (
         <View style={{ gap: 10 }}>
           <Field
             label="Yanıtın"
@@ -74,14 +112,16 @@ export function ReviewBlock({ review, onReplied }: { review: OwnReview; onReplie
             style={{ minHeight: 88, paddingTop: 12, textAlignVertical: 'top' }}
           />
           <AppText style={{ color: colors.zinc600, fontSize: 13, lineHeight: 18 }}>
-            Firma sayfasında yorumun altında herkese açık görünür ve sonradan değiştirilemez. Müşterinin adını, adresini yazma.
+            {review.companyReply
+              ? 'Eski yanıtının yerine geçer. Müşteri yorumunu yeniden düzenlemedikçe tekrar değiştirilemez. Müşterinin adını, adresini yazma.'
+              : 'Firma sayfasında yorumun altında herkese açık görünür ve sonradan değiştirilemez. Müşterinin adını, adresini yazma.'}
           </AppText>
           {error ? <Notice>{error}</Notice> : null}
-          <Button title="Yanıtı yayımla" loading={saving} onPress={() => void send()} />
+          <Button title={review.companyReply ? 'Yanıtı güncelle' : 'Yanıtı yayımla'} loading={saving} onPress={() => void send()} />
           <Button title="Vazgeç" kind="secondary" onPress={() => setOpen(false)} />
         </View>
       ) : (
-        <Button title="Yanıtla" kind="secondary" onPress={() => setOpen(true)} />
+        <Button title={review.companyReply ? 'Yanıtını güncelle' : 'Yanıtla'} kind="secondary" onPress={() => setOpen(true)} />
       )}
     </View>
   );

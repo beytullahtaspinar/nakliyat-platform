@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator.js';
 import { PaginationDto } from '../requests/dto/list-requests.dto.js';
-import { PublicCompaniesDto } from './dto/review.dto.js';
+import { LatestReviewsDto, PublicCompaniesDto } from './dto/review.dto.js';
 import { ReviewsService } from './reviews.service.js';
 
 /** Herkese açık firma sayfaları: yalnızca doğrulanmış ve etkin firmalar */
@@ -28,5 +28,19 @@ export class PublicCompaniesController {
   @Get(':id/reviews')
   reviewsOf(@Param('id') id: string, @Query() { page, limit }: PaginationDto) {
     return this.reviews.publicReviews(id, page, limit);
+  }
+}
+
+/** Sitedeki en yeni müşteri yorumları (ana sayfa ve il sayfaları) */
+@ApiTags('Firmalar (herkese açık)')
+@Public()
+@Controller('reviews')
+export class PublicReviewsController {
+  constructor(private readonly reviews: ReviewsService) {}
+
+  /** Yayındaki yazılı yorumlar, en yeni önce; city ile çıkışı ya da varışı o il olanlar */
+  @Get('latest')
+  latest(@Query() dto: LatestReviewsDto) {
+    return this.reviews.latestPublic(dto);
   }
 }

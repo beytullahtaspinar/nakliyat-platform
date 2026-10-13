@@ -34,6 +34,7 @@ export interface DomainEventMap {
   'credit.card_paid': { paymentId: string };
   /** Müşteri tamamlanan işin firmasını değerlendirdi */
   'review.created': { reviewId: string };
+  'review.updated': { reviewId: string; previousRating: number };
 }
 
 export type DomainEventName = keyof DomainEventMap;

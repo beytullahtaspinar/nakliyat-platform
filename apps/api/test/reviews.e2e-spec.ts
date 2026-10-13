@@ -246,6 +246,82 @@ describe('Değerlendirmeler (e2e)', () => {
     expect(reviews.body.items[0].companyReply).toBe('Gecikme için özür dileriz, yeni evinizde mutluluklar.');
   });
 
+  it('teklif karşılaştırmada firmanın en yeni yorumu, sitede son yorumlar listesi', async () => {
+    const quotes = await http().get(`/v1/requests/${requestId}/quotes`).set(auth('customer')).expect(200);
+    expect(quotes.body[0].company.latestReview).toMatchObject({
+      rating: 4,
+      excerpt: 'Ekip özenliydi, yalnızca yarım saat geç geldiler.',
+      authorName: 'Ayşe Y.',
+      route: 'İzmir → Ankara',
+    });
+
+    const latest = await http().get('/v1/reviews/latest?limit=50').expect(200);
+    const mine = latest.body.items.find((r: { id: string }) => r.id === reviewId);
+    expect(mine).toMatchObject({ authorName: 'Ayşe Y.', cityCodes: ['35', '06'], company: { id: companyId, displayName: 'Puanlı Test Nakliyat' } });
+    expect(mine.moveDate).toBeTruthy();
+    expect(JSON.stringify(latest.body)).not.toContain('Yorumcu');
+    const izmir = await http().get('/v1/reviews/latest?city=35').expect(200);
+    expect(izmir.body.items.map((r: { id: string }) => r.id)).toContain(reviewId);
+    const bursa = await http().get('/v1/reviews/latest?city=16').expect(200);
+    expect(bursa.body.items.map((r: { id: string }) => r.id)).not.toContain(reviewId);
+    await http().get('/v1/reviews/latest?limit=100').expect(400);
+  });
+
+  it('müşteri yorumunu düzenler: puan güncellenir, düzenlendi görünür, firmaya bildirilir, yanıtını günceller', async () => {
+    await http().patch(`/v1/bookings/${bookingId}/review`).set(auth('other')).send({ rating: 1 }).expect(404);
+    await http().patch(`/v1/bookings/${bookingId}/review`).set(auth('company')).send({ rating: 1 }).expect(403);
+    await http().patch(`/v1/bookings/${bookingId}/review`).set(auth('customer')).send({ rating: 9 }).expect(400);
+
+    // Değişiklik yoksa düzenlendi sayılmaz
+    const same = await http()
+      .patch(`/v1/bookings/${bookingId}/review`)
+      .set(auth('customer'))
+      .send({ rating: 4, comment: 'Ekip özenliydi, yalnızca yarım saat geç geldiler.' })
+      .expect(200);
+    expect(same.body.editedAt).toBeNull();
+
+    const before = mails(emails.company, 'NEW_REVIEW').length;
+    const res = await http()
+      .patch(`/v1/bookings/${bookingId}/review`)
+      .set(auth('customer'))
+      .send({ rating: 5, comment: 'Gecikmeyi telafi ettiler, eşyalar tek çizik almadı. Teşekkürler!' })
+      .expect(200);
+    expect(res.body).toMatchObject({ rating: 5, isPublished: true, replyOutdated: true });
+    expect(res.body.editedAt).toBeTruthy();
+    // Firmanın yanıtı korunur
+    expect(res.body.companyReply).toBe('Gecikme için özür dileriz, yeni evinizde mutluluklar.');
+    await events.drain();
+
+    const profile = await http().get(`/v1/companies/${companyId}`).expect(200);
+    expect([Number(profile.body.ratingAverage), profile.body.ratingCount]).toEqual([5, 1]);
+    expect(profile.body.ratingDistribution).toMatchObject({ '5': 1, '4': 0 });
+    const reviews = await http().get(`/v1/companies/${companyId}/reviews`).expect(200);
+    expect(reviews.body.items[0]).toMatchObject({ rating: 5, comment: 'Gecikmeyi telafi ettiler, eşyalar tek çizik almadı. Teşekkürler!' });
+    expect(reviews.body.items[0].editedAt).toBeTruthy();
+
+    const notices = mails(emails.company, 'NEW_REVIEW');
+    expect(notices).toHaveLength(before + 1);
+    expect(notices.at(-1)!.content.title).toBe('Müşterin değerlendirmesini düzenledi: 4 → 5 yıldız');
+    const customerId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.customer } })).id;
+    const log = await prisma.auditLog.findFirstOrThrow({ where: { actorId: customerId, action: 'review.edit', entityId: reviewId } });
+    expect(log.details).toMatchObject({ before: { rating: 4 }, after: { rating: 5 } });
+
+    // Yanıt eski metne ait: firma bir kez günceller, sonra yine tek yanıt kuralı
+    const own = await http().get('/v1/company/reviews').set(auth('company')).expect(200);
+    expect(own.body.items[0]).toMatchObject({ id: reviewId, replyOutdated: true });
+    const updated = await http()
+      .post(`/v1/company/reviews/${reviewId}/reply`)
+      .set(auth('company'))
+      .send({ body: 'Güzel sözleriniz için teşekkür ederiz.' })
+      .expect(200);
+    expect(updated.body).toMatchObject({ companyReply: 'Güzel sözleriniz için teşekkür ederiz.', replyOutdated: false });
+    await http().post(`/v1/company/reviews/${reviewId}/reply`).set(auth('company')).send({ body: 'Bir daha' }).expect(409);
+
+    // Yorum kaldırılıp yalnızca puan bırakılabilir
+    const onlyRating = await http().patch(`/v1/bookings/${bookingId}/review`).set(auth('customer')).send({ rating: 4, comment: '  ' }).expect(200);
+    expect(onlyRating.body).toMatchObject({ rating: 4, comment: null });
+  });
+
   it('yönetici yorumu gerekçeyle gizler: sayfadan ve ortalamadan çıkar, firma gerekçeyi görür; geri alabilir', async () => {
     await http().post(`/v1/admin/reviews/${reviewId}/hide`).set(auth('company')).send({ reason: 'Uygunsuz içerik' }).expect(403);
     await http().post(`/v1/admin/reviews/${reviewId}/hide`).set(auth('admin')).send({ reason: 'x' }).expect(400);
@@ -266,6 +342,9 @@ describe('Değerlendirmeler (e2e)', () => {
     expect(byCustomer.body.items.map((r: { id: string }) => r.id)).toContain(reviewId);
     const adminId = (await prisma.user.findUniqueOrThrow({ where: { phone: phones.admin } })).id;
     expect(await prisma.auditLog.count({ where: { actorId: adminId, action: 'review.hide', entityId: reviewId } })).toBe(1);
+
+    // Gizlenen yorum düzenlenemez
+    await http().patch(`/v1/bookings/${bookingId}/review`).set(auth('customer')).send({ rating: 5 }).expect(409);
 
     await http().post(`/v1/admin/reviews/${reviewId}/show`).set(auth('admin')).expect(200);
     expect((await http().get(`/v1/companies/${companyId}`).expect(200)).body.ratingCount).toBe(1);

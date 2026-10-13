@@ -150,10 +150,14 @@ export default async function CompanyReviewsPage({ searchParams }: PageProps<"/f
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     <Stars value={r.rating} />
                     <span className="text-sm font-semibold text-zinc-900">{RATING_LABELS[r.rating]}</span>
-                    <span className="text-sm text-zinc-600">{formatDate(r.createdAt)}</span>
+                    <span className="text-sm text-zinc-600">
+                      {formatDate(r.createdAt)}
+                      {r.editedAt && ` · düzenlendi ${formatDate(r.editedAt)}`}
+                    </span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {!r.isPublished && <Badge tone="warning">Yayından kaldırıldı</Badge>}
+                    {r.replyOutdated && <Badge tone="warning">Yanıtından sonra düzenlendi</Badge>}
                     {r.companyReply ? <Badge tone="brand">Yanıtlandı</Badge> : <Badge tone="accent">Yanıt bekliyor</Badge>}
                   </div>
                 </div>
@@ -185,6 +189,7 @@ export default async function CompanyReviewsPage({ searchParams }: PageProps<"/f
                       {r.companyReplyAt && <span className="font-normal text-zinc-700"> · {formatDate(r.companyReplyAt)}</span>}
                     </p>
                     <p className="mt-1 whitespace-pre-line text-sm text-zinc-900">{r.companyReply}</p>
+                    {r.replyOutdated && <ReplyForm reviewId={r.id} update />}
                   </div>
                 ) : (
                   <ReplyForm reviewId={r.id} />

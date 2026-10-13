@@ -142,6 +142,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps<"/yon
                   <Stars value={r.rating} />
                   <div className="mt-1 text-xs font-medium text-slate-700">{RATING_LABELS[r.rating]}</div>
                   <div className="text-xs text-slate-500">{formatDate(r.createdAt)}</div>
+                  {r.editedAt && <div className="text-xs text-slate-500">düzenlendi {formatDate(r.editedAt)}</div>}
                 </td>
                 <td className={`${cell} max-lg:col-span-2 max-lg:row-start-2`}>
                   <ReviewText comment={r.comment} companyReply={r.companyReply} companyName={r.company.displayName} />

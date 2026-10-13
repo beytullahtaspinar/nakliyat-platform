@@ -167,7 +167,11 @@ export type OwnReview = {
   /** Yönetici gizlediyse false */
   isPublished: boolean;
   hiddenReason: string | null;
+  /** Müşterinin son düzenlemesi; null ise hiç düzenlenmedi */
+  editedAt: string | null;
   createdAt: string;
+  /** Müşteri yorumu firmanın yanıtından sonra düzenledi: firma yanıtını güncelleyebilir */
+  replyOutdated: boolean;
 };
 
 export type BookingPlace = {
@@ -458,6 +462,18 @@ export type PublicCompany = {
   ratingCount: number;
   completedJobs: number;
   badges?: BadgeCode[];
+  /** Teklif listesinde: firmanın en yeni yazılı yorumu, kısaltılmış (yoksa null) */
+  latestReview?: ReviewExcerpt | null;
+};
+
+/** Yorum alıntısı: teklif kartında firma satırının altında */
+export type ReviewExcerpt = {
+  rating: number;
+  excerpt: string;
+  authorName: string;
+  route: string;
+  /** Taşınma günü (ISO) */
+  moveDate: string;
 };
 
 /** GET /requests/:id/quotes: fiyata göre sıralı */

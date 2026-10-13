@@ -19,6 +19,7 @@ import { quoteCost } from '../credits/credit-rules.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { latestReviewExcerpts } from '../reviews/review-snippets.js';
 import { VerificationService } from '../verification/verification.service.js';
 import type { CompanyQuotesQueryDto, CompanyRequestsQueryDto } from './dto/company-lists.dto.js';
 import type { CreateQuoteDto, UpdateQuoteDto } from './dto/quote.dto.js';
@@ -231,11 +232,19 @@ export class QuotesService {
       include: { company: true },
     });
     const now = new Date();
-    const badges = await this.badges.forCompanies(quotes.map((q) => q.company), now);
+    const [badges, reviews] = await Promise.all([
+      this.badges.forCompanies(quotes.map((q) => q.company), now),
+      // Karar anında güven: firmanın en yeni yazılı yorumu teklifin üstünde görünür
+      latestReviewExcerpts(this.prisma, quotes.map((q) => q.companyId)),
+    ]);
     return quotes.map(({ company, ...q }) => ({
       ...q,
       isExpired: q.validUntil < now,
-      company: { ...toPublicCompany(company), badges: badges.get(company.id) ?? [] },
+      company: {
+        ...toPublicCompany(company),
+        badges: badges.get(company.id) ?? [],
+        latestReview: reviews.get(company.id) ?? null,
+      },
     }));
   }
 

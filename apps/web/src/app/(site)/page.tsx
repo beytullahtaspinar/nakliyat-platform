@@ -13,6 +13,8 @@ import {
   TruckIcon,
   WalletIcon,
 } from "@/components/ui/icons";
+import { LatestReviews } from "@/components/reviews/latest-reviews";
+import { HOME_MIN_REVIEWS, LATEST_REVIEW_LIMIT, getLatestReviews } from "@/lib/latest-reviews";
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
@@ -81,8 +83,12 @@ const VERIFICATION = [
   "Teklif fiyat geçmişinin kaydı",
 ];
 
-export default function Home() {
+// Son yorumlar bölümü saatte bir (yorum gelince hemen, 'firmalar' etiketiyle) yenilenir
+export const revalidate = 3600;
+
+export default async function Home() {
   const cities = getCities();
+  const latest = await getLatestReviews();
 
   return (
     <main className="flex-1">
@@ -232,6 +238,18 @@ export default function Home() {
           </ul>
         </div>
       </section>
+
+      {/* Gerçek taşımalardan son yorumlar: yeterli yorum yokken bölüm çizilmez */}
+      {latest.length >= HOME_MIN_REVIEWS && (
+        <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6">
+          <SectionHeading
+            eyebrow="Müşteri yorumları"
+            title="Gerçek taşımalardan son yorumlar"
+            description="Her yorumu, firmayla platform üzerinden anlaşıp taşınması tamamlanan bir müşteri yazdı."
+          />
+          <LatestReviews reviews={latest.slice(0, LATEST_REVIEW_LIMIT)} className="mt-8" />
+        </section>
+      )}
 
       {/* İller */}
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">

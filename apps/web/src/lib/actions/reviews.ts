@@ -49,25 +49,32 @@ export async function cancelBooking(
   return {};
 }
 
-export async function submitReview(
-  bookingId: string,
-  pagePath: string,
-  _prev: ReviewActionState,
-  formData: FormData,
-): Promise<ReviewActionState> {
+/** Puan ve yorum alanlarını okur; hata varsa kullanıcıya gösterilecek metni döner */
+function readReview(formData: FormData): { rating: number; comment: string } | { error: string } {
   const rating = Number(formData.get("rating"));
   const comment = String(formData.get("comment") ?? "").trim();
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) return { error: "Lütfen 1 ile 5 arasında bir puan seç." };
   if (comment && (comment.length < COMMENT_MIN_LENGTH || comment.length > COMMENT_MAX_LENGTH)) {
     return { error: `Yorum en az ${COMMENT_MIN_LENGTH}, en fazla ${COMMENT_MAX_LENGTH} karakter olmalı. Yalnızca puan da verebilirsin.` };
   }
+  return { rating, comment };
+}
+
+export async function submitReview(
+  bookingId: string,
+  pagePath: string,
+  _prev: ReviewActionState,
+  formData: FormData,
+): Promise<ReviewActionState> {
+  const input = readReview(formData);
+  if ("error" in input) return input;
   const token = await getAccessToken();
   if (!token) return { error: SESSION_ENDED };
   try {
     await apiFetch(`/bookings/${encodeURIComponent(bookingId)}/review`, {
       method: "POST",
       token,
-      body: { rating, ...(comment && { comment }) },
+      body: { rating: input.rating, ...(input.comment && { comment: input.comment }) },
     });
   } catch (err) {
     return failure(err, "Değerlendirmen kaydedilemedi, lütfen tekrar dene.");
@@ -75,6 +82,31 @@ export async function submitReview(
   revalidatePath(pagePath);
   refreshPublicPages();
   return { notice: "Teşekkürler, değerlendirmen yayında." };
+}
+
+/** Müşteri puanını ve yorumunu düzenler; yorum boş bırakılırsa yalnızca puan kalır. */
+export async function updateReview(
+  bookingId: string,
+  pagePath: string,
+  _prev: ReviewActionState,
+  formData: FormData,
+): Promise<ReviewActionState> {
+  const input = readReview(formData);
+  if ("error" in input) return input;
+  const token = await getAccessToken();
+  if (!token) return { error: SESSION_ENDED };
+  try {
+    await apiFetch(`/bookings/${encodeURIComponent(bookingId)}/review`, {
+      method: "PATCH",
+      token,
+      body: { rating: input.rating, ...(input.comment && { comment: input.comment }) },
+    });
+  } catch (err) {
+    return failure(err, "Değişiklikler kaydedilemedi, lütfen tekrar dene.");
+  }
+  revalidatePath(pagePath);
+  refreshPublicPages();
+  return { notice: "Değerlendirmen güncellendi." };
 }
 
 export async function replyToReview(

@@ -151,6 +151,19 @@ export const templates = {
     };
   },
 
+  reviewUpdated(p: { rating: number; previousRating: number; comment: string | null; hasReply: boolean }): NotificationContent {
+    const excerpt = p.comment && p.comment.length > 300 ? `${p.comment.slice(0, 300).trimEnd()}…` : p.comment;
+    const ratingChange = p.rating === p.previousRating ? `${p.rating} yıldız` : `${p.previousRating} → ${p.rating} yıldız`;
+    return {
+      type: 'NEW_REVIEW',
+      title: `Müşterin değerlendirmesini düzenledi: ${ratingChange}`,
+      body: excerpt ?? 'Müşterin yorumunu kaldırıp yalnızca puan bıraktı.',
+      ...(p.hasReply && { details: ['Yanıtın yorumun altında duruyor; yeni metne göre güncelleyebilirsin.'] }),
+      path: '/firma-paneli/degerlendirmeler',
+      actionLabel: p.hasReply ? 'Yorumu oku, yanıtını güncelle' : 'Yorumu oku ve yanıtla',
+    };
+  },
+
   companyVerified(p: { companyName: string }): NotificationContent {
     return {
       type: 'COMPANY_VERIFICATION',
