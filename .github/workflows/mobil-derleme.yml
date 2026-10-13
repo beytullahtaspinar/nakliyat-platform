@@ -4,6 +4,7 @@ name: Mobil derleme
 # bu iş yalnızca derlemeyi başlatır ve bitmesini beklemez. Sonuç expo.dev → Builds sayfasında görünür.
 # Gerekli gizli değer: EXPO_TOKEN (expo.dev → Account settings → Access tokens).
 # Mağazaya gönderme burada yok; o adım ayrıca ve elle yapılır.
+# "yer: github" seçilirse Android paketi bu makinede derlenir ve Actions → çalıştırma → Artifacts altından indirilir.
 on:
   workflow_dispatch:
     inputs:
@@ -22,10 +23,16 @@ on:
         type: choice
         options: [android, ios, all]
         default: android
+      yer:
+        description: "expo: Expo bulutunda / github: GitHub Actions'ta (yalnız Android; Expo'nun aylık ücretsiz hakkı bitince)"
+        type: choice
+        options: [expo, github]
+        default: expo
 
 jobs:
   derle:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -39,8 +46,49 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
       - name: EAS derlemesini başlat
+        if: inputs.yer == 'expo'
         working-directory: apps/mobile
         env:
           APP_VARIANT: ${{ inputs.uygulama }}
           PROFILE: ${{ inputs.profil == 'deneme' && format('{0}-deneme', inputs.uygulama) || inputs.uygulama }}
         run: eas build --profile "$PROFILE" --platform ${{ inputs.platform }} --non-interactive --no-wait
+
+      # GitHub'da derleme: Expo bulutu yerine bu makinede (eas build --local). İmzalama anahtarı yine
+      # Expo'dan gelir. Firebase dosyası Expo'da gizli değişken olduğu için buraya gelmez; GitHub gizli
+      # değerlerinden (GOOGLE_SERVICES_JSON_FIRMA / _MUSTERI, dosyanın içeriği) yazılır.
+      - name: GitHub'da derleme yalnız Android
+        if: inputs.yer == 'github' && inputs.platform != 'android'
+        run: |
+          echo "::error::GitHub'da derleme yalnız Android için. Platform olarak android seç."
+          exit 1
+      - uses: actions/setup-java@v4
+        if: inputs.yer == 'github'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Firebase dosyasını yaz
+        if: inputs.yer == 'github'
+        env:
+          GSJ: ${{ inputs.uygulama == 'firma' && secrets.GOOGLE_SERVICES_JSON_FIRMA || secrets.GOOGLE_SERVICES_JSON_MUSTERI }}
+          NAME: GOOGLE_SERVICES_JSON_${{ inputs.uygulama == 'firma' && 'FIRMA' || 'MUSTERI' }}
+        run: |
+          if [ -z "$GSJ" ]; then
+            echo "::error::$NAME gizli değeri yok. GitHub → Settings → Secrets → Actions'a google-services.json içeriğini ekle; yoksa Android bildirimleri çalışmaz."
+            exit 1
+          fi
+          printf '%s' "$GSJ" > "$RUNNER_TEMP/google-services.json"
+          echo "GOOGLE_SERVICES_JSON=$RUNNER_TEMP/google-services.json" >> "$GITHUB_ENV"
+      - name: Android paketini GitHub'da derle
+        if: inputs.yer == 'github'
+        working-directory: apps/mobile
+        env:
+          APP_VARIANT: ${{ inputs.uygulama }}
+          PROFILE: ${{ inputs.profil == 'deneme' && format('{0}-deneme', inputs.uygulama) || inputs.uygulama }}
+          EXT: ${{ inputs.profil == 'deneme' && 'apk' || 'aab' }}
+        run: eas build --local --profile "$PROFILE" --platform android --non-interactive --output "$RUNNER_TEMP/cikti/${{ inputs.uygulama }}-${{ inputs.profil }}.$EXT"
+      - uses: actions/upload-artifact@v4
+        if: inputs.yer == 'github'
+        with:
+          name: ${{ inputs.uygulama }}-${{ inputs.profil }}-android
+          path: ${{ runner.temp }}/cikti/
+          retention-days: 14
