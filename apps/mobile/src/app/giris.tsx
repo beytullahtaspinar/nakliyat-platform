@@ -26,7 +26,7 @@ const COPY = {
 
 export default function LoginScreen() {
   const { signIn } = useSession();
-  const [phone, setPhone] = useState('');
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,14 +34,14 @@ export default function LoginScreen() {
   const copy = COPY[variant];
 
   async function submit() {
-    if (!phone.trim() || !password) {
-      setError('Telefon numaranı ve şifreni yaz.');
+    if (!login.trim() || !password) {
+      setError('Telefon numaranı ya da e-postanı ve şifreni yaz.');
       return;
     }
     setError(null);
     setLoading(true);
     try {
-      await signIn(phone.trim(), password);
+      await signIn(login.trim(), password);
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Giriş yapılamadı, tekrar dene.';
       setError(message.includes('Google veya Apple') ? 'Bu hesap Google veya Apple ile açıldı. Aşağıdaki düğmeyle devam et.' : message);
@@ -64,13 +64,15 @@ export default function LoginScreen() {
 
           <View style={{ gap: 16 }}>
             <Field
-              label="Cep telefonu"
-              placeholder="05xx xxx xx xx"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              autoComplete="tel"
-              textContentType="telephoneNumber"
+              label="Cep telefonu veya e-posta"
+              placeholder="05xx xxx xx xx ya da ad@ornek.com"
+              value={login}
+              onChangeText={setLogin}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="username"
+              textContentType="username"
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()}
               submitBehavior="submit"

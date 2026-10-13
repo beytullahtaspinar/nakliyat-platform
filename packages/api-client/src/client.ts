@@ -124,9 +124,9 @@ export function createApiClient({ origin = DEFAULT_API_ORIGIN, tokens, onSession
   return {
     request,
 
-    /** Telefon + şifre ile giriş; anahtarlar depoya yazılır. */
-    async login(phone: string, password: string): Promise<AuthUser> {
-      const res = await request<AuthResponse>('/auth/login', { method: 'POST', body: { phone, password }, auth: false });
+    /** Telefon ya da e-posta + şifre ile giriş; anahtarlar depoya yazılır. */
+    async login(login: string, password: string): Promise<AuthUser> {
+      const res = await request<AuthResponse>('/auth/login', { method: 'POST', body: { login, password }, auth: false });
       await tokens.set({ accessToken: res.accessToken, refreshToken: res.refreshToken });
       return res.user;
     },

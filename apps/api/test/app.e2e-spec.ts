@@ -120,6 +120,22 @@ describe('API (e2e)', () => {
         .expect(401);
     });
 
+    it('e-posta adresiyle de giriş yapılır; büyük harf fark etmez', async () => {
+      await prisma.user.update({ where: { phone: '+905320000001' }, data: { email: 'giris-eposta@test.local' } });
+      const res = await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({ login: ' Giris-Eposta@Test.local ', password: 'GucluSifre123' })
+        .expect(200);
+      expect(res.body.user.phone).toBe('+905320000001');
+      // Aynı alana telefon da yazılabilir
+      await request(app.getHttpServer()).post('/v1/auth/login').send({ login: phone, password: 'GucluSifre123' }).expect(200);
+      await request(app.getHttpServer())
+        .post('/v1/auth/login')
+        .send({ login: 'giris-eposta@test.local', password: 'YanlisSifre' })
+        .expect(401);
+      await request(app.getHttpServer()).post('/v1/auth/login').send({ password: 'GucluSifre123' }).expect(401);
+    });
+
     it('giriş yapar ve /me ile kullanıcıyı görür', async () => {
       const login = await request(app.getHttpServer())
         .post('/v1/auth/login')

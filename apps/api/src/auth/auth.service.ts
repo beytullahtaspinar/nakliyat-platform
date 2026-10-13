@@ -83,17 +83,15 @@ export class AuthService {
     return { user: this.toAuthUser(user), ...(await this.issueTokens(user)) };
   }
 
+  /** Telefon ya da e-posta + şifre. Yüklü eski uygulamalar alanı `phone` adıyla gönderir. */
   async login(dto: LoginDto): Promise<AuthResponseDto> {
-    const phone = normalizeTrMobile(dto.phone);
-    const user = phone
-      ? await this.prisma.user.findUnique({ where: { phone } })
-      : null;
+    const user = await this.findByLogin(dto.login ?? dto.phone ?? '');
     if (user && !user.deletedAt && user.passwordHash === OAUTH_ONLY_PASSWORD) {
       throw new UnauthorizedException('Bu hesap Google veya Apple ile açıldı. Giriş sayfasındaki düğmeyle devam et.');
     }
     const valid = user && !user.deletedAt && (await bcrypt.compare(dto.password, user.passwordHash));
     if (!user || !valid) {
-      throw new UnauthorizedException('Telefon numarası veya şifre hatalı');
+      throw new UnauthorizedException('Telefon numarası, e-posta veya şifre hatalı');
     }
     return this.signIn(user);
   }
@@ -222,6 +220,14 @@ export class AuthService {
       verified: this.verification.isComplete(user),
       hasPassword: user.passwordHash !== OAUTH_ONLY_PASSWORD,
     };
+  }
+
+  /** "@" içeriyorsa e-posta, değilse cep telefonu olarak aranır */
+  private async findByLogin(input: string): Promise<User | null> {
+    const value = input.trim();
+    if (value.includes('@')) return this.prisma.user.findUnique({ where: { email: value.toLowerCase() } });
+    const phone = normalizeTrMobile(value);
+    return phone ? this.prisma.user.findUnique({ where: { phone } }) : null;
   }
 
   private requirePhone(input: string): string {
