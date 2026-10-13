@@ -21,7 +21,7 @@ export type TokenStore = {
 };
 
 export type RegisterInput = {
-  role: 'CUSTOMER';
+  role: 'CUSTOMER' | 'COMPANY';
   fullName: string;
   phone: string;
   email: string;

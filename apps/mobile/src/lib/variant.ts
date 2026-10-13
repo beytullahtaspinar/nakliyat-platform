@@ -7,7 +7,7 @@ export type AppVariant = 'firma' | 'musteri';
 export const variant: AppVariant = Constants.expoConfig?.extra?.variant === 'firma' ? 'firma' : 'musteri';
 
 /** Bu uygulamaya hangi rol girebilir; giriş aynı, rol farklıysa diğer uygulamaya yönlendirilir. */
-export const allowedRole: UserRole = variant === 'firma' ? 'COMPANY' : 'CUSTOMER';
+export const allowedRole: Extract<UserRole, 'COMPANY' | 'CUSTOMER'> = variant === 'firma' ? 'COMPANY' : 'CUSTOMER';
 
 export const WEB_ORIGIN = 'https://evdenevenakliyat.app';
 

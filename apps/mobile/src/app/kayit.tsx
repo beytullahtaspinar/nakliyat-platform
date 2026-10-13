@@ -5,10 +5,30 @@ import { SocialSignIn } from '@/components/social-sign-in';
 import { AppText, Button, Checkbox, Field, Notice, PasswordField } from '@/components/ui';
 import { LEGAL_PAGES, LEGAL_VERSION, openWebPage } from '@/lib/legal';
 import { useSession } from '@/lib/session';
+import { variant } from '@/lib/variant';
 import { colors } from '@/theme';
 
-/** Müşteri kaydı (sitedeki /kayit). Firma kaydı belge gerektirdiği için sitede kalır. */
+const COPY = {
+  firma: {
+    title: 'Firmanı kaydet',
+    lead: 'Önce yetkili hesabını aç. Ardından firma bilgilerini gir ve belgelerini yükle; yönetim onaylayınca teklif verebilirsin.',
+    nameLabel: 'Yetkili adı soyadı',
+    submit: 'Firma hesabı oluştur',
+  },
+  musteri: {
+    title: 'Hesap oluştur',
+    lead: 'Taşınma talebini oluştur, onaylı firmalardan ücretsiz teklif al.',
+    nameLabel: 'Ad soyad',
+    submit: 'Hesap oluştur',
+  },
+} as const;
+
+/**
+ * Kayıt (sitedeki /kayit). Firma uygulamasında yetkili hesabı açılır; firma bilgileri ve belgeler
+ * girişten sonra firma kabuğundaki kurulum ekranında istenir.
+ */
 export default function RegisterScreen() {
+  const copy = COPY[variant];
   const { signUp } = useSession();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -53,13 +73,13 @@ export default function RegisterScreen() {
     <DetailScreen backLabel="Giriş">
       <View style={{ gap: 6 }}>
         <AppText weight="bold" accessibilityRole="header" style={{ fontSize: 26, lineHeight: 32 }}>
-          Hesap oluştur
+          {copy.title}
         </AppText>
-        <AppText style={{ color: colors.zinc600 }}>Taşınma talebini oluştur, onaylı firmalardan ücretsiz teklif al.</AppText>
+        <AppText style={{ color: colors.zinc600 }}>{copy.lead}</AppText>
       </View>
       <SocialSignIn onError={setError} dividerFirst={false} />
       <Field
-        label="Ad soyad"
+        label={copy.nameLabel}
         value={fullName}
         onChangeText={setFullName}
         autoComplete="name"
@@ -134,7 +154,7 @@ export default function RegisterScreen() {
         </View>
       </View>
       {error ? <Notice>{error}</Notice> : null}
-      <Button title="Hesap oluştur" loading={loading} onPress={() => void submit()} />
+      <Button title={copy.submit} loading={loading} onPress={() => void submit()} />
     </DetailScreen>
   );
 }
