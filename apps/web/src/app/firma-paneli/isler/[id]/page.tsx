@@ -92,7 +92,9 @@ export default async function CompanyBookingPage({ params }: PageProps<"/firma-p
                       {booking.review.hiddenReason && ` Gerekçe: ${booking.review.hiddenReason}`}
                     </p>
                   )}
-                  {!booking.review.companyReply && <ReplyForm reviewId={booking.review.id} />}
+                  {(!booking.review.companyReply || booking.review.replyOutdated) && (
+                    <ReplyForm reviewId={booking.review.id} update={!!booking.review.companyReply} />
+                  )}
                   {booking.review.comment && booking.review.isPublished && (
                     <p className="mt-2 text-right">
                       <ReportButton target="REVIEW" targetId={booking.review.id} />

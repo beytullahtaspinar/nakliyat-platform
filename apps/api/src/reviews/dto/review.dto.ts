@@ -137,3 +137,19 @@ export class PublicCompaniesDto {
   @Matches(/^\d{2}$/)
   toCity?: string;
 }
+
+/** Sitedeki en yeni yorumlar (ana sayfa, il sayfaları) */
+export class LatestReviewsDto {
+  @ApiPropertyOptional({ default: 6, maximum: 50, description: 'İl sayfaları tek istekle 50 yorum alıp kendi içinde süzer' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit = 6;
+
+  @ApiPropertyOptional({ example: '34', description: 'Çıkışı ya da varışı bu il olan taşımaların yorumları' })
+  @IsOptional()
+  @Matches(/^\d{2}$/)
+  city?: string;
+}

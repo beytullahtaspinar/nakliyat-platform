@@ -31,3 +31,10 @@ export function maskName(fullName: string, deleted: boolean): string {
   const last = rest.at(-1);
   return last ? `${first} ${last.charAt(0).toLocaleUpperCase('tr-TR')}.` : first!;
 }
+
+/**
+ * Müşteri yorumunu firmanın yanıtından sonra düzenlediyse yanıt eski metne aittir; firma yanıtını
+ * bir kez daha güncelleyebilir (her yeni düzenlemeden sonra yeniden).
+ */
+export const replyOutdated = (r: { companyReplyAt: Date | null; editedAt: Date | null }) =>
+  !!(r.companyReplyAt && r.editedAt && r.editedAt > r.companyReplyAt);

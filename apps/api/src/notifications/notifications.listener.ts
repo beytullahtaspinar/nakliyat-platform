@@ -49,6 +49,7 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('booking.completed', (p) => this.onBookingCompleted(p.bookingId, p.completedBy));
     this.events.on('booking.cancelled', (p) => this.onBookingCancelled(p.bookingId, p.cancelledBy));
     this.events.on('review.created', ({ reviewId }) => this.onReviewCreated(reviewId));
+    this.events.on('review.updated', ({ reviewId, previousRating }) => this.onReviewUpdated(reviewId, previousRating));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
     this.events.on('company.name_change_reviewed', ({ changeId }) => this.onNameChangeReviewed(changeId));
     this.events.on('credit.transfer_reviewed', ({ transferId }) => this.onTransferReviewed(transferId));
@@ -225,6 +226,19 @@ export class NotificationsListener implements OnModuleInit {
     });
     if (!review) return;
     await this.notifications.notify(review.company.ownerId, templates.newReview(review));
+  }
+
+  /** Müşteri yorumunu düzenledi: firma yeni hâlini görsün, gerekirse yanıtını güncellesin */
+  async onReviewUpdated(reviewId: string, previousRating: number) {
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+      select: { rating: true, comment: true, companyReply: true, company: { select: { ownerId: true } } },
+    });
+    if (!review) return;
+    await this.notifications.notify(
+      review.company.ownerId,
+      templates.reviewUpdated({ ...review, previousRating, hasReply: review.companyReply !== null }),
+    );
   }
 
   async onVerificationChanged(companyId: string) {

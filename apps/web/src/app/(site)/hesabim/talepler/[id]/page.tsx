@@ -24,6 +24,8 @@ import { ConfirmButton } from "@/components/forms/confirm-button";
 import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
 import { Conversation } from "@/components/messages/conversation";
 import { ReviewCard } from "@/components/reviews/review-card";
+import { ReviewEditor } from "@/components/reviews/review-editor";
+import { ReviewExcerpt } from "@/components/reviews/review-excerpt";
 import { ReviewForm } from "@/components/reviews/review-form";
 import { RequestMediaManager } from "@/components/media/request-media-manager";
 import { RouteOverview } from "@/components/map/route-overview";
@@ -263,6 +265,14 @@ function QuoteCard({
         </div>
       </div>
 
+      {quote.company.latestReview && quote.company.verified && (
+        <ReviewExcerpt
+          review={quote.company.latestReview}
+          href={`${companyPath(quote.company)}#yorumlar`}
+          total={quote.company.ratingCount}
+        />
+      )}
+
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
         <div>
           <dt className="text-zinc-500">Araç</dt>
@@ -394,15 +404,25 @@ function ReviewSection({ booking }: { booking: CustomerBooking }) {
               <Link href={`${companyPath(company)}#yorumlar`} className="font-medium text-brand-700 underline">
                 firma sayfasında
               </Link>{" "}
-              yayında.
+              &ldquo;Doğrulanmış taşıma&rdquo; rozetiyle yayında.
             </p>
+          )}
+          {/* Yönetimce kaldırılan yorum düzenlenemez: gizleme gerekçesi o metne ait */}
+          {review.isPublished && (
+            <ReviewEditor
+              bookingId={booking.id}
+              pagePath={`/hesabim/talepler/${booking.requestId}`}
+              companyName={company.displayName}
+              review={review}
+              hasReply={!!review.companyReply}
+            />
           )}
         </div>
       ) : (
         <>
           <p className="mt-1 text-sm text-zinc-600">
             Puanın firmanın ortalamasına eklenir ve taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder.
-            Değerlendirme bir kez yapılır, sonradan değiştirilemez.
+            Fikrin değişirse değerlendirmeni sonradan düzenleyebilirsin.
           </p>
           <div className="mt-4">
             <ReviewForm bookingId={booking.id} pagePath={`/hesabim/talepler/${booking.requestId}`} companyName={company.displayName} />

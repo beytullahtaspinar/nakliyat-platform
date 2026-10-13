@@ -17,7 +17,7 @@ import { useDialog } from '@/components/dialog';
 import { RouteMapView } from '@/components/map';
 import { DetailScreen, Section } from '@/components/panel';
 import { ReportButton } from '@/components/report';
-import { Stars } from '@/components/review';
+import { ReviewExcerpt, Stars } from '@/components/review';
 import { AppText, Badge, Badges, Button, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { formatPhone } from '@/lib/bookings';
@@ -304,6 +304,7 @@ function QuoteBlock({ quote, cheapest, onAccept }: { quote: CustomerQuote; cheap
   return (
     <View style={{ gap: 10, opacity: dimmed ? 0.6 : 1 }}>
       <CompanyLine company={quote.company} />
+      {quote.company.latestReview ? <ReviewExcerpt review={quote.company.latestReview} /> : null}
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
         <AppText weight="bold" style={{ fontSize: 24, lineHeight: 30 }}>
           {formatMoney(quote.priceTry)}
@@ -422,19 +423,29 @@ function BookingCard({
   );
 }
 
-/** Tamamlanan işte bir kez yapılan değerlendirme; sonradan değiştirilemez */
+/** Tamamlanan işte değerlendirme; müşteri sonradan puanını ve yorumunu düzenleyebilir */
 function ReviewSection({ booking, onSaved }: { booking: CustomerBooking; onSaved: () => Promise<void> }) {
   const { review, company } = booking;
+  const [editing, setEditing] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  if (review) {
+  function startEditing() {
+    if (!review) return;
+    setRating(review.rating);
+    setComment(review.comment ?? '');
+    setError(null);
+    setEditing(true);
+  }
+
+  if (review && !editing) {
     return (
       <Section title="Değerlendirmen">
         <Stars rating={review.rating} />
         <AppText style={{ color: review.comment ? colors.zinc900 : colors.zinc600 }}>{review.comment || 'Yorum yazmadın.'}</AppText>
+        {review.editedAt ? <AppText style={{ color: colors.zinc500, fontSize: 13 }}>{`Düzenlendi: ${formatDate(review.editedAt)}`}</AppText> : null}
         {!review.isPublished ? (
           <Notice>
             {`Yorumun site kurallarına uymadığı için yayından kaldırıldı.${review.hiddenReason ? ` Gerekçe: ${review.hiddenReason}` : ''}`}
@@ -449,6 +460,8 @@ function ReviewSection({ booking, onSaved }: { booking: CustomerBooking; onSaved
             <ReportButton target="REVIEW_REPLY" targetId={review.id} compact />
           </View>
         ) : null}
+        {/* Yönetimce kaldırılan yorum düzenlenemez: gizleme gerekçesi o metne ait */}
+        {review.isPublished ? <Button title="Değerlendirmeni düzenle" kind="secondary" icon="create-outline" onPress={startEditing} /> : null}
       </Section>
     );
   }
@@ -460,18 +473,27 @@ function ReviewSection({ booking, onSaved }: { booking: CustomerBooking; onSaved
     setError(null);
     setSaving(true);
     try {
-      await api.request(`/bookings/${booking.id}/review`, { method: 'POST', body: { rating, ...(text && { comment: text }) } });
+      await api.request(`/bookings/${booking.id}/review`, {
+        method: review ? 'PATCH' : 'POST',
+        body: { rating, ...(text && { comment: text }) },
+      });
       await onSaved();
+      setEditing(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Değerlendirme gönderilemedi.');
+    } finally {
       setSaving(false);
     }
   }
 
   return (
     <Section
-      title={`${company.displayName} firmasını değerlendir`}
-      description="Puanın firmanın ortalamasına eklenir ve taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder. Değerlendirme bir kez yapılır, sonradan değiştirilemez."
+      title={review ? 'Değerlendirmeni düzenle' : `${company.displayName} firmasını değerlendir`}
+      description={
+        review
+          ? `Yorumunun yanında "düzenlendi" yazar ve firmaya haber verilir.${review.companyReply ? ' Firmanın yanıtı yerinde kalır.' : ''}`
+          : 'Puanın firmanın ortalamasına eklenir ve taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder. Fikrin değişirse sonradan düzenleyebilirsin.'
+      }
     >
       <View accessibilityRole="adjustable" accessibilityLabel={`Puan: 5 üzerinden ${rating}`} style={{ flexDirection: 'row', gap: 6 }}>
         {[1, 2, 3, 4, 5].map((n) => (
@@ -496,7 +518,8 @@ function ReviewSection({ booking, onSaved }: { booking: CustomerBooking; onSaved
         style={{ minHeight: 96, paddingTop: 12, textAlignVertical: 'top' }}
       />
       {error ? <Notice>{error}</Notice> : null}
-      <Button title="Değerlendirmeyi gönder" loading={saving} onPress={() => void submit()} />
+      <Button title={review ? 'Değişiklikleri kaydet' : 'Değerlendirmeyi gönder'} loading={saving} onPress={() => void submit()} />
+      {review ? <Button title="Vazgeç" kind="secondary" onPress={() => setEditing(false)} /> : null}
     </Section>
   );
 }

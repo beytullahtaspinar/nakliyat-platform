@@ -10,6 +10,7 @@ import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs, type Crumb } from "@/components/local/breadcrumbs";
 import { RatingSummary } from "@/components/reviews/rating-summary";
 import { ReviewCard } from "@/components/reviews/review-card";
+import { Stars } from "@/components/reviews/stars";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, cardClass } from "@/components/ui/card";
 import { ApiError, apiFetch, type Paginated, type PublicCompanyProfile, type PublicReview } from "@/lib/api";
@@ -190,12 +191,51 @@ export default async function CompanyPage({ params }: Props) {
   ].filter((f): f is { label: string; value: string } => !!f);
 
   const cover = company.photos[0];
+  const hasReviews = company.ratingCount > 0;
   const summary = [
     company.cityName && `${company.cityName} merkezli`,
-    company.ratingCount > 0 && `★ ${formatRating(company.ratingAverage)} (${company.ratingCount} yorum)`,
     company.completedJobs > 0 && `${company.completedJobs} tamamlanan taşıma`,
     `${yearOf(company.memberSince)} yılından beri platformda`,
   ].filter(Boolean);
+
+  const reviewsSection = (
+    <section id="yorumlar" className="scroll-mt-20">
+      <h2 className="text-2xl font-semibold">Müşteri yorumları</h2>
+      <p className="mt-2 text-sm text-zinc-600">
+        Yorumlar yalnızca bu firmayla platform üzerinden anlaşan ve taşınması tamamlanan müşterilerden gelir; her
+        taşıma için bir değerlendirme yapılabilir ve her yorumda taşınma ayı ile güzergâh görünür. Müşteri
+        yorumunu sonradan düzenlerse &ldquo;düzenlendi&rdquo; yazar. Kurallara aykırı yorumlar gerekçesiyle yayından
+        kaldırılır.
+      </p>
+      <Card className="mt-4 p-5">
+        <RatingSummary
+          average={company.ratingAverage}
+          count={company.ratingCount}
+          distribution={company.ratingDistribution}
+          headingLevel={3}
+        />
+      </Card>
+      {reviews.items.length > 0 && (
+        <ul className="mt-4 space-y-3">
+          {reviews.items.map((r) => (
+            <ReviewCard
+              key={r.id}
+              as="li"
+              review={r}
+              companyName={company.displayName}
+              author={r.authorName}
+              verified={{ moveDate: r.moveDate, route: r.route }}
+            />
+          ))}
+        </ul>
+      )}
+      {reviews.total > reviews.items.length && (
+        <p className="mt-3 text-sm text-zinc-600">
+          En yeni {reviews.items.length} yorum gösteriliyor (toplam {reviews.total}).
+        </p>
+      )}
+    </section>
+  );
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10">
@@ -242,6 +282,18 @@ export default async function CompanyPage({ params }: Props) {
             {company.legalName}
           </p>
           <p className="mt-1 text-zinc-600">{summary.join(" · ")}</p>
+          {hasReviews && (
+            <a
+              href="#yorumlar"
+              className="mt-3 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-accent-200 bg-accent-50 px-3 py-2 text-zinc-900 hover:border-accent-400"
+            >
+              <span className="text-xl font-bold">{formatRating(company.ratingAverage)}</span>
+              <Stars value={Number(company.ratingAverage)} className="h-5 w-5" />
+              <span className="text-sm font-medium text-zinc-700 underline-offset-2 hover:underline">
+                {company.ratingCount} doğrulanmış müşteri yorumu
+              </span>
+            </a>
+          )}
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {company.verified && !earned.includes("DOCUMENTS_VERIFIED") && <Badge tone="success">✓ Doğrulanmış firma</Badge>}
             <CompanyBadges badges={earned} />
@@ -270,10 +322,20 @@ export default async function CompanyPage({ params }: Props) {
             <ButtonLink href="/talep-olustur" size="lg" className="mt-4 w-full justify-center">
               Ücretsiz teklif al
             </ButtonLink>
+            {hasReviews && (
+              <p className="mt-3 flex flex-wrap items-center justify-center gap-x-1.5 text-sm text-zinc-700">
+                <Stars value={Number(company.ratingAverage)} />
+                <a href="#yorumlar" className="font-medium hover:underline">
+                  {formatRating(company.ratingAverage)} · {company.ratingCount} yorum
+                </a>
+              </p>
+            )}
           </Card>
         </aside>
 
         <div className="min-w-0 space-y-12 lg:col-start-1 lg:row-start-1">
+          {/* Gerçek taşımalara dayanan yorumlar en güçlü güven işareti: varsa en üstte */}
+          {hasReviews && reviewsSection}
           {company.description && (
             <section>
               <h2 className="text-2xl font-semibold">{company.displayName} hakkında</h2>
@@ -362,34 +424,8 @@ export default async function CompanyPage({ params }: Props) {
             </section>
           )}
 
-          <section id="yorumlar" className="scroll-mt-20">
-            <h2 className="text-2xl font-semibold">Müşteri yorumları</h2>
-            <p className="mt-2 text-sm text-zinc-600">
-              Yorumlar yalnızca bu firmayla platform üzerinden anlaşan ve taşınması tamamlanan müşterilerden gelir; her
-              taşıma için bir değerlendirme yapılabilir. Kurallara aykırı yorumlar gerekçesiyle yayından kaldırılır.
-            </p>
-            <Card className="mt-4 p-5">
-              <RatingSummary
-                average={company.ratingAverage}
-                count={company.ratingCount}
-                distribution={company.ratingDistribution}
-                headingLevel={3}
-              />
-            </Card>
-            {reviews.items.length > 0 && (
-              <ul className="mt-4 space-y-3">
-                {reviews.items.map((r) => (
-                  <ReviewCard key={r.id} as="li" review={r} companyName={company.displayName} author={`${r.authorName} · ${r.route}`} />
-                ))}
-              </ul>
-            )}
-            {reviews.total > reviews.items.length && (
-              <p className="mt-3 text-sm text-zinc-600">
-                En yeni {reviews.items.length} yorum gösteriliyor (toplam {reviews.total}).
-              </p>
-            )}
-          </section>
 
+          {!hasReviews && reviewsSection}
         </div>
       </div>
 

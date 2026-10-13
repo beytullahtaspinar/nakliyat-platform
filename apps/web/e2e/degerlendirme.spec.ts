@@ -7,7 +7,7 @@ import { moveDayIsToday } from "./db";
 import { TEST_CODE } from "./dogrulama";
 
 // Taşınma tamamlanınca müşteri firmayı puanlar, firma yanıtlar, yorum firma sayfasında görünür,
-// yönetici gizleyince sayfadan kalkar. Hazırlık API'den, akış tarayıcıdan.
+// müşteri yorumunu düzenler, yönetici gizleyince sayfadan kalkar. Hazırlık API'den, akış tarayıcıdan.
 const API = `http://localhost:${process.env.API_PORT ?? 4000}/v1`;
 const PASSWORD = "yorum-sifre-1234";
 
@@ -143,7 +143,11 @@ test("tamamlanan taşımada müşteri firmayı değerlendirir, yorum firma sayfa
   await expect(page).toHaveURL(/\/firmalar\/yorum-nakliyat-\d+-[a-z0-9]+#yorumlar$/);
   await expect(page.getByRole("heading", { level: 1, name: companyName })).toBeVisible();
   const reviews = page.locator("#yorumlar");
-  await expect(reviews.getByText("Ayşe P. · İzmir → Ankara")).toBeVisible();
+  await expect(reviews.getByText("Ayşe P.", { exact: true })).toBeVisible();
+  await expect(reviews.getByText("Doğrulanmış taşıma")).toBeVisible();
+  await expect(reviews.getByText(/· İzmir → Ankara$/)).toBeVisible();
+  // Başlıktaki puan kutusu yorumlara götürür
+  await expect(page.getByRole("link", { name: /1 doğrulanmış müşteri yorumu/ })).toHaveAttribute("href", "#yorumlar");
   await expect(reviews.getByText("Gecikme için özür dileriz, yeni evinizde mutluluklar.")).toBeVisible();
   await expect(page.getByText("Puanlayan")).toHaveCount(0);
   const jsonLd = await page.locator('script[type="application/ld+json"]').allTextContents();
@@ -153,13 +157,33 @@ test("tamamlanan taşımada müşteri firmayı değerlendirir, yorum firma sayfa
   await expectAccessible(page);
   const companyUrl = page.url().split("#")[0];
 
+  // Müşteri yorumunu düzenler: puan ve metin değişir, "düzenlendi" görünür, firmanın yanıtı yerinde kalır
+  const edited = "Ekip çok özenliydi, gecikmeyi de dikkatli çalışarak telafi ettiler.";
+  await page.goto(`/hesabim/talepler/${requestId}`);
+  await section.getByRole("button", { name: "Değerlendirmeni düzenle" }).click();
+  const commentField = section.getByLabel(`${companyName} ile deneyimin (isteğe bağlı)`);
+  await expect(commentField).toHaveValue("Ekip çok özenliydi, yalnızca biraz geç geldiler.");
+  await expect(section.getByRole("radio", { name: "4 yıldız, İyi" })).toBeChecked();
+  await section.getByRole("radio", { name: "5 yıldız, Çok iyi" }).check({ force: true });
+  await commentField.fill(edited);
+  await section.getByRole("button", { name: "Değişiklikleri kaydet" }).click();
+  await expect(section.getByRole("status")).toHaveText("Değerlendirmen güncellendi.");
+  await expect(section.getByRole("img", { name: "5 üzerinden 5,0 puan" })).toBeVisible();
+  await expect(section.getByText(edited).first()).toBeVisible();
+  await expectAccessible(page);
+
+  await page.goto(companyUrl);
+  await expect(reviews.getByText(edited)).toBeVisible();
+  await expect(reviews.getByText("· düzenlendi")).toBeVisible();
+  await expect(reviews.getByText("Bu yanıt, yorumun düzenlenmeden önceki hâline verildi.")).toBeVisible();
+
   // Yönetici yorumu gerekçeyle gizler; firma sayfasından kalkar
   const adminContext = await browser.newContext();
   const adminPage = await adminContext.newPage();
   await login(adminPage, adminPhone);
   await expect(adminPage).toHaveURL(/\/yonetim$/);
   await adminPage.goto(`/yonetim/degerlendirmeler?ara=${encodeURIComponent(companyName)}`);
-  const row = adminPage.getByRole("row").filter({ hasText: "Ekip çok özenliydi" });
+  const row = adminPage.getByRole("row").filter({ hasText: "gecikmeyi de dikkatli" });
   await expect(row.getByText("Yanıtlandı")).toBeVisible();
   await expectAccessible(adminPage);
   await row.getByRole("button", { name: "Gizle" }).click();
@@ -172,7 +196,7 @@ test("tamamlanan taşımada müşteri firmayı değerlendirir, yorum firma sayfa
   // Gizlenen sekmesinde görünür, yayında sekmesinde görünmez
   await adminPage.getByRole("navigation", { name: "Değerlendirme süzgeci" }).getByRole("link", { name: /^Gizlenen/ }).click();
   await expect(adminPage).toHaveURL(/durum=gizli/);
-  await expect(adminPage.getByText("Ekip çok özenliydi, yalnızca biraz geç geldiler.")).toBeVisible();
+  await expect(adminPage.getByText(edited)).toBeVisible();
   await expectAccessible(adminPage);
   await adminContext.close();
 

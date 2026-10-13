@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
@@ -37,6 +37,14 @@ export class ReviewsController {
     return this.reviews.create(user.id, id, dto);
   }
 
+  /** Müşteri puanını ve yorumunu düzenler (yorumda "düzenlendi" görünür, firmaya bildirilir) */
+  @Roles(UserRole.CUSTOMER)
+  @Patch('bookings/:id/review')
+  update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CreateReviewDto) {
+    if (user.impersonatorId) throw new ForbiddenException('Değerlendirmeyi müşterinin kendisi düzenlemeli');
+    return this.reviews.update(user.id, id, dto);
+  }
+
   /** Firmanın aldığı değerlendirmeler (gizlenenler dahil), süzgeç ve sıralamayla; puan özeti ve sayaçlar */
   @Roles(UserRole.COMPANY)
   @Get('company/reviews')
@@ -44,7 +52,7 @@ export class ReviewsController {
     return this.reviews.listForCompany(user.id, dto);
   }
 
-  /** Firma yoruma bir kez yanıt verir */
+  /** Firma yoruma bir kez yanıt verir (müşteri yorumu sonradan düzenlediyse yanıtını güncelleyebilir) */
   @Roles(UserRole.COMPANY)
   @Post('company/reviews/:id/reply')
   @HttpCode(HttpStatus.OK)

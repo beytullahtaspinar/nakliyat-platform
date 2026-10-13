@@ -515,6 +515,8 @@ model Review {
   /// Yöneticinin gizleme gerekçesi; firma panelinde de gösterilir
   hiddenReason   String?   @db.VarChar(500)
   hiddenAt       DateTime?
+  /// Müşterinin puanı ya da yorumu son düzenlediği an; herkese açık sayfada "düzenlendi" yazar
+  editedAt       DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -523,6 +525,7 @@ model Review {
   customer User    @relation(fields: [customerId], references: [id])
 
   @@index([companyId, isPublished, createdAt])
+  @@index([isPublished, createdAt])
 }
 
 // ─── Mesajlaşma ve bildirimler ──────────────────────────────────

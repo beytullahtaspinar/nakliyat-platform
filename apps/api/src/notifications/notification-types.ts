@@ -42,7 +42,7 @@ export const NOTIFICATION_TYPES = {
   },
   NEW_REVIEW: {
     label: 'Yeni değerlendirme',
-    description: 'Bir müşteri firmanı puanlayıp yorum yazdığında',
+    description: 'Bir müşteri firmanı puanlayıp yorum yazdığında ya da yorumunu düzenlediğinde',
     roles: [UserRole.COMPANY],
   },
   COMPANY_VERIFICATION: {
