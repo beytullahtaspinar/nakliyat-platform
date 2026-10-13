@@ -75,7 +75,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = useCallback(async (input: Omit<RegisterInput, 'role'>) => {
-    const user = await api.register({ ...input, role: 'CUSTOMER' });
+    const user = await api.register({ ...input, role: allowedRole });
     setState({ status: 'signedIn', user });
   }, []);
 

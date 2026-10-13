@@ -246,18 +246,29 @@ export function LogoMark({ size = 40 }: { size?: number }) {
 }
 
 const LOGO = require('../../assets/logo.png');
+const LOGO_ON_DARK = require('../../assets/logo-beyaz.png');
 const LOGO_RATIO = 1200 / 161;
 
-/** Giriş ekranındaki tam logo (sitedekiyle aynı); firma uygulamasında altında "Firma" etiketi */
-export function Wordmark() {
+/**
+ * Giriş ekranındaki tam logo (sitedekiyle aynı). `onDark` lacivert zeminde beyaz yazılı logoyu kullanır;
+ * firma uygulamasında altında turuncu "Firma uygulaması" etiketi durur.
+ */
+export function Wordmark({ onDark = false }: { onDark?: boolean }) {
   const height = 30;
   return (
-    <View accessible accessibilityRole="image" accessibilityLabel={variant === 'firma' ? 'Evden Eve Nakliyat Firma' : 'Evden Eve Nakliyat'} style={{ gap: 6 }}>
-      <Image source={LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
+    <View
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={variant === 'firma' ? 'Evden Eve Nakliyat Firma' : 'Evden Eve Nakliyat'}
+      style={{ gap: 12, alignItems: 'flex-start' }}
+    >
+      <Image source={onDark ? LOGO_ON_DARK : LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
       {variant === 'firma' ? (
-        <AppText weight="semibold" style={{ color: colors.accent700, fontSize: 13, letterSpacing: 1 }}>
-          FİRMA UYGULAMASI
-        </AppText>
+        <View style={{ backgroundColor: colors.accent500, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
+          <AppText weight="bold" style={{ color: colors.brand900, fontSize: 11, lineHeight: 14, letterSpacing: 1.2 }}>
+            FİRMA UYGULAMASI
+          </AppText>
+        </View>
       ) : null}
     </View>
   );

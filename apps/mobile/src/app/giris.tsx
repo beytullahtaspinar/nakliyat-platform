@@ -1,8 +1,9 @@
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, type TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SocialSignIn } from '@/components/social-sign-in';
 import { AppText, Button, Field, Notice, PasswordField, Wordmark } from '@/components/ui';
 import { useSession } from '@/lib/session';
@@ -14,13 +15,11 @@ const COPY = {
     title: 'Firma girişi',
     lead: 'Gelen talepleri gör, teklif ver, işlerini takip et.',
     signupLabel: 'Firmanı kaydet',
-    signupPath: '/kayit?rol=firma',
   },
   musteri: {
     title: 'Giriş yap',
     lead: 'Taşınma talebini oluştur, firmalardan gelen teklifleri karşılaştır.',
     signupLabel: 'Hesap oluştur',
-    signupPath: '/kayit',
   },
 } as const;
 
@@ -32,6 +31,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const passwordRef = useRef<TextInput>(null);
   const copy = COPY[variant];
+  const insets = useSafeAreaInsets();
 
   async function submit() {
     if (!login.trim() || !password) {
@@ -50,19 +50,51 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.zinc50 }}>
+    <View style={{ flex: 1, backgroundColor: colors.zinc50 }}>
+      {/* Lacivert üst alan; yazılar açık renkte kalsın */}
+      <StatusBar style="light" />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, gap: 24 }} keyboardShouldPersistTaps="handled">
-          <Wordmark />
-
-          <View style={{ gap: 6, marginTop: 24 }}>
-            <AppText weight="bold" accessibilityRole="header" style={{ fontSize: 28, lineHeight: 34, letterSpacing: -0.5 }}>
-              {copy.title}
-            </AppText>
-            <AppText style={{ color: colors.zinc600 }}>{copy.lead}</AppText>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: Math.max(insets.bottom, 16) + 8 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View
+            style={{
+              backgroundColor: colors.brand700,
+              paddingTop: insets.top + 28,
+              paddingHorizontal: 24,
+              paddingBottom: 64,
+              borderBottomLeftRadius: 28,
+              borderBottomRightRadius: 28,
+              gap: 28,
+            }}
+          >
+            <Wordmark onDark />
+            <View style={{ gap: 8 }}>
+              <AppText weight="bold" accessibilityRole="header" style={{ color: colors.white, fontSize: 30, lineHeight: 36, letterSpacing: -0.5 }}>
+                {copy.title}
+              </AppText>
+              <AppText style={{ color: colors.brand100, fontSize: 16, lineHeight: 23 }}>{copy.lead}</AppText>
+            </View>
           </View>
 
-          <View style={{ gap: 16 }}>
+          <View
+            style={{
+              marginTop: -40,
+              marginHorizontal: 16,
+              padding: 20,
+              gap: 16,
+              backgroundColor: colors.white,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: colors.zinc200,
+              shadowColor: colors.brand900,
+              shadowOpacity: 0.08,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 3,
+            }}
+          >
             <Field
               label="Cep telefonu veya e-posta"
               placeholder="05xx xxx xx xx ya da ad@ornek.com"
@@ -93,25 +125,17 @@ export default function LoginScreen() {
             <SocialSignIn onError={setError} />
           </View>
 
-          <View style={{ marginTop: 'auto', gap: 4, alignItems: 'center' }}>
-            <AppText style={{ color: colors.zinc600 }}>Hesabın yok mu?</AppText>
-            {variant === 'musteri' ? (
-              <Pressable accessibilityRole="button" hitSlop={8} onPress={() => router.push('/kayit')} style={{ alignSelf: 'center', paddingVertical: 6 }}>
-                <AppText weight="semibold" style={{ color: colors.brand700 }}>
-                  {copy.signupLabel}
-                </AppText>
-              </Pressable>
-            ) : (
-              <TextLink label={copy.signupLabel} path={copy.signupPath} />
-            )}
+          <View style={{ marginTop: 'auto', paddingTop: 28, paddingHorizontal: 24, gap: 10 }}>
+            <AppText style={{ color: colors.zinc600, textAlign: 'center' }}>Hesabın yok mu?</AppText>
+            <Button title={copy.signupLabel} kind="secondary" onPress={() => router.push('/kayit')} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-/** Şifre sıfırlama ve telefonla firma kaydı sitede yapılır (Google / Apple ile firma kaydı uygulamada) */
+/** Şifre sıfırlama sitede yapılır */
 function TextLink({ label, path }: { label: string; path: string }) {
   return (
     <Pressable
