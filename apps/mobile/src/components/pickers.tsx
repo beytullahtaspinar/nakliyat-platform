@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppText } from '@/components/ui';
+import { AppText, Button } from '@/components/ui';
 import { formatDayTitle, formatMonth, monthGrid, shiftMonth, WEEKDAYS_SHORT } from '@/lib/calendar';
 import { colors, fonts, radius } from '@/theme';
 
@@ -107,6 +107,117 @@ export function SelectField<T extends string | number>({
               <AppText style={{ color: colors.zinc600, textAlign: 'center', padding: 24 }}>Sonuç bulunamadı.</AppText>
             }
           />
+        </SafeAreaView>
+      </Modal>
+    </View>
+  );
+}
+
+/** Çoklu seçim (ör. hizmet verilen iller): liste açık kalır, "Tamam" ile kapanır */
+export function MultiSelectField<T extends string | number>({
+  label,
+  values,
+  options,
+  onChange,
+  allLabel,
+  placeholder = 'Seç',
+  searchable,
+}: {
+  label: string;
+  values: readonly T[];
+  options: readonly Option<T>[];
+  onChange: (values: T[]) => void;
+  /** Hepsi seçiliyken kutuda görünen yazı (ör. "Tüm Türkiye") */
+  allLabel: string;
+  placeholder?: string;
+  searchable?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const selected = useMemo(() => new Set(values), [values]);
+  const filtered = useMemo(() => {
+    const q = fold(query.trim());
+    return q ? options.filter((o) => fold(o.label).includes(q)) : options;
+  }, [options, query]);
+  const all = options.length > 0 && options.every((o) => selected.has(o.value));
+  const names = options.filter((o) => selected.has(o.value)).map((o) => o.label);
+  const text = all ? allLabel : names.length > 3 ? `${names.slice(0, 3).join(', ')} +${names.length - 3}` : names.join(', ');
+
+  function close() {
+    setOpen(false);
+    setQuery('');
+  }
+
+  function toggle(value: T) {
+    onChange(selected.has(value) ? values.filter((v) => v !== value) : [...values, value]);
+  }
+
+  return (
+    <View style={{ gap: 6 }}>
+      <AppText weight="medium">{label}</AppText>
+      <FieldButton label={label} text={text || placeholder} empty={names.length === 0} icon="chevron-down" onPress={() => setOpen(true)} />
+      <Modal visible={open} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
+          <SheetHeader title={label} onClose={close} />
+          <View style={{ padding: 16, paddingBottom: 8, gap: 8 }}>
+            {searchable ? (
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Ara"
+                placeholderTextColor={colors.zinc500}
+                accessibilityLabel={`${label} ara`}
+                autoCorrect={false}
+                style={inputStyle}
+              />
+            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => onChange(all ? [] : options.map((o) => o.value))}
+              style={{ alignSelf: 'flex-start', paddingVertical: 6 }}
+            >
+              <AppText weight="semibold" style={{ color: colors.brand700 }}>
+                {all ? 'Seçimi temizle' : allLabel}
+              </AppText>
+            </Pressable>
+          </View>
+          <FlatList
+            data={filtered}
+            keyExtractor={(o) => String(o.value)}
+            keyboardShouldPersistTaps="handled"
+            initialNumToRender={30}
+            renderItem={({ item }) => {
+              const active = selected.has(item.value);
+              return (
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: active }}
+                  onPress={() => toggle(item.value)}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 20,
+                    minHeight: 52,
+                    backgroundColor: pressed ? colors.zinc100 : colors.white,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.zinc100,
+                  })}
+                >
+                  <AppText weight={active ? 'semibold' : 'regular'} style={{ flex: 1, color: active ? colors.brand700 : colors.zinc900 }}>
+                    {item.label}
+                  </AppText>
+                  <Ionicons name={active ? 'checkbox' : 'square-outline'} size={22} color={active ? colors.brand700 : colors.zinc500} />
+                </Pressable>
+              );
+            }}
+            ListEmptyComponent={
+              <AppText style={{ color: colors.zinc600, textAlign: 'center', padding: 24 }}>Sonuç bulunamadı.</AppText>
+            }
+          />
+          <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: colors.zinc200 }}>
+            <Button title={`Tamam (${names.length} seçili)`} onPress={close} />
+          </View>
         </SafeAreaView>
       </Modal>
     </View>

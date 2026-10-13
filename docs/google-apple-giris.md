@@ -31,7 +31,9 @@ Uygulamalar ayrı Google/Apple anahtarı istemez; sitedeki akışı uygulama iç
    pencereyi `evdenevenakliyat://oauth?handoff=...` (firma: `evdenevenakliyat-firma://`) adresine yönlendirir.
 3. Uygulama belirteci gizli değerle birlikte `POST /v1/auth/oauth/app/exchange`'e gönderir; değer özetle eşleşirse
    oturum açılır ya da kayıt belirteci döner. Belirteci ele geçiren başka bir uygulama gizli değeri bilmediği için kullanamaz.
-4. Hesabı olmayan kişi müşteri uygulamasında "Kaydını tamamla" ekranında telefonunu girer. Firma kaydı sitede yapılır.
+4. Hesabı olmayan kişi "Kaydını tamamla" ekranında telefonunu girer; hesap uygulamanın rolüyle açılır. Firma
+   uygulamasında ardından "Firma bilgileri" ekranı (unvan, vergi no, K3 no, merkez il, hizmet illeri) gelir, belgeler
+   Hesap → Belgeler'den yüklenir. Telefon ve şifreyle firma kaydı yalnızca sitede.
 
 Hatalar uygulamaya kod olarak döner (`evdenevenakliyat://oauth?hata=sure`).
 

@@ -51,7 +51,7 @@ function RootStack() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.zinc50 } }}>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="giris" />
-        {/* Kayıt yalnızca müşteri uygulamasında; firma kaydı sitede */}
+        {/* Telefonla kayıt yalnızca müşteri uygulamasında; firma uygulamasında Google / Apple ile ya da sitede */}
         <Stack.Screen name="kayit" />
         <Stack.Screen name="kayit-tamamla" />
       </Stack.Protected>

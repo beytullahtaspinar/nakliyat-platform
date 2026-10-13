@@ -109,7 +109,7 @@ export default function LoginScreen() {
   );
 }
 
-/** Şifre sıfırlama ve firma kaydı sitede yapılır */
+/** Şifre sıfırlama ve telefonla firma kaydı sitede yapılır (Google / Apple ile firma kaydı uygulamada) */
 function TextLink({ label, path }: { label: string; path: string }) {
   return (
     <Pressable
