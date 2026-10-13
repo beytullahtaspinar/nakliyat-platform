@@ -253,14 +253,14 @@ const LOGO_RATIO = 1200 / 161;
  * Giriş ekranındaki tam logo (sitedekiyle aynı). `onDark` lacivert zeminde beyaz yazılı logoyu kullanır;
  * firma uygulamasında altında turuncu "Firma uygulaması" etiketi durur.
  */
-export function Wordmark({ onDark = false }: { onDark?: boolean }) {
+export function Wordmark({ onDark = false, center = false }: { onDark?: boolean; center?: boolean }) {
   const height = 30;
   return (
     <View
       accessible
       accessibilityRole="image"
       accessibilityLabel={variant === 'firma' ? 'Evden Eve Nakliyat Firma' : 'Evden Eve Nakliyat'}
-      style={{ gap: 12, alignItems: 'flex-start' }}
+      style={{ gap: 12, alignItems: center ? 'center' : 'flex-start' }}
     >
       <Image source={onDark ? LOGO_ON_DARK : LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
       {variant === 'firma' ? (
