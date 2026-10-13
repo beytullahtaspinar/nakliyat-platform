@@ -69,12 +69,12 @@ export default function LoginScreen() {
               gap: 28,
             }}
           >
-            <Wordmark onDark />
-            <View style={{ gap: 8 }}>
-              <AppText weight="bold" accessibilityRole="header" style={{ color: colors.white, fontSize: 30, lineHeight: 36, letterSpacing: -0.5 }}>
+            <Wordmark onDark center />
+            <View style={{ gap: 8, alignItems: 'center' }}>
+              <AppText weight="bold" accessibilityRole="header" style={{ color: colors.white, fontSize: 30, lineHeight: 36, letterSpacing: -0.5, textAlign: 'center' }}>
                 {copy.title}
               </AppText>
-              <AppText style={{ color: colors.brand100, fontSize: 16, lineHeight: 23 }}>{copy.lead}</AppText>
+              <AppText style={{ color: colors.brand100, fontSize: 16, lineHeight: 23, textAlign: 'center' }}>{copy.lead}</AppText>
             </View>
           </View>
 
