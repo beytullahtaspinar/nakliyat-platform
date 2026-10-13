@@ -14,7 +14,7 @@ export async function login(_prev: FormState, formData: FormData): Promise<FormS
   try {
     result = await apiFetch<AuthResponse>("/auth/login", {
       method: "POST",
-      body: { phone: text(formData, "phone"), password: String(formData.get("password") ?? "") },
+      body: { login: text(formData, "login"), password: String(formData.get("password") ?? "") },
     });
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Giriş yapılamadı." };

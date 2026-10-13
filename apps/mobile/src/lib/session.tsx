@@ -13,7 +13,8 @@ type SessionState =
 
 type SessionContextValue = {
   state: SessionState;
-  signIn(phone: string, password: string): Promise<void>;
+  /** login: cep telefonu ya da e-posta */
+  signIn(login: string, password: string): Promise<void>;
   /** Google / Apple girişinden ya da kaydından gelen oturumu bu cihazda açar (rol uygulamaya uymalı) */
   adopt(response: AuthResponse): Promise<void>;
   /** Müşteri kaydı (yalnızca müşteri uygulamasında); kayıttan sonra oturum açık */
@@ -54,8 +55,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => setSessionExpiredHandler(undefined);
   }, [reload]);
 
-  const signIn = useCallback(async (phone: string, password: string) => {
-    const user = await api.login(phone, password);
+  const signIn = useCallback(async (login: string, password: string) => {
+    const user = await api.login(login, password);
     if (user.role !== allowedRole) {
       // Aynı giriş, farklı uygulama: oturumu bu cihazda tutma, doğru uygulamayı söyle.
       await api.logout();

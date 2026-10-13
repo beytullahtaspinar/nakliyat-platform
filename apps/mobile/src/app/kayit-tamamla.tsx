@@ -7,10 +7,15 @@ import { AppText, Button, Checkbox, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
 import { LEGAL_PAGES, LEGAL_VERSION, openWebPage } from '@/lib/legal';
 import { useSession } from '@/lib/session';
+import { allowedRole, variant } from '@/lib/variant';
 import { colors } from '@/theme';
 
-/** Google / Apple ile ilk giriş: telefon numarası ve onaylar alınıp müşteri hesabı açılır (sitedeki /kayit/tamamla) */
+/**
+ * Google / Apple ile ilk giriş: telefon numarası ve onaylar alınıp hesap açılır (sitedeki /kayit/tamamla).
+ * Rol uygulamanınki: firma uygulamasında firma hesabı açılır, firma bilgileri sonra istenir ((firma)/_layout).
+ */
 export default function CompleteSignupScreen() {
+  const isCompany = variant === 'firma';
   const { belirtec, ad, eposta } = useLocalSearchParams<{ belirtec: string; ad?: string; eposta?: string }>();
   const { adopt } = useSession();
   const [fullName, setFullName] = useState(ad ?? '');
@@ -21,7 +26,7 @@ export default function CompleteSignupScreen() {
   const [loading, setLoading] = useState(false);
 
   async function submit() {
-    if (fullName.trim().length < 3) return setError('Adını ve soyadını yaz.');
+    if (fullName.trim().length < 3) return setError(isCompany ? 'Yetkilinin adını ve soyadını yaz.' : 'Adını ve soyadını yaz.');
     if (!phone.trim()) return setError('Cep telefonu numaranı yaz.');
     if (!terms) return setError('Devam etmek için kullanım koşullarını kabul et.');
     setError(null);
@@ -32,7 +37,7 @@ export default function CompleteSignupScreen() {
         auth: false,
         body: {
           signupToken: belirtec,
-          role: 'CUSTOMER',
+          role: allowedRole,
           fullName: fullName.trim(),
           phone: phone.trim(),
           termsVersion: LEGAL_VERSION,
@@ -53,10 +58,13 @@ export default function CompleteSignupScreen() {
           Kaydını tamamla
         </AppText>
         <AppText style={{ color: colors.zinc600 }}>
-          {eposta ? `${eposta} ile devam ediyorsun. ` : ''}Firmalar teklif kabul ettiğinde seni arayabilsin diye cep telefonu numaranı ekle.
+          {eposta ? `${eposta} ile devam ediyorsun. ` : ''}
+          {isCompany
+            ? 'Müşteriler ve yönetim sana bu numaradan ulaşır. Sonraki adımda firma bilgilerini gireceksin.'
+            : 'Firmalar teklif kabul ettiğinde seni arayabilsin diye cep telefonu numaranı ekle.'}
         </AppText>
       </View>
-      <Field label="Ad soyad" value={fullName} onChangeText={setFullName} autoComplete="name" textContentType="name" maxLength={100} />
+      <Field label={isCompany ? 'Yetkili adı soyadı' : 'Ad soyad'} value={fullName} onChangeText={setFullName} autoComplete="name" textContentType="name" maxLength={100} />
       <Field
         label="Cep telefonu"
         placeholder="05xx xxx xx xx"
@@ -80,7 +88,7 @@ export default function CompleteSignupScreen() {
         </View>
       </View>
       {error ? <Notice>{error}</Notice> : null}
-      <Button title="Hesabımı oluştur" loading={loading} onPress={() => void submit()} />
+      <Button title={isCompany ? 'Devam et' : 'Hesabımı oluştur'} loading={loading} onPress={() => void submit()} />
     </DetailScreen>
   );
 }

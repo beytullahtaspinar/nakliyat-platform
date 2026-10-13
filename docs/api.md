@@ -32,7 +32,7 @@ Durum: ✅ yazıldı ve test edildi · ⏳ planlandı
 | Durum | Yöntem | Yol | Kim | Açıklama |
 |---|---|---|---|---|
 | ✅ | POST | `/auth/register` | Herkes | Müşteri veya firma kaydı |
-| ✅ | POST | `/auth/login` | Herkes | Telefon + şifre ile giriş |
+| ✅ | POST | `/auth/login` | Herkes | Telefon ya da e-posta + şifre ile giriş (`login`; eski istemciler `phone`) |
 | ✅ | POST | `/auth/refresh` | Herkes | Yeni anahtar çifti al (eski anahtar geçersizleşir; tekrar kullanılırsa tüm oturumlar kapanır) |
 | ✅ | POST | `/auth/logout` | Herkes | Yenileme anahtarını iptal eder |
 | ✅ | GET | `/auth/me` | Giriş yapmış | Oturumdaki kullanıcı |

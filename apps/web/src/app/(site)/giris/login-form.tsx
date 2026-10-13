@@ -10,8 +10,8 @@ export function LoginForm({ next }: { next?: string }) {
   return (
     <form {...formProps} className="space-y-4">
       {next && <input type="hidden" name="next" value={next} />}
-      <Field label="Cep telefonu">
-        <Input name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="05XX XXX XX XX" required />
+      <Field label="Cep telefonu veya e-posta">
+        <Input name="login" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="05XX XXX XX XX ya da ad@ornek.com" required />
       </Field>
       <Field label="Şifre">
         <Input name="password" type="password" autoComplete="current-password" required />

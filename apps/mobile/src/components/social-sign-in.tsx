@@ -5,12 +5,12 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { AppText } from '@/components/ui';
 import { enabledProviders, PROVIDER_LABELS, signInWithProvider, type OAuthProviderId } from '@/lib/oauth';
 import { useSession } from '@/lib/session';
-import { variant } from '@/lib/variant';
 import { colors, radius } from '@/theme';
 
 /**
  * "Google ile devam et" / "Apple ile devam et". Sunucuda anahtarı olmayan sağlayıcının düğmesi görünmez.
- * Hesabı olmayan kişi müşteri uygulamasında kaydı tamamlar; firma kaydı belge gerektirdiği için sitede yapılır.
+ * Hesabı olmayan kişi "Kaydını tamamla" ekranında telefonunu girer; hesap uygulamanın rolüyle açılır
+ * (firma uygulamasında ardından firma bilgileri ve belgeler istenir).
  */
 export function SocialSignIn({
   onError,
@@ -37,10 +37,6 @@ export function SocialSignIn({
       const result = await signInWithProvider(provider);
       if (result.status === 'signed_in') return await adopt(result);
       if (result.status === 'signup_required') {
-        if (variant === 'firma') {
-          onError(`Bu ${PROVIDER_LABELS[provider]} hesabına bağlı bir firma hesabı yok. Firmanı evdenevenakliyat.app üzerinden kaydedebilirsin.`);
-          return;
-        }
         router.push({
           pathname: '/kayit-tamamla',
           params: { belirtec: result.signupToken, ad: result.profile.fullName ?? '', eposta: result.profile.email ?? '' },
