@@ -43,7 +43,7 @@ export function SiteFooter() {
       <div className="site-footer-columns mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
           <p>
-            <Logo />
+            <Logo full />
             <span className="sr-only">Evden Eve Nakliyat (evdenevenakliyat.app)</span>
           </p>
           <p className="mt-4 max-w-xs text-sm font-semibold text-zinc-800 dark:text-zinc-200">

@@ -234,7 +234,7 @@ const MARKS = {
   musteri: require('../../assets/musteri/icon.png'),
 } as const;
 
-/** Marka işareti: hız çizgili "e"; müşteri uygulamasında lacivert, firma uygulamasında turuncu zemin */
+/** Uygulama simgesi: beyaz iç karede hız çizgili "e"; müşteri uygulamasında lacivert, firma uygulamasında turuncu çerçeve */
 export function LogoMark({ size = 40 }: { size?: number }) {
   return (
     <Image
@@ -246,15 +246,14 @@ export function LogoMark({ size = 40 }: { size?: number }) {
 }
 
 const LOGO = require('../../assets/logo.png');
-const LOGO_ON_DARK = require('../../assets/logo-beyaz.png');
-const LOGO_RATIO = 1200 / 161;
+const LOGO_RATIO = 1200 / 222;
 
 /**
- * Giriş ekranındaki tam logo (sitedekiyle aynı). `onDark` lacivert zeminde beyaz yazılı logoyu kullanır;
- * firma uygulamasında altında turuncu "Firma uygulaması" etiketi durur.
+ * Giriş ekranındaki tam logo ("TEKLİF PLATFORMU" alt başlıklı, sitedekiyle aynı). Marka kılavuzu: koyu zeminde
+ * logo beyaz kart içinde durur (`onDark`). Firma uygulamasında altında turuncu "Firma uygulaması" etiketi durur.
  */
 export function Wordmark({ onDark = false, center = false }: { onDark?: boolean; center?: boolean }) {
-  const height = 30;
+  const height = 44;
   return (
     <View
       accessible
@@ -262,7 +261,9 @@ export function Wordmark({ onDark = false, center = false }: { onDark?: boolean;
       accessibilityLabel={variant === 'firma' ? 'Evden Eve Nakliyat Firma' : 'Evden Eve Nakliyat'}
       style={{ gap: 12, alignItems: center ? 'center' : 'flex-start' }}
     >
-      <Image source={onDark ? LOGO_ON_DARK : LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
+      <View style={onDark ? { backgroundColor: colors.white, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12 } : null}>
+        <Image source={LOGO} style={{ width: height * LOGO_RATIO, height }} resizeMode="contain" />
+      </View>
       {variant === 'firma' ? (
         <View style={{ backgroundColor: colors.accent500, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 }}>
           <AppText weight="bold" style={{ color: colors.brand900, fontSize: 11, lineHeight: 14, letterSpacing: 1.2 }}>

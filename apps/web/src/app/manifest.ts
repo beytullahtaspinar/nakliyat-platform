@@ -4,7 +4,7 @@ import { BRAND_SLOGAN, BRAND_TAGLINE } from "@/lib/site";
 /**
  * Telefona "uygulama gibi" kurulum (PWA). Ana ekrandan açılınca tarayıcı çubuğu olmadan,
  * /uygulama üzerinden kişinin kendi paneline (firma paneli, hesabım) gider.
- * Simgeler: public/simgeler/ (kaynak: app/icon.svg).
+ * Simgeler: public/simgeler/ (kaynak: /mnt/project-files/tasarim/logo/sunum-v2-2026-10-14/uret.py).
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {

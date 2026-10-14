@@ -43,7 +43,7 @@ export function renderCodeEmail(code: string, recipientName: string, webUrl: str
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 12px">
 <tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#1b2f6e;padding:16px 24px"><img src="${escape(new URL('/marka/logo-beyaz-eposta.png', webUrl).toString())}" width="201" height="27" alt="Evden Eve Nakliyat" style="display:block;border:0;color:#ffffff;font-size:18px;font-weight:700"></td></tr>
+<tr><td style="background:#ffffff;border-bottom:4px solid #1b2f6e;padding:16px 24px"><img src="${escape(new URL('/marka/logo-eposta.png', webUrl).toString())}" width="240" height="44" alt="Evden Eve Nakliyat" style="display:block;border:0;color:#1b2f6e;font-size:18px;font-weight:700"></td></tr>
 <tr><td align="center" style="padding:32px 24px 8px">
 <p style="margin:0 0 8px;font-size:15px">Merhaba ${escape(firstName)},</p>
 <h1 style="margin:0 0 12px;font-size:20px;color:#172554">${copy.title}</h1>
