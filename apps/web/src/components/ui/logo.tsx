@@ -28,6 +28,7 @@ export function LogoAppIcon({ className = "h-8 w-8" }: { className?: string }) {
 /**
  * Yatay logo. Erişilebilir ad logoyu saran bağlantıdan (aria-label) ya da yanındaki metinden gelir, görsel boş alt'lıdır.
  * `full`: "TEKLİF PLATFORMU" alt başlıklı sürüm (büyük kullanımlar).
+ * Başlıkta masaüstünde (lg) alt başlıklı, daha dar ekranlarda alt başlıksız logo gösterilir.
  * `compactBelow360`: çok dar telefonlarda (320 px) yalnızca "e"; başlıktaki düğmelere yer kalsın.
  */
 export function Logo({ compactBelow360 = false, full = false }: { compactBelow360?: boolean; full?: boolean }) {
@@ -50,6 +51,13 @@ export function Logo({ compactBelow360 = false, full = false }: { compactBelow36
       {compactBelow360 ? (
         <source media="(max-width: 359px)" srcSet="/marka/e-96.webp 96w, /marka/e.webp 192w" sizes="45px" width={192} height={138} />
       ) : null}
+      <source
+        media="(min-width: 1024px)"
+        srcSet="/marka/logo-tam-480.webp 480w, /marka/logo-tam-960.webp 960w"
+        sizes="302px"
+        width={480}
+        height={89}
+      />
       <img
         src="/marka/logo-280.webp"
         srcSet="/marka/logo-280.webp 280w, /marka/logo-560.webp 560w, /marka/logo-840.webp 840w"
@@ -58,7 +66,7 @@ export function Logo({ compactBelow360 = false, full = false }: { compactBelow36
         height={52}
         alt=""
         decoding="async"
-        className="block h-8 w-auto sm:h-11"
+        className="block h-8 w-auto sm:h-11 lg:h-14"
       />
     </picture>
   );
