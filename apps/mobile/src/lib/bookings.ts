@@ -1,4 +1,5 @@
-import type { BookingPlace, BookingStatus } from '@nakliyat/api-client';
+import type { BookingActor, BookingFollowUpState, BookingPlace, BookingStatus } from '@nakliyat/api-client';
+import { formatDate } from './format';
 import type { Tone } from './requests';
 
 // apps/web/src/app/firma-paneli/booking-bits.tsx ve apps/web/src/lib/geo.ts ile aynı
@@ -43,3 +44,28 @@ const timeFormat = new Intl.DateTimeFormat('tr-TR', {
 
 /** Mesaj zamanı, TSİ: "9 Eki 14:05" */
 export const formatMessageTime = (iso: string) => timeFormat.format(new Date(iso));
+
+const WHO: Record<BookingActor, string> = { CUSTOMER: 'Müşteri', COMPANY: 'Firma', SYSTEM: 'Sistem', ADMIN: 'Yönetim' };
+
+/**
+ * Taşınma sonrası durum metni (sitedeki BookingFollowUp ile aynı): kimse işaretlemezse ne zaman tamamlanacağı,
+ * bekleyen itiraz ya da yönetimin kararı. Gösterilecek bir şey yoksa null.
+ */
+export function followUpText(
+  b: BookingFollowUpState & { status: BookingStatus; canComplete: boolean },
+  viewer: 'CUSTOMER' | 'COMPANY',
+): string | null {
+  if (b.status === 'SCHEDULED' && b.disputedAt) {
+    const who = b.disputedBy === viewer ? 'Taşınmanın yapılmadığını bildirdin' : `${WHO[b.disputedBy ?? 'CUSTOMER']} taşınmanın yapılmadığını bildirdi`;
+    return `${who} (${formatDate(b.disputedAt)}). Yönetim inceleyip karar verecek; bu sürede iş tamamlanmaz ve iptal edilemez.${b.disputeReason ? ` İtiraz: "${b.disputeReason}"` : ''}`;
+  }
+  if (b.disputeResolvedAt && b.disputeResolution) {
+    const result = b.status === 'COMPLETED' ? 'taşınma yapılmış sayıldı' : 'taşınma yapılmadı, iş iptal edildi';
+    return `Yönetim itirazı karara bağladı (${formatDate(b.disputeResolvedAt)}): ${result}. Açıklama: ${b.disputeResolution}`;
+  }
+  if (b.status === 'COMPLETED' && b.completedBy === 'SYSTEM') return 'Taşınma gününden sonra itiraz gelmediği için iş kendiliğinden tamamlandı.';
+  if (b.status === 'SCHEDULED' && b.canComplete && b.autoCompleteOn) {
+    return `Taşınma yapıldıysa işi tamamlandı olarak işaretle. Kimse işaretlemez ve itiraz gelmezse iş ${formatDate(`${b.autoCompleteOn}T00:00:00.000Z`)} tarihinde kendiliğinden tamamlanır.`;
+  }
+  return null;
+}

@@ -24,8 +24,14 @@ export interface DomainEventMap {
   'message.sent': { messageId: string };
   /** İşin taşınma günü yarın (Türkiye saatiyle); hatırlatma zamanı geldi */
   'booking.move_day_approaching': { bookingId: string };
-  /** Müşteri ya da firma işi tamamlandı olarak işaretledi */
-  'booking.completed': { bookingId: string; completedBy: 'CUSTOMER' | 'COMPANY' };
+  /** İş tamamlandı: müşteri ya da firma işaretledi, sistem süre dolunca tamamladı ya da yönetici itirazı karara bağladı */
+  'booking.completed': { bookingId: string; completedBy: 'CUSTOMER' | 'COMPANY' | 'SYSTEM' | 'ADMIN' };
+  /** Taşınma günü geçti ama kimse işi tamamlamadı; iki tarafa "taşınma tamamlandı mı?" diye sorma zamanı */
+  'booking.completion_check': { bookingId: string };
+  /** Taraflardan biri "taşınma yapılmadı" diye itiraz etti */
+  'booking.disputed': { bookingId: string };
+  /** Yönetici itirazı karara bağladı (iş tamamlandı ya da iptal edildi) */
+  'booking.dispute_resolved': { bookingId: string; decision: 'complete' | 'cancel'; note: string };
   /** Müşteri ya da firma anlaşılan işi iptal etti */
   'booking.cancelled': { bookingId: string; cancelledBy: 'CUSTOMER' | 'COMPANY' };
   /** Yönetici firmanın havale bildirimini onayladı veya reddetti */

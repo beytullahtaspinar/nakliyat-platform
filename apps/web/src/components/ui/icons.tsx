@@ -176,6 +176,13 @@ export const FlagIcon = (p: P) => (
   </Icon>
 );
 
+export const ScaleIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 4v16M8 20h8M5 7h14M12 4.5 5 7M12 4.5 19 7" />
+    <path d="m5 7-2.5 6a3 3 0 0 0 5 0L5 7ZM19 7l-2.5 6a3 3 0 0 0 5 0L19 7Z" />
+  </Icon>
+);
+
 export const TagIcon = (p: P) => (
   <Icon {...p}>
     <path d="M3.5 12.1V4.5a1 1 0 0 1 1-1h7.6a1 1 0 0 1 .7.3l8 8a1 1 0 0 1 0 1.4l-7.6 7.6a1 1 0 0 1-1.4 0l-8-8a1 1 0 0 1-.3-.7z" />

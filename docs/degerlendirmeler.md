@@ -10,6 +10,8 @@ ve teklif kartlarında görünür.
    firma "İş tamamlandı" der: `POST /bookings/:id/complete`. Gün gelmeden yapılamaz; böylece
    taşınmadan önce yorum yazılamaz. İş ve talep `COMPLETED` olur, firmanın `completedJobs` sayısı artar.
    Firma tamamladıysa müşteriye `REVIEW_REQUEST` bildirimi (e-posta + uygulama içi) gider.
+   Kimse işaretlemezse ertesi gün iki tarafa sorulur, 7 gün sonra itiraz yoksa iş kendiliğinden
+   tamamlanır; "taşınma yapılmadı" itirazını yönetim karara bağlar: [tasinma-sonrasi.md](tasinma-sonrasi.md).
 2. **Müşteri değerlendirir.** `POST /bookings/:id/review` → `{ rating: 1-5, comment?: 10-2000 karakter }`.
    İş başına bir değerlendirme, sonradan değiştirilemez. Firmaya `NEW_REVIEW` bildirimi gider.
 3. **Firma yanıtlar.** `POST /company/reviews/:id/reply` bir kez; yanıt yorumun altında herkese açık.

@@ -21,7 +21,9 @@ import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib
 import { CompanyLogo } from "@/components/company-logo";
 import { BadgeLegend, CompanyBadges } from "@/components/company-badges";
 import { ConfirmButton } from "@/components/forms/confirm-button";
+import { BookingFollowUp } from "@/components/bookings/booking-follow-up";
 import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
+import { DisputeBookingForm } from "@/components/bookings/dispute-booking-form";
 import { Conversation } from "@/components/messages/conversation";
 import { ReviewCard } from "@/components/reviews/review-card";
 import { ReviewEditor } from "@/components/reviews/review-editor";
@@ -321,6 +323,7 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
           {booking.cancelledAt && ` · iptal: ${formatDate(booking.cancelledAt)}`}
         </p>
         {booking.cancelReason && <p className="mt-2 text-sm">İptal nedeni: {booking.cancelReason}</p>}
+        <BookingFollowUp {...booking} viewer="CUSTOMER" className="mt-2" />
         <p className="mt-3 text-sm">
           Yeniden teklif almak için{" "}
           <Link href="/talep-olustur" className="font-semibold text-brand-700 underline">
@@ -351,10 +354,11 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
         <p className="mt-3 text-sm">
           Firma da senin iletişim bilgilerini ve açık adresini artık görebiliyor. Taşınma gününü ve
           detayları aşağıdaki mesajlardan ya da telefonla firmayla netleştirebilirsin.
-          {!booking.canComplete && " Taşınma günü geldiğinde işi tamamlandı olarak işaretleyip firmayı değerlendirebileceksin."}
+          {!booking.canComplete && !booking.disputedAt && " Taşınma günü geldiğinde işi tamamlandı olarak işaretleyip firmayı değerlendirebileceksin."}
         </p>
       )}
-      {(booking.canComplete || booking.canCancel) && (
+      <BookingFollowUp {...booking} viewer="CUSTOMER" className="mt-3" />
+      {(booking.canComplete || booking.canCancel || booking.canDispute) && (
         <div className="mt-4 flex flex-wrap items-start gap-3">
           {booking.canComplete && (
             <ConfirmButton
@@ -363,6 +367,9 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
               confirmText={`${booking.company.displayName} taşımanı bitirdi mi? Onaylarsan iş tamamlandı olarak kapanır ve firmayı değerlendirebilirsin.`}
               confirmLabel="Evet, tamamlandı"
             />
+          )}
+          {booking.canDispute && (
+            <DisputeBookingForm bookingId={booking.id} pagePath={`/hesabim/talepler/${booking.requestId}`} counterpart={booking.company.displayName} />
           )}
           {booking.canCancel && (
             <CancelBookingForm

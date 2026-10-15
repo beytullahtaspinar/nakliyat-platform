@@ -473,20 +473,41 @@ enum BookingStatus {
   CANCELLED
 }
 
+/// İşi kimin kapattığı (tamamladığı ya da itiraz sonucu iptal ettiği)
+enum BookingActor {
+  CUSTOMER
+  COMPANY
+  /// Taşınma gününden sonra kimse işaretlemeyince sistem tamamladı
+  SYSTEM
+  /// Yönetici itirazı karara bağladı
+  ADMIN
+}
+
 model Booking {
-  id             String        @id @default(cuid())
-  requestId      String        @unique
-  quoteId        String        @unique
-  companyId      String
-  status         BookingStatus @default(SCHEDULED)
-  scheduledAt    DateTime
-  completedAt    DateTime?
-  cancelledAt    DateTime?
-  cancelReason   String?       @db.Text
+  id                    String        @id @default(cuid())
+  requestId             String        @unique
+  quoteId               String        @unique
+  companyId             String
+  status                BookingStatus @default(SCHEDULED)
+  scheduledAt           DateTime
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  cancelReason          String?       @db.Text
   /// Taşınmadan bir gün önceki hatırlatma gönderildiğinde dolar (bir kez gider)
-  reminderSentAt DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  reminderSentAt        DateTime?
+  /// Taşınma gününün ertesi günü "taşınma tamamlandı mı?" bildirimi gönderildiğinde dolar
+  completionCheckSentAt DateTime?
+  completedBy           BookingActor?
+  /// Taraflardan biri "taşınma yapılmadı" dedi: iş kendiliğinden tamamlanmaz, yönetici karar verir.
+  /// Ayrıntı: docs/tasinma-sonrasi.md
+  disputedAt            DateTime?
+  disputedBy            BookingActor?
+  disputeReason         String?       @db.Text
+  /// Yöneticinin itiraz kararı ve iki tarafın da gördüğü açıklaması
+  disputeResolvedAt     DateTime?
+  disputeResolution     String?       @db.VarChar(500)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
   request  MovingRequest @relation(fields: [requestId], references: [id])
   quote    Quote         @relation(fields: [quoteId], references: [id])
@@ -497,6 +518,7 @@ model Booking {
   @@index([companyId, status])
   @@index([companyId, scheduledAt])
   @@index([status, scheduledAt])
+  @@index([disputedAt])
 }
 
 /// Müşterinin tamamlanan iş için firmaya verdiği puan ve yorum (iş başına bir tane).

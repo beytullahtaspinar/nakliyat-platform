@@ -99,6 +99,7 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ⏳ | GET | `/bookings/:id` | Taraflar | İş detayı |
 | ✅ | POST | `/bookings/:id/complete` | Taraflar | İşi tamamlandı olarak işaretle; taşınma günü gelmeden yapılamaz. Talep de tamamlanır. Firma tamamlarsa müşteriye `REVIEW_REQUEST` gider. |
 | ✅ | POST | `/bookings/:id/cancel` | Taraflar | Anlaşılan işi gerekçeyle (`reason`, 5-500 karakter) iptal et; taşınma gününün sonuna kadar. Talep de iptal olur, mesajlaşma kapanır, karşı tarafa `BOOKING_CANCELLED` gider. Kimin iptal ettiği denetim kaydında (`booking.cancel`). |
+| ✅ | POST | `/bookings/:id/dispute` | Taraflar | "Taşınma yapılmadı" itirazı (`reason`, 5-500 karakter); taşınma günü geldikten sonra, iş tamamlanmadan. İş kendiliğinden tamamlanmaz, yönetim karar verir. Karşı tarafa `BOOKING_FOLLOW_UP` gider. Kimse işaretlemezse taşınmadan 7 gün sonra iş kendiliğinden tamamlanır (docs/tasinma-sonrasi.md). |
 | ✅ | POST | `/bookings/:id/review` | Müşteri | Tamamlanan işe 1-5 puan ve isteğe bağlı yorum (10-2000 karakter); iş başına bir kez, değiştirilemez. Firmaya `NEW_REVIEW` gider. ([degerlendirmeler.md](degerlendirmeler.md)) |
 | ✅ | GET · POST | `/bookings/:id/messages` | Taraflar | İş üzerinden yazışma (teklif kabulünden sonra). GET karşı tarafın mesajlarını okundu sayar (yönetici firma görünümünde saymaz). Mesaj 1-2000 karakter; iptal edilen işte salt okunur. Karşı tarafa okunmamışların ilki için `NEW_MESSAGE` bildirimi gider. |
 | ✅ | GET | `/messages/unread` | Müşteri, Firma | Okunmamış mesajlar: `{ total, items: [{ bookingId, requestId, count }] }` |
@@ -134,6 +135,8 @@ Başka bir müşterinin talebine erişim 404 döner (talep kimliği tahminiyle b
 | ⏳ | GET | `/admin/quotes` · `/admin/bookings` | Listeleme ve arama |
 | ✅ | GET | `/admin/reviews?status=visible\|hidden&rating=&q=` | Değerlendirmeler; firma adı veya yorum metninde arama |
 | ✅ | POST | `/admin/reviews/:id/hide` · `/show` | Yorumu gerekçeyle gizle (sayfadan ve ortalamadan çıkar) ya da yeniden yayına al; karar geçmişine yazılır |
+| ✅ | GET | `/admin/bookings/disputes?status=open\|resolved` | "Taşınma yapılmadı" itirazları; bekleyenler eskisi önce. Özette `disputes.open` |
+| ✅ | POST | `/admin/bookings/:id/resolve-dispute` | `{ decision: complete\|cancel, note }`: iş tamamlanır ya da iptal edilir; iki tarafa `BOOKING_FOLLOW_UP`, `booking.dispute_resolve` |
 | ⏳ | GET | `/admin/stats` | Dönüşüm oranları, zamana göre grafikler |
 
 Tüm admin işlemleri `AuditLog` tablosuna kaydedilir. İlk admin hesabı sunucuda oluşturulur (dışarıdan kayıtla açılamaz):

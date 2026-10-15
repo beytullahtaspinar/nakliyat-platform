@@ -221,13 +221,30 @@ export type OwnReview = {
   replyOutdated: boolean;
 };
 
-/** Değerlendirme, "iş tamamlandı" ve "işi iptal et" düğmeleri için iş alanları */
-type BookingReviewState = {
+/** İşi kimin kapattığı: SYSTEM = süre dolunca kendiliğinden, ADMIN = itiraz kararı */
+export type BookingActor = "CUSTOMER" | "COMPANY" | "SYSTEM" | "ADMIN";
+
+/** "Taşınma yapılmadı" itirazı ve yönetimin kararı */
+export type BookingDispute = {
+  completedBy: BookingActor | null;
+  disputedAt: string | null;
+  disputedBy: BookingActor | null;
+  disputeReason: string | null;
+  disputeResolvedAt: string | null;
+  disputeResolution: string | null;
+};
+
+/** Değerlendirme, "iş tamamlandı", "itiraz et" ve "işi iptal et" düğmeleri için iş alanları */
+type BookingReviewState = BookingDispute & {
   completedAt: string | null;
-  /** Planlanmış ve taşınma günü gelmiş: tamamlandı olarak işaretlenebilir */
+  /** Planlanmış, itirazsız ve taşınma günü gelmiş: tamamlandı olarak işaretlenebilir */
   canComplete: boolean;
-  /** Planlanmış ve taşınma günü geçmemiş: gerekçeyle iptal edilebilir */
+  /** Planlanmış, itirazsız ve taşınma günü geçmemiş: gerekçeyle iptal edilebilir */
   canCancel: boolean;
+  /** Taşınma günü geldi, iş tamamlanmadı: "taşınma yapılmadı" diye itiraz edilebilir */
+  canDispute: boolean;
+  /** İtiraz olmazsa işin kendiliğinden tamamlanacağı gün ("2026-10-22"); planlanmış ve itirazsız işte dolu */
+  autoCompleteOn: string | null;
   cancelledAt: string | null;
   cancelReason: string | null;
   review: OwnReview | null;
@@ -571,6 +588,21 @@ export type AdminSummary = {
   nameChanges: { pending: number };
   transfers: { pending: number };
   reports: { open: number };
+  disputes: { open: number };
+};
+
+/** GET /admin/bookings/disputes */
+export type AdminDispute = Omit<BookingDispute, "completedBy"> & {
+  id: string;
+  requestId: string;
+  status: "SCHEDULED" | "COMPLETED" | "CANCELLED";
+  scheduledAt: string;
+  priceTry: string;
+  from: string;
+  to: string;
+  customer: { id: string; fullName: string; phone: string };
+  company: { id: string; displayName: string; phone: string };
+  messageCount: number;
 };
 
 export type ReportTarget = "MESSAGE" | "REVIEW" | "REVIEW_REPLY";
@@ -705,14 +737,14 @@ export type AdminRequestDetail = MovingRequestDetail & {
     createdAt: string;
     company: { id: string; displayName: string; verificationStatus: VerificationStatus };
   })[];
-  booking: {
+  booking: (BookingDispute & {
     id: string;
     status: CustomerBooking["status"];
     scheduledAt: string;
     completedAt: string | null;
     cancelledAt: string | null;
     cancelReason: string | null;
-  } | null;
+  }) | null;
 };
 
 export type AdminReview = OwnReview & {

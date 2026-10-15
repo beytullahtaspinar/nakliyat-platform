@@ -1,3 +1,4 @@
+import { AUTO_COMPLETE_DAYS } from '../reviews/review-rules.js';
 import { NotificationType } from './notification-types.js';
 
 /** Kanaldan bağımsız bildirim içeriği. Her kanal bunu kendi biçimine çevirir. */
@@ -130,13 +131,79 @@ export const templates = {
     };
   },
 
-  reviewRequest(p: { companyName: string; requestId: string }): NotificationContent {
+  reviewRequest(p: { companyName: string; requestId: string; by: 'COMPANY' | 'SYSTEM' }): NotificationContent {
+    const opening =
+      p.by === 'COMPANY'
+        ? `${p.companyName} işi tamamlandı olarak işaretledi.`
+        : `Taşınma gününün üzerinden ${AUTO_COMPLETE_DAYS} gün geçti ve itiraz gelmediği için taşıman tamamlandı sayıldı.`;
     return {
       type: 'REVIEW_REQUEST',
       title: `Taşınman tamamlandı: ${p.companyName} firmasını değerlendir`,
-      body: `${p.companyName} işi tamamlandı olarak işaretledi. Puanın ve yorumun, taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder.`,
+      body: `${opening} Puanın ve yorumun, taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder.`,
       path: `/hesabim/talepler/${p.requestId}#degerlendirme`,
       actionLabel: 'Firmayı değerlendir',
+    };
+  },
+
+  /** Taşınma gününün ertesi günü müşteriye: tamamlandıysa işaretle, yapılmadıysa itiraz et */
+  completionCheckForCustomer(p: Route & { requestId: string; companyName: string; autoCompleteOn: Date }): NotificationContent {
+    return {
+      type: 'BOOKING_FOLLOW_UP',
+      title: `Taşınman tamamlandı mı? ${p.companyName}`,
+      body: `${formatDate(p.moveDate)} tarihli taşıman bittiyse "Taşınma tamamlandı" de ve firmayı değerlendir. Taşınma yapılmadıysa itiraz et; itiraz olmazsa iş ${formatDate(p.autoCompleteOn)} tarihinde tamamlandı sayılır.`,
+      details: [`Firma: ${p.companyName}`, `Güzergâh: ${routeLine(p)}`, `Taşınma tarihi: ${formatDate(p.moveDate)}`],
+      path: `/hesabim/talepler/${p.requestId}`,
+      actionLabel: 'Taşınmayı onayla',
+    };
+  },
+
+  completionCheckForCompany(p: Route & { bookingId: string; customerName: string; autoCompleteOn: Date }): NotificationContent {
+    return {
+      type: 'BOOKING_FOLLOW_UP',
+      title: `İşi tamamladın mı? ${routeLine(p)}`,
+      body: `${p.customerName} müşterinin ${formatDate(p.moveDate)} tarihli taşımasını bitirdiysen işi tamamlandı olarak işaretle. Taşıma yapılmadıysa itiraz et; itiraz olmazsa iş ${formatDate(p.autoCompleteOn)} tarihinde tamamlandı sayılır.`,
+      details: [`Müşteri: ${p.customerName}`, `Güzergâh: ${routeLine(p)}`, `Taşınma tarihi: ${formatDate(p.moveDate)}`],
+      path: `/firma-paneli/isler/${p.bookingId}`,
+      actionLabel: 'İşi tamamla',
+    };
+  },
+
+  /** Kimse işaretlemeyince iş kendiliğinden tamamlandı; firmaya bilgi */
+  autoCompletedForCompany(p: Route & { bookingId: string; customerName: string }): NotificationContent {
+    return {
+      type: 'BOOKING_FOLLOW_UP',
+      title: `İş tamamlandı sayıldı: ${routeLine(p)}`,
+      body: `${p.customerName} müşterinin ${formatDate(p.moveDate)} tarihli taşıması, ${AUTO_COMPLETE_DAYS} gün içinde itiraz gelmediği için tamamlandı sayıldı. Müşteriden değerlendirme istendi.`,
+      details: [`Müşteri: ${p.customerName}`, `Güzergâh: ${routeLine(p)}`],
+      path: `/firma-paneli/isler/${p.bookingId}`,
+      actionLabel: 'İşi görüntüle',
+    };
+  },
+
+  /** Karşı taraf "taşınma yapılmadı" dedi */
+  bookingDisputed(p: Route & { path: string; by: string; reason: string }): NotificationContent {
+    return {
+      type: 'BOOKING_FOLLOW_UP',
+      title: `İtiraz: ${p.by} taşınmanın yapılmadığını bildirdi`,
+      body: `${formatDate(p.moveDate)} tarihli iş tamamlanmış sayılmayacak; yönetim inceleyip karar verecek. Gerekirse sana destek@evdenevenakliyat.app adresinden ulaşacağız.`,
+      details: [`Güzergâh: ${routeLine(p)}`, `İtiraz nedeni: ${p.reason}`],
+      path: p.path,
+      actionLabel: 'İşi görüntüle',
+    };
+  },
+
+  /** Yönetimin itiraz kararı; tamamlandıysa müşteriye değerlendirme bağlantısı */
+  disputeResolved(p: Route & { path: string; decision: 'complete' | 'cancel'; note: string; forCustomer: boolean }): NotificationContent {
+    const completed = p.decision === 'complete';
+    return {
+      type: 'BOOKING_FOLLOW_UP',
+      title: completed ? `İtiraz sonuçlandı: iş tamamlandı sayıldı` : `İtiraz sonuçlandı: iş iptal edildi`,
+      body: completed
+        ? `Yönetim ${formatDate(p.moveDate)} tarihli taşınmanın yapıldığına karar verdi.${p.forCustomer ? ' Firmayı artık değerlendirebilirsin.' : ''}`
+        : `Yönetim ${formatDate(p.moveDate)} tarihli taşınmanın yapılmadığına karar verdi; iş iptal edildi.`,
+      details: [`Güzergâh: ${routeLine(p)}`, `Yönetimin açıklaması: ${p.note}`],
+      path: completed && p.forCustomer ? `${p.path}#degerlendirme` : p.path,
+      actionLabel: completed && p.forCustomer ? 'Firmayı değerlendir' : 'İşi görüntüle',
     };
   },
 

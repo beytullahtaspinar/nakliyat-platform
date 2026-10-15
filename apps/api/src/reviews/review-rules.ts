@@ -19,6 +19,30 @@ export const moveDayReached = (scheduledAt: Date, now = new Date()) =>
 export const moveDayPassed = (scheduledAt: Date, now = new Date()) =>
   todayInTurkey(now) > scheduledAt.toISOString().slice(0, 10);
 
+/** Taşınma gününden bu kadar gün sonra kimse işaretlemediyse ve itiraz yoksa iş kendiliğinden tamamlanır */
+export const AUTO_COMPLETE_DAYS = 7;
+/** Taşınma sonrası bildirimler (ertesi gün kontrolü, otomatik tamamlama) bu saatten (Türkiye saati) itibaren gider */
+export const FOLLOW_UP_HOUR_TR = 10;
+
+const addDays = (day: string, days: number) =>
+  new Date(Date.parse(`${day}T00:00:00.000Z`) + days * 86_400_000).toISOString().slice(0, 10);
+
+/** İşin kendiliğinden tamamlanacağı gün ("2026-10-22"); taşınma günü + AUTO_COMPLETE_DAYS */
+export const autoCompleteDay = (scheduledAt: Date) => addDays(scheduledAt.toISOString().slice(0, 10), AUTO_COMPLETE_DAYS);
+
+/**
+ * Taşınma sonrası işinin bu turda bakacağı günler; saat FOLLOW_UP_HOUR_TR'den önceyse null (gece bildirim gitmesin).
+ * - checkFrom..checkTo: taşınma günü dün ile (AUTO_COMPLETE_DAYS-1) gün önce arası → "taşınma tamamlandı mı?" sorusu
+ * - completeBefore: taşınma günü bu günden önce olanlar (en az AUTO_COMPLETE_DAYS gün geçmiş) → kendiliğinden tamamlanır
+ */
+export function followUpWindow(now = new Date()) {
+  const hourTr = (now.getUTCHours() + 3) % 24;
+  if (hourTr < FOLLOW_UP_HOUR_TR) return null;
+  const today = todayInTurkey(now);
+  const completeBefore = addDays(today, -(AUTO_COMPLETE_DAYS - 1));
+  return { checkFrom: completeBefore, checkTo: today, completeBefore };
+}
+
 /**
  * Herkese açık sayfada yorum sahibinin adı: "Ayşe Yılmaz" → "Ayşe Y.". Soyadı ve iletişim
  * bilgisi gösterilmez; hesabını silen müşterinin adı hiç gösterilmez.

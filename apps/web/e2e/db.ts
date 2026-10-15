@@ -28,3 +28,13 @@ export function moveDayIsToday(bookingId: string) {
     { BOOKING_ID: bookingId },
   );
 }
+
+/** İşin taşınma gününü `days` gün öncesine çeker (taşınma sonrası takip ve itiraz akışları için) */
+export function moveDayWasDaysAgo(bookingId: string, days: number) {
+  runWithPrisma(
+    `const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+     const day = new Date(Date.parse(today) - Number(process.env.DAYS) * 86400000);
+     await prisma.booking.update({ where: { id: process.env.BOOKING_ID }, data: { scheduledAt: day } });`,
+    { BOOKING_ID: bookingId, DAYS: String(days) },
+  );
+}

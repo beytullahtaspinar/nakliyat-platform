@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { ReportButton } from "@/components/report-button";
 import { notFound } from "next/navigation";
+import { BookingFollowUp } from "@/components/bookings/booking-follow-up";
 import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
+import { DisputeBookingForm } from "@/components/bookings/dispute-booking-form";
 import { ConfirmButton } from "@/components/forms/confirm-button";
 import { RouteOverview } from "@/components/map/route-overview";
 import { Conversation } from "@/components/messages/conversation";
@@ -69,10 +71,18 @@ export default async function CompanyBookingPage({ params }: PageProps<"/firma-p
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0 space-y-6">
           {booking.status === "CANCELLED" && (
-            <p className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800">
-              Bu iş iptal edildi{booking.cancelledAt && ` (${formatDate(booking.cancelledAt)})`}.
-              {booking.cancelReason && ` İptal nedeni: ${booking.cancelReason}`}
-            </p>
+            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800">
+              <p>
+                Bu iş iptal edildi{booking.cancelledAt && ` (${formatDate(booking.cancelledAt)})`}.
+                {booking.cancelReason && ` İptal nedeni: ${booking.cancelReason}`}
+              </p>
+              <BookingFollowUp {...booking} viewer="COMPANY" className="mt-2" />
+            </div>
+          )}
+          {booking.status === "COMPLETED" && (booking.completedBy === "SYSTEM" || booking.disputeResolvedAt) && (
+            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-slate-800">
+              <BookingFollowUp {...booking} viewer="COMPANY" />
+            </div>
           )}
           {booking.status === "COMPLETED" && (
             <PanelSection
@@ -139,8 +149,14 @@ export default async function CompanyBookingPage({ params }: PageProps<"/firma-p
             )}
           </PanelSection>
 
-          {(booking.canComplete || booking.canCancel) && (
+          {booking.status === "SCHEDULED" && booking.disputedAt && (
+            <PanelSection id="itiraz" title="İtiraz">
+              <BookingFollowUp {...booking} viewer="COMPANY" className="text-slate-800" />
+            </PanelSection>
+          )}
+          {(booking.canComplete || booking.canCancel || booking.canDispute) && (
             <PanelSection id="islemler" title="İşlemler">
+              <BookingFollowUp {...booking} viewer="COMPANY" className="mb-3 text-slate-700" />
               <div className="flex flex-wrap items-start gap-3">
                 {booking.canComplete && (
                   <ConfirmButton
@@ -149,6 +165,9 @@ export default async function CompanyBookingPage({ params }: PageProps<"/firma-p
                     confirmText={`${customer.fullName} müşterisinin taşıması bitti mi? Onaylarsan iş tamamlandı olarak kapanır ve müşteriden firmanı değerlendirmesi istenir.`}
                     confirmLabel="Evet, tamamlandı"
                   />
+                )}
+                {booking.canDispute && (
+                  <DisputeBookingForm bookingId={booking.id} pagePath={`/firma-paneli/isler/${booking.id}`} counterpart="Müşteri" />
                 )}
                 {booking.canCancel && (
                   <CancelBookingForm

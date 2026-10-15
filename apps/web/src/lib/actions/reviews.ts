@@ -49,6 +49,44 @@ export async function cancelBooking(
   return {};
 }
 
+/** Müşteri ya da firma "taşınma yapılmadı" der; iş kendiliğinden tamamlanmaz, yönetim karar verir. */
+export async function disputeBooking(
+  bookingId: string,
+  pagePath: string,
+  _prev: ReviewActionState,
+  formData: FormData,
+): Promise<ReviewActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length < 5 || reason.length > 500) return { error: "Ne olduğunu kısaca yaz (5-500 karakter)." };
+  const token = await getAccessToken();
+  if (!token) return { error: SESSION_ENDED };
+  try {
+    await apiFetch(`/bookings/${encodeURIComponent(bookingId)}/dispute`, { method: "POST", token, body: { reason } });
+  } catch (err) {
+    return failure(err, "İtiraz gönderilemedi, lütfen tekrar dene.");
+  }
+  revalidatePath(pagePath);
+  return {};
+}
+
+/** Yönetici itirazı karara bağlar: taşınma yapıldıysa iş tamamlanır, yapılmadıysa iptal edilir. */
+export async function resolveDispute(bookingId: string, _prev: ReviewActionState, formData: FormData): Promise<ReviewActionState> {
+  const decision = String(formData.get("decision") ?? "");
+  if (decision !== "complete" && decision !== "cancel") return { error: "Bir karar seç." };
+  const note = String(formData.get("note") ?? "").trim();
+  if (note.length < 5 || note.length > 500) return { error: "İki tarafın göreceği bir açıklama yaz (5-500 karakter)." };
+  const token = await getAccessToken();
+  if (!token) return { error: SESSION_ENDED };
+  try {
+    await apiFetch(`/admin/bookings/${encodeURIComponent(bookingId)}/resolve-dispute`, { method: "POST", token, body: { decision, note } });
+  } catch (err) {
+    return failure(err, "Karar kaydedilemedi, lütfen tekrar dene.");
+  }
+  revalidatePath("/yonetim", "layout");
+  refreshPublicPages();
+  return { notice: decision === "complete" ? "İş tamamlandı; iki tarafa bildirildi." : "İş iptal edildi; iki tarafa bildirildi." };
+}
+
 /** Puan ve yorum alanlarını okur; hata varsa kullanıcıya gösterilecek metni döner */
 function readReview(formData: FormData): { rating: number; comment: string } | { error: string } {
   const rating = Number(formData.get("rating"));
