@@ -58,6 +58,35 @@ export class CancelBookingDto {
   reason!: string;
 }
 
+export class DisputeBookingDto {
+  @ApiProperty({ example: 'Firma taşınma günü gelmedi, telefonlara da çıkmadı.' })
+  @Transform(trim)
+  @IsString()
+  @Length(5, 500, { message: 'İtiraz nedeni 5-500 karakter olmalı' })
+  reason!: string;
+}
+
+export class ResolveDisputeDto {
+  @ApiProperty({ enum: ['complete', 'cancel'], description: 'complete: taşınma yapıldı, iş tamamlanır; cancel: yapılmadı, iş iptal edilir' })
+  @IsIn(['complete', 'cancel'], { message: 'Karar complete ya da cancel olmalı' })
+  decision!: 'complete' | 'cancel';
+
+  @ApiProperty({ example: 'Firma teslim tutanağını ve fotoğrafları gönderdi; taşınma yapılmış.', description: 'İki taraf da bildirimde görür' })
+  @Transform(trim)
+  @IsString()
+  @Length(5, 500, { message: 'Açıklama 5-500 karakter olmalı' })
+  note!: string;
+}
+
+export const DISPUTE_FILTERS = ['open', 'resolved'] as const;
+
+export class AdminListDisputesDto extends PaginationDto {
+  @ApiPropertyOptional({ enum: DISPUTE_FILTERS, default: 'open' })
+  @IsOptional()
+  @IsIn(DISPUTE_FILTERS)
+  status: (typeof DISPUTE_FILTERS)[number] = 'open';
+}
+
 export const REVIEW_SORTS = ['newest', 'oldest', 'lowest', 'highest'] as const;
 export type ReviewSort = (typeof REVIEW_SORTS)[number];
 

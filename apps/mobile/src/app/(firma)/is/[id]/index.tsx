@@ -5,12 +5,12 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { useDialog } from '@/components/dialog';
 import { RouteMapView } from '@/components/map';
-import { CancelForm, QuickAction, Row } from '@/components/booking-bits';
+import { CancelForm, DisputeForm, QuickAction, Row } from '@/components/booking-bits';
 import { DetailScreen, Section } from '@/components/panel';
 import { ReviewBlock } from '@/components/review';
 import { AppText, Badge, Button, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
-import { BOOKING_STATUS, bookingRoute, directionsUrl, formatPhone, mapUrl } from '@/lib/bookings';
+import { BOOKING_STATUS, bookingRoute, directionsUrl, followUpText, formatPhone, mapUrl } from '@/lib/bookings';
 import { formatDate } from '@/lib/format';
 import { distanceText, floorLabel, formatMoney, homeTypeLabel } from '@/lib/requests';
 import { useApi } from '@/lib/use-api';
@@ -37,6 +37,7 @@ export default function BookingScreen() {
   const { request: r, customer } = booking;
   const status = BOOKING_STATUS[booking.status];
   const unreadCount = unread?.items.find((i) => i.bookingId === booking.id)?.count ?? 0;
+  const followUp = followUpText(booking, 'COMPANY');
 
   async function done(message: string) {
     setNotice(message);
@@ -78,6 +79,7 @@ export default function BookingScreen() {
           }`}
         </Notice>
       ) : null}
+      {followUp ? <Notice tone="info">{followUp}</Notice> : null}
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <QuickAction icon="call" label="Ara" onPress={() => void Linking.openURL(`tel:${customer.phone}`)} />
@@ -129,9 +131,12 @@ export default function BookingScreen() {
         <Stop title="Varış" place={r.to} />
       </Section>
 
-      {booking.canComplete || booking.canCancel ? (
+      {booking.canComplete || booking.canCancel || booking.canDispute ? (
         <Section title="İşlemler">
           {booking.canComplete ? <Button title="İş tamamlandı" onPress={confirmComplete} /> : null}
+          {booking.canDispute ? (
+            <DisputeForm bookingId={booking.id} counterpart="Müşteri" onDisputed={() => done('İtirazın yönetime iletildi; müşteriye de haber verildi.')} />
+          ) : null}
           {booking.canCancel ? (
             <CancelForm
               bookingId={booking.id}

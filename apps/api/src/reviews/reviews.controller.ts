@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { UserRole } from '../generated/prisma/enums.js';
-import { CancelBookingDto, CreateReviewDto, ListReviewsDto, ReplyReviewDto } from './dto/review.dto.js';
+import { CancelBookingDto, CreateReviewDto, DisputeBookingDto, ListReviewsDto, ReplyReviewDto } from './dto/review.dto.js';
 import { ReviewsService } from './reviews.service.js';
 
 @ApiTags('Değerlendirmeler')
@@ -26,6 +26,17 @@ export class ReviewsController {
   @HttpCode(HttpStatus.OK)
   cancel(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: CancelBookingDto) {
     return this.reviews.cancelBooking(user, id, dto.reason);
+  }
+
+  /**
+   * Müşteri ya da firma "taşınma yapılmadı" der (taşınma günü geldikten sonra, iş tamamlanmadan).
+   * İş kendiliğinden tamamlanmaz; yönetici inceleyip tamamlar ya da iptal eder.
+   */
+  @Roles(UserRole.CUSTOMER, UserRole.COMPANY)
+  @Post('bookings/:id/dispute')
+  @HttpCode(HttpStatus.OK)
+  dispute(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: DisputeBookingDto) {
+    return this.reviews.disputeBooking(user, id, dto.reason);
   }
 
   /** Müşteri tamamlanan işin firmasını 1-5 puanla, isteğe bağlı yorumla değerlendirir (iş başına bir kez). */

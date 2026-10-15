@@ -12,7 +12,7 @@ import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Image, View } from 'react-native';
-import { CancelForm, MediaStrip, QuickAction, Row } from '@/components/booking-bits';
+import { CancelForm, DisputeForm, MediaStrip, QuickAction, Row } from '@/components/booking-bits';
 import { useDialog } from '@/components/dialog';
 import { RouteMapView } from '@/components/map';
 import { DetailScreen, Section } from '@/components/panel';
@@ -20,7 +20,7 @@ import { ReportButton } from '@/components/report';
 import { ReviewExcerpt, Stars } from '@/components/review';
 import { AppText, Badge, Badges, Button, Field, Notice } from '@/components/ui';
 import { api } from '@/lib/api';
-import { formatPhone } from '@/lib/bookings';
+import { followUpText, formatPhone } from '@/lib/bookings';
 import { formatDate, REQUEST_STATUS } from '@/lib/format';
 import { MAX_PHOTOS, pickPhotos, removePhoto, uploadPhotos } from '@/lib/request-media';
 import { distanceText, floorLabel, formatMoney, homeTypeLabel, place, VEHICLE_LABELS } from '@/lib/requests';
@@ -337,6 +337,7 @@ function BookingCard({
 }) {
   const { company } = booking;
   const dialog = useDialog();
+  const followUp = followUpText(booking, 'CUSTOMER');
 
   if (booking.status === 'CANCELLED') {
     return (
@@ -346,6 +347,7 @@ function BookingCard({
           {booking.cancelledAt ? ` · iptal: ${formatDate(booking.cancelledAt)}` : ''}
         </AppText>
         {booking.cancelReason ? <AppText>İptal nedeni: {booking.cancelReason}</AppText> : null}
+        {followUp ? <AppText>{followUp}</AppText> : null}
         <Button title="Yeni talep oluştur" kind="secondary" onPress={() => router.push('/teklif-al')} />
       </Section>
     );
@@ -391,9 +393,10 @@ function BookingCard({
         {booking.status === 'SCHEDULED' ? (
           <AppText style={{ fontSize: 14, lineHeight: 20, color: colors.zinc600 }}>
             Firma da senin iletişim bilgilerini ve açık adresini artık görebiliyor. Detayları mesajlardan ya da telefonla netleştirebilirsin.
-            {booking.canComplete ? '' : ' Taşınma günü geldiğinde işi tamamlandı olarak işaretleyip firmayı değerlendirebileceksin.'}
+            {booking.canComplete || booking.disputedAt ? '' : ' Taşınma günü geldiğinde işi tamamlandı olarak işaretleyip firmayı değerlendirebileceksin.'}
           </AppText>
         ) : null}
+        {followUp ? <AppText style={{ fontSize: 14, lineHeight: 20, color: colors.zinc600 }}>{followUp}</AppText> : null}
       </View>
 
       <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -406,9 +409,16 @@ function BookingCard({
         />
       </View>
 
-      {booking.canComplete || booking.canCancel ? (
+      {booking.canComplete || booking.canCancel || booking.canDispute ? (
         <Section title="İşlemler">
           {booking.canComplete ? <Button title="Taşınma tamamlandı" onPress={confirmComplete} /> : null}
+          {booking.canDispute ? (
+            <DisputeForm
+              bookingId={booking.id}
+              counterpart={company.displayName}
+              onDisputed={() => onChanged('İtirazın yönetime iletildi; firmaya da haber verildi.')}
+            />
+          ) : null}
           {booking.canCancel ? (
             <CancelForm
               bookingId={booking.id}

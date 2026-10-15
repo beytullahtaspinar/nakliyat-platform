@@ -184,8 +184,25 @@ export type BookingPlace = {
   location: { lat: number; lng: number } | null;
 };
 
+/** İşi kimin kapattığı: SYSTEM = taşınmadan 7 gün sonra itirazsız kendiliğinden, ADMIN = itiraz kararı */
+export type BookingActor = 'CUSTOMER' | 'COMPANY' | 'SYSTEM' | 'ADMIN';
+
+/** Taşınma sonrası: "taşınma yapılmadı" itirazı, yönetimin kararı ve otomatik tamamlama */
+export type BookingFollowUpState = {
+  completedBy: BookingActor | null;
+  /** Taşınma günü geldi, iş tamamlanmadı: "taşınma yapılmadı" diye itiraz edilebilir */
+  canDispute: boolean;
+  /** İtiraz olmazsa işin kendiliğinden tamamlanacağı gün ("2026-10-22") */
+  autoCompleteOn: string | null;
+  disputedAt: string | null;
+  disputedBy: BookingActor | null;
+  disputeReason: string | null;
+  disputeResolvedAt: string | null;
+  disputeResolution: string | null;
+};
+
 /** GET /company/bookings, /company/bookings/:id: anlaşma sonrası müşteri bilgisi ve açık adres açılır */
-export type CompanyBooking = {
+export type CompanyBooking = BookingFollowUpState & {
   id: string;
   requestId: string;
   status: BookingStatus;
@@ -493,7 +510,7 @@ export type CustomerQuote = {
 };
 
 /** GET /bookings: teklif kabulünden sonra firma iletişim bilgisi açılır */
-export type CustomerBooking = {
+export type CustomerBooking = BookingFollowUpState & {
   id: string;
   requestId: string;
   quoteId: string;

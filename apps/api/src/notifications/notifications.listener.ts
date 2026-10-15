@@ -3,7 +3,8 @@ import { getCityByCode, getDistrict } from '@nakliyat/locations';
 import { formatTrPhone } from '../common/utils/phone.js';
 import { DomainEvents } from '../events/domain-events.js';
 import type { MovingRequest } from '../generated/prisma/client.js';
-import { BankTransferStatus, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
+import { BankTransferStatus, BookingActor, BookingStatus, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
+import { autoCompleteDay } from '../reviews/review-rules.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from './notifications.service.js';
 import { templates } from './templates.js';
@@ -48,6 +49,9 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('booking.move_day_approaching', ({ bookingId }) => this.onMoveDayApproaching(bookingId));
     this.events.on('booking.completed', (p) => this.onBookingCompleted(p.bookingId, p.completedBy));
     this.events.on('booking.cancelled', (p) => this.onBookingCancelled(p.bookingId, p.cancelledBy));
+    this.events.on('booking.completion_check', ({ bookingId }) => this.onCompletionCheck(bookingId));
+    this.events.on('booking.disputed', ({ bookingId }) => this.onBookingDisputed(bookingId));
+    this.events.on('booking.dispute_resolved', (p) => this.onDisputeResolved(p.bookingId, p.decision, p.note));
     this.events.on('review.created', ({ reviewId }) => this.onReviewCreated(reviewId));
     this.events.on('review.updated', ({ reviewId, previousRating }) => this.onReviewUpdated(reviewId, previousRating));
     this.events.on('company.verification_changed', ({ companyId }) => this.onVerificationChanged(companyId));
@@ -205,17 +209,94 @@ export class NotificationsListener implements OnModuleInit {
     }
   }
 
-  /** Firma işi tamamladıysa müşteriden değerlendirme iste; müşteri kendisi tamamladıysa formu zaten görüyor. */
-  async onBookingCompleted(bookingId: string, completedBy: 'CUSTOMER' | 'COMPANY') {
-    if (completedBy !== 'COMPANY') return;
+  /**
+   * Firma işi tamamladıysa ya da iş süre dolunca kendiliğinden tamamlandıysa müşteriden değerlendirme iste;
+   * müşteri kendisi tamamladıysa formu zaten görüyor. Yönetici kararı ayrı bildirimle duyurulur.
+   */
+  async onBookingCompleted(bookingId: string, completedBy: 'CUSTOMER' | 'COMPANY' | 'SYSTEM' | 'ADMIN') {
+    if (completedBy !== 'COMPANY' && completedBy !== 'SYSTEM') return;
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
-      select: { requestId: true, request: { select: { customerId: true } }, company: { select: { displayName: true } } },
+      include: {
+        request: { include: { customer: { select: { fullName: true } } } },
+        company: { select: { displayName: true, ownerId: true } },
+      },
     });
     if (!booking) return;
     await this.notifications.notify(
       booking.request.customerId,
-      templates.reviewRequest({ companyName: booking.company.displayName, requestId: booking.requestId }),
+      templates.reviewRequest({ companyName: booking.company.displayName, requestId: booking.requestId, by: completedBy }),
+    );
+    if (completedBy === 'SYSTEM') {
+      await this.notifications.notify(
+        booking.company.ownerId,
+        templates.autoCompletedForCompany({
+          ...route(booking.request),
+          moveDate: booking.scheduledAt,
+          bookingId,
+          customerName: booking.request.customer.fullName,
+        }),
+      );
+    }
+  }
+
+  /** Taşınma gününün ertesi günü iki tarafa: tamamlandıysa işaretle, yapılmadıysa itiraz et */
+  async onCompletionCheck(bookingId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        request: { include: { customer: { select: { fullName: true } } } },
+        company: { select: { displayName: true, ownerId: true } },
+      },
+    });
+    if (!booking || booking.status !== BookingStatus.SCHEDULED || booking.disputedAt) return;
+    const common = { ...route(booking.request), moveDate: booking.scheduledAt, autoCompleteOn: new Date(`${autoCompleteDay(booking.scheduledAt)}T12:00:00.000Z`) };
+    await this.notifications.notify(
+      booking.request.customerId,
+      templates.completionCheckForCustomer({ ...common, requestId: booking.requestId, companyName: booking.company.displayName }),
+    );
+    await this.notifications.notify(
+      booking.company.ownerId,
+      templates.completionCheckForCompany({ ...common, bookingId, customerName: booking.request.customer.fullName }),
+    );
+  }
+
+  /** İtirazı yapmayan tarafa haber ver */
+  async onBookingDisputed(bookingId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { request: true, company: { select: { ownerId: true, displayName: true } } },
+    });
+    if (!booking?.disputedBy) return;
+    const common = { ...route(booking.request), moveDate: booking.scheduledAt, reason: booking.disputeReason ?? '' };
+    if (booking.disputedBy === BookingActor.COMPANY) {
+      await this.notifications.notify(
+        booking.request.customerId,
+        templates.bookingDisputed({ ...common, by: booking.company.displayName, path: `/hesabim/talepler/${booking.requestId}` }),
+      );
+    } else {
+      await this.notifications.notify(
+        booking.company.ownerId,
+        templates.bookingDisputed({ ...common, by: 'Müşteri', path: `/firma-paneli/isler/${bookingId}` }),
+      );
+    }
+  }
+
+  /** Yönetimin itiraz kararını iki tarafa duyur */
+  async onDisputeResolved(bookingId: string, decision: 'complete' | 'cancel', note: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { request: true, company: { select: { ownerId: true } } },
+    });
+    if (!booking) return;
+    const common = { ...route(booking.request), moveDate: booking.scheduledAt, decision, note };
+    await this.notifications.notify(
+      booking.request.customerId,
+      templates.disputeResolved({ ...common, forCustomer: true, path: `/hesabim/talepler/${booking.requestId}` }),
+    );
+    await this.notifications.notify(
+      booking.company.ownerId,
+      templates.disputeResolved({ ...common, forCustomer: false, path: `/firma-paneli/isler/${bookingId}` }),
     );
   }
 

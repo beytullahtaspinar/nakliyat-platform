@@ -3,6 +3,7 @@ import { AccountModule } from '../account/account.module.js';
 import { MediaModule } from '../media/media.module.js';
 import { PricingModule } from '../pricing/pricing.module.js';
 import { ReviewsModule } from '../reviews/reviews.module.js';
+import { AdminBookingsController } from './admin-bookings.controller.js';
 import { AdminCompaniesController } from './admin-companies.controller.js';
 import { AdminCreditsController } from './admin-credits.controller.js';
 import { AdminDocumentsController } from './admin-documents.controller.js';
@@ -16,6 +17,6 @@ import { AdminUsersController } from './admin-users.controller.js';
 
 @Module({
   imports: [AccountModule, MediaModule, PricingModule, ReviewsModule],
-  controllers: [AdminOverviewController, AdminCompaniesController, AdminCreditsController, AdminPricingController, AdminDocumentsController, AdminNameChangesController, AdminRequestsController, AdminReviewsController, AdminStatsController, AdminUsersController],
+  controllers: [AdminOverviewController, AdminBookingsController, AdminCompaniesController, AdminCreditsController, AdminPricingController, AdminDocumentsController, AdminNameChangesController, AdminRequestsController, AdminReviewsController, AdminStatsController, AdminUsersController],
 })
 export class AdminModule {}

@@ -12,7 +12,7 @@ import { PaginationDto } from '../requests/dto/list-requests.dto.js';
 import { addDays, dayStart, MAX_CALENDAR_DAYS } from './calendar-rules.js';
 import { CalendarRangeDto } from './dto/calendar.dto.js';
 import { CompanyBookingsQueryDto, CompanySearchDto } from './dto/company-bookings.dto.js';
-import { moveDayPassed, moveDayReached } from '../reviews/review-rules.js';
+import { autoCompleteDay, moveDayPassed, moveDayReached } from '../reviews/review-rules.js';
 import { toReviewView } from '../reviews/reviews.service.js';
 
 const place = (cityCode: string, districtSlug: string) => {
@@ -23,11 +23,18 @@ const place = (cityCode: string, districtSlug: string) => {
 /** Anlaşma sonrası taraflar birbirinin iletişim ve adres bilgisini görür. */
 const point = (lat: number | null, lng: number | null) => (lat != null && lng != null ? { lat, lng } : null);
 /** Değerlendirme, "iş tamamlandı" ve "işi iptal et" düğmeleri için ortak alanlar */
-const reviewState = (b: { status: BookingStatus; scheduledAt: Date; review: Review | null }) => ({
-  canComplete: b.status === BookingStatus.SCHEDULED && moveDayReached(b.scheduledAt),
-  canCancel: b.status === BookingStatus.SCHEDULED && !moveDayPassed(b.scheduledAt),
-  review: b.review && toReviewView(b.review),
-});
+const reviewState = (b: { status: BookingStatus; scheduledAt: Date; disputedAt: Date | null; review: Review | null }) => {
+  const open = b.status === BookingStatus.SCHEDULED && !b.disputedAt;
+  return {
+    canComplete: open && moveDayReached(b.scheduledAt),
+    canCancel: open && !moveDayPassed(b.scheduledAt),
+    /** Taşınma günü geldi ama iş tamamlanmadı: "taşınma yapılmadı" diye yönetime bildirilebilir */
+    canDispute: open && moveDayReached(b.scheduledAt),
+    /** İtiraz olmazsa işin kendiliğinden tamamlanacağı gün ("2026-10-22") */
+    autoCompleteOn: open ? autoCompleteDay(b.scheduledAt) : null,
+    review: b.review && toReviewView(b.review),
+  };
+};
 
 const COMPANY_BOOKING = {
   quote: true,

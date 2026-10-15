@@ -35,6 +35,11 @@ export const NOTIFICATION_TYPES = {
     description: 'Taşınmadan bir gün önce, güzergâh ve iletişim bilgisiyle',
     roles: [UserRole.CUSTOMER, UserRole.COMPANY],
   },
+  BOOKING_FOLLOW_UP: {
+    label: 'Taşınma sonrası',
+    description: 'Taşınma gününden sonra işin tamamlanıp tamamlanmadığı sorulduğunda, itiraz edildiğinde ya da sonuçlandığında',
+    roles: [UserRole.CUSTOMER, UserRole.COMPANY],
+  },
   REVIEW_REQUEST: {
     label: 'Değerlendirme hatırlatması',
     description: 'Taşınman tamamlandığında firmayı değerlendirmen için',

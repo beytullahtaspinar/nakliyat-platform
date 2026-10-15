@@ -144,7 +144,19 @@ export default async function AdminRequestPage({ params }: PageProps<"/yonetim/t
                 <Row label="Durum" value={BOOKING_STATUS[r.booking.status]} />
                 <Row label="Planlanan tarih" value={formatDate(r.booking.scheduledAt)} />
                 {r.booking.completedAt && <Row label="Tamamlandı" value={formatDate(r.booking.completedAt)} />}
+                {r.booking.completedBy && <Row label="Tamamlayan" value={COMPLETED_BY[r.booking.completedBy]} />}
                 {r.booking.cancelReason && <Row label="İptal nedeni" value={r.booking.cancelReason} />}
+                {r.booking.disputedAt && (
+                  <Row
+                    label={`İtiraz (${r.booking.disputedBy === "COMPANY" ? "firma" : "müşteri"}, ${formatDate(r.booking.disputedAt)})`}
+                    value={r.booking.disputeReason ?? ""}
+                    sub={
+                      r.booking.disputeResolution
+                        ? `Karar: ${r.booking.disputeResolution}`
+                        : "Karar bekliyor (İtirazlar sayfasından karar ver)"
+                    }
+                  />
+                )}
               </dl>
             </Card>
           )}
@@ -153,6 +165,13 @@ export default async function AdminRequestPage({ params }: PageProps<"/yonetim/t
     </>
   );
 }
+
+const COMPLETED_BY = {
+  CUSTOMER: "Müşteri",
+  COMPANY: "Firma",
+  SYSTEM: "Sistem (7 gün itirazsız geçti)",
+  ADMIN: "Yönetim (itiraz kararı)",
+} as const;
 
 function Row({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (

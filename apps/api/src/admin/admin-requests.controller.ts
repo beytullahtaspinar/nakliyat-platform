@@ -62,7 +62,22 @@ export class AdminRequestsController {
           orderBy: { priceTry: 'asc' },
           include: { company: { select: { id: true, displayName: true, verificationStatus: true } } },
         },
-        booking: { select: { id: true, status: true, scheduledAt: true, completedAt: true, cancelledAt: true, cancelReason: true } },
+        booking: {
+          select: {
+            id: true,
+            status: true,
+            scheduledAt: true,
+            completedAt: true,
+            completedBy: true,
+            cancelledAt: true,
+            cancelReason: true,
+            disputedAt: true,
+            disputedBy: true,
+            disputeReason: true,
+            disputeResolvedAt: true,
+            disputeResolution: true,
+          },
+        },
       },
     });
     if (!request) throw new NotFoundException('Talep bulunamadı');

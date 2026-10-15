@@ -122,6 +122,58 @@ export function CancelForm({
   );
 }
 
+/** "Taşınma yapılmadı" itirazı: iş kendiliğinden tamamlanmaz, yönetim inceler (sitedeki DisputeBookingForm) */
+export function DisputeForm({
+  bookingId,
+  counterpart,
+  onDisputed,
+}: {
+  bookingId: string;
+  /** Karşı taraf: "Firma adı" ya da "Müşteri" */
+  counterpart: string;
+  onDisputed: () => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  if (!open) return <Button title="Taşınma yapılmadı" kind="secondary" onPress={() => setOpen(true)} />;
+
+  async function submit() {
+    if (reason.trim().length < 5) return setError('Ne olduğunu en az 5 karakterle yaz.');
+    setError(null);
+    setSaving(true);
+    try {
+      await api.request(`/bookings/${bookingId}/dispute`, { method: 'POST', body: { reason: reason.trim() } });
+      await onDisputed();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'İtiraz gönderilemedi, tekrar dene.');
+      setSaving(false);
+    }
+  }
+
+  return (
+    <View style={{ gap: 10, backgroundColor: colors.zinc100, borderRadius: 12, padding: 12 }}>
+      <AppText>
+        İş tamamlandı sayılmayacak; yönetim iki tarafla görüşüp karar verecek. {counterpart} itirazını bildirimle öğrenir.
+      </AppText>
+      <Field
+        label="Ne oldu?"
+        value={reason}
+        onChangeText={setReason}
+        multiline
+        maxLength={500}
+        placeholder="Örnek: Taşınma günü kimse gelmedi, telefonlara da çıkılmadı."
+        style={{ minHeight: 80, paddingTop: 12, textAlignVertical: 'top' }}
+      />
+      {error ? <Notice>{error}</Notice> : null}
+      <Button title="İtirazı gönder" loading={saving} onPress={() => void submit()} />
+      <Button title="Vazgeç" kind="secondary" onPress={() => setOpen(false)} />
+    </View>
+  );
+}
+
 /** Fotoğraflar küçük resim; dokununca tam boy (videolar dahil) tarayıcıda açılır. onRemove verilirse silme düğmesi çıkar. */
 export function MediaStrip({ media, onRemove }: { media: RequestMedia[]; onRemove?: (m: RequestMedia) => void }) {
   return (

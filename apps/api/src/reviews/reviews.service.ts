@@ -7,7 +7,7 @@ import { CompanyBadgesService } from '../companies/company-badges.service.js';
 import { cityName } from '../common/utils/locations.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { Prisma, type Review } from '../generated/prisma/client.js';
-import { BookingStatus, CompanyMediaKind, RequestStatus, UserRole } from '../generated/prisma/enums.js';
+import { BookingActor, BookingStatus, CompanyMediaKind, RequestStatus, UserRole } from '../generated/prisma/enums.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type {
   AdminListReviewsDto,
@@ -19,6 +19,8 @@ import type {
 } from './dto/review.dto.js';
 import { moveDayPassed, moveDayReached, replyOutdated } from './review-rules.js';
 import { AUTHOR_AND_ROUTE, routeOf, toPublicReview } from './review-snippets.js';
+
+const DISPUTE_OPEN = 'Bu iş için itiraz var; yönetim inceleyip karar verecek';
 
 /** Arama motoruna açık firma sayfası: yorumu var ya da tanıtım yazısı ve fotoğrafları yeterli */
 const INDEXABLE_COMPANY = { OR: [{ ratingCount: { gt: 0 } }, { showcaseComplete: true }] } satisfies Prisma.CompanyWhereInput;
@@ -73,6 +75,128 @@ export class ReviewsService {
    * Tamamlanınca talep de tamamlanır, firmanın tamamlanan iş sayısı artar ve müşteri değerlendirme yapabilir.
    */
   async completeBooking(user: AuthUser, bookingId: string) {
+    const { booking, by } = await this.bookingForParty(user, bookingId);
+    if (booking.status === BookingStatus.COMPLETED) throw new ConflictException('Bu iş zaten tamamlandı olarak işaretlenmiş');
+    if (booking.status === BookingStatus.CANCELLED) throw new ConflictException('İptal edilen iş tamamlanamaz');
+    if (booking.disputedAt) throw new ConflictException(DISPUTE_OPEN);
+    if (!moveDayReached(booking.scheduledAt)) {
+      throw new ConflictException('İş, taşınma günü geldiğinde tamamlandı olarak işaretlenebilir');
+    }
+    const completedAt = await this.finishBooking(booking, by);
+    if (!completedAt) throw new ConflictException('Bu iş zaten tamamlandı olarak işaretlenmiş');
+    return { id: booking.id, status: BookingStatus.COMPLETED, completedAt, completedBy: by };
+  }
+
+  /**
+   * İşi tamamlar: talep tamamlanır, firmanın tamamlanan iş sayısı artar, olay yayınlanır. İş bu arada
+   * başka bir yoldan kapandıysa (ya da sistem tamamlarken itiraz geldiyse) hiçbir şey yapmaz ve null döner.
+   */
+  async finishBooking(
+    booking: { id: string; requestId: string; companyId: string },
+    by: BookingActor,
+    extra?: (tx: Prisma.TransactionClient) => Promise<unknown>,
+  ): Promise<Date | null> {
+    const completedAt = new Date();
+    const done = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.booking.updateMany({
+        where: {
+          id: booking.id,
+          status: BookingStatus.SCHEDULED,
+          // Yönetici itirazlı işi karara bağlar; diğer yollar itirazlı işi tamamlayamaz
+          disputedAt: by === BookingActor.ADMIN ? { not: null } : null,
+        },
+        data: { status: BookingStatus.COMPLETED, completedAt, completedBy: by },
+      });
+      if (updated.count !== 1) return false;
+      await tx.movingRequest.update({ where: { id: booking.requestId }, data: { status: RequestStatus.COMPLETED } });
+      await tx.company.update({ where: { id: booking.companyId }, data: { completedJobs: { increment: 1 } } });
+      await extra?.(tx);
+      return true;
+    });
+    if (!done) return null;
+    this.events.emit('booking.completed', { bookingId: booking.id, completedBy: by });
+    return completedAt;
+  }
+
+  /**
+   * Taraflardan biri "taşınma yapılmadı" der. Taşınma günü geldikten sonra, iş tamamlanmadan yapılabilir.
+   * İş kendiliğinden tamamlanmaz; taraflar da tamamlayamaz ya da iptal edemez, yönetici karar verir.
+   */
+  async disputeBooking(user: AuthUser, bookingId: string, reason: string) {
+    const { booking, by } = await this.bookingForParty(user, bookingId);
+    if (booking.status === BookingStatus.COMPLETED) {
+      throw new ConflictException('Tamamlanan iş için itiraz edilemez; sorun varsa destek@evdenevenakliyat.app adresine yaz');
+    }
+    if (booking.status === BookingStatus.CANCELLED) throw new ConflictException('İptal edilen iş için itiraz edilemez');
+    if (booking.disputedAt) throw new ConflictException(DISPUTE_OPEN);
+    if (!moveDayReached(booking.scheduledAt)) {
+      throw new ConflictException('Taşınma günü gelmeden itiraz edilemez; vazgeçtiysen işi iptal edebilirsin');
+    }
+    const disputedAt = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      const done = await tx.booking.updateMany({
+        where: { id: booking.id, status: BookingStatus.SCHEDULED, disputedAt: null },
+        data: { disputedAt, disputedBy: by, disputeReason: reason },
+      });
+      if (done.count !== 1) throw new ConflictException('Bu işin durumu değişti, sayfayı yenile');
+      await tx.auditLog.create({
+        data: {
+          actorId: user.impersonatorId ?? user.id,
+          action: 'booking.dispute',
+          entityType: 'Booking',
+          entityId: booking.id,
+          details: { disputedBy: by, reason, ...(user.impersonatorId && { onBehalfOf: user.id }) },
+        },
+      });
+    });
+    this.events.emit('booking.disputed', { bookingId: booking.id });
+    return { id: booking.id, status: BookingStatus.SCHEDULED, disputedAt, disputedBy: by, disputeReason: reason };
+  }
+
+  /**
+   * Yönetici itirazı karara bağlar: taşınma yapıldıysa iş tamamlanır (müşteri değerlendirebilir),
+   * yapılmadıysa iptal edilir. Kredi kendiliğinden iade edilmez; gerekirse yönetici kredi düzeltmesi yapar.
+   */
+  async resolveDispute(adminId: string, bookingId: string, decision: 'complete' | 'cancel', note: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { id: true, status: true, requestId: true, companyId: true, disputedAt: true },
+    });
+    if (!booking) throw new NotFoundException('İş bulunamadı');
+    if (!booking.disputedAt || booking.status !== BookingStatus.SCHEDULED) {
+      throw new ConflictException('Bu iş için bekleyen bir itiraz yok');
+    }
+    const resolvedAt = new Date();
+    const audit = async (tx: Prisma.TransactionClient) => {
+      await tx.booking.update({ where: { id: booking.id }, data: { disputeResolvedAt: resolvedAt, disputeResolution: note } });
+      await tx.auditLog.create({
+        data: { actorId: adminId, action: 'booking.dispute_resolve', entityType: 'Booking', entityId: booking.id, details: { decision, note } },
+      });
+    };
+
+    if (decision === 'complete') {
+      const completedAt = await this.finishBooking(booking, BookingActor.ADMIN, audit);
+      if (!completedAt) throw new ConflictException('Bu işin durumu değişti, sayfayı yenile');
+      this.events.emit('booking.dispute_resolved', { bookingId: booking.id, decision, note });
+      return { id: booking.id, status: BookingStatus.COMPLETED, completedAt, completedBy: BookingActor.ADMIN, disputeResolution: note };
+    }
+
+    const cancelledAt = new Date();
+    await this.prisma.$transaction(async (tx) => {
+      const done = await tx.booking.updateMany({
+        where: { id: booking.id, status: BookingStatus.SCHEDULED },
+        data: { status: BookingStatus.CANCELLED, cancelledAt, cancelReason: 'Taşınma yapılmadı (itiraz yönetimce kabul edildi)' },
+      });
+      if (done.count !== 1) throw new ConflictException('Bu işin durumu değişti, sayfayı yenile');
+      await tx.movingRequest.update({ where: { id: booking.requestId }, data: { status: RequestStatus.CANCELLED } });
+      await audit(tx);
+    });
+    this.events.emit('booking.dispute_resolved', { bookingId: booking.id, decision, note });
+    return { id: booking.id, status: BookingStatus.CANCELLED, cancelledAt, disputeResolution: note };
+  }
+
+  /** İşi, onu görebilen tarafın (müşteri ya da firma) adına okur */
+  private async bookingForParty(user: AuthUser, bookingId: string) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       select: {
@@ -81,6 +205,7 @@ export class ReviewsService {
         scheduledAt: true,
         requestId: true,
         companyId: true,
+        disputedAt: true,
         request: { select: { customerId: true } },
         company: { select: { ownerId: true } },
       },
@@ -88,24 +213,7 @@ export class ReviewsService {
     const isCustomer = user.role === UserRole.CUSTOMER && booking?.request.customerId === user.id;
     const isCompany = user.role === UserRole.COMPANY && booking?.company.ownerId === user.id;
     if (!booking || (!isCustomer && !isCompany)) throw new NotFoundException('İş bulunamadı');
-    if (booking.status === BookingStatus.COMPLETED) throw new ConflictException('Bu iş zaten tamamlandı olarak işaretlenmiş');
-    if (booking.status === BookingStatus.CANCELLED) throw new ConflictException('İptal edilen iş tamamlanamaz');
-    if (!moveDayReached(booking.scheduledAt)) {
-      throw new ConflictException('İş, taşınma günü geldiğinde tamamlandı olarak işaretlenebilir');
-    }
-
-    const completedAt = new Date();
-    await this.prisma.$transaction(async (tx) => {
-      const done = await tx.booking.updateMany({
-        where: { id: booking.id, status: BookingStatus.SCHEDULED },
-        data: { status: BookingStatus.COMPLETED, completedAt },
-      });
-      if (done.count !== 1) throw new ConflictException('Bu iş zaten tamamlandı olarak işaretlenmiş');
-      await tx.movingRequest.update({ where: { id: booking.requestId }, data: { status: RequestStatus.COMPLETED } });
-      await tx.company.update({ where: { id: booking.companyId }, data: { completedJobs: { increment: 1 } } });
-    });
-    this.events.emit('booking.completed', { bookingId: booking.id, completedBy: isCustomer ? 'CUSTOMER' : 'COMPANY' });
-    return { id: booking.id, status: BookingStatus.COMPLETED, completedAt };
+    return { booking, by: isCustomer ? BookingActor.CUSTOMER : BookingActor.COMPANY };
   }
 
   /**
@@ -114,31 +222,18 @@ export class ReviewsService {
    * konuşma salt okunur kalır. Kimin iptal ettiği denetim kaydında tutulur.
    */
   async cancelBooking(user: AuthUser, bookingId: string, reason: string) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      select: {
-        id: true,
-        status: true,
-        scheduledAt: true,
-        requestId: true,
-        request: { select: { customerId: true } },
-        company: { select: { ownerId: true } },
-      },
-    });
-    const isCustomer = user.role === UserRole.CUSTOMER && booking?.request.customerId === user.id;
-    const isCompany = user.role === UserRole.COMPANY && booking?.company.ownerId === user.id;
-    if (!booking || (!isCustomer && !isCompany)) throw new NotFoundException('İş bulunamadı');
+    const { booking, by: cancelledBy } = await this.bookingForParty(user, bookingId);
     if (booking.status === BookingStatus.CANCELLED) throw new ConflictException('Bu iş zaten iptal edilmiş');
     if (booking.status === BookingStatus.COMPLETED) throw new ConflictException('Tamamlanan iş iptal edilemez');
+    if (booking.disputedAt) throw new ConflictException(DISPUTE_OPEN);
     if (moveDayPassed(booking.scheduledAt)) {
-      throw new ConflictException('Taşınma günü geçen iş iptal edilemez; sorun varsa destek@evdenevenakliyat.app adresine yaz');
+      throw new ConflictException('Taşınma günü geçen iş iptal edilemez; taşınma yapılmadıysa itiraz edebilirsin');
     }
 
-    const cancelledBy = isCustomer ? 'CUSTOMER' : 'COMPANY';
     const cancelledAt = new Date();
     await this.prisma.$transaction(async (tx) => {
       const done = await tx.booking.updateMany({
-        where: { id: booking.id, status: BookingStatus.SCHEDULED },
+        where: { id: booking.id, status: BookingStatus.SCHEDULED, disputedAt: null },
         data: { status: BookingStatus.CANCELLED, cancelledAt, cancelReason: reason },
       });
       if (done.count !== 1) throw new ConflictException('Bu işin durumu değişti, sayfayı yenile');
