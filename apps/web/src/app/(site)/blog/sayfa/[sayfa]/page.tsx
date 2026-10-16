@@ -1,7 +1,7 @@
 import { BlogIndex, blogIndexMetadata, parsePage } from "@/components/blog/blog-routes";
-import { BLOG_PATH } from "@/lib/blog/wordpress";
+import { BLOG_PATH } from "@/lib/blog/api";
 
-export const revalidate = 3600;
+export const revalidate = 900;
 
 // Sayfalar derlemede üretilmez, ilk ziyarette üretilip önbelleğe alınır
 export const dynamicParams = true;

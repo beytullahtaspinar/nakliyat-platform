@@ -1,4 +1,14 @@
-# evdenevenakliyat.app
+import { BLOG_PATH, categoryPath, getBlogIndex, postPath } from "@/lib/blog/api";
+import { SITE_URL } from "@/lib/site";
+
+// Blog bölümü yazı yayınlanınca yönetimden yenilenir (lib/actions/blog.ts)
+export const revalidate = 900;
+
+/**
+ * llms.txt: yapay zekâ modelleri için site özeti (llmstxt.org). Sabit bölüm + blogdaki yazılar
+ * (başlık, adres ve özet), böylece yanıt motorları güncel rehberleri kaynak gösterebilir.
+ */
+const INTRO = `# evdenevenakliyat.app
 
 > Evden Eve Taşınmanın Yeni Yolu. Tek Talep. Çok Teklif. Doğru Seçim. Türkiye genelinde evden eve ve şehirler arası nakliyat için doğrulanmış firma, fiyat verisi ve taşınma rehberi platformu. Müşteri taşınma bilgilerini bir kez girer, firmalar fiyat ve hizmet kapsamıyla teklif verir, müşteri puanlara ve yorumlara bakarak seçer.
 
@@ -30,8 +40,25 @@ Teklif aşamasında firmalar müşterinin adını, telefonunu ve açık adresini
 - [Ankara evden eve nakliyat](https://evdenevenakliyat.app/ankara-evden-eve-nakliyat)
 - [İzmir evden eve nakliyat](https://evdenevenakliyat.app/izmir-evden-eve-nakliyat)
 - [İstanbul - Ankara şehirler arası nakliyat](https://evdenevenakliyat.app/istanbul-ankara-sehirler-arasi-nakliyat)
+`;
 
-## Taşınma rehberi (blog)
+/** Markdown bağlantı metninde köşeli parantez bozulmasın */
+const plain = (text: string) => text.replace(/[\[\]]/g, "").replace(/\s+/g, " ").trim();
 
-- [Tüm yazılar](https://evdenevenakliyat.app/blog): evden eve nakliyat fiyatları, taşınma hazırlığı ve firma seçimi rehberleri
-- [Yeni yazılar (RSS)](https://evdenevenakliyat.app/blog/rss.xml)
+export async function GET() {
+  const { posts, categories } = await getBlogIndex();
+  const lines = [
+    INTRO,
+    "## Taşınma rehberi (blog)",
+    "",
+    `- [Tüm yazılar](${SITE_URL}${BLOG_PATH}): evden eve nakliyat fiyatları, taşınma hazırlığı ve firma seçimi rehberleri`,
+    `- [Yeni yazılar (RSS)](${SITE_URL}${BLOG_PATH}/rss.xml)`,
+    ...categories.map((c) => `- [${plain(c.name)}](${SITE_URL}${categoryPath(c)})${c.description ? `: ${plain(c.description)}` : ""}`),
+  ];
+  const indexable = posts.filter((p) => !p.noindex).slice(0, 100);
+  if (indexable.length > 0) {
+    lines.push("", "### Yazılar", "");
+    for (const post of indexable) lines.push(`- [${plain(post.title)}](${SITE_URL}${postPath(post)}): ${plain(post.excerpt)}`);
+  }
+  return new Response(`${lines.join("\n")}\n`, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+}

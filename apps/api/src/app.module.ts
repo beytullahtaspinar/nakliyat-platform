@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AccountModule } from './account/account.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { BlogModule } from './blog/blog.module.js';
 import { BookingsModule } from './bookings/bookings.module.js';
 import { CompaniesModule } from './companies/companies.module.js';
 import { CreditsModule } from './credits/credits.module.js';
@@ -46,6 +47,7 @@ import { ReviewsModule } from './reviews/reviews.module.js';
     ModerationModule,
     ReviewsModule,
     PricingModule,
+    BlogModule,
     AdminModule,
     NotificationsModule,
   ],

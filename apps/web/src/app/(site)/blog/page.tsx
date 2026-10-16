@@ -1,7 +1,7 @@
 import { BlogIndex, blogIndexMetadata } from "@/components/blog/blog-routes";
 
-// WordPress'te yazı yayınlanınca /api/blog/yenile önbelleği hemen bitirir; yoksa saatte bir yenilenir
-export const revalidate = 3600;
+// Yönetimde yazı kaydedilince önbellek hemen biter; zamanlanmış yazılar için en geç 15 dakikada bir yenilenir
+export const revalidate = 900;
 
 export const generateMetadata = () => blogIndexMetadata(1);
 

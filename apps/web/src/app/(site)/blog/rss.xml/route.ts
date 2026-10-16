@@ -1,8 +1,8 @@
-import { BLOG_PATH, getPosts, postPath } from "@/lib/blog/wordpress";
+import { BLOG_PATH, getPosts, postPath } from "@/lib/blog/api";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
-// Yazı yayınlanınca /api/blog/yenile önbelleği bitirir
-export const revalidate = 3600;
+// Yönetimde yazı kaydedilince önbellek hemen biter
+export const revalidate = 900;
 
 const escapeXml = (text: string) =>
   text.replace(/[<>&"']/g, (ch) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[ch]!);
@@ -19,7 +19,7 @@ export async function GET() {
         `<link>${url}</link>`,
         `<guid isPermaLink="true">${url}</guid>`,
         `<pubDate>${new Date(post.publishedAt).toUTCString()}</pubDate>`,
-        ...post.categories.map((c) => `<category>${escapeXml(c.name)}</category>`),
+        ...(post.category ? [`<category>${escapeXml(post.category.name)}</category>`] : []),
         `<description>${escapeXml(post.excerpt)}</description>`,
         "</item>",
       ].join("");

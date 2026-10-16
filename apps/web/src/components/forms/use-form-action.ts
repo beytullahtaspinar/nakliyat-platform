@@ -23,7 +23,8 @@ export function useFormAction<S extends object>(
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setInvalid(undefined);
-    const formData = new FormData(event.currentTarget);
+    // Birden çok gönder düğmesi varsa (ör. "Yayınla" / "Taslak kaydet") basılanın adı ve değeri de gönderilir
+    const formData = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
     startTransition(() => formAction(formData));
   };
 

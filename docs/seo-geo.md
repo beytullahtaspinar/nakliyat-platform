@@ -11,8 +11,8 @@
 |---|---|
 | `robots.txt`: paneller kapalı, yapay zekâ tarayıcıları açık | `apps/web/src/app/robots.ts` |
 | `sitemap.xml` | `apps/web/src/app/sitemap.ts` |
-| `llms.txt`: yapay zekâ modelleri için site özeti | `apps/web/public/llms.txt` |
-| Blog (WordPress'ten): BlogPosting, RSS, site haritası | `apps/web/src/app/(site)/blog/`, [blog-wordpress.md](blog-wordpress.md) |
+| `llms.txt`: yapay zekâ modelleri için site özeti + blog yazıları | `apps/web/src/app/llms.txt/route.ts` |
+| Blog (yönetim panelinden): BlogPosting, FAQPage, yazar profili (ProfilePage), RSS, site haritası, llms.txt | `apps/web/src/app/(site)/blog/`, [blog.md](blog.md) |
 | Organization + WebSite yapısal verisi (JSON-LD) | `apps/web/src/app/layout.tsx` |
 | Başlık şablonu, açıklama, canonical, Open Graph, `lang="tr"` | `apps/web/src/app/layout.tsx` |
 
@@ -70,7 +70,7 @@ Her veri sayfasında yöntem açıklaması, örneklem büyüklüğü ve güncell
 
 ### 2. Konu kümeleri (topical authority)
 
-Her ana konu için bir kapsamlı rehber sayfası ve ona bağlı alt yazılar (blog, WordPress'ten):
+Her ana konu için bir kapsamlı rehber sayfası ve ona bağlı alt yazılar (blog, yönetim panelinden):
 
 | Ana rehber | Alt konular |
 |---|---|
@@ -101,25 +101,16 @@ Her ana konu için bir kapsamlı rehber sayfası ve ona bağlı alt yazılar (bl
 | Ana sayfa | Statik | Organization, WebSite | "Nasıl çalışır" adımları, kısa net tanım |
 | Şehir / ilçe (`/istanbul-evden-eve-nakliyat`) | Statik + günlük yenileme (ISR) | Service, BreadcrumbList, FAQPage | **Platform verisinden gerçek fiyat aralıkları** (ör. "Kadıköy 2+1 ortalama teklif: 18.000-26.000 TL, son 90 gün, 142 teklif"), bölgedeki firma sayısı, sık sorulan sorular |
 | Firma profili (`/firma/[ad]`) | ISR | MovingCompany, AggregateRating, Review | Hizmet bölgeleri, tamamlanan iş sayısı, belge doğrulama tarihi |
-| Blog yazısı (`/blog/[slug]`) | ISR, WordPress'te yayınlanınca anında yenilenir | Article, BreadcrumbList, yazar | Soruya ilk paragrafta net cevap, tablo ve listeler, güncelleme tarihi |
+| Blog yazısı (`/blog/[slug]`) | ISR, yönetimde kaydedilince anında yenilenir | BlogPosting, FAQPage, BreadcrumbList, yazar (Person) | "Kısaca" kutusunda net cevap, tablo ve listeler, sık sorulan sorular, güncelleme tarihi |
 | Paneller | Dinamik | Yok | `noindex`, robots'ta kapalı |
 
 **Neden gerçek veri önemli:** Yapay zekâ motorları genel "taşınma ipuçları" metinlerini değil, başka yerde bulunmayan sayısal veriyi kaynak gösterir. Platformdaki teklif verisi bizim en büyük GEO avantajımız olacak.
 
-## Blog: WordPress editör, Next.js vitrin
+## Blog: yönetim panelinde yazılır, sitede yayınlanır
 
-```
-Yazar → cms.evdenevenakliyat.app (WordPress, sadece yönetim)
-                │  REST API: /wp-json/wp/v2/posts
-                ▼
-Okur  → evdenevenakliyat.app/blog/... (Next.js, sitenin kendi tasarımı)
-```
-
-- WordPress `cms.` alt alan adında kurulur. Ayarlar → Okuma → **"Arama motorlarının siteyi dizine eklemesini engelle"** işaretlenir. Böylece aynı içerik iki adreste görünüp birbirini zayıflatmaz. Yazıların canonical adresi her zaman `evdenevenakliyat.app/blog/...` olur.
-- Meta açıklama WordPress'te **Yoast SEO** ile girilebilir; Yoast bunu REST API'de `yoast_head_json` alanında verir, site bu alanı kullanır (yoksa yazının özeti).
-- Yazı yayınlanınca WordPress (mu-plugin) siteye haber verir, sayfa saniyeler içinde güncellenir.
-- Görseller WordPress medya kütüphanesinden, WordPress'in ürettiği boyutlarla (srcset) sunulur.
-- Kurulum ve yazım kuralları: [blog-wordpress.md](blog-wordpress.md).
+Yazılar `/yonetim/blog` ekranında yazılır (Markdown editör, önizleme, görsel yükleme), sitede `/blog` altında
+sitenin kendi tasarımıyla yayınlanır. Ayrı bir CMS (WordPress) yok; içerik aynı API ve veritabanında.
+Ayrıntılar ve yazım kuralları: [blog.md](blog.md).
 
 ## Yayına çıkmadan önce kontrol listesi
 

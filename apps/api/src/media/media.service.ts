@@ -141,6 +141,29 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
             }),
           exists: async (id) => (await this.prisma.companyMedia.count({ where: { id } })) > 0,
         },
+        // Blog görselleri: büyük hali ve önizlemesi ayrı dosyalar
+        {
+          pending: () => this.prisma.blogMedia.findMany({ where: local, orderBy: { createdAt: 'asc' }, take: MOVE_BATCH }),
+          markMoved: (id) =>
+            this.prisma.blogMedia.updateMany({ where: { id, ...local }, data: { storage: StorageLocation.R2 } }),
+          exists: async (id) => (await this.prisma.blogMedia.count({ where: { id } })) > 0,
+        },
+        {
+          pending: async () =>
+            (
+              await this.prisma.blogMedia.findMany({
+                where: { thumbStorage: StorageLocation.LOCAL },
+                orderBy: { createdAt: 'asc' },
+                take: MOVE_BATCH,
+              })
+            ).map((m) => ({ id: m.id, storageKey: m.thumbKey, mimeType: m.mimeType, sizeBytes: 0 })),
+          markMoved: (id) =>
+            this.prisma.blogMedia.updateMany({
+              where: { id, thumbStorage: StorageLocation.LOCAL },
+              data: { thumbStorage: StorageLocation.R2 },
+            }),
+          exists: async (id) => (await this.prisma.blogMedia.count({ where: { id } })) > 0,
+        },
       ];
       let r2Used = (await this.usage())[StorageLocation.R2];
       for (const table of tables) {
@@ -288,15 +311,16 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /** Depo başına kullanılan toplam boyut (bayt). Talep dosyaları, firma belgeleri ve firma görselleri aynı depoyu paylaşır. */
+  /** Depo başına kullanılan toplam boyut (bayt). Talep dosyaları, firma belgeleri, firma ve blog görselleri aynı depoyu paylaşır. */
   private async usage() {
     const used = { [StorageLocation.LOCAL]: 0, [StorageLocation.R2]: 0 };
-    const [media, documents, showcase] = await Promise.all([
+    const [media, documents, showcase, blog] = await Promise.all([
       this.prisma.requestMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
       this.prisma.companyDocument.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
       this.prisma.companyMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
+      this.prisma.blogMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
     ]);
-    for (const g of [...media, ...documents, ...showcase]) used[g.storage] += g._sum.sizeBytes ?? 0;
+    for (const g of [...media, ...documents, ...showcase, ...blog]) used[g.storage] += g._sum.sizeBytes ?? 0;
     return used;
   }
 

@@ -1,14 +1,15 @@
+import { Marked } from "marked";
 import sanitizeHtml from "sanitize-html";
-import { slugify } from "@/lib/reviews";
 import { SITE_URL } from "@/lib/site";
+import { blogSlugify } from "./rules";
 
 /**
- * WordPress yazı içeriğini sitede güvenle gösterilecek HTML'e çevirir.
- * Yalnızca metin biçimi, liste, tablo, görsel ve bağlantı kalır: betik, stil, sınıf, iframe ve
- * form gibi her şey atılır. Görünüm sitenin kendi stilinden gelir.
+ * Yazı içeriği (Markdown) → sitede güvenle gösterilecek HTML.
+ * Yalnızca metin biçimi, liste, tablo, görsel ve bağlantı kalır: betik, stil, sınıf, iframe ve form gibi
+ * her şey atılır. Görünüm sitenin kendi stilinden gelir.
  */
 const ALLOWED_TAGS = [
-  "p", "br", "hr", "strong", "b", "em", "i", "u", "s", "mark", "sup", "sub", "small", "code", "pre", "kbd",
+  "p", "br", "hr", "strong", "b", "em", "i", "u", "s", "del", "mark", "sup", "sub", "small", "code", "pre", "kbd",
   "abbr", "cite", "q", "blockquote", "a", "ul", "ol", "li", "dl", "dt", "dd", "h2", "h3", "h4",
   "figure", "figcaption", "img", "table", "caption", "thead", "tbody", "tfoot", "tr", "th", "td",
   "details", "summary",
@@ -29,43 +30,55 @@ export function decodeEntities(text: string): string {
   });
 }
 
-/** HTML'den düz metin: başlık, özet, açıklama alanları için */
+/** HTML'den düz metin: kelime sayısı, açıklama alanları için */
 export function htmlToText(html: string): string {
-  const text = sanitizeHtml(html.replace(/<\/(p|li|h\d|div)>/gi, "</$1> "), { allowedTags: [], allowedAttributes: {} });
+  const text = sanitizeHtml(html.replace(/<\/(p|li|h\d|div|td|th)>/gi, "</$1> "), { allowedTags: [], allowedAttributes: {} });
   return decodeEntities(text).replace(/\s+/g, " ").trim();
 }
 
-/**
- * WordPress adresine verilen bağlantıları sitenin blog adreslerine çevirir; aynı yazı iki alan adında
- * görünmesin (cms. alt alanı arama motorlarına kapalı). Medya dosyaları WordPress'ten sunulmaya devam eder.
- */
-function rewriteHref(href: string, wordpressUrl: string): string {
+const escapeAttr = (text: string) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+// Başlıklı görsel (![açıklama](adres "alt yazı")) figür olarak, alt yazısıyla gösterilir
+const markdown = new Marked({
+  gfm: true,
+  renderer: {
+    image({ href, title, text }) {
+      const img = `<img src="${escapeAttr(href)}" alt="${escapeAttr(text)}">`;
+      return title ? `<figure>${img}<figcaption>${escapeAttr(title)}</figcaption></figure>` : img;
+    },
+  },
+});
+
+/** Sitenin kendi adresine verilen tam bağlantılar göreli olur */
+function rewriteHref(href: string): string {
   let url: URL;
   try {
-    url = new URL(href, wordpressUrl);
+    url = new URL(href, SITE_URL);
   } catch {
     return href;
   }
   const site = new URL(SITE_URL);
-  if (url.host === site.host) return `${url.pathname}${url.search}${url.hash}`;
-  if (url.host !== new URL(wordpressUrl).host || url.pathname.startsWith("/wp-content/")) return href;
-
-  const parts = url.pathname.split("/").filter(Boolean);
-  if (parts[0] === "blog") parts.shift();
-  if (parts.length === 0) return `/blog${url.hash}`;
-  if (parts[0] === "category" && parts.length >= 2) return `/blog/kategori/${parts.at(-1)}${url.hash}`;
-  // Kalıcı bağlantı ayarı "Yazı adı" (/yazi-adi/): son parça yazının kısa adıdır
-  return `/blog/${parts.at(-1)}${url.hash}`;
+  if (url.host === site.host && /^https?:$/.test(url.protocol)) return `${url.pathname}${url.search}${url.hash}`;
+  return href;
 }
 
-/** Yazı içeriği. `eagerFirstImage`: öne çıkan görsel yoksa içerikteki ilk görsel geç yüklenmesin (LCP). */
-export function renderContent(html: string, wordpressUrl: string, { eagerFirstImage = false } = {}): string {
+export type ContentImage = { width: number; height: number; thumb: { src: string; width: number; height: number } };
+
+/**
+ * İçerik HTML'i. `images`: içerikteki blog görsellerinin boyutları (sayfa kayması olmasın) ve önizlemeleri (srcset).
+ * `eagerFirstImage`: kapak görseli yoksa içerikteki ilk görsel geç yüklenmesin (LCP).
+ */
+export function renderContent(
+  source: string,
+  { images = {}, eagerFirstImage = false }: { images?: Record<string, ContentImage>; eagerFirstImage?: boolean } = {},
+): string {
+  const raw = markdown.parse(source, { async: false });
   let imageIndex = 0;
-  const clean = sanitizeHtml(html, {
+  const clean = sanitizeHtml(raw, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: {
-      a: ["href", "title", "rel", "target"],
-      img: ["src", "srcset", "sizes", "width", "height", "alt", "loading", "decoding"],
+      a: ["href", "title", "rel"],
+      img: ["src", "srcset", "sizes", "width", "height", "alt", "loading", "decoding", "fetchpriority"],
       th: ["colspan", "rowspan", "scope"],
       td: ["colspan", "rowspan"],
       ol: ["start", "reversed"],
@@ -80,17 +93,23 @@ export function renderContent(html: string, wordpressUrl: string, { eagerFirstIm
       h5: "h4",
       h6: "h4",
       a: (tagName, attribs) => {
-        const href = attribs.href ? rewriteHref(attribs.href, wordpressUrl) : undefined;
-        const external = href !== undefined && /^https?:\/\//.test(href) && !href.startsWith(wordpressUrl);
+        const href = attribs.href ? rewriteHref(attribs.href) : undefined;
+        const external = href !== undefined && /^https?:\/\//.test(href);
         const attrs: Record<string, string> = { ...attribs, ...(href !== undefined && { href }) };
-        if (attribs.target === "_blank" || external) attrs.rel = "noopener noreferrer";
-        if (attribs.target && attribs.target !== "_blank") delete attrs.target;
+        if (external) attrs.rel = "noopener noreferrer";
         return { tagName, attribs: attrs };
       },
       img: (tagName, attribs) => {
         const eager = eagerFirstImage && imageIndex++ === 0;
-        const attrs: Record<string, string> = { ...attribs, alt: attribs.alt ?? "", decoding: "async" };
-        if (eager) delete attrs.loading;
+        const known = attribs.src ? images[attribs.src] : undefined;
+        const attrs: Record<string, string> = { src: attribs.src, alt: attribs.alt ?? "", decoding: "async" };
+        if (known) {
+          attrs.width = String(known.width);
+          attrs.height = String(known.height);
+          attrs.srcset = `${known.thumb.src} ${known.thumb.width}w, ${attribs.src} ${known.width}w`;
+          attrs.sizes = "(min-width: 768px) 720px, 100vw";
+        }
+        if (eager) attrs.fetchpriority = "high";
         else attrs.loading = "lazy";
         return { tagName, attribs: attrs };
       },
@@ -101,9 +120,11 @@ export function renderContent(html: string, wordpressUrl: string, { eagerFirstIm
   const usedIds = new Set<string>();
   return (
     clean
+      // Markdown görseli paragraf içine koyar: figür paragrafın içinde olamaz
+      .replace(/<p>\s*(<figure>[\s\S]*?<\/figure>)\s*<\/p>/g, "$1")
       // İçindekiler için h2 başlıklarına kimlik verilir
       .replace(/<h2>([\s\S]*?)<\/h2>/g, (_, inner: string) => {
-        const base = slugify(htmlToText(inner)) || "bolum";
+        const base = blogSlugify(htmlToText(inner), 60) || "bolum";
         let id = base;
         for (let i = 2; usedIds.has(id); i++) id = `${base}-${i}`;
         usedIds.add(id);

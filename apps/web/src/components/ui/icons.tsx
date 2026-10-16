@@ -224,3 +224,10 @@ export const SpinnerIcon = (p: P) => (
     <path d="M12 3a9 9 0 1 0 9 9" />
   </Icon>
 );
+
+export const DocumentIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M14 3.5H7a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8z" />
+    <path d="M14 3.5V8h4.5M9 12.5h6M9 16h6" />
+  </Icon>
+);

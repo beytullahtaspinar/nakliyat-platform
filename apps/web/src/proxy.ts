@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { ApiError, apiFetch, type AuthTokens } from "@/lib/api";
+import { blogRedirect } from "@/lib/blog/redirect";
 import {
   ACCESS_COOKIE,
   REFRESH_COOKIE,
@@ -31,6 +32,9 @@ function refreshOnce(refreshToken: string) {
 }
 
 export async function proxy(request: NextRequest) {
+  const redirect = await blogRedirect(request);
+  if (redirect) return redirect;
+
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
   if (!refreshToken || request.cookies.has(ACCESS_COOKIE)) return NextResponse.next();
 
