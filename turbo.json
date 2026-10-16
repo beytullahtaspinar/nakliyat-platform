@@ -8,6 +8,9 @@
       "dependsOn": [
         "^build"
       ],
+      "env": [
+        "API_URL"
+      ],
       "outputs": [
         "dist/**",
         ".next/**",

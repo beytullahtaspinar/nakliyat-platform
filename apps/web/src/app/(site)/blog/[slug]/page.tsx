@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
+import { preload } from "react-dom";
 import { PostCard } from "@/components/blog/post-card";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs, type Crumb } from "@/components/local/breadcrumbs";
@@ -30,6 +31,9 @@ const load = cache(async (slug: string): Promise<BlogPost> => {
   if ("redirect" in post) permanentRedirect(`${BLOG_PATH}/${post.redirect}`);
   return post;
 });
+
+const COVER_SIZES = "(min-width: 768px) 720px, 100vw";
+const coverSrcSet = (cover: NonNullable<BlogPost["cover"]>) => `${cover.thumb.src} ${cover.thumb.width}w, ${cover.src} ${cover.width}w`;
 
 const absolute = (src: string) => (src.startsWith("/") ? `${SITE_URL}${src}` : src);
 
@@ -115,6 +119,10 @@ export default async function BlogPostPage({ params }: Props) {
   if (decodeURIComponent(slug) !== post.slug) permanentRedirect(postPath(post));
 
   const { category, author } = post;
+  // Kapak (LCP) <head>'de ön yüklenir: tarayıcı sayfayı ayrıştırmayı beklemeden ister
+  if (post.cover) {
+    preload(post.cover.src, { as: "image", imageSrcSet: coverSrcSet(post.cover), imageSizes: COVER_SIZES, fetchPriority: "high" });
+  }
   // İlgili yazılar: aynı kategoriden, yoksa en yeniler
   const related = (await getPosts({ category: category?.slug, perPage: 4 })).posts.filter((p) => p.id !== post.id).slice(0, 3);
   const updated = new Date(post.updatedAt).getTime() - new Date(post.publishedAt).getTime() > 86_400_000;
@@ -172,8 +180,8 @@ export default async function BlogPostPage({ params }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={post.cover.src}
-            srcSet={`${post.cover.thumb.src} ${post.cover.thumb.width}w, ${post.cover.src} ${post.cover.width}w`}
-            sizes="(min-width: 768px) 720px, 100vw"
+            srcSet={coverSrcSet(post.cover)}
+            sizes={COVER_SIZES}
             width={post.cover.width}
             height={post.cover.height}
             alt={post.cover.alt}

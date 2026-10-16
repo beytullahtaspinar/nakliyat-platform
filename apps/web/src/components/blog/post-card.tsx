@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { preload } from "react-dom";
 import { formatDate } from "@/lib/format";
 import { type BlogPostSummary, postPath } from "@/lib/blog/api";
 
@@ -6,6 +7,12 @@ import { type BlogPostSummary, postPath } from "@/lib/blog/api";
 export function PostCard({ post, priority = false, headingLevel = 2 }: { post: BlogPostSummary; priority?: boolean; headingLevel?: 2 | 3 }) {
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const category = post.category;
+  const srcSet = post.cover && `${post.cover.thumb.src} ${post.cover.thumb.width}w, ${post.cover.src} ${post.cover.width}w`;
+  const sizes = "(min-width: 1024px) 352px, (min-width: 640px) 50vw, 100vw";
+  // İlk kartın görseli <head>'de ön yüklenir: tarayıcı onu sayfayı ayrıştırmayı beklemeden ister (LCP)
+  if (priority && post.cover && srcSet) {
+    preload(post.cover.thumb.src, { as: "image", imageSrcSet: srcSet, imageSizes: sizes, fetchPriority: "high" });
+  }
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-zinc-200 bg-white shadow-[var(--shadow-card)]">
       {post.cover && (
@@ -13,8 +20,8 @@ export function PostCard({ post, priority = false, headingLevel = 2 }: { post: B
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={post.cover.thumb.src}
-          srcSet={`${post.cover.thumb.src} ${post.cover.thumb.width}w, ${post.cover.src} ${post.cover.width}w`}
-          sizes="(min-width: 1024px) 352px, (min-width: 640px) 50vw, 100vw"
+          srcSet={srcSet ?? undefined}
+          sizes={sizes}
           width={post.cover.thumb.width}
           height={post.cover.thumb.height}
           alt=""
