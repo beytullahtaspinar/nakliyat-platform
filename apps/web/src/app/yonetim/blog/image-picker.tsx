@@ -7,6 +7,7 @@ import type { BlogMediaItem } from "@/lib/blog/admin";
 import { BLOG_IMAGE_SIDE, BLOG_THUMB_SIDE } from "@/lib/blog/rules";
 import { compressImageSizes, MediaError } from "@/lib/media/compress";
 import { putFile } from "@/lib/media/upload";
+import type { UploadTicket } from "@/lib/actions/media";
 
 const smallButton =
   "inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 " +
@@ -18,8 +19,14 @@ export async function uploadBlogImage(file: File, alt?: string): Promise<BlogMed
   const info = (c: { blob: Blob; mimeType: string }) => ({ mimeType: c.mimeType, sizeBytes: c.blob.size });
   const ticket = await prepareBlogUpload(info(main), info(thumb));
   if (!ticket.ok) throw new MediaError(ticket.error);
-  await putFile(ticket.data.file, main.blob, () => {});
-  await putFile(ticket.data.thumb, thumb.blob, () => {});
+  // Yükleme adresine gönderim: hangi aşamada ve hangi yanıtla kesildiği hata iletisinde görünsün
+  const send = (t: UploadTicket, blob: Blob, label: string) =>
+    putFile(t, blob, () => {}).catch((err: Error) => {
+      const reason = err.message === "network" ? "bağlantı kesildi" : `sunucu yanıtı ${err.message}`;
+      throw new MediaError(`${label} yüklenemedi (${reason}). Tekrar dene; sürerse hata kodunu bildir.`);
+    });
+  await send(ticket.data.file, main.blob, "Görsel");
+  await send(ticket.data.thumb, thumb.blob, "Önizleme");
   const saved = await attachBlogMedia({
     key: ticket.data.file.key,
     thumbKey: ticket.data.thumb.key,

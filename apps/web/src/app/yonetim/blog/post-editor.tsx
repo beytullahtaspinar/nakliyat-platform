@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { clearDraft, parseDraft, readDraftText, writeDraft } from "./draft-backup";
 import { FormError, inputClass } from "@/components/forms/fields";
 import { useFormAction } from "@/components/forms/use-form-action";
 import { Badge } from "@/components/ui/card";
@@ -30,6 +31,8 @@ import { ImagePicker } from "./image-picker";
 const card = "rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5";
 const label = "text-sm font-medium text-slate-800";
 const hint = "mt-1 block text-xs text-slate-500";
+// Yedek okuma deposu değişmez; yalnızca açılışta okunur (useSyncExternalStore için sabit abonelik)
+const noSubscribe = () => () => {};
 const toolButton =
   "rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50";
 
@@ -115,6 +118,45 @@ export function PostEditor({
   const [dirty, setDirty] = useState(false);
   const textarea = useRef<HTMLTextAreaElement>(null);
 
+  // Yazının tarayıcıdaki yedeği: değişiklikte yazılır, başarılı kayıtta silinir. Açılışta yedek varsa sorulur.
+  const postId = post?.id ?? null;
+  const draftValues = { title, slug, excerpt, summary, content, seoTitle, seoDescription, faq, cover, coverKey, coverAlt, categoryId, authorId };
+  const draftText = useSyncExternalStore(noSubscribe, () => readDraftText(postId), () => null);
+  const [draftDismissed, setDraftDismissed] = useState(false);
+  const draft = draftText && !draftDismissed ? parseDraft(draftText, post?.updatedAt) : null;
+  const restoreDraft = () => {
+    if (!draft) return;
+    const v = draft as Partial<typeof draftValues>;
+    if (typeof v.title === "string") setTitle(v.title);
+    if (typeof v.slug === "string") setSlug(v.slug);
+    if (typeof v.excerpt === "string") setExcerpt(v.excerpt);
+    if (typeof v.summary === "string") setSummary(v.summary);
+    if (typeof v.content === "string") setContent(v.content);
+    if (typeof v.seoTitle === "string") setSeoTitle(v.seoTitle);
+    if (typeof v.seoDescription === "string") setSeoDescription(v.seoDescription);
+    if (Array.isArray(v.faq)) setFaq(v.faq);
+    if (v.cover === null || (v.cover && typeof v.cover === "object")) setCover(v.cover ?? null);
+    if (typeof v.coverKey === "string") setCoverKey(v.coverKey);
+    if (typeof v.coverAlt === "string") setCoverAlt(v.coverAlt);
+    if (typeof v.categoryId === "string") setCategoryId(v.categoryId);
+    if (typeof v.authorId === "string") setAuthorId(v.authorId);
+    setDraftDismissed(true);
+    setDirty(true);
+  };
+  useEffect(() => {
+    // Kayıt yapılıp sayfa yenilendiyse (yeni yazıda yönlendirme sonrası) yedek artık eski
+    if (savedNotice) {
+      clearDraft(null);
+      clearDraft(postId);
+    }
+  }, [savedNotice, postId]);
+  useEffect(() => {
+    if (!dirty) return;
+    writeDraft(postId, draftValues);
+    // draftValues her oluşturulduğunda yeni nesne; alanların kendisi izleniyor
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, postId, title, slug, excerpt, summary, content, seoTitle, seoDescription, faq, cover, coverKey, coverAlt, categoryId, authorId]);
+
   // Kaydedilmemiş değişiklik varken sayfadan çıkılırsa tarayıcı uyarır
   useEffect(() => {
     if (!dirty) return;
@@ -126,7 +168,10 @@ export function PostEditor({
   const [seenState, setSeenState] = useState(state);
   if (state !== seenState) {
     setSeenState(state);
-    if (state.notice) setDirty(false);
+    if (state.notice) {
+      setDirty(false);
+      clearDraft(postId);
+    }
   }
 
   const change = <T,>(set: (v: T) => void) => (v: T) => {
@@ -411,6 +456,17 @@ export function PostEditor({
                 <span className={hint}>Bilgiler değiştiyse işaretle; sayfada ve Google&apos;da &quot;güncellendi&quot; tarihi görünür.</span>
               </span>
             </label>
+          )}
+          {draft && !state.notice && (
+            <div role="status" className="flex flex-wrap items-center gap-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <span>Bu tarayıcıda kaydedilmemiş bir taslak var.</span>
+              <button type="button" onClick={restoreDraft} className="font-semibold underline">
+                Taslağı geri yükle
+              </button>
+              <button type="button" onClick={() => setDraftDismissed(true)} className="underline">
+                Yoksay
+              </button>
+            </div>
           )}
           <FormError message={state.error ?? invalid} />
           {state.notice && (
