@@ -1,7 +1,7 @@
 import { CategoryIndex, categoryMetadata, parsePage } from "@/components/blog/blog-routes";
-import { categoryPath } from "@/lib/blog/wordpress";
+import { categoryPath } from "@/lib/blog/api";
 
-export const revalidate = 3600;
+export const revalidate = 900;
 
 export const dynamicParams = true;
 export function generateStaticParams(): { kategori: string; sayfa: string }[] {

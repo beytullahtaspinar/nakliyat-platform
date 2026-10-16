@@ -9,7 +9,7 @@
         "^build"
       ],
       "env": [
-        "WORDPRESS_URL"
+        "API_URL"
       ],
       "outputs": [
         "dist/**",

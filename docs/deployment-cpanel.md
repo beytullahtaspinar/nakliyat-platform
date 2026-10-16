@@ -7,7 +7,7 @@ Canlı ortam cPanel üzerinde iki Node.js uygulaması olarak çalışır:
 | API | `api.evdenevenakliyat.app` | `app.cjs` |
 | Web | `evdenevenakliyat.app` | `apps/web/server.js` |
 
-Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin panelleri aynı Next.js uygulamasında, ana alan adında çalışır. Blog `evdenevenakliyat.app/blog` altında yayınlanır. Yazılar `cms.evdenevenakliyat.app` adresindeki WordPress'ten girilir ve Next.js tarafından çekilir. Ayrıntılar: [SEO ve GEO rehberi](seo-geo.md).
+Tanıtım sayfaları, şehir bazlı SEO sayfaları ve müşteri, firma, admin panelleri aynı Next.js uygulamasında, ana alan adında çalışır. Blog `evdenevenakliyat.app/blog` altında yayınlanır; yazılar yönetim panelinden (`/yonetim/blog`) girilir ([blog.md](blog.md)). Ayrıntılar: [SEO ve GEO rehberi](seo-geo.md).
 
 > **.app uzantısı hakkında:** .app alan adları tarayıcılarda yalnızca HTTPS ile açılır (HSTS preload). Ana alan adı ve her alt alan adı için SSL sertifikası (cPanel AutoSSL veya Let's Encrypt) site yayına girmeden önce aktif olmalı. Sertifika yoksa site hiç açılmaz.
 
@@ -28,7 +28,7 @@ Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-releas
 
 ## 3. İlk kurulum (bir kez)
 
-1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. Tüm adresler için SSL'i (AutoSSL / Let's Encrypt) aç. Blog editörü WordPress (`cms.`) eski PHP paketinde kalır, DNS ile yönlendirilir.
+1. **Alan adları:** Ana alan adı web uygulamasına, `api.` alt alan adı API'ye ayrılır. Tüm adresler için SSL'i (AutoSSL / Let's Encrypt) aç.
 2. **Veritabanı:** cPanel → **Database Wizard** ile veritabanı ve kullanıcı oluştur, kullanıcıya **ALL PRIVILEGES** ver. Şifreyi sembolsüz üret (yalnızca harf ve rakam), böylece bağlantı adresinde kodlama gerekmez.
 3. **API uygulaması** (Setup Node.js App → Create Application):
    - Node.js version: 22, Application mode: Production
@@ -36,8 +36,8 @@ Kurulum logu: `~/deploy.log`. Kurulu sürüm: `~/.config/nakliyat/current-releas
    - Application startup file: `app.cjs`
    - Environment variables: `NODE_ENV=production`, `WEB_URL=https://evdenevenakliyat.app`, `DATABASE_URL=mysql://KULLANICI:SIFRE@localhost:3306/VERITABANI`, `JWT_ACCESS_SECRET` (uzun, rastgele), isteğe bağlı `SENTRY_DSN` ([izleme.md](izleme.md)), talep fotoğraf/videoları için `R2_*` ([dosya-yukleme.md](dosya-yukleme.md)), e-posta bildirimleri için `BREVO_API_KEY`, `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME`, anlık bildirim için `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` ([bildirimler.md](bildirimler.md)), telefon doğrulaması için isteğe bağlı `PHONE_OTP_PROVIDER` ve sağlayıcı anahtarları ([dogrulama.md](dogrulama.md)), Google/Apple ile giriş için isteğe bağlı `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APPLE_*` ([google-apple-giris.md](google-apple-giris.md))
    - **Run NPM Install**'a basma; bağımlılıkları deploy getirir.
-4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`, isteğe bağlı `SENTRY_DSN`, blog için `WORDPRESS_URL` ve `BLOG_REVALIDATE_SECRET` ([blog-wordpress.md](blog-wordpress.md)).
-5. **GitHub:** Repo → Settings → Environments → `production` → Variable `NEXT_PUBLIC_API_URL` = `https://api.evdenevenakliyat.app`; blog varsa `WORDPRESS_URL` = `https://cms.evdenevenakliyat.app`.
+4. **Web uygulaması:** Application root `nakliyat-web`, Application URL `evdenevenakliyat.app`, startup file `apps/web/server.js`, `NODE_ENV=production`, isteğe bağlı `SENTRY_DSN`.
+5. **GitHub:** Repo → Settings → Environments → `production` → Variable `NEXT_PUBLIC_API_URL` = `https://api.evdenevenakliyat.app`.
 6. **Sunucunun GitHub'a erişimi:** GitHub → Settings → Developer settings → **Fine-grained tokens** → Generate new token. Repository access: yalnızca `nakliyat-platform`. Permissions: **Contents: Read-only**. Token'ı cPanel → **Terminal**'de şu komutla kaydet (ekrana yazılmaz, sohbete veya dosyaya yapıştırma):
 
    ```bash

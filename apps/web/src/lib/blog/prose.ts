@@ -1,0 +1,23 @@
+/** Yazı içeriğinin görünümü (sitede ve yönetimdeki önizlemede): içerik düz HTML, biçim buradan gelir */
+export const BLOG_PROSE = [
+  "mt-8 text-[1.0625rem] leading-8 text-zinc-800",
+  "[&_h2]:mt-12 [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-zinc-900",
+  "[&_h3]:mt-8 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-zinc-900",
+  "[&_h4]:mt-6 [&_h4]:font-semibold [&_h4]:text-zinc-900",
+  "[&_p]:mt-4 [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6",
+  "[&_ol]:mt-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6",
+  "[&_a]:font-medium [&_a]:text-brand-700 [&_a]:underline [&_a:hover]:text-brand-800",
+  "[&_strong]:font-semibold [&_strong]:text-zinc-900",
+  "[&_blockquote]:mt-6 [&_blockquote]:border-l-4 [&_blockquote]:border-accent-400 [&_blockquote]:bg-accent-50 [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:text-zinc-800",
+  "[&_figure]:mt-6 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-xl",
+  "[&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-zinc-600",
+  "[&_hr]:my-10 [&_hr]:border-zinc-200",
+  "[&_code]:rounded [&_code]:bg-zinc-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.9em]",
+  "[&_pre]:mt-4 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-zinc-100 [&_pre]:p-4",
+  "[&_.blog-table]:relative [&_.blog-table]:mt-6 [&_.blog-table]:overflow-x-auto",
+  "[&_table]:w-full [&_table]:text-left [&_table]:text-[0.95rem] [&_table]:leading-6",
+  "[&_th]:border-b-2 [&_th]:border-zinc-300 [&_th]:py-2 [&_th]:pr-4 [&_th]:font-semibold [&_th]:align-bottom",
+  "[&_td]:border-b [&_td]:border-zinc-200 [&_td]:py-2 [&_td]:pr-4 [&_td]:align-top",
+  "[&_details]:mt-4 [&_details]:rounded-xl [&_details]:border [&_details]:border-zinc-200 [&_details]:p-4",
+  "[&_summary]:cursor-pointer [&_summary]:font-semibold [&_summary]:text-zinc-900",
+].join(" ");

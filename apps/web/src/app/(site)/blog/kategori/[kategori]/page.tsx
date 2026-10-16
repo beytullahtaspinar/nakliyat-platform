@@ -1,6 +1,6 @@
 import { CategoryIndex, categoryMetadata } from "@/components/blog/blog-routes";
 
-export const revalidate = 3600;
+export const revalidate = 900;
 
 export const dynamicParams = true;
 export function generateStaticParams(): { kategori: string }[] {

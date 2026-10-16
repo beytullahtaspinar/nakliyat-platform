@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
+import { preload } from "react-dom";
 import { PostCard } from "@/components/blog/post-card";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs, type Crumb } from "@/components/local/breadcrumbs";
@@ -9,12 +10,13 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
-import { BLOG_PATH, type BlogPost, categoryPath, getPost, getPosts, postPath } from "@/lib/blog/wordpress";
+import { BLOG_PROSE as PROSE } from "@/lib/blog/prose";
+import { BLOG_PATH, type BlogPost, authorPath, categoryPath, getPost, getPosts, postPath } from "@/lib/blog/api";
 
-// WordPress'te yazı güncellenince /api/blog/yenile önbelleği hemen bitirir; yoksa saatte bir yenilenir
-export const revalidate = 3600;
+// Yönetimde yazı kaydedilince önbellek hemen biter; yoksa en geç 15 dakikada bir yenilenir
+export const revalidate = 900;
 
-// Yazılar derlemede üretilmez (WordPress'e bağlanılmaz); ilk ziyarette üretilip önbelleğe alınır
+// Yazılar derlemede üretilmez; ilk ziyarette üretilip önbelleğe alınır
 export const dynamicParams = true;
 export function generateStaticParams(): { slug: string }[] {
   return [];
@@ -22,11 +24,18 @@ export function generateStaticParams(): { slug: string }[] {
 
 type Props = { params: Promise<{ slug: string }> };
 
-const load = cache(async (slug: string) => {
+/** Yazı. Eski adresler normalde proxy'de yönlenir (lib/blog/redirect.ts); buradaki yalnızca yedek. */
+const load = cache(async (slug: string): Promise<BlogPost> => {
   const post = await getPost(decodeURIComponent(slug));
   if (!post) notFound();
+  if ("redirect" in post) permanentRedirect(`${BLOG_PATH}/${post.redirect}`);
   return post;
 });
+
+const COVER_SIZES = "(min-width: 768px) 720px, 100vw";
+const coverSrcSet = (cover: NonNullable<BlogPost["cover"]>) => `${cover.thumb.src} ${cover.thumb.width}w, ${cover.src} ${cover.width}w`;
+
+const absolute = (src: string) => (src.startsWith("/") ? `${SITE_URL}${src}` : src);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await load((await params).slug);
@@ -35,6 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: post.seoTitle,
     description: post.seoDescription,
     alternates: { canonical: path },
+    ...(post.noindex && { robots: { index: false, follow: true } }),
     openGraph: {
       type: "article",
       locale: "tr_TR",
@@ -42,20 +52,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: post.seoTitle,
       description: post.seoDescription,
       publishedTime: post.publishedAt,
-      modifiedTime: post.modifiedAt,
-      ...(post.author && { authors: [post.author.name] }),
-      ...(post.categories[0] && { section: post.categories[0].name }),
-      images: post.image
-        ? [{ url: post.image.src, width: post.image.width, height: post.image.height, alt: post.image.alt }]
+      modifiedTime: post.updatedAt,
+      ...(post.author && { authors: [`${SITE_URL}${authorPath(post.author)}`] }),
+      ...(post.category && { section: post.category.name }),
+      images: post.cover
+        ? [{ url: post.cover.src, width: post.cover.width, height: post.cover.height, alt: post.cover.alt }]
         : DEFAULT_OG_IMAGES,
     },
   };
 }
 
-/** schema.org BlogPosting: yazar, tarih ve görsel sayfada görünenle aynı */
+/** schema.org BlogPosting (+ sık sorulan sorular varsa FAQPage): yazar, tarih ve görsel sayfada görünenle aynı */
 function postJsonLd(post: BlogPost) {
   const url = `${SITE_URL}${postPath(post)}`;
-  return {
+  const article = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "@id": `${url}#yazi`,
@@ -63,55 +73,59 @@ function postJsonLd(post: BlogPost) {
     url,
     headline: post.title,
     description: post.seoDescription,
+    ...(post.summary && { abstract: post.summary }),
     datePublished: post.publishedAt,
-    dateModified: post.modifiedAt,
+    dateModified: post.updatedAt,
     inLanguage: "tr-TR",
     wordCount: post.wordCount,
-    ...(post.image && { image: { "@type": "ImageObject", url: post.image.src, width: post.image.width, height: post.image.height } }),
-    ...(post.categories.length > 0 && { articleSection: post.categories.map((c) => c.name) }),
+    ...(post.cover && {
+      image: { "@type": "ImageObject", url: absolute(post.cover.src), width: post.cover.width, height: post.cover.height },
+    }),
+    ...(post.category && { articleSection: post.category.name }),
     author: post.author
-      ? { "@type": "Person", name: post.author.name, ...(post.author.bio && { description: post.author.bio }) }
+      ? {
+          "@type": "Person",
+          "@id": `${SITE_URL}${authorPath(post.author)}#kisi`,
+          name: post.author.name,
+          url: `${SITE_URL}${authorPath(post.author)}`,
+          ...(post.author.jobTitle && { jobTitle: post.author.jobTitle }),
+          ...(post.author.photo && { image: absolute(post.author.photo.src) }),
+          ...(post.author.sameAs.length > 0 && { sameAs: post.author.sameAs }),
+        }
       : { "@id": `${SITE_URL}/#organization` },
     publisher: { "@id": `${SITE_URL}/#organization` },
     isPartOf: { "@type": "Blog", "@id": `${SITE_URL}${BLOG_PATH}#blog`, url: `${SITE_URL}${BLOG_PATH}` },
   };
+  if (post.faq.length === 0) return [article];
+  return [
+    article,
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": `${url}#sss`,
+      mainEntity: post.faq.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: { "@type": "Answer", text: f.answer },
+      })),
+    },
+  ];
 }
-
-/** WordPress içeriğinin görünümü: içerik düz HTML, biçim buradan gelir */
-const PROSE = [
-  "mt-8 text-[1.0625rem] leading-8 text-zinc-800",
-  "[&_h2]:mt-12 [&_h2]:scroll-mt-24 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:text-zinc-900",
-  "[&_h3]:mt-8 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-zinc-900",
-  "[&_h4]:mt-6 [&_h4]:font-semibold [&_h4]:text-zinc-900",
-  "[&_p]:mt-4 [&_ul]:mt-4 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6",
-  "[&_ol]:mt-4 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6",
-  "[&_a]:font-medium [&_a]:text-brand-700 [&_a]:underline [&_a:hover]:text-brand-800",
-  "[&_strong]:font-semibold [&_strong]:text-zinc-900",
-  "[&_blockquote]:mt-6 [&_blockquote]:border-l-4 [&_blockquote]:border-accent-400 [&_blockquote]:bg-accent-50 [&_blockquote]:px-5 [&_blockquote]:py-3 [&_blockquote]:text-zinc-800",
-  "[&_figure]:mt-6 [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-xl",
-  "[&_figcaption]:mt-2 [&_figcaption]:text-center [&_figcaption]:text-sm [&_figcaption]:text-zinc-600",
-  "[&_hr]:my-10 [&_hr]:border-zinc-200",
-  "[&_code]:rounded [&_code]:bg-zinc-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-[0.9em]",
-  "[&_pre]:mt-4 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-zinc-100 [&_pre]:p-4",
-  "[&_.blog-table]:relative [&_.blog-table]:mt-6 [&_.blog-table]:overflow-x-auto",
-  "[&_table]:w-full [&_table]:text-left [&_table]:text-[0.95rem] [&_table]:leading-6",
-  "[&_th]:border-b-2 [&_th]:border-zinc-300 [&_th]:py-2 [&_th]:pr-4 [&_th]:font-semibold [&_th]:align-bottom",
-  "[&_td]:border-b [&_td]:border-zinc-200 [&_td]:py-2 [&_td]:pr-4 [&_td]:align-top",
-  "[&_details]:mt-4 [&_details]:rounded-xl [&_details]:border [&_details]:border-zinc-200 [&_details]:p-4",
-  "[&_summary]:cursor-pointer [&_summary]:font-semibold [&_summary]:text-zinc-900",
-].join(" ");
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = await load(slug);
   // Adres, yazının kısa adından farklı yazıldıysa (ör. büyük harf) tek adrese kalıcı yönlenir
-  if (decodeURIComponent(slug) !== decodeURIComponent(post.slug)) permanentRedirect(postPath(post));
+  if (decodeURIComponent(slug) !== post.slug) permanentRedirect(postPath(post));
 
-  const category = post.categories[0];
-  const related = category
-    ? (await getPosts({ categoryId: category.id, perPage: 4 })).posts.filter((p) => p.id !== post.id).slice(0, 3)
-    : [];
-  const updated = new Date(post.modifiedAt).getTime() - new Date(post.publishedAt).getTime() > 86_400_000;
+  const { category, author } = post;
+  // Kapak (LCP) <head>'de ön yüklenir: tarayıcı sayfayı ayrıştırmayı beklemeden ister
+  if (post.cover) {
+    preload(post.cover.src, { as: "image", imageSrcSet: coverSrcSet(post.cover), imageSizes: COVER_SIZES, fetchPriority: "high" });
+  }
+  // İlgili yazılar: aynı kategoriden, yoksa en yeniler
+  const related = (await getPosts({ category: category?.slug, perPage: 4 })).posts.filter((p) => p.id !== post.id).slice(0, 3);
+  const updated = new Date(post.updatedAt).getTime() - new Date(post.publishedAt).getTime() > 86_400_000;
 
   const crumbs: Crumb[] = [
     { name: "Ana sayfa", href: "/" },
@@ -137,36 +151,53 @@ export default async function BlogPostPage({ params }: Props) {
           )}
           <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-zinc-900 sm:text-4xl">{post.title}</h1>
           <p className="mt-4 flex flex-wrap gap-x-2 text-sm text-zinc-600">
-            {post.author && (
+            {author && (
               <>
-                <span>{post.author.name}</span>
+                <Link href={authorPath(author)} className="font-medium text-zinc-800 hover:text-brand-700 hover:underline">
+                  {author.name}
+                </Link>
                 <span aria-hidden>·</span>
               </>
             )}
             <span>
-              {updated ? "Güncellendi: " : ""}
-              <time dateTime={updated ? post.modifiedAt : post.publishedAt}>
-                {formatDate(updated ? post.modifiedAt : post.publishedAt)}
-              </time>
+              Yayın: <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
             </span>
+            {updated && (
+              <>
+                <span aria-hidden>·</span>
+                <span>
+                  Güncellendi: <time dateTime={post.updatedAt}>{formatDate(post.updatedAt)}</time>
+                </span>
+              </>
+            )}
             <span aria-hidden>·</span>
             <span>{post.readingMinutes} dk okuma</span>
           </p>
         </header>
 
-        {post.image && (
-          // WordPress görselin boyutlarını (srcset) zaten üretiyor; sunucuda yeniden işlenmez
+        {post.cover && (
+          // Görsel yüklenirken iki boyutta üretildi (800 ve 1600 px); sunucuda yeniden işlenmez
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={post.image.src}
-            srcSet={post.image.srcSet}
-            sizes="(min-width: 768px) 720px, 100vw"
-            width={post.image.width}
-            height={post.image.height}
-            alt={post.image.alt}
+            src={post.cover.src}
+            srcSet={coverSrcSet(post.cover)}
+            sizes={COVER_SIZES}
+            width={post.cover.width}
+            height={post.cover.height}
+            alt={post.cover.alt}
             fetchPriority="high"
             className="mt-8 aspect-[16/9] w-full rounded-2xl bg-zinc-100 object-cover"
           />
+        )}
+
+        {post.summary && (
+          // Sorunun net cevabı en başta: okur ve yapay zekâ yanıt motorları buradan alıntılar (GEO)
+          <section aria-labelledby="kisaca" className="mt-8 rounded-xl border-l-4 border-accent-500 bg-accent-50 p-5">
+            <h2 id="kisaca" className="text-sm font-semibold uppercase tracking-wider text-accent-800">
+              Kısaca
+            </h2>
+            <p className="mt-2 whitespace-pre-line text-[1.0625rem] leading-7 text-zinc-900">{post.summary}</p>
+          </section>
         )}
 
         {post.headings.length >= 3 && (
@@ -180,6 +211,13 @@ export default async function BlogPostPage({ params }: Props) {
                   </a>
                 </li>
               ))}
+              {post.faq.length > 0 && (
+                <li>
+                  <a href="#sik-sorulan-sorular" className="inline-block py-0.5 hover:text-brand-700 hover:underline">
+                    Sık sorulan sorular
+                  </a>
+                </li>
+              )}
             </ol>
           </nav>
         )}
@@ -187,10 +225,45 @@ export default async function BlogPostPage({ params }: Props) {
         {/* İçerik renderContent ile temizlendi: yalnızca izin verilen etiket ve nitelikler kalır */}
         <div className={PROSE} dangerouslySetInnerHTML={{ __html: post.html }} />
 
-        {post.author?.bio && (
-          <aside aria-label="Yazar hakkında" className="mt-12 rounded-xl border border-zinc-200 p-5">
-            <p className="font-semibold text-zinc-900">{post.author.name}</p>
-            <p className="mt-1 text-sm text-zinc-700">{post.author.bio}</p>
+        {post.faq.length > 0 && (
+          <section aria-labelledby="sik-sorulan-sorular" className="mt-12">
+            <h2 id="sik-sorulan-sorular" className="scroll-mt-24 text-2xl font-semibold text-zinc-900">
+              Sık sorulan sorular
+            </h2>
+            <dl className="mt-4 divide-y divide-zinc-200 rounded-xl border border-zinc-200">
+              {post.faq.map((f) => (
+                <div key={f.question} className="p-5">
+                  <dt className="font-semibold text-zinc-900">{f.question}</dt>
+                  <dd className="mt-2 whitespace-pre-line text-zinc-700">{f.answer}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        {author && (
+          <aside aria-label="Yazar hakkında" className="mt-12 flex gap-4 rounded-xl border border-zinc-200 p-5">
+            {author.photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={author.photo.thumb.src}
+                width={64}
+                height={64}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="size-16 shrink-0 rounded-full bg-zinc-100 object-cover"
+              />
+            )}
+            <div>
+              <p className="font-semibold text-zinc-900">
+                <Link href={authorPath(author)} className="hover:text-brand-700 hover:underline">
+                  {author.name}
+                </Link>
+              </p>
+              {author.jobTitle && <p className="text-sm text-zinc-600">{author.jobTitle}</p>}
+              {author.bio && <p className="mt-2 line-clamp-4 text-sm text-zinc-700">{author.bio}</p>}
+            </div>
           </aside>
         )}
       </article>

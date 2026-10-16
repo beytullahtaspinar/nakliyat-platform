@@ -1,7 +1,7 @@
 "use client";
 
 import { SideNav } from "@/components/panel/side-nav";
-import { BuildingIcon, CalculatorIcon, ChartIcon, ClipboardIcon, FlagIcon, GridIcon, ScaleIcon, ShieldCheckIcon, StarIcon, TagIcon, UsersIcon, WalletIcon } from "@/components/ui/icons";
+import { BuildingIcon, CalculatorIcon, ChartIcon, ClipboardIcon, DocumentIcon, FlagIcon, GridIcon, ScaleIcon, ShieldCheckIcon, StarIcon, TagIcon, UsersIcon, WalletIcon } from "@/components/ui/icons";
 
 export function AdminNav({
   pendingCompanies,
@@ -66,6 +66,7 @@ export function AdminNav({
               badge: { count: pendingTransfers, label: "onay bekleyen havale" },
             },
             { href: "/yonetim/fiyat-hesaplama", label: "Fiyat hesaplayıcı", icon: CalculatorIcon },
+            { href: "/yonetim/blog", label: "Blog", icon: DocumentIcon },
           ],
         },
       ]}

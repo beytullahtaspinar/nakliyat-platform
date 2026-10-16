@@ -10,9 +10,10 @@
 const PUBLIC_PAGES = [
   "/",
   "/evden-eve-nakliyat",
-  // Blog içeriği sahte WordPress'ten (lighthouse.yml)
+  // Blog içeriği sahte blog API'sinden (e2e/blog-api-mock.mjs, lighthouse.yml)
   "/blog",
   "/blog/tasinma-kontrol-listesi",
+  "/blog/yazar/elif-yilmaz",
   "/istanbul-evden-eve-nakliyat",
   "/istanbul-kadikoy-evden-eve-nakliyat",
   "/kvkk-aydinlatma-metni",

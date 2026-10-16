@@ -80,17 +80,17 @@ enum IdentityProvider {
 
 /// Google / Apple hesabı bağlantısı. Bu yolla açılan hesapların şifresi yoktur (passwordHash "!").
 model UserIdentity {
-  id        String           @id @default(cuid())
-  userId    String
-  provider  IdentityProvider
+  id          String           @id @default(cuid())
+  userId      String
+  provider    IdentityProvider
   /// Sağlayıcının değişmeyen kullanıcı kimliği (id_token "sub")
-  subject   String           @db.VarChar(191)
+  subject     String           @db.VarChar(191)
   /// Sağlayıcının bildirdiği e-posta (Apple'da gizli yönlendirme adresi olabilir)
-  email     String?          @db.VarChar(191)
+  email       String?          @db.VarChar(191)
   /// Apple'ın son girişte verdiği refresh_token. Hesap silinince Apple'da iptal edilir (App Store kuralı 5.1.1(v)).
   /// Yalnızca bizim .p8 anahtarımızla imzalanan istemci sırrıyla kullanılabilir.
-  revokeToken String?        @db.Text
-  createdAt DateTime         @default(now())
+  revokeToken String?          @db.Text
+  createdAt   DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -893,4 +893,114 @@ model AuditLog {
   actor User @relation(fields: [actorId], references: [id])
 
   @@index([entityType, entityId])
+}
+
+// ─── Blog (/blog) ───────────────────────────────────────────────
+// Yazılar yönetim panelinden (/yonetim/blog) yazılır, sitede /blog altında yayınlanır.
+// Kim neyi değiştirdi AuditLog'da (blog.*).
+
+enum BlogPostStatus {
+  DRAFT
+  /// publishedAt gelecekteyse zamanlanmış: o saate kadar sitede görünmez
+  PUBLISHED
+}
+
+model BlogCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique @db.VarChar(120)
+  name        String   @db.VarChar(80)
+  /// Kategori sayfasının giriş metni ve arama açıklaması
+  description String?  @db.VarChar(400)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts BlogPost[]
+}
+
+/// Yazar profili (E-E-A-T): her yazıda imza, /blog/yazar/<slug> sayfası
+model BlogAuthor {
+  id        String   @id @default(cuid())
+  slug      String   @unique @db.VarChar(120)
+  name      String   @db.VarChar(100)
+  /// Ör. "Nakliyat sektörü editörü"
+  jobTitle  String?  @db.VarChar(120)
+  bio       String?  @db.Text
+  /// Fotoğraf: BlogMedia içindeki görselin anahtarı
+  photoKey  String?  @db.VarChar(300)
+  /// LinkedIn vb. profil adresleri (schema.org sameAs)
+  sameAs    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts BlogPost[]
+}
+
+model BlogPost {
+  id               String         @id @default(cuid())
+  slug             String         @unique @db.VarChar(200)
+  title            String         @db.VarChar(200)
+  /// Liste kartındaki özet; SEO açıklaması boşsa o da bu olur
+  excerpt          String         @db.VarChar(400)
+  /// "Kısaca" kutusu: sorunun yazının başındaki net cevabı (GEO)
+  summary          String?        @db.Text
+  /// İçerik (Markdown)
+  content          String         @db.MediumText
+  /// Sık sorulan sorular: [{ question, answer }]; sayfada ve FAQPage yapısal verisinde
+  faq              Json?
+  seoTitle         String?        @db.VarChar(200)
+  seoDescription   String?        @db.VarChar(400)
+  /// Arama motorlarına kapalı (ör. kampanya duyurusu)
+  noindex          Boolean        @default(false)
+  status           BlogPostStatus @default(DRAFT)
+  publishedAt      DateTime?
+  /// Okura gösterilen "güncellendi" tarihi: yalnızca içerik gerçekten değiştiğinde ilerler
+  contentUpdatedAt DateTime?
+  coverKey         String?        @db.VarChar(300)
+  coverAlt         String?        @db.VarChar(200)
+  categoryId       String?
+  authorId         String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  category  BlogCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author    BlogAuthor?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  redirects BlogSlugRedirect[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status, publishedAt])
+  @@index([authorId])
+}
+
+/// Yazının adresi değişince eski adres yeni adrese kalıcı yönlenir (arama motoru sıralaması kaybolmasın)
+model BlogSlugRedirect {
+  slug      String   @id @db.VarChar(200)
+  postId    String
+  createdAt DateTime @default(now())
+
+  post BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+/// Blog görselleri (kapak, içerik, yazar fotoğrafı): büyük (1600 px) + önizleme (800 px) WebP
+model BlogMedia {
+  id           String          @id @default(cuid())
+  storageKey   String          @unique @db.VarChar(300)
+  storage      StorageLocation @default(LOCAL)
+  thumbKey     String          @unique @db.VarChar(300)
+  thumbStorage StorageLocation @default(LOCAL)
+  mimeType     String          @db.VarChar(100)
+  /// Büyük dosya ve önizlemenin toplamı (kota için)
+  sizeBytes    Int
+  width        Int
+  height       Int
+  thumbWidth   Int
+  thumbHeight  Int
+  /// Varsayılan alt metin
+  alt          String?         @db.VarChar(200)
+  createdAt    DateTime        @default(now())
+
+  @@index([storage])
+  @@index([thumbStorage])
 }

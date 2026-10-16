@@ -13,7 +13,7 @@ apps/
 docs/    Mimari, veritabanı, kurulum ve cPanel dokümanları
 ```
 
-Tanıtım sayfaları ve tüm paneller tek Next.js uygulamasındadır. Blog yazıları `cms.` alt alan adındaki WordPress'ten girilir, `/blog` altında Next.js ile yayınlanır.
+Tanıtım sayfaları ve tüm paneller tek Next.js uygulamasındadır. Blog yazıları yönetim panelinden (`/yonetim/blog`) yazılır, `/blog` altında yayınlanır ([docs/blog.md](docs/blog.md)).
 
 ## Hızlı başlangıç
 

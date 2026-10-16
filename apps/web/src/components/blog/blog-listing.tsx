@@ -6,14 +6,7 @@ import { Card } from "@/components/ui/card";
 import { PostCard } from "@/components/blog/post-card";
 import { HUB_PATH } from "@/lib/local-content";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
-import {
-  BLOG_PATH,
-  type BlogCategory,
-  type BlogPage,
-  categoryPath,
-  pagePath,
-  postPath,
-} from "@/lib/blog/wordpress";
+import { BLOG_PATH, type BlogCategory, type BlogPage, categoryPath, pagePath, postPath } from "@/lib/blog/api";
 
 /** Blog ana sayfası ve kategori sayfalarının ortak düzeni */
 export function BlogListing({
@@ -25,6 +18,7 @@ export function BlogListing({
   data,
   categories,
   activeCategory,
+  before,
 }: {
   title: string;
   intro: string;
@@ -35,6 +29,8 @@ export function BlogListing({
   data: BlogPage;
   categories: BlogCategory[];
   activeCategory?: string;
+  /** Başlıkla liste arasında ek içerik (ör. yazar tanıtımı) */
+  before?: React.ReactNode;
 }) {
   const url = `${SITE_URL}${pagePath(basePath, page)}`;
   return (
@@ -45,6 +41,7 @@ export function BlogListing({
         {page > 1 && <span className="text-zinc-600"> · Sayfa {page}</span>}
       </h1>
       <p className="mt-3 max-w-2xl text-lg text-zinc-700">{intro}</p>
+      {before}
 
       {categories.length > 0 && (
         <nav aria-label="Blog kategorileri" className="mt-6">
@@ -55,7 +52,7 @@ export function BlogListing({
               </CategoryLink>
             </li>
             {categories.map((c) => (
-              <li key={c.id}>
+              <li key={c.slug}>
                 <CategoryLink href={categoryPath(c)} active={activeCategory === c.slug}>
                   {c.name}
                 </CategoryLink>
@@ -89,7 +86,7 @@ export function BlogListing({
                 headline: post.title,
                 url: `${SITE_URL}${postPath(post)}`,
                 datePublished: post.publishedAt,
-                dateModified: post.modifiedAt,
+                dateModified: post.updatedAt,
               })),
             }}
           />
