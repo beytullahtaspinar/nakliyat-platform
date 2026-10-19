@@ -27,6 +27,30 @@ fi
 # Web: Next.js standalone çıktısı + statik dosyalar
 cp -r apps/web/.next/standalone "$OUT/web"
 
+# Turbopack sunucu tarafında dışarıdan yüklenen paketler için .next/node_modules altına sürüm karmalı
+# bağlantılar koyar (ör. postcss-<karma> -> node_modules/.pnpm/postcss@x/node_modules/postcss).
+# Aşağıda .pnpm silindiği ve sunucu bağlantıları çözmediği için bunlar gerçek kopyaya çevrilir;
+# yoksa bu paketleri kullanan sayfa ve Server Action'lar "Cannot find module" ile düşer.
+EXTERNALS="$OUT/web/apps/web/.next/node_modules"
+if [ -d "$EXTERNALS" ]; then
+  for link in "$EXTERNALS"/* "$EXTERNALS"/@*/*; do
+    [ -L "$link" ] || continue
+    target="$(readlink -f "$link")"
+    # Paketin kendi bağımlılıkları .pnpm'de yanındadır; düz node_modules'taki sürüm farklı olabilir
+    deps="$(dirname "$target")"
+    [[ "$(basename "$deps")" == @* ]] && deps="$(dirname "$deps")"
+    rm "$link"
+    cp -rL "$target" "$link"
+    for dep in "$deps"/* "$deps"/@*/*; do
+      rel="${dep#"$deps"/}"
+      [ -e "$dep" ] && [[ "$rel" != @* || "$rel" == */* ]] || continue
+      [ "$(readlink -f "$dep")" = "$target" ] && continue
+      mkdir -p "$(dirname "$link/node_modules/$rel")"
+      cp -rL "$dep" "$link/node_modules/$rel"
+    done
+  done
+fi
+
 # Standalone çıktısı pnpm'in sembolik bağlantılı düzenini kullanır. Sunucudaki LiteSpeed Node
 # çalıştırıcısı bağlantıları her zaman çözmediği için paketler birbirini bulamıyor
 # (ör. next -> @swc/helpers). Bağımlılıkları bağlantısız, düz bir node_modules'a açıyoruz.
@@ -51,8 +75,9 @@ for pkg in "$WEB_MODS"/.pnpm/*/node_modules/*; do
 done
 rm -rf "$WEB_MODS" "$OUT/web/apps/web/node_modules"
 mv "$FLAT" "$WEB_MODS"
-if find "$WEB_MODS" -type l | grep -q .; then
-  echo "HATA: web node_modules içinde hâlâ sembolik bağlantı var" >&2
+if find "$OUT/web" -type l | grep -q .; then
+  echo "HATA: web paketinde hâlâ sembolik bağlantı var:" >&2
+  find "$OUT/web" -type l >&2
   exit 1
 fi
 
