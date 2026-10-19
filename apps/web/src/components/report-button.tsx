@@ -16,6 +16,7 @@ const REASONS = [
 /**
  * Mesaj, yorum ya da firma yanıtını yönetime bildirme bağlantısı ve penceresi. Mobil uygulamalardaki
  * "Bildir" ile aynı uca gider; bildirim /yonetim/sikayetler ekranına düşer.
+ * Pencere başlık ve form içerdiği için <p> içine konmaz (tarayıcı <p>'yi kapatır, sayfa hydration hatası verir).
  */
 export function ReportButton({
   target,
