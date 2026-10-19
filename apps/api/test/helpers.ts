@@ -30,3 +30,18 @@ export async function addApprovedDocuments(prisma: PrismaService, companyIds: st
     ),
   });
 }
+
+/**
+ * Test dosyaları paralel koştuğu için temizlikteki ilişkili deleteMany'ler başka dosyanın yazmasıyla
+ * kilitlenebilir (MariaDB deadlock, Prisma P2034). Temizliği birkaç kez dener.
+ */
+export async function retryOnConflict(fn: () => Promise<void>, attempts = 5) {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if ((err as { code?: string }).code !== 'P2034' || i >= attempts) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 100 * i));
+    }
+  }
+}
