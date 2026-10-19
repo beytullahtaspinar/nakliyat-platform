@@ -106,9 +106,9 @@ export default async function CompanyBookingPage({ params }: PageProps<"/firma-p
                     <ReplyForm reviewId={booking.review.id} update={!!booking.review.companyReply} />
                   )}
                   {booking.review.comment && booking.review.isPublished && (
-                    <p className="mt-2 text-right">
+                    <div className="mt-2 text-right">
                       <ReportButton target="REVIEW" targetId={booking.review.id} />
-                    </p>
+                    </div>
                   )}
                 </ReviewCard>
               )}

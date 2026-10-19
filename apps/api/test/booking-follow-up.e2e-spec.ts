@@ -10,7 +10,7 @@ import { NOTIFICATION_CHANNELS, type ChannelProvider, type Recipient } from './.
 import type { NotificationContent } from './../src/notifications/templates.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { BookingFollowUpService } from './../src/reviews/booking-follow-up.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 class FakeEmail implements ChannelProvider {
   readonly channel = 'EMAIL' as const;
@@ -98,7 +98,7 @@ describe('Taşınma sonrası takip (e2e)', () => {
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
     followUp = app.get(BookingFollowUpService);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     const names = { customer: 'Ayşe Takipçi', company: 'Firma Yetkilisi', other: 'Başka Müşteri' };
     for (const who of ['customer', 'company', 'other'] as const) {
@@ -132,7 +132,7 @@ describe('Taşınma sonrası takip (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

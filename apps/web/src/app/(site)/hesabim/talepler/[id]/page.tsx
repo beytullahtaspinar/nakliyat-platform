@@ -400,9 +400,9 @@ function ReviewSection({ booking }: { booking: CustomerBooking }) {
               </p>
             )}
             {review.companyReply && (
-              <p className="mt-2 text-right">
+              <div className="mt-2 text-right">
                 <ReportButton target="REVIEW_REPLY" targetId={review.id} />
-              </p>
+              </div>
             )}
           </ReviewCard>
           {review.isPublished && company.verified && (
