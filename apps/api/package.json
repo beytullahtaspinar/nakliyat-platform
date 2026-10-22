@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev && prisma generate",
-    "db:deploy": "prisma migrate deploy",
+    "db:deploy": "node migrate.cjs",
     "postinstall": "prisma generate",
     "openapi:export": "nest build && node dist/export-openapi.js",
     "admin:create": "node dist/create-admin.js"
@@ -73,6 +73,7 @@
     "dist",
     "prisma",
     "prisma.config.ts",
-    "app.cjs"
+    "app.cjs",
+    "migrate.cjs"
   ]
 }

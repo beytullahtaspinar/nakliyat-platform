@@ -64,6 +64,9 @@ jobs:
       - run: pnpm test
       - name: Veritabanı migration
         run: pnpm --filter @nakliyat/api db:deploy
+      # Migration'lar kendi betiğimizle uygulanıyor (migrate.cjs); Prisma kayıtları kendisininki gibi görmeli
+      - name: Migration kayıtları Prisma ile uyumlu
+        run: pnpm --filter @nakliyat/api exec prisma migrate status
       - name: API e2e testleri
         run: pnpm --filter @nakliyat/api test:e2e
       - run: pnpm build
