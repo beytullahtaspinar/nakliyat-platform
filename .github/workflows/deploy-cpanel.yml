@@ -33,6 +33,18 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Sayfalar derlenirken canlı API'den veri çekilir. Canlı API yanıt vermiyorsa (ör. sunucudaki bir
+      # sorun yüzünden kapalıysa) il sayfaları 60 sn sınırına takılıp derleme düşer ve düzeltme de
+      # yayınlanamaz. O durumda derleme kapalı bir yerel adresle API'siz yapılır; sayfalar canlıda
+      # yeniden doğrulanınca veriyi alır.
+      - name: Canlı API derleme için erişilebilir mi
+        run: |
+          if curl -fsS --max-time 15 "${{ vars.NEXT_PUBLIC_API_URL || 'https://api.evdenevenakliyat.app' }}/v1/health" | grep -q '"status":"ok"'; then
+            echo "Canlı API yanıt veriyor, sayfalar canlı veriyle derlenecek."
+          else
+            echo "::warning::Canlı API yanıt vermiyor; sayfalar API verisi olmadan derlenecek."
+            echo "API_URL=http://127.0.0.1:4999" >> "$GITHUB_ENV"
+          fi
       - name: Paketleri üret
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
