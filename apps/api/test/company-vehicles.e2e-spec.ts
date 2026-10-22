@@ -29,10 +29,10 @@ describe('Firma araçları (e2e)', () => {
   let uploadDir: string;
   const tokens: Record<'company' | 'other' | 'customer' | 'admin', string> = {} as never;
   const phones = {
-    company: '+905320000901',
-    other: '+905320000902',
-    customer: '+905320000903',
-    admin: '+905320000904',
+    company: '+905320002301',
+    other: '+905320002302',
+    customer: '+905320002303',
+    admin: '+905320002304',
   };
   const companyIds: Record<'company' | 'other', string> = {} as never;
   // Testler paralel koşan başka dosyalardaki rastgele plakalarla çakışmasın: 81 ili ve Q/W/X harflerini kullanan sabit plakalar
