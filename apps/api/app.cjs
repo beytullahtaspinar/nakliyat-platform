@@ -3,12 +3,15 @@
 //
 // Sunucuya dışarıdan SSH ile bağlanılamadığı için bekleyen veritabanı migration'ları
 // uygulama açılırken burada uygulanır (DATABASE_URL, cPanel'deki ortam değişkenlerinden gelir).
-// Migration yoksa birkaç saniyede biter. RUN_MIGRATIONS=false ile kapatılabilir.
+// Migration'lar uygulamanın kendi mariadb sürücüsüyle uygulanır (migrate.cjs): sunucuda Prisma'nın
+// migration motoru veritabanına bağlanamıyor. Migration yoksa birkaç saniyede biter.
+// RUN_MIGRATIONS=false ile kapatılabilir.
 const { spawnSync } = require('node:child_process');
+const path = require('node:path');
 
 if (process.env.RUN_MIGRATIONS !== 'false') {
-  const prismaCli = require.resolve('prisma/build/index.js');
-  const result = spawnSync(process.execPath, [prismaCli, 'migrate', 'deploy'], {
+  // Ayrı süreçte çalışır: bağlantı ve kilit uygulama açılmadan kapanmış olur
+  const result = spawnSync(process.execPath, [path.join(__dirname, 'migrate.cjs')], {
     cwd: __dirname,
     env: process.env,
     stdio: ['ignore', 'inherit', 'inherit'],
