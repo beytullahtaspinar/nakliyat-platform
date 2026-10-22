@@ -51,6 +51,8 @@ jobs:
       DATABASE_URL: mysql://nakliyat:nakliyat@127.0.0.1:3306/nakliyat
       JWT_ACCESS_SECRET: ci-test-secret
       NEXT_TELEMETRY_DISABLED: 1
+      # Derleme canlı API'ye bağlı kalmasın: kapalı yerel adres hemen reddedilir, sayfalar API'siz derlenir
+      API_URL: http://127.0.0.1:4999
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
