@@ -46,7 +46,7 @@ export class CompanyOverviewController {
         _sum: { priceTry: true },
       });
 
-    const [openRequests, notQuoted, quotes, decided, bookings, next7Days, revenueThis, revenueLast] =
+    const [openRequests, notQuoted, quotes, decided, bookings, next7Days, revenueThis, revenueLast, vehicles] =
       await Promise.all([
         this.prisma.movingRequest.count({
           where: {
@@ -82,6 +82,7 @@ export class CompanyOverviewController {
         }),
         revenue(thisMonth),
         revenue(lastMonth),
+        this.prisma.vehicle.groupBy({ by: ['status'], where: own, orderBy: { status: 'asc' }, _count: { _all: true } }),
       ]);
 
     const count = <K extends string>(rows: { status: K; _count: { _all: number } }[]) =>
@@ -89,6 +90,7 @@ export class CompanyOverviewController {
     const byQuote = count(quotes);
     const byBooking = count(bookings);
     const recent = count(decided);
+    const byVehicle = count(vehicles);
 
     return {
       requests: { open: openRequests, notQuoted },
@@ -109,6 +111,8 @@ export class CompanyOverviewController {
         lastMonthTry: Number(revenueLast._sum.priceTry ?? 0),
       },
       rating: { average: Number(company.ratingAverage), count: company.ratingCount },
+      // Onaylı aracı olmayan firmaya panelde araç ekleme uyarısı gösterilir
+      vehicles: { verified: byVehicle.VERIFIED ?? 0, pending: byVehicle.PENDING ?? 0, rejected: byVehicle.REJECTED ?? 0 },
     };
   }
 }

@@ -58,6 +58,14 @@ export const TruckIcon = (p: P) => (
   </Icon>
 );
 
+/** Plaka: araçlar */
+export const PlateIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="2.5" y="7" width="19" height="10" rx="2" />
+    <path d="M6 7v10M9 11h2M9 13.5h2M13.5 11h4M13.5 13.5h4" />
+  </Icon>
+);
+
 export const StarIcon = (p: P) => (
   <Icon {...p}>
     <path d="m12 3.8 2.5 5.1 5.6.8-4 4 1 5.5-5.1-2.7-5 2.7.9-5.5-4-4 5.6-.8L12 3.8Z" />

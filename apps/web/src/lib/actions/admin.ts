@@ -97,6 +97,39 @@ export async function rejectDocument(
   return { notice: "Belge reddedildi; gerekçe firma panelinde gösterilir." };
 }
 
+export async function approveVehicle(companyId: string, vehicleId: string): Promise<AdminActionState> {
+  try {
+    await apiFetch(
+      `/admin/companies/${encodeURIComponent(companyId)}/vehicles/${encodeURIComponent(vehicleId)}/approve`,
+      { method: "POST", token: await adminToken() },
+    );
+  } catch (err) {
+    return failure(err, "Araç onaylanamadı.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Araç onaylandı." };
+}
+
+export async function rejectVehicle(
+  companyId: string,
+  vehicleId: string,
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length < 5) return { error: "Firmanın neyi düzelteceğini anlayacağı bir gerekçe yazın." };
+  try {
+    await apiFetch(
+      `/admin/companies/${encodeURIComponent(companyId)}/vehicles/${encodeURIComponent(vehicleId)}/reject`,
+      { method: "POST", token: await adminToken(), body: { reason } },
+    );
+  } catch (err) {
+    return failure(err, "Araç reddedilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Araç reddedildi; gerekçe firma panelinde gösterilir." };
+}
+
 export async function updateCompany(
   companyId: string,
   _prev: AdminActionState & { saved?: boolean },

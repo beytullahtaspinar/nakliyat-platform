@@ -1,5 +1,12 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import type { CompanyCreditSummary, CompanyDocumentSummary, CompanyProfile, CompanyReviews, VerificationStatus } from '@nakliyat/api-client';
+import type {
+  CompanyCreditSummary,
+  CompanyDocumentSummary,
+  CompanyProfile,
+  CompanyReviews,
+  CompanyVehicleSummary,
+  VerificationStatus,
+} from '@nakliyat/api-client';
 import * as Linking from 'expo-linking';
 import { router, type Href } from 'expo-router';
 import type { ComponentProps } from 'react';
@@ -27,13 +34,16 @@ export default function AccountScreen() {
   const { data: reviews, reload: reloadReviews } = useApi<CompanyReviews>('/company/reviews?limit=1');
   const { data: documents, reload: reloadDocuments } = useApi<CompanyDocumentSummary>('/company/documents');
   const { data: credits, reload: reloadCredits } = useApi<CompanyCreditSummary>('/company/credits');
+  const { data: vehicles, reload: reloadVehicles } = useApi<CompanyVehicleSummary>('/company/vehicles');
 
   const unanswered = reviews?.summary.counts.unanswered ?? 0;
   const missing = documents?.requirements.filter((r) => r.state !== 'VERIFIED').length ?? 0;
+  const noVehicle = vehicles !== null && vehicles !== undefined && vehicles.verifiedCount === 0;
+  const vehiclePending = vehicles?.vehicles.some((v) => v.status === 'PENDING') ?? false;
   const status = profile ? VERIFICATION[profile.verificationStatus] : null;
 
   return (
-    <PanelScreen title="Hesap" onRefresh={() => Promise.all([reload(), reloadReviews(), reloadDocuments(), reloadCredits()])}>
+    <PanelScreen title="Hesap" onRefresh={() => Promise.all([reload(), reloadReviews(), reloadDocuments(), reloadCredits(), reloadVehicles()])}>
       {error ? <Notice>{error}</Notice> : null}
       {profile && status ? (
         <View style={{ gap: 6 }}>
@@ -54,6 +64,12 @@ export default function AccountScreen() {
       <Section title="Firma">
         <Row icon="star-outline" label="Değerlendirmeler" hint={unanswered > 0 ? `${unanswered} yanıt bekliyor` : undefined} to="/degerlendirmeler" />
         <Row icon="document-text-outline" label="Belgeler" hint={missing > 0 ? `${missing} zorunlu belge eksik ya da onaysız` : undefined} to="/belgeler" />
+        <Row
+          icon="car-outline"
+          label="Araçlar"
+          hint={noVehicle ? (vehiclePending ? 'Aracın inceleniyor' : 'Onaylı araç yok, aracını ekle') : undefined}
+          to="/araclar"
+        />
         <Row icon="wallet-outline" label="Kredi" value={credits ? formatCredits(credits.balance) : undefined} to="/kredi" />
         <Row icon="people-outline" label="Müşteriler" to="/musteriler" />
       </Section>

@@ -169,7 +169,8 @@ export default function HowItWorksPage() {
             {[
               "Firma hesabı açılır, hizmet verilen iller ve firma bilgileri girilir.",
               "K3 yetki belgesi, vergi levhası ve ticaret sicil kaydı yüklenir.",
-              "Belgeler tek tek incelenir; zorunlu belgeler onaylanmadan firma teklif veremez.",
+              "Yetki belgesine kayıtlı en az bir aracın ruhsatı ve plakası görünen fotoğrafları eklenir.",
+              "Belgeler ve araç tek tek incelenir; onaylanmadan firma teklif veremez.",
               "Onaylanan firma, hizmet bölgesindeki yeni talepleri görür ve teklif verir.",
             ].map((item) => (
               <li key={item} className="flex items-start gap-3">

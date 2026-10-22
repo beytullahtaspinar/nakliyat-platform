@@ -19,6 +19,7 @@ export default async function AdminHomePage() {
   const stats = [
     { label: "Onay bekleyen firma", value: summary.companies.pending, href: "/yonetim/firmalar?durum=bekleyen", highlight: summary.companies.pending > 0 },
     { label: "Onay bekleyen belge", value: summary.documents.pending, href: "/yonetim/belgeler", highlight: summary.documents.pending > 0 },
+    { label: "Onay bekleyen araç", value: summary.vehicles.pending, href: "/yonetim/araclar", highlight: summary.vehicles.pending > 0 },
     {
       label: "Onay bekleyen ad değişikliği",
       value: summary.nameChanges.pending,

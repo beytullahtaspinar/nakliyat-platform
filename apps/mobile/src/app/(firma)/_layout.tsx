@@ -34,6 +34,7 @@ export default function Layout() {
       <Stack.Screen name="takvim" />
       <Stack.Screen name="degerlendirmeler" />
       <Stack.Screen name="belgeler" />
+      <Stack.Screen name="araclar" />
       <Stack.Screen name="kredi" />
       <Stack.Screen name="musteriler" />
       <Stack.Screen name="hesap-sil" />

@@ -9,7 +9,7 @@ import { colors } from '@/theme';
 
 /**
  * Firma profili olmayan firma hesabı (ör. Google / Apple ile uygulamadan açılan): sitedeki /firma-paneli
- * ilk ekranının karşılığı. Profil açılınca panel görünür; belgeler Hesap → Belgeler'den yüklenir.
+ * ilk ekranının karşılığı. Profil açılınca panel görünür; belgeler Hesap → Belgeler'den, araç Hesap → Araçlar'dan yüklenir.
  */
 export function CompanySetupScreen({ onCreated }: { onCreated: () => void }) {
   const [cities, setCities] = useState<City[]>([]);
@@ -61,8 +61,8 @@ export function CompanySetupScreen({ onCreated }: { onCreated: () => void }) {
   return (
     <PanelScreen title="Firma bilgileri" form>
       <AppText style={{ color: colors.zinc600 }}>
-        Firmanı kaydet; ardından K3 yetki belgeni, vergi levhanı ve ticaret sicil belgeni yükle. Yönetim belgelerini onaylayınca
-        bölgendeki taleplere teklif verebilirsin.
+        Firmanı kaydet; ardından K3 yetki belgeni, vergi levhanı, ticaret sicil belgeni ve yetki belgene kayıtlı aracının ruhsatıyla
+        fotoğraflarını yükle. Yönetim onaylayınca bölgendeki taleplere teklif verebilirsin.
       </AppText>
       <Field label="Ticari unvan" placeholder="Vergi levhasındaki unvan" value={legalName} onChangeText={setLegalName} maxLength={200} />
       <Field label="Görünen ad" placeholder="Müşterilerin göreceği ad" value={displayName} onChangeText={setDisplayName} maxLength={80} />

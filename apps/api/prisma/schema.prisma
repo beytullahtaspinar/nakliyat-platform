@@ -281,19 +281,61 @@ enum VehicleType {
   TIR
 }
 
-model Vehicle {
-  id            String      @id @default(cuid())
-  companyId     String
-  plate         String
-  type          VehicleType
-  capacityM3    Int
-  hasLiftSystem Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+/// Aracın kayıtlı olduğu yetki belgesi türü
+enum VehicleAuthorization {
+  K3
+  L1
+}
 
-  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+/// Araç dosyaları: ruhsat ve plakası görünen önden, yandan, arkadan fotoğraflar
+enum VehicleFileKind {
+  REGISTRATION
+  FRONT
+  SIDE
+  REAR
+}
+
+/// Firmanın aracı. Firma onayı için en az bir onaylı araç gerekir: yönetici ruhsattaki plakayı fotoğraflardaki
+/// plakayla karşılaştırıp onaylar ya da gerekçeyle reddeder. Kurallar: media/vehicle-rules.ts
+model Vehicle {
+  id            String               @id @default(cuid())
+  companyId     String
+  /// Boşluksuz, büyük harf (34ABC123)
+  plate         String               @db.VarChar(12)
+  type          VehicleType
+  authorization VehicleAuthorization
+  capacityM3    Int?
+  hasLiftSystem Boolean              @default(false)
+  status        VerificationStatus   @default(PENDING)
+  reviewNote    String?              @db.VarChar(500)
+  reviewedAt    DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  company Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  files   VehicleFile[]
 
   @@unique([companyId, plate])
+  @@index([plate])
+  @@index([status])
+}
+
+/// Aracın ruhsatı ve fotoğrafları. Dosya depoda firmalar/<firmaId>/ altında (belgelerle aynı); her türden bir dosya.
+model VehicleFile {
+  id         String          @id @default(cuid())
+  vehicleId  String
+  kind       VehicleFileKind
+  storageKey String          @unique @db.VarChar(300)
+  storage    StorageLocation @default(LOCAL)
+  mimeType   String          @db.VarChar(100)
+  sizeBytes  Int
+  fileName   String          @db.VarChar(200)
+  createdAt  DateTime        @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([vehicleId, kind])
+  @@index([storage])
 }
 
 // ─── Taşıma talepleri ───────────────────────────────────────────

@@ -11,7 +11,7 @@ import { colors } from '@/theme';
 const COPY = {
   firma: {
     title: 'Firmanı kaydet',
-    lead: 'Önce yetkili hesabını aç. Ardından firma bilgilerini gir ve belgelerini yükle; yönetim onaylayınca teklif verebilirsin.',
+    lead: 'Önce yetkili hesabını aç. Ardından firma bilgilerini gir, belgelerini ve aracını yükle; yönetim onaylayınca teklif verebilirsin.',
     nameLabel: 'Yetkili adı soyadı',
     submit: 'Firma hesabı oluştur',
   },

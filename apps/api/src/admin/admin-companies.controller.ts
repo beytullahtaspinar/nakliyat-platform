@@ -24,6 +24,8 @@ import type { Prisma } from '../generated/prisma/client.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { UserRole, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
 import { CompanyDocumentsService } from '../media/company-documents.service.js';
+import { CompanyVehiclesService } from '../media/company-vehicles.service.js';
+import { VEHICLE_REQUIREMENT_LABEL } from '../media/vehicle-rules.js';
 import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { HideShowcaseMediaDto } from '../media/dto/company-showcase.dto.js';
 import { CompaniesService } from '../companies/companies.service.js';
@@ -46,6 +48,7 @@ export class AdminCompaniesController {
     private readonly prisma: PrismaService,
     private readonly events: DomainEvents,
     private readonly documents: CompanyDocumentsService,
+    private readonly vehicles: CompanyVehiclesService,
     private readonly showcase: CompanyShowcaseService,
     private readonly companies: CompaniesService,
     private readonly nameChanges: CompanyNameChangesService,
@@ -150,12 +153,17 @@ export class AdminCompaniesController {
         orderBy: { createdAt: status === VerificationStatus.PENDING ? 'asc' : 'desc' },
         skip: (page - 1) * limit,
         take: limit,
-        include: { ...WITH_CITIES, owner: { select: { fullName: true, phone: true, email: true } } },
+        include: {
+          ...WITH_CITIES,
+          owner: { select: { fullName: true, phone: true, email: true } },
+          _count: { select: { vehicles: { where: { status: VerificationStatus.VERIFIED } } } },
+        },
       }),
       this.prisma.company.count({ where }),
     ]);
     return {
-      items: items.map(({ owner, ...c }) => ({ ...toProfile(c), owner })),
+      // verifiedVehicles: araç şartından önce onaylanmış firmalar listede "araç yok" diye işaretlenir
+      items: items.map(({ owner, _count, ...c }) => ({ ...toProfile(c), owner, verifiedVehicles: _count.vehicles })),
       total,
       page,
       limit,
@@ -185,6 +193,7 @@ export class AdminCompaniesController {
       ...toProfile(rest),
       owner,
       ...(await this.documents.summary(id)),
+      ...(await this.vehicles.summary(id)),
       media: await this.showcase.listForAdmin(id),
       nameChanges: await this.nameChanges.historyFor(id),
       quoteCount: _count.quotes,
@@ -262,11 +271,15 @@ export class AdminCompaniesController {
     return this.showcase.setHidden(admin.id, id, mediaId, null);
   }
 
-  /** Zorunlu belgelerin (K3, vergi levhası, ticaret sicil) her biri onaylanmış ve süresi geçerli olmalı */
+  /**
+   * Zorunlu belgelerin (K3, vergi levhası, ticaret sicil) her biri onaylanmış ve süresi geçerli olmalı;
+   * en az bir aracı (ruhsat ve plakalı fotoğraflar) onaylanmış olmalı
+   */
   @Post(':id/verify')
   @HttpCode(HttpStatus.OK)
   async verify(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
     const missing = await this.documents.missingForVerification(id);
+    if (!(await this.vehicles.hasVerifiedVehicle(id))) missing.push(VEHICLE_REQUIREMENT_LABEL);
     if (missing.length) {
       throw new ConflictException(`Firma onaylanamaz, şu belgeler onaylanmadı: ${missing.join(', ')}`);
     }
@@ -295,6 +308,24 @@ export class AdminCompaniesController {
     @Body() dto: RejectCompanyDto,
   ) {
     return this.documents.review(admin.id, id, documentId, VerificationStatus.REJECTED, dto.reason);
+  }
+
+  @Post(':id/vehicles/:vehicleId/approve')
+  @HttpCode(HttpStatus.OK)
+  approveVehicle(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Param('vehicleId') vehicleId: string) {
+    return this.vehicles.review(admin.id, id, vehicleId, VerificationStatus.VERIFIED);
+  }
+
+  /** Gerekçe (ör. plaka fotoğrafta okunmuyor) firma panelinde aracın yanında gösterilir */
+  @Post(':id/vehicles/:vehicleId/reject')
+  @HttpCode(HttpStatus.OK)
+  rejectVehicle(
+    @CurrentUser() admin: AuthUser,
+    @Param('id') id: string,
+    @Param('vehicleId') vehicleId: string,
+    @Body() dto: RejectCompanyDto,
+  ) {
+    return this.vehicles.review(admin.id, id, vehicleId, VerificationStatus.REJECTED, dto.reason);
   }
 
   private async setStatus(admin: AuthUser, id: string, status: VerificationStatus, note?: string) {

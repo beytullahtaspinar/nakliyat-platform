@@ -1,11 +1,12 @@
 "use client";
 
 import { SideNav } from "@/components/panel/side-nav";
-import { BuildingIcon, CalculatorIcon, ChartIcon, ClipboardIcon, DocumentIcon, FlagIcon, GridIcon, ScaleIcon, ShieldCheckIcon, StarIcon, TagIcon, UsersIcon, WalletIcon } from "@/components/ui/icons";
+import { BuildingIcon, CalculatorIcon, ChartIcon, ClipboardIcon, DocumentIcon, FlagIcon, GridIcon, PlateIcon, ScaleIcon, ShieldCheckIcon, StarIcon, TagIcon, UsersIcon, WalletIcon } from "@/components/ui/icons";
 
 export function AdminNav({
   pendingCompanies,
   pendingDocuments,
+  pendingVehicles,
   pendingNameChanges,
   pendingTransfers,
   openReports,
@@ -13,6 +14,7 @@ export function AdminNav({
 }: {
   pendingCompanies: number;
   pendingDocuments: number;
+  pendingVehicles: number;
   pendingNameChanges: number;
   pendingTransfers: number;
   openReports: number;
@@ -37,6 +39,12 @@ export function AdminNav({
               label: "Belgeler",
               icon: ShieldCheckIcon,
               badge: { count: pendingDocuments, label: "onay bekleyen belge" },
+            },
+            {
+              href: "/yonetim/araclar",
+              label: "Araçlar",
+              icon: PlateIcon,
+              badge: { count: pendingVehicles, label: "onay bekleyen araç" },
             },
             {
               href: "/yonetim/ad-degisiklikleri",

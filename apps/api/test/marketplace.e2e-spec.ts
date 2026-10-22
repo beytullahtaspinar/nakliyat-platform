@@ -344,7 +344,7 @@ describe('Pazaryeri akışı (e2e)', () => {
     await http().get('/v1/admin/summary').set(auth('companyA')).expect(403);
   });
   it('admin firma ve talepleri arar, talep kaydını teklifleriyle görür', async () => {
-    const companies = await http().get('/v1/admin/companies?q=companyB').set(auth('admin')).expect(200);
+    const companies = await http().get('/v1/admin/companies?q=companyB Nakliyat').set(auth('admin')).expect(200);
     expect(companies.body.items.map((c: { id: string }) => c.id)).toEqual([companyIds.companyB]);
     const byPhone = await http().get('/v1/admin/companies?q=0532 000 0202').set(auth('admin')).expect(200);
     expect(byPhone.body.items.map((c: { id: string }) => c.id)).toEqual([companyIds.companyA]);

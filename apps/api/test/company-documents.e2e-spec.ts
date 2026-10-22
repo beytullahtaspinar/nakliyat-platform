@@ -9,7 +9,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { markVerified } from './helpers.js';
+import { addApprovedVehicles, markVerified } from './helpers.js';
 
 type Summary = {
   documents: { id: string; type: string; status: string; url: string; reviewNote: string | null; validUntil: string | null }[];
@@ -204,6 +204,10 @@ describe('Firma belgeleri (e2e)', () => {
     for (const doc of (body as Summary).documents) await review(doc.id, 'approve');
     const res = await http().get(`/v1/admin/companies/${companyId}`).set(auth('admin')).expect(200);
     expect(res.body.requirements.every((r: { state: string }) => r.state === 'VERIFIED')).toBe(true);
+    // Belgeler tamam, onaylı araç yok: firma yine onaylanamaz (araç akışı company-vehicles.e2e-spec.ts)
+    const noVehicle = await http().post(`/v1/admin/companies/${companyId}/verify`).set(auth('admin')).expect(409);
+    expect(noVehicle.body.message).toContain('Onaylı araç');
+    await addApprovedVehicles(prisma, [companyId]);
     await http().post(`/v1/admin/companies/${companyId}/verify`).set(auth('admin')).expect(200);
 
     const k3 = ofType(res.body, 'K3_LICENSE')[0]!;

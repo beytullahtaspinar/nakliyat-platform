@@ -8,6 +8,7 @@ import {
   GridIcon,
   InboxIcon,
   PhotoIcon,
+  PlateIcon,
   ShieldCheckIcon,
   StarIcon,
   TagIcon,
@@ -62,6 +63,7 @@ export function PanelNav({
             { href: "/firma-paneli/profil", label: "Firma profili", icon: BuildingIcon },
             { href: "/firma-paneli/tanitim", label: "Tanıtım sayfası", icon: PhotoIcon },
             { href: "/firma-paneli/belgeler", label: "Belgeler", icon: ShieldCheckIcon },
+            { href: "/firma-paneli/araclar", label: "Araçlar", icon: PlateIcon },
           ],
         },
         {

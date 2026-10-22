@@ -85,6 +85,7 @@ export default async function AdminCompaniesPage({ searchParams }: PageProps<"/y
               </td>
               <td className={td}>
                 <VerificationBadge status={c.verificationStatus} />
+                {c.verifiedVehicles === 0 && <div className="mt-1 text-xs text-amber-800">Onaylı araç yok</div>}
               </td>
               <td className={`${td} whitespace-nowrap text-slate-600`}>{formatDate(c.createdAt)}</td>
             </tr>

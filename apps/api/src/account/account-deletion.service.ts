@@ -3,6 +3,7 @@ import { OAUTH_PROVIDERS, type OAuthProvider } from '../auth/oauth/provider.js';
 import { BookingStatus, QuoteStatus, RequestStatus, UserStatus } from '../generated/prisma/enums.js';
 import { CreditsService } from '../credits/credits.service.js';
 import { CompanyDocumentsService } from '../media/company-documents.service.js';
+import { CompanyVehiclesService } from '../media/company-vehicles.service.js';
 import { CompanyShowcaseService } from '../media/company-showcase.service.js';
 import { MediaService } from '../media/media.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -28,6 +29,7 @@ export class AccountDeletionService {
     private readonly prisma: PrismaService,
     private readonly media: MediaService,
     private readonly documents: CompanyDocumentsService,
+    private readonly vehicles: CompanyVehiclesService,
     private readonly showcase: CompanyShowcaseService,
     private readonly credits: CreditsService,
     @Inject(OAUTH_PROVIDERS) private readonly oauthProviders: OAuthProvider[],
@@ -109,6 +111,7 @@ export class AccountDeletionService {
     await this.media.deleteForCustomer(id);
     if (companyId) {
       await this.documents.deleteForCompany(companyId);
+      await this.vehicles.deleteForCompany(companyId);
       await this.showcase.deleteForCompany(companyId);
     }
   }

@@ -15,7 +15,7 @@ export function CompanyDecision({
 }: {
   companyId: string;
   status: VerificationStatus;
-  /** Onaylanmamış zorunlu belgeler; boş değilse firma onaylanamaz */
+  /** Onaylanmamış zorunlu belgeler ve araç; boş değilse firma onaylanamaz */
   missing: string[];
 }) {
   const [rejecting, setRejecting] = useState(false);
@@ -38,14 +38,14 @@ export function CompanyDecision({
       )}
       {status !== "VERIFIED" && missing.length > 0 && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Onay için önce şu belgeler onaylanmalı: {missing.join(", ")}.
+          Onay için önce şunlar onaylanmalı: {missing.join(", ")}.
         </p>
       )}
       {status !== "VERIFIED" && missing.length === 0 && (
         <ConfirmButton
           action={verify}
           label="Firmayı onayla"
-          confirmText="Belgeler onaylı. Vergi numarası ve unvanı da kontrol ettin mi? Onaylanan firma hizmet bölgesindeki taleplere teklif verebilir."
+          confirmText="Belgeler ve araç onaylı. Vergi numarası ve unvanı da kontrol ettin mi? Onaylanan firma hizmet bölgesindeki taleplere teklif verebilir."
           confirmLabel="Evet, onayla"
         />
       )}

@@ -16,6 +16,7 @@ export function companyRoute(path: string, tag = ''): Href {
   if (section === 'degerlendirmeler') return '/degerlendirmeler';
   if (section === 'kredi') return '/kredi';
   if (section === 'belgeler') return '/belgeler';
+  if (section === 'araclar') return '/araclar';
   // Firma onayı ve ad değişikliği bildirimleri: durum Hesap sekmesinde görünür
   if (section === 'profil') return '/hesap';
   return '/';
