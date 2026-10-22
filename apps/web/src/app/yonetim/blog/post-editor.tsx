@@ -517,6 +517,16 @@ export function PostEditor({
               ))}
             </select>
           </div>
+          {(categories.length === 0 || authors.length === 0) && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              {categories.length === 0 && authors.length === 0
+                ? "Henüz kategori ve yazar eklenmemiş."
+                : categories.length === 0
+                  ? "Henüz kategori eklenmemiş."
+                  : "Henüz yazar eklenmemiş."}{" "}
+              Aşağıdaki bağlantıdan ekleyip bu sayfaya dönün; yazdıklarınız bu tarayıcıda saklanır, geri yükleyebilirsiniz.
+            </p>
+          )}
           <p className="text-xs text-slate-500">
             <Link href="/yonetim/blog/kategoriler" className="font-medium text-brand-700 hover:underline">
               Kategoriler
