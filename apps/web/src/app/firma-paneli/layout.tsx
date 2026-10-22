@@ -38,8 +38,8 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
           <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Firma bilgilerini gir</h1>
           <p className="mt-2 text-sm text-slate-600">
             Hoş geldin {user.fullName}. Taleplere teklif verebilmek için önce firmanı tanıt. Ekibimiz vergi
-            numaranı ve belgelerini (K3 yetki belgesi, vergi levhası, ticaret sicil) kontrol ettikten sonra firman
-            doğrulanır. Belgeleri bir sonraki adımda yükleyeceksin.
+            numaranı, belgelerini (K3 yetki belgesi, vergi levhası, ticaret sicil) ve aracının ruhsatını kontrol
+            ettikten sonra firman doğrulanır. Belgeleri ve aracını bir sonraki adımda yükleyeceksin.
           </p>
           <PanelSection id="firma-bilgileri" title="Firma bilgileri" className="mt-6">
             <ProfileForm cities={cityOptions} />
@@ -96,7 +96,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
       {/* Uyarıların kendi üst boşluğu ilkinde sıfırlanır; hiçbiri yoksa kap yer kaplamaz */}
       <div className="mb-6 empty:hidden [&>*:first-child]:mt-0">
         <VerifyNotice user={user} returnTo="/firma-paneli" />
-        <VerificationBanner profile={profile} />
+        <VerificationBanner profile={profile} vehicles={overview?.vehicles} />
         {!impersonating && <AppPrompt settingsPath="/firma-paneli/bildirimler" />}
       </div>
       {children}
@@ -104,8 +104,27 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
   );
 }
 
-function VerificationBanner({ profile }: { profile: CompanyProfile }) {
-  if (profile.verificationStatus === "VERIFIED") return null;
+function VerificationBanner({ profile, vehicles }: { profile: CompanyProfile; vehicles?: CompanyOverview["vehicles"] }) {
+  if (profile.verificationStatus === "VERIFIED") {
+    // Araç şartından önce onaylanmış firmalar onaylı kalır; aracını eklemesi hatırlatılır
+    if (!vehicles || vehicles.verified > 0) return null;
+    return (
+      <div role="status" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <strong>{vehicles.pending > 0 ? "Aracın inceleniyor." : "Aracını ekle."}</strong>{" "}
+        {vehicles.pending > 0
+          ? "Ruhsat ve fotoğrafları kontrol edildikten sonra bu uyarı kalkar."
+          : "Firmaların yetki belgesine kayıtlı en az bir aracı olmalı. Ruhsatı ve plakası görünen önden, yandan, arkadan fotoğraflarını "}
+        {vehicles.pending === 0 && (
+          <>
+            <Link href="/firma-paneli/araclar" className="font-semibold underline">
+              Araçlar
+            </Link>{" "}
+            sayfasından yükle.
+          </>
+        )}
+      </div>
+    );
+  }
   const rejected = profile.verificationStatus === "REJECTED";
   return (
     <div
@@ -120,15 +139,23 @@ function VerificationBanner({ profile }: { profile: CompanyProfile }) {
           {profile.verificationNote ? `Gerekçe: ${profile.verificationNote}. ` : ""}
           Bilgilerini firma profilinden düzeltip kaydettiğinde ya da{" "}
           <Link href="/firma-paneli/belgeler" className="font-semibold underline">
-            yeni belge yüklediğinde
+            yeni belge
           </Link>{" "}
-          yeniden incelenir.
+          ya da{" "}
+          <Link href="/firma-paneli/araclar" className="font-semibold underline">
+            araç
+          </Link>{" "}
+          eklediğinde yeniden incelenir.
         </>
       ) : (
         <>
           <strong>Firman doğrulama bekliyor.</strong> K3 yetki belgesi, vergi levhası ve ticaret sicil belgeni{" "}
           <Link href="/firma-paneli/belgeler" className="font-semibold underline">
             Belgeler
+          </Link>
+          , yetki belgene kayıtlı aracının ruhsatını ve fotoğraflarını{" "}
+          <Link href="/firma-paneli/araclar" className="font-semibold underline">
+            Araçlar
           </Link>{" "}
           sayfasından yükle. Bölgendeki talepleri şimdiden görebilirsin; doğrulama tamamlanınca teklif verebileceksin.
         </>

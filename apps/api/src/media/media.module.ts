@@ -6,6 +6,8 @@ import { CompanyDocumentsController } from './company-documents.controller.js';
 import { CompanyShowcaseController } from './company-showcase.controller.js';
 import { CompanyShowcaseService } from './company-showcase.service.js';
 import { CompanyDocumentsService } from './company-documents.service.js';
+import { CompanyVehiclesController } from './company-vehicles.controller.js';
+import { CompanyVehiclesService } from './company-vehicles.service.js';
 import { FilesController } from './files.controller.js';
 import { LocalStorage } from './local-storage.js';
 import { MediaService } from './media.service.js';
@@ -46,6 +48,7 @@ export function createFileStorage(config: ConfigService): MediaStorage {
   controllers: [
     RequestMediaController,
     CompanyDocumentsController,
+    CompanyVehiclesController,
     CompanyShowcaseController,
     PublicMediaController,
     FilesController,
@@ -53,9 +56,10 @@ export function createFileStorage(config: ConfigService): MediaStorage {
   providers: [
     MediaService,
     CompanyDocumentsService,
+    CompanyVehiclesService,
     CompanyShowcaseService,
     { provide: FILE_STORAGE, inject: [ConfigService], useFactory: createFileStorage },
   ],
-  exports: [MediaService, CompanyDocumentsService, CompanyShowcaseService, FILE_STORAGE],
+  exports: [MediaService, CompanyDocumentsService, CompanyVehiclesService, CompanyShowcaseService, FILE_STORAGE],
 })
 export class MediaModule {}

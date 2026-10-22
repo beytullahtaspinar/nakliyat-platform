@@ -535,6 +535,7 @@ export type CompanyOverview = {
   bookings: { scheduled: number; next7Days: number; completed: number; cancelled: number };
   revenue: { month: string; thisMonthTry: number; lastMonthTry: number };
   rating: { average: number; count: number };
+  vehicles: { verified: number; pending: number; rejected: number };
 };
 
 /** GET /company/reviews */
@@ -585,6 +586,7 @@ export type AdminSummary = {
   users: { customers: number; companies: number; total: number };
   bookings: { scheduled: number };
   documents: { pending: number };
+  vehicles: { pending: number };
   nameChanges: { pending: number };
   transfers: { pending: number };
   reports: { open: number };
@@ -666,6 +668,8 @@ export type AdminCompany = CompanyProfile & {
   createdAt: string;
   updatedAt: string;
   owner: CompanyOwner;
+  /** Yalnızca listede: onaylı araç sayısı */
+  verifiedVehicles?: number;
 };
 
 export type CompanyDocument = {
@@ -700,8 +704,41 @@ export type AdminDocument = CompanyDocument & {
 /** GET /company/documents: belgeler ve zorunlu belgelerin durumu */
 export type CompanyDocumentSummary = { documents: CompanyDocument[]; requirements: DocumentRequirement[] };
 
+export type VehicleFileKind = "REGISTRATION" | "FRONT" | "SIDE" | "REAR";
+
+/** Firmanın aracı: ruhsat ve plakası görünen önden, yandan, arkadan fotoğraflar */
+export type CompanyVehicle = {
+  id: string;
+  /** Boşluksuz, büyük harf (34ABC123) */
+  plate: string;
+  type: VehicleType;
+  authorization: "K3" | "L1";
+  status: VerificationStatus;
+  reviewNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+  reviewedAt: string | null;
+  files: {
+    kind: VehicleFileKind;
+    fileName: string;
+    mimeType: string;
+    sizeBytes: number;
+    /** Kısa süreli imzalı görüntüleme adresi */
+    url: string;
+  }[];
+};
+
+/** GET /company/vehicles: araçlar ve onaylı araç sayısı (firma onayı için en az bir onaylı araç gerekir) */
+export type CompanyVehicleSummary = { vehicles: CompanyVehicle[]; verifiedCount: number };
+
+/** GET /admin/vehicles: araç ve ait olduğu firma */
+export type AdminVehicle = CompanyVehicle & {
+  company: { id: string; displayName: string; legalName: string; verificationStatus: VerificationStatus };
+};
+
 export type AdminCompanyDetail = AdminCompany &
-  CompanyDocumentSummary & {
+  CompanyDocumentSummary &
+  CompanyVehicleSummary & {
   owner: CompanyOwner & { id: string; createdAt: string };
   /** Tanıtım sayfası görselleri (gizlenenler dahil) */
   media: ShowcaseMedia[];
@@ -718,6 +755,8 @@ export type AdminCompanyDetail = AdminCompany &
       type?: CompanyDocument["type"];
       method?: string;
       path?: string;
+      /** Araç kararları */
+      plate?: string;
       /** Görünen ad değişikliği */
       oldName?: string;
       newName?: string;

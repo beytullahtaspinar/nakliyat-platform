@@ -55,6 +55,9 @@ test("firma paneli CRM düzeninde: pano, süzgeçli talepler, işler ve müşter
   for (const doc of docs.documents) {
     expect((await request.post(`${API}/admin/companies/${companyId}/documents/${doc.id}/approve`, { headers: adminHeaders })).ok()).toBeTruthy();
   }
+  for (const vehicle of docs.vehicles) {
+    expect((await request.post(`${API}/admin/companies/${companyId}/vehicles/${vehicle.id}/approve`, { headers: adminHeaders })).ok()).toBeTruthy();
+  }
   expect((await request.post(`${API}/admin/companies/${companyId}/verify`, { headers: adminHeaders })).ok()).toBeTruthy();
 
   const suffix = uniqueDigits(4);

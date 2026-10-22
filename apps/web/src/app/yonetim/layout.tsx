@@ -23,6 +23,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/yonetim">)
         <AdminNav
           pendingCompanies={summary.companies.pending}
           pendingDocuments={summary.documents.pending}
+          pendingVehicles={summary.vehicles.pending}
           pendingNameChanges={summary.nameChanges.pending}
           pendingTransfers={summary.transfers.pending}
           openReports={summary.reports.open}

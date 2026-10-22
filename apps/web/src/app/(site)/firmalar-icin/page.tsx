@@ -63,12 +63,12 @@ const JOIN_STEPS = [
     text: "Cep telefonunla kaydol, firma adını ve hizmet verdiğin illeri gir.",
   },
   {
-    title: "Belgelerini yükle",
-    text: "K3 yetki belgesi, vergi levhası ve ticaret sicil belgeni PDF ya da fotoğraf olarak panelden yükle.",
+    title: "Belgelerini ve aracını yükle",
+    text: "K3 yetki belgesi, vergi levhası, ticaret sicil belgen ve yetki belgene kayıtlı aracının ruhsatı ile plakası görünen önden, yandan, arkadan fotoğrafları.",
   },
   {
     title: "Onayı bekle",
-    text: "Belgeler tek tek incelenir. Eksik ya da hatalı belge olursa gerekçesiyle bildirilir, yenisini yükleyebilirsin.",
+    text: "Belgeler ve aracın tek tek incelenir; ruhsattaki plaka fotoğraflardakiyle karşılaştırılır. Eksik ya da hatalı belge olursa gerekçesiyle bildirilir, yenisini yükleyebilirsin.",
   },
   {
     title: "Teklif vermeye başla",

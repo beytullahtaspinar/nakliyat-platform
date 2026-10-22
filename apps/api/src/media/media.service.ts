@@ -95,7 +95,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Diskte kalan dosyaları (talep fotoğrafları, firma belgeleri ve görselleri) R2'ye taşır: R2 kurulmadan ya da
+   * Diskte kalan dosyaları (talep fotoğrafları, firma belgeleri, araç dosyaları ve görselleri) R2'ye taşır: R2 kurulmadan ya da
    * R2 hata verirken yüklenenler. Önce R2'ye kopyalanır, kayıt güncellenir, sonra diskteki silinir;
    * arada görüntüleme bozulmaz.
    */
@@ -117,6 +117,12 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
           markMoved: (id) =>
             this.prisma.companyDocument.updateMany({ where: { id, ...local }, data: { storage: StorageLocation.R2 } }),
           exists: async (id) => (await this.prisma.companyDocument.count({ where: { id } })) > 0,
+        },
+        {
+          pending: () => this.prisma.vehicleFile.findMany({ where: local, orderBy: { createdAt: 'asc' }, take: MOVE_BATCH }),
+          markMoved: (id) =>
+            this.prisma.vehicleFile.updateMany({ where: { id, ...local }, data: { storage: StorageLocation.R2 } }),
+          exists: async (id) => (await this.prisma.vehicleFile.count({ where: { id } })) > 0,
         },
         {
           pending: () => this.prisma.companyMedia.findMany({ where: local, orderBy: { createdAt: 'asc' }, take: MOVE_BATCH }),
@@ -311,16 +317,17 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /** Depo başına kullanılan toplam boyut (bayt). Talep dosyaları, firma belgeleri, firma ve blog görselleri aynı depoyu paylaşır. */
+  /** Depo başına kullanılan toplam boyut (bayt). Talep dosyaları, firma belgeleri ve araç dosyaları, firma ve blog görselleri aynı depoyu paylaşır. */
   private async usage() {
     const used = { [StorageLocation.LOCAL]: 0, [StorageLocation.R2]: 0 };
-    const [media, documents, showcase, blog] = await Promise.all([
+    const [media, documents, vehicles, showcase, blog] = await Promise.all([
       this.prisma.requestMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
       this.prisma.companyDocument.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
+      this.prisma.vehicleFile.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
       this.prisma.companyMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
       this.prisma.blogMedia.groupBy({ by: ['storage'], _sum: { sizeBytes: true } }),
     ]);
-    for (const g of [...media, ...documents, ...showcase, ...blog]) used[g.storage] += g._sum.sizeBytes ?? 0;
+    for (const g of [...media, ...documents, ...vehicles, ...showcase, ...blog]) used[g.storage] += g._sum.sizeBytes ?? 0;
     return used;
   }
 

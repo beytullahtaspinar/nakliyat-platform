@@ -14,9 +14,10 @@ import { AdminRequestsController } from './admin-requests.controller.js';
 import { AdminReviewsController } from './admin-reviews.controller.js';
 import { AdminStatsController } from './admin-stats.controller.js';
 import { AdminUsersController } from './admin-users.controller.js';
+import { AdminVehiclesController } from './admin-vehicles.controller.js';
 
 @Module({
   imports: [AccountModule, MediaModule, PricingModule, ReviewsModule],
-  controllers: [AdminOverviewController, AdminBookingsController, AdminCompaniesController, AdminCreditsController, AdminPricingController, AdminDocumentsController, AdminNameChangesController, AdminRequestsController, AdminReviewsController, AdminStatsController, AdminUsersController],
+  controllers: [AdminOverviewController, AdminBookingsController, AdminCompaniesController, AdminCreditsController, AdminPricingController, AdminDocumentsController, AdminNameChangesController, AdminRequestsController, AdminReviewsController, AdminStatsController, AdminUsersController, AdminVehiclesController],
 })
 export class AdminModule {}

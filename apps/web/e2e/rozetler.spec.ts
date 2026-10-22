@@ -58,6 +58,9 @@ test("belgeleri onaylı firma teklif listesinde, firma sayfasında ve panelde ro
   for (const doc of docs.documents) {
     expect((await request.post(`${API}/admin/companies/${companyId}/documents/${doc.id}/approve`, { headers: adminHeaders })).ok()).toBeTruthy();
   }
+  for (const vehicle of docs.vehicles) {
+    expect((await request.post(`${API}/admin/companies/${companyId}/vehicles/${vehicle.id}/approve`, { headers: adminHeaders })).ok()).toBeTruthy();
+  }
   expect((await request.post(`${API}/admin/companies/${companyId}/verify`, { headers: adminHeaders })).ok()).toBeTruthy();
 
   const customerPhone = `0532${uniqueDigits(7)}`;

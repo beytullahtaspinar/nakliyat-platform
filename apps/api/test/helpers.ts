@@ -29,6 +29,40 @@ export async function addApprovedDocuments(prisma: PrismaService, companyIds: st
       })),
     ),
   });
+  await addApprovedVehicles(prisma, companyIds);
+}
+
+/** Rastgele, biçimi geçerli bir plaka (testler paralel koştuğu için firmalar arasında çakışmaz) */
+export const randomPlate = () => {
+  const letters = Array.from({ length: 3 }, () => 'ABCDEFGHJKLMNPRSTUVYZ'[Math.floor(Math.random() * 21)]).join('');
+  return `${String(1 + Math.floor(Math.random() * 81)).padStart(2, '0')}${letters}${100 + Math.floor(Math.random() * 900)}`;
+};
+
+/**
+ * Araç akışını konu almayan testler için: firmaya ruhsatı ve fotoğrafları onaylanmış bir araç ekler
+ * (firma onayı için gerekir). Araç akışı company-vehicles.e2e-spec.ts'te.
+ */
+export async function addApprovedVehicles(prisma: PrismaService, companyIds: string[]) {
+  for (const companyId of companyIds) {
+    await prisma.vehicle.create({
+      data: {
+        companyId,
+        plate: randomPlate(),
+        type: 'KAMYON',
+        authorization: 'K3',
+        status: 'VERIFIED',
+        files: {
+          create: (['REGISTRATION', 'FRONT', 'SIDE', 'REAR'] as const).map((kind) => ({
+            kind,
+            storageKey: `firmalar/${companyId}/${randomBytes(16).toString('hex')}.jpg`,
+            mimeType: 'image/jpeg',
+            sizeBytes: 1000,
+            fileName: `${kind.toLowerCase()}.jpg`,
+          })),
+        },
+      },
+    });
+  }
 }
 
 /**

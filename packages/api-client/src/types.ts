@@ -49,6 +49,7 @@ export type CompanyOverview = {
   bookings: { scheduled: number; next7Days: number; completed: number; cancelled: number };
   revenue: { month: string; thisMonthTry: number; lastMonthTry: number };
   rating: { average: number; count: number };
+  vehicles: { verified: number; pending: number; rejected: number };
 };
 
 export type VerificationStatus = 'PENDING' | 'VERIFIED' | 'REJECTED';
@@ -329,6 +330,26 @@ export type DocumentRequirement = {
 
 /** GET /company/documents */
 export type CompanyDocumentSummary = { documents: CompanyDocument[]; requirements: DocumentRequirement[] };
+
+export type VehicleFileKind = 'REGISTRATION' | 'FRONT' | 'SIDE' | 'REAR';
+
+/** GET /company/vehicles: firmanın aracı (ruhsat ve plakası görünen önden, yandan, arkadan fotoğraflar) */
+export type CompanyVehicle = {
+  id: string;
+  /** Boşluksuz, büyük harf (34ABC123) */
+  plate: string;
+  type: VehicleType;
+  authorization: 'K3' | 'L1';
+  status: VerificationStatus;
+  reviewNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+  reviewedAt: string | null;
+  files: { kind: VehicleFileKind; fileName: string; mimeType: string; sizeBytes: number; url: string }[];
+};
+
+/** Firma onayı için en az bir onaylı araç gerekir */
+export type CompanyVehicleSummary = { vehicles: CompanyVehicle[]; verifiedCount: number };
 
 /** Dosya yükleme adresi: dosya bu adrese PUT ile gönderilir */
 export type UploadTicket = { key: string; url: string; method: 'PUT'; headers: Record<string, string> };

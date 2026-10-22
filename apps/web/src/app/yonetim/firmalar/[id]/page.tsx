@@ -22,6 +22,8 @@ import { DocumentReview } from "./document-review";
 import { ImpersonateButton } from "./impersonate-button";
 import { MediaModeration } from "./media-moderation";
 import { companyPath } from "@/lib/reviews";
+import { VEHICLE_REQUIREMENT, formatPlate } from "@/lib/vehicles";
+import { VehicleInspection } from "../../vehicle-inspection";
 
 export const metadata: Metadata = { title: "Firma inceleme" };
 
@@ -31,6 +33,11 @@ const HISTORY_LABELS: Record<string, string> = {
   "company.document.upload": "Firma belge yükledi",
   "company.document.approve": "Belge onaylandı",
   "company.document.reject": "Belge reddedildi",
+  "company.vehicle.upload": "Firma araç ekledi",
+  "company.vehicle.update": "Firma aracını düzeltti",
+  "company.vehicle.delete": "Firma aracını sildi",
+  "company.vehicle.approve": "Araç onaylandı",
+  "company.vehicle.reject": "Araç reddedildi",
   "company.impersonate": "Firma paneline geçildi",
   "company.impersonate.action": "Firma panelinde değişiklik",
   "company.media.hide": "Tanıtım görseli gizlendi",
@@ -48,6 +55,7 @@ function panelArea(path?: string): string | undefined {
   if (!path) return undefined;
   if (path.includes("/company/profile")) return "firma bilgileri";
   if (path.includes("/company/documents")) return "belgeler";
+  if (path.includes("/company/vehicles")) return "araçlar";
   if (path.includes("/company/showcase")) return "tanıtım sayfası";
   if (path.includes("/quotes")) return "teklifler";
   if (path.includes("/bookings")) return "işler";
@@ -74,6 +82,7 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
     apiFetch<AdminCompanyCredits>(`/admin/companies/${encodeURIComponent(id)}/credits`, { token }),
   ]);
   const missing = c.requirements.filter((r) => r.state !== "VERIFIED").map((r) => DOCUMENT_LABELS[r.type]);
+  if (c.verifiedCount === 0) missing.push(VEHICLE_REQUIREMENT);
   const pendingName = c.nameChanges.find((n) => n.status === "PENDING");
 
   return (
@@ -91,7 +100,8 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
       />
       {created && (
         <p role="status" className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
-          Firma açıldı ve onay bekliyor. Onaylamak için zorunlu belgeleri yükle: firma paneline geçip Belgeler sayfasından yükleyebilirsin.
+          Firma açıldı ve onay bekliyor. Onaylamak için zorunlu belgeleri ve bir aracı yükle: firma paneline geçip Belgeler ve
+          Araçlar sayfalarından yükleyebilirsin.
         </p>
       )}
 
@@ -190,6 +200,29 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
             </ul>
           </Card>
 
+          <Card className="p-5" role="region" aria-labelledby="araclar-baslik">
+            <h2 id="araclar-baslik" className="font-semibold">Araçlar</h2>
+            <p className="mt-1 text-sm text-zinc-600">
+              Ruhsattaki plakayı önden, yandan ve arkadan fotoğraflardaki plakayla karşılaştırın. En az bir araç onaylanmadan
+              firma onaylanamaz.
+            </p>
+            {c.vehicles.length === 0 ? (
+              <p className="mt-3 text-sm text-zinc-500">
+                {c.verificationStatus === "VERIFIED"
+                  ? "Araç yok. Firma araç şartından önce onaylandı; panelinde araç ekleme uyarısı görüyor."
+                  : "Araç eklenmedi."}
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-5">
+                {c.vehicles.map((v) => (
+                  <li key={v.id} className="border-t border-zinc-100 pt-4 first:border-0 first:pt-0">
+                    <VehicleInspection companyId={c.id} vehicle={v} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
           {c.media.length > 0 && (
             <Card className="p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -238,6 +271,7 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
                         ? VERIFICATION[h.details.to].label
                         : (HISTORY_LABELS[h.action] ?? h.action)}
                       {h.details?.type && `: ${DOCUMENT_LABELS[h.details.type]}`}
+                      {h.details?.plate && `: ${formatPlate(h.details.plate)}`}
                       {h.details?.newName && `: “${h.details.oldName}” → “${h.details.newName}”`}
                       {panelArea(h.details?.path) && ` (${panelArea(h.details?.path)})`}
                     </span>{" "}
