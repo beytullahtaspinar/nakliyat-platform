@@ -12,6 +12,9 @@ const WEB_PORT = 3000;
 const SECOND_WEB_PORT = 3001;
 const API_PORT = 4000;
 const IYZICO_MOCK_PORT = 4200;
+const INDEXNOW_MOCK_PORT = 4300;
+/** Web sunucuları IndexNow bildirimini sahte sunucuya yollar (e2e/indexnow-mock.mjs) */
+const INDEXNOW_ENDPOINT = `http://127.0.0.1:${INDEXNOW_MOCK_PORT}/indexnow`;
 const CI = Boolean(process.env.CI);
 
 // Anlık bildirim için her çalıştırmada yeni VAPID anahtarı (push servisine gerçek istek atılmaz)
@@ -77,6 +80,7 @@ export default defineConfig({
         PORT: String(WEB_PORT),
         HOSTNAME: "127.0.0.1",
         API_URL: `http://localhost:${API_PORT}`,
+        INDEXNOW_ENDPOINT,
       },
       timeout: 60_000,
     },
@@ -89,8 +93,16 @@ export default defineConfig({
         PORT: String(SECOND_WEB_PORT),
         HOSTNAME: "127.0.0.1",
         API_URL: `http://localhost:${API_PORT}`,
+        INDEXNOW_ENDPOINT,
       },
       timeout: 60_000,
+    },
+    {
+      command: "node e2e/indexnow-mock.mjs",
+      url: `http://127.0.0.1:${INDEXNOW_MOCK_PORT}/saglik`,
+      reuseExistingServer: !CI,
+      env: { INDEXNOW_MOCK_PORT: String(INDEXNOW_MOCK_PORT) },
+      timeout: 10_000,
     },
     {
       command: "node e2e/iyzico-mock.mjs",

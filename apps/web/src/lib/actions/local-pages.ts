@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath, updateTag } from "next/cache";
+import sitemap from "@/app/sitemap";
 import { ApiError, apiFetch } from "@/lib/api";
+import { notifyIndexNow, submitToIndexNow } from "@/lib/indexnow";
 import { LOCAL_PAGE_CACHE_TAG } from "@/lib/local-page-content";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 
@@ -18,6 +20,7 @@ function refresh(slug: string) {
   updateTag(LOCAL_PAGE_CACHE_TAG);
   revalidatePath(`/${slug}`);
   revalidatePath("/yonetim/sayfalar", "layout");
+  notifyIndexNow([`/${slug}`]);
 }
 
 const text = (formData: FormData, name: string) => String(formData.get(name) ?? "").trim();
@@ -60,5 +63,18 @@ export async function resetLocalPage(slug: string): Promise<LocalPageActionState
     return { notice: "Sayfa otomatik metne döndü." };
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Sayfa varsayılana döndürülemedi." };
+  }
+}
+
+/** Site haritasındaki tüm adresleri Bing/Yandex'e bildirir (ilk kurulumda ya da toplu değişiklikten sonra) */
+export async function submitSitemapToIndexNow(): Promise<LocalPageActionState> {
+  try {
+    await adminToken();
+    const count = await submitToIndexNow((await sitemap()).map((entry) => entry.url));
+    return count
+      ? { notice: `${count} adres Bing ve Yandex'e bildirildi.` }
+      : { error: "Bildirim bu ortamda kapalı (yalnızca canlı sitede çalışır)." };
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Bildirim gönderilemedi, biraz sonra tekrar deneyin." };
   }
 }

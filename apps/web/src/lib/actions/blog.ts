@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { ApiError, apiFetch } from "@/lib/api";
 import { istanbulLocalToIso, type AdminBlogPost, type BlogMediaItem } from "@/lib/blog/admin";
 import { renderContent } from "@/lib/blog/content";
-import { BLOG_CACHE_TAG, BLOG_PATH } from "@/lib/blog/rules";
+import { BLOG_CACHE_TAG, BLOG_PATH, postPath } from "@/lib/blog/rules";
+import { notifyIndexNow } from "@/lib/indexnow";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 import type { UploadTicket } from "./media";
 
@@ -84,6 +85,8 @@ export async function savePost(id: string | null, _prev: BlogActionState, formDa
   if (!result.ok) return { error: result.error };
   refreshSite();
   const post = result.data;
+  // Yayındaki yazı Bing'e bildirilir; taslağa alınan yazının adresi de (artık açılmadığı öğrenilsin)
+  if (post.state !== "scheduled" && !post.noindex) notifyIndexNow([postPath(post), BLOG_PATH]);
   if (!id) redirect(`/yonetim/blog/${post.id}?kaydedildi=${post.state}`);
   const notice =
     post.state === "published"
