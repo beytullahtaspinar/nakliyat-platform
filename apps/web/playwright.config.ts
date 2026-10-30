@@ -8,6 +8,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Sunucular zaten açıksa yeniden başlatılmaz.
  */
 const WEB_PORT = 3000;
+/** Aynı derlemenin ikinci süreci: canlıdaki gibi birden çok Node süreci önbelleği paylaşır (e2e/bolge-sayfalari) */
+const SECOND_WEB_PORT = 3001;
 const API_PORT = 4000;
 const IYZICO_MOCK_PORT = 4200;
 const CI = Boolean(process.env.CI);
@@ -73,6 +75,18 @@ export default defineConfig({
       // GitHub Actions HOSTNAME değişkenini makine adına ayarlar; sunucu yerel adreste dinlesin
       env: {
         PORT: String(WEB_PORT),
+        HOSTNAME: "127.0.0.1",
+        API_URL: `http://localhost:${API_PORT}`,
+      },
+      timeout: 60_000,
+    },
+    {
+      // İlk web sunucusu statik dosyaları kopyaladıktan sonra başlar (sunucular sırayla açılır)
+      command: "node .next/standalone/apps/web/server.js",
+      url: `http://127.0.0.1:${SECOND_WEB_PORT}/api/saglik`,
+      reuseExistingServer: !CI,
+      env: {
+        PORT: String(SECOND_WEB_PORT),
         HOSTNAME: "127.0.0.1",
         API_URL: `http://localhost:${API_PORT}`,
       },

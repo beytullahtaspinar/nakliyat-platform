@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // cPanel "Setup Node.js App" için tek klasörlük, bağımlılıkları içinde çalıştırılabilir çıktı
   output: "standalone",
+  // Sunucuda birden çok Node süreci var: yönetimde yapılan güncelleme hepsinin önbelleğini yenilesin
+  cacheHandler: require.resolve("./cache-handler.cjs"),
   async headers() {
     return [
       {
