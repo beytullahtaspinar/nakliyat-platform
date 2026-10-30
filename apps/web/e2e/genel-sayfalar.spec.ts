@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { seedRegionQuotes } from "./db";
 
 /** Sayfada WCAG 2.2 AA erişilebilirlik ihlali olmamalı */
 async function expectAccessible(page: Page) {
@@ -146,4 +147,24 @@ test("tanıtım sayfaları menüden ve altbilgiden açılır, yapısal veri içe
   await expect(page.getByText(/\[[^\]]+\]/)).toHaveCount(0);
   await expectAccessible(page);
   expect(errors).toEqual([]);
+});
+
+test("güzergâh sayfası platformdaki gerçek teklifleri gösterir", async ({ page }, testInfo) => {
+  // Her proje kendi güzergâhını kullanır: Hakkari → Tunceli (mobil) ya da Hakkari → Van (masaüstü)
+  const mobile = testInfo.project.name === "mobil";
+  const to = mobile ? { code: "62", name: "Tunceli", slug: "tunceli" } : { code: "65", name: "Van", slug: "van" };
+  seedRegionQuotes("30", to.code, [20000, 22000, 24000, 26000, 28000, 30000], mobile ? "+9053200095" : "+9053200096");
+
+  await page.goto(`/hakkari-${to.slug}-sehirler-arasi-nakliyat`);
+  await expect(page.getByRole("heading", { name: `Hakkari - ${to.name} taşımalarında gerçek teklifler` })).toBeVisible();
+  await expect(page.getByText(/Son 90 günde 6 taşıma talebine doğrulanmış firmalardan 6 teklif geldi/)).toBeVisible();
+  await expect(
+    page.getByRole("row", { name: "2+1 22.500 TL - 27.500 TL 25.000 TL 6 teklif, 2 firma" }),
+  ).toBeVisible();
+  await expectAccessible(page);
+});
+
+test("veri yokken gerçek teklif bölümü görünmez", async ({ page }) => {
+  await page.goto("/bayburt-evden-eve-nakliyat");
+  await expect(page.getByRole("heading", { name: /gerçek teklifler/ })).toHaveCount(0);
 });
