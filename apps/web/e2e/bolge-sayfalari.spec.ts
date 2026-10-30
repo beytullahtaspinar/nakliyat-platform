@@ -6,10 +6,13 @@ import { expect, test, type Page } from "@playwright/test";
 /**
  * Bölge sayfaları: yönetici il sayfasının başlığını, giriş metnini, kapak görselini, ek içeriğini ve SSS'sini
  * değiştirir; sayfa sitede hemen güncellenir, "Varsayılana dön" ile otomatik metne döner.
- * Her proje (mobil/masaüstü) kendi ilini kullanır.
+ * Her proje (mobil/masaüstü) kendi ilini kullanır. Kayıt bir süreçte yapılır, sayfa ikinci süreçte de yenilenmeli
+ * (canlıda web birden çok Node süreciyle çalışır; cache-handler.cjs).
  */
 const PASSWORD = "yonetici-sifre-123";
 const IMAGE = path.join(__dirname, "fixtures", "oda.jpg");
+/** playwright.config.ts SECOND_WEB_PORT */
+const SECOND_WEB_PORT = 3001;
 
 const uniqueDigits = (n: number) => `${Date.now()}${Math.floor(Math.random() * 1e6)}`.slice(-n);
 
@@ -45,6 +48,12 @@ test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsay
   await expect(page.getByLabel("Sayfa başlığı (H1)")).toHaveAttribute("placeholder", `${city.name} Evden Eve Nakliyat`);
   await expectAccessible(page);
 
+  // İkinci süreç sayfayı önbelleğine alsın
+  const otherProcess = await browser.newContext({ baseURL: `http://127.0.0.1:${SECOND_WEB_PORT}` });
+  const otherVisitor = await otherProcess.newPage();
+  await otherVisitor.goto(url);
+  await expect(otherVisitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} Evden Eve Nakliyat`);
+
   await page.getByLabel("Sayfa başlığı (H1)").fill(`${city.name} evden eve nakliyat rehberi`);
   await page.getByLabel("Giriş metni").fill(`${city.name} için yazılmış özel giriş.\n\nİkinci paragraf.`);
   await page.getByLabel("Ek içerik (isteğe bağlı)").fill(`## ${city.name}'da taşınırken\n\nDar sokaklarda küçük araç gerekir.`);
@@ -74,6 +83,11 @@ test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsay
   await expect(visitor.getByRole("row", { name: /2\+1 .* TL/ })).toBeVisible();
   await expectAccessible(visitor);
 
+  // Kaydı karşılamayan süreç de yeni içeriği gösterir
+  await otherVisitor.goto(url);
+  await expect(otherVisitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} evden eve nakliyat rehberi`);
+  await expect(otherVisitor.getByRole("img", { name: `${city.name} taşıma görseli` })).toBeVisible();
+
   // Varsayılana dön
   await page.goto(`/yonetim/sayfalar/${city.slug}-evden-eve-nakliyat`);
   await page.getByRole("button", { name: /Varsayılana dön/ }).click();
@@ -81,5 +95,8 @@ test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsay
   await visitor.goto(url);
   await expect(visitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} Evden Eve Nakliyat`);
   await expect(visitor.getByRole("img", { name: `${city.name} taşıma görseli` })).toHaveCount(0);
+  await otherVisitor.goto(url);
+  await expect(otherVisitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} Evden Eve Nakliyat`);
   await visitorContext.close();
+  await otherProcess.close();
 });
