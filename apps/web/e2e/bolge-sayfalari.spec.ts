@@ -139,4 +139,9 @@ test("IndexNow anahtar dosyası yayında, yönetici tüm sayfaları bildirebilir
   const sent = await indexNowReceived(request, "https://evdenevenakliyat.app/istanbul-evden-eve-nakliyat");
   expect(sent?.key).toBe(keyText);
   expect(sent?.urlList).toContain("https://evdenevenakliyat.app/evden-eve-nakliyat");
+
+  // Bing reddederse genel hata yerine sebep görünür
+  await request.post(`${INDEXNOW_MOCK}/siradaki?kod=403`);
+  await page.getByRole("button", { name: "Tüm sayfaları Bing'e bildir" }).click();
+  await expect(page.getByText("Bing site anahtarını doğrulayamadı (403)")).toBeVisible();
 });

@@ -3,7 +3,7 @@
 import { revalidatePath, updateTag } from "next/cache";
 import sitemap from "@/app/sitemap";
 import { ApiError, apiFetch } from "@/lib/api";
-import { notifyIndexNow, submitToIndexNow } from "@/lib/indexnow";
+import { describeIndexNowError, notifyIndexNow, submitToIndexNow } from "@/lib/indexnow";
 import { LOCAL_PAGE_CACHE_TAG } from "@/lib/local-page-content";
 import { getAccessToken, getCurrentUser } from "@/lib/session";
 
@@ -75,6 +75,8 @@ export async function submitSitemapToIndexNow(): Promise<LocalPageActionState> {
       ? { notice: `${count} adres Bing ve Yandex'e bildirildi.` }
       : { error: "Bildirim bu ortamda kapalı (yalnızca canlı sitede çalışır)." };
   } catch (err) {
-    return { error: err instanceof ApiError ? err.message : "Bildirim gönderilemedi, biraz sonra tekrar deneyin." };
+    if (err instanceof ApiError) return { error: err.message };
+    console.error("Tüm sayfalar IndexNow'a bildirilemedi:", err);
+    return { error: describeIndexNowError(err) };
   }
 }
