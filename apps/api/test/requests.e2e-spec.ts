@@ -5,7 +5,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { markVerified } from './helpers.js';
+import { markVerified, retryOnConflict } from './helpers.js';
 
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL).
 describe('Taşıma talepleri (e2e)', () => {
@@ -55,7 +55,7 @@ describe('Taşıma talepleri (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     customerToken = await register(phones[0]!, 'CUSTOMER');
     otherCustomerToken = await register(phones[1]!, 'CUSTOMER');
     companyToken = await register(phones[2]!, 'COMPANY');
@@ -65,7 +65,7 @@ describe('Taşıma talepleri (e2e)', () => {
   afterAll(async () => {
     // Arka planda çalışan bildirim dinleyicileri bitmeden kullanıcıları silme
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

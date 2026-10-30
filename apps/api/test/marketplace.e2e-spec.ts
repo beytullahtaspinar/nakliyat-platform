@@ -6,7 +6,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 // Talep → teklif → karşılaştırma → kabul akışının tamamı. Çalışan bir MariaDB/MySQL gerektirir.
 describe('Pazaryeri akışı (e2e)', () => {
@@ -72,7 +72,7 @@ describe('Pazaryeri akışı (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     await register('customer', 'CUSTOMER');
     await register('companyA', 'COMPANY');
@@ -95,7 +95,7 @@ describe('Pazaryeri akışı (e2e)', () => {
   afterAll(async () => {
     // Arka planda çalışan bildirim dinleyicileri bitmeden kullanıcıları silme
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

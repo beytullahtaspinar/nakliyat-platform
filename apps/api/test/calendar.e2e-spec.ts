@@ -9,7 +9,7 @@ import { todayInTurkey } from './../src/media/company-document-rules.js';
 import { NOTIFICATION_CHANNELS, type ChannelProvider, type Recipient } from './../src/notifications/channels/channel.js';
 import type { NotificationContent } from './../src/notifications/templates.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 class FakeEmail implements ChannelProvider {
   readonly channel = 'EMAIL' as const;
@@ -83,7 +83,7 @@ describe('Takvim ve hatırlatma (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     for (const who of ['customer', 'company', 'other'] as const) {
       const res = await http()
@@ -112,7 +112,7 @@ describe('Takvim ve hatırlatma (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

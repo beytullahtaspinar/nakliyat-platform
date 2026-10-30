@@ -69,7 +69,7 @@ export async function addApprovedVehicles(prisma: PrismaService, companyIds: str
  * Test dosyaları paralel koştuğu için temizlikteki ilişkili deleteMany'ler başka dosyanın yazmasıyla
  * kilitlenebilir (MariaDB deadlock, Prisma P2034). Temizliği birkaç kez dener.
  */
-export async function retryOnConflict(fn: () => Promise<void>, attempts = 5) {
+export async function retryOnConflict<T>(fn: () => Promise<T>, attempts = 5): Promise<T> {
   for (let i = 1; ; i++) {
     try {
       return await fn();

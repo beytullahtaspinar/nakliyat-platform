@@ -9,7 +9,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 type MediaView = { id: string; kind: string; publicUrl: string; previewUrl: string; hidden: boolean; hiddenReason: string | null; caption: string | null };
 type Showcase = {
@@ -92,7 +92,7 @@ describe('Firma tanıtım sayfası (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     tokens.company = await register(phones.company);
     tokens.other = await register(phones.other);
     await markVerified(prisma, Object.values(phones));
@@ -113,7 +113,7 @@ describe('Firma tanıtım sayfası (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     await rm(uploadDir, { recursive: true, force: true });
   });

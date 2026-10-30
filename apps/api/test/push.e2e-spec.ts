@@ -8,6 +8,7 @@ import { DomainEvents } from './../src/events/domain-events.js';
 import { NotificationsService } from './../src/notifications/notifications.service.js';
 import { templates } from './../src/notifications/templates.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { retryOnConflict } from './helpers.js';
 
 // Anlık bildirim aboneliği ve gönderimi. Push servisine gerçek istek atılmaz. Çalışan bir MariaDB/MySQL gerektirir.
 describe('Anlık bildirim (e2e)', () => {
@@ -39,7 +40,7 @@ describe('Anlık bildirim (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     notifications = app.get(NotificationsService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     for (const who of ['company', 'customer'] as const) {
       const res = await http()
         .post('/v1/auth/register')
@@ -53,7 +54,7 @@ describe('Anlık bildirim (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     send.mockRestore();
     vapidEnv.forEach((k, i) => (savedEnv[i] === undefined ? delete process.env[k] : (process.env[k] = savedEnv[i])));

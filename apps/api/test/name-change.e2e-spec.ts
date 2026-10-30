@@ -6,7 +6,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL).
 describe('Firma görünen ad değişikliği (e2e)', () => {
@@ -43,7 +43,7 @@ describe('Firma görünen ad değişikliği (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     tokens.company = (
       await http()
         .post('/v1/auth/register')
@@ -66,7 +66,7 @@ describe('Firma görünen ad değişikliği (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

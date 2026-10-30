@@ -8,7 +8,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { markVerified } from './helpers.js';
+import { markVerified, retryOnConflict } from './helpers.js';
 
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL). Dosyalar geçici klasöre (yerel sürücü) yazılır.
 describe('Talep fotoğraf ve videoları (e2e)', () => {
@@ -62,7 +62,7 @@ describe('Talep fotoğraf ve videoları (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     tokens.customer = await register(phones[0]!, 'CUSTOMER');
     tokens.other = await register(phones[1]!, 'CUSTOMER');
     tokens.company = await register(phones[2]!, 'COMPANY');
@@ -102,7 +102,7 @@ describe('Talep fotoğraf ve videoları (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     await rm(uploadDir, { recursive: true, force: true });
   });

@@ -9,7 +9,7 @@ import { NOTIFICATION_CHANNELS, type ChannelProvider, type Recipient } from './.
 import type { NotificationContent } from './../src/notifications/templates.js';
 import { NotificationsService } from './../src/notifications/notifications.service.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 /** Gerçek e-posta göndermeyen sahte kanal: gönderilenleri kaydeder, istenirse hata verir. */
 class FakeEmail implements ChannelProvider {
@@ -67,7 +67,7 @@ describe('Bildirimler (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     for (const who of ['customer', 'company'] as const) {
       const res = await http()
@@ -93,7 +93,7 @@ describe('Bildirimler (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

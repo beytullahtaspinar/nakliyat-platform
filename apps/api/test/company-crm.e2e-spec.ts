@@ -6,7 +6,7 @@ import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { todayInTurkey } from './../src/media/company-document-rules.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 // Firma paneli CRM uçları: süzgeçler, iş ayrıntısı, müşteriler ve pano. Çalışan bir MariaDB/MySQL gerektirir.
 describe('Firma paneli listeleri ve pano (e2e)', () => {
@@ -65,7 +65,7 @@ describe('Firma paneli listeleri ve pano (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     const names = { ayse: 'Ayşe CRM', mehmet: 'Mehmet CRM', company: 'CRM Firma', other: 'CRM Diğer' };
     for (const who of Object.keys(phones) as (keyof typeof phones)[]) {
@@ -104,7 +104,7 @@ describe('Firma paneli listeleri ve pano (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

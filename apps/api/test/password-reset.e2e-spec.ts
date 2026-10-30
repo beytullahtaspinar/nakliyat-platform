@@ -5,6 +5,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { EMAIL_CODE_SENDER, type CodePurpose, type CodeSender } from './../src/verification/senders/code-sender.js';
+import { retryOnConflict } from './helpers.js';
 
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL).
 describe('Şifremi unuttum (e2e)', () => {
@@ -44,7 +45,7 @@ describe('Şifremi unuttum (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     await http()
       .post('/v1/auth/register')
       .send({ role: 'CUSTOMER', fullName: 'Şifre Unutan', phone, email: address, password: 'EskiSifre123' })
@@ -52,7 +53,7 @@ describe('Şifremi unuttum (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 
