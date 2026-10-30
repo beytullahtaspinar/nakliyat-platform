@@ -6,6 +6,7 @@ import { DEFAULT_PRICING_SETTINGS } from '@nakliyat/pricing';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { retryOnConflict } from './helpers.js';
 
 // Fiyat hesaplayıcı katsayıları: herkese açık okuma, yalnızca yönetici değiştirir.
 // Çalışan bir MariaDB/MySQL gerektirir.
@@ -31,7 +32,7 @@ describe('Fiyat hesaplayıcı (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     tokens.customer = (
       await http()
@@ -46,7 +47,7 @@ describe('Fiyat hesaplayıcı (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

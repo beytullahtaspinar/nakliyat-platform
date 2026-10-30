@@ -5,6 +5,7 @@ import request from 'supertest';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { retryOnConflict } from './helpers.js';
 
 // Yönetimden müşteri ve firma açma. Çalışan bir MariaDB/MySQL gerektirir.
 describe('Yönetimden hesap açma (e2e)', () => {
@@ -37,7 +38,7 @@ describe('Yönetimden hesap açma (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     await prisma.user.create({
       data: { role: 'ADMIN', fullName: 'Test Admin', phone: phones.admin, passwordHash: await bcrypt.hash('GucluSifre123', 4) },
     });
@@ -46,7 +47,7 @@ describe('Yönetimden hesap açma (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

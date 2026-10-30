@@ -9,7 +9,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 type VehicleView = {
   id: string;
@@ -95,7 +95,7 @@ describe('Firma araçları (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     await prisma.vehicle.deleteMany({ where: { plate: { startsWith: '81QWX' } } });
     tokens.company = await register(phones.company, 'COMPANY');
     tokens.other = await register(phones.other, 'COMPANY');
@@ -122,7 +122,7 @@ describe('Firma araçları (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     await rm(uploadDir, { recursive: true, force: true });
   });

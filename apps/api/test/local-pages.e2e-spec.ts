@@ -5,6 +5,7 @@ import request from 'supertest';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { retryOnConflict } from './helpers.js';
 
 // Bölge sayfası içeriği: yönetimden yazılır, il/ilçe/güzergâh sayfası okur. Görseller blog kütüphanesinden.
 describe('Bölge sayfaları (e2e)', () => {
@@ -46,7 +47,7 @@ describe('Bölge sayfaları (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     await prisma.blogMedia.createMany({ data: [media(coverKey), media(imageKey)] });
     const passwordHash = await bcrypt.hash('GucluSifre123', 4);
     await prisma.user.create({ data: { role: 'ADMIN', fullName: 'Sayfa Admin', phone: phones.admin, passwordHash } });
@@ -57,7 +58,7 @@ describe('Bölge sayfaları (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

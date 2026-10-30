@@ -7,7 +7,7 @@ import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { NOTIFICATION_CHANNELS } from './../src/notifications/channels/channel.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 // Mağaza kuralları için kullanıcı içeriği denetimi: küfür süzgeci, bildirme ve engelleme. MariaDB/MySQL gerektirir.
 describe('İçerik bildirimi ve engelleme (e2e)', () => {
@@ -57,7 +57,7 @@ describe('İçerik bildirimi ve engelleme (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     for (const who of ['customer', 'company', 'other'] as const) {
       const res = await http()
@@ -106,7 +106,7 @@ describe('İçerik bildirimi ve engelleme (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

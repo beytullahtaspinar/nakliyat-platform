@@ -4,6 +4,7 @@ import request from 'supertest';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { retryOnConflict } from './helpers.js';
 
 // Bölge sayfalarındaki gerçek teklif verisi: eşikler, geri çekilen teklif ve doğrulanmamış firma hariç.
 // Çalışan bir MariaDB/MySQL gerektirir. Veri Tunceli (62) içinde: başka testler bu ili kullanmaz.
@@ -34,7 +35,7 @@ describe('Bölge teklif istatistikleri (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     const user = (phone: string, role: 'CUSTOMER' | 'COMPANY') =>
       prisma.user.create({ data: { role, fullName: `İstatistik ${phone.slice(-3)}`, phone, passwordHash: 'x' } });
@@ -108,7 +109,7 @@ describe('Bölge teklif istatistikleri (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

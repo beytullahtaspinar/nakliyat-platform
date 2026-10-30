@@ -8,7 +8,7 @@ import type { CreditSettings } from './../src/credits/credit-rules.js';
 import { CreditsService } from './../src/credits/credits.service.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 // Kredi defteri: teklifte düşme, iadeler, yönetim ayarları ve elle düzeltme. Çalışan bir MariaDB/MySQL gerektirir.
 // Ayarlar tek satırlık ortak kayıt: diğer test dosyaları paralel koştuğu için sistem veritabanında açılmaz,
@@ -67,7 +67,7 @@ describe('Kredi (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     credits = app.get(CreditsService);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     const real = credits.getSettings.bind(credits);
     vi.spyOn(credits, 'getSettings').mockImplementation(async () => {
@@ -100,7 +100,7 @@ describe('Kredi (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

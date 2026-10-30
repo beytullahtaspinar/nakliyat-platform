@@ -8,6 +8,7 @@ import request from 'supertest';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { retryOnConflict } from './helpers.js';
 
 // Blog: yönetimden yazı, kategori, yazar ve görsel; sitenin okuduğu herkese açık uçlar.
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL). Görseller geçici klasöre (yerel sürücü) yazılır.
@@ -66,7 +67,7 @@ describe('Blog (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     const passwordHash = await bcrypt.hash('GucluSifre123', 4);
     await prisma.user.create({ data: { role: 'ADMIN', fullName: 'Blog Admin', phone: phones.admin, passwordHash } });
     await prisma.user.create({ data: { role: 'CUSTOMER', fullName: 'Müşteri', phone: phones.customer, passwordHash } });
@@ -76,7 +77,7 @@ describe('Blog (e2e)', () => {
   });
 
   afterAll(async () => {
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     await rm(uploadDir, { recursive: true, force: true });
   });

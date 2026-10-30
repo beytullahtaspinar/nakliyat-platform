@@ -9,7 +9,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedVehicles, markVerified } from './helpers.js';
+import { addApprovedVehicles, markVerified, retryOnConflict } from './helpers.js';
 
 type Summary = {
   documents: { id: string; type: string; status: string; url: string; reviewNote: string | null; validUntil: string | null }[];
@@ -95,7 +95,7 @@ describe('Firma belgeleri (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
     tokens.company = await register(phones.company, 'COMPANY');
     tokens.other = await register(phones.other, 'COMPANY');
     tokens.customer = await register(phones.customer, 'CUSTOMER');
@@ -118,7 +118,7 @@ describe('Firma belgeleri (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     await rm(uploadDir, { recursive: true, force: true });
   });

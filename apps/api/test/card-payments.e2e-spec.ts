@@ -12,7 +12,7 @@ import { CreditsService } from './../src/credits/credits.service.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { CardPaymentsService } from './../src/payments/card-payments.service.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { markVerified } from './helpers.js';
+import { markVerified, retryOnConflict } from './helpers.js';
 
 // Kartla kredi yükleme: iyzico yerine sahte bir sunucu. İstek imzası (IYZWSv2) sahte sunucuda doğrulanır.
 // Kart ayarı ortak kayıtta; diğer test dosyaları etkilenmesin diye getSettings üzerine yazılarak açılır.
@@ -95,7 +95,7 @@ describe('Kartla ödeme (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     const credits = app.get(CreditsService);
     const real = credits.getSettings.bind(credits);
@@ -128,7 +128,7 @@ describe('Kartla ödeme (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     await new Promise((r) => mock.close(r));
   });

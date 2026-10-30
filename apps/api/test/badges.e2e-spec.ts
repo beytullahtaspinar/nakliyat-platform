@@ -6,7 +6,7 @@ import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 // Firma rozetleri: belgeleri onaylı, hızlı yanıt, yüksek puan. Çalışan bir MariaDB/MySQL gerektirir.
 describe('Firma rozetleri (e2e)', () => {
@@ -51,7 +51,7 @@ describe('Firma rozetleri (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     for (const who of ['customer', 'fast', 'slow'] as const) {
       const res = await http()
@@ -106,7 +106,7 @@ describe('Firma rozetleri (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

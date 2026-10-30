@@ -8,6 +8,7 @@ import { configureApp } from './../src/app.setup.js';
 import { IdentityProvider } from './../src/generated/prisma/enums.js';
 import { OAUTH_PROVIDERS, type OAuthProfile, type OAuthProvider } from './../src/auth/oauth/provider.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
+import { retryOnConflict } from './helpers.js';
 
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL).
 describe('Google / Apple ile giriş (e2e)', () => {
@@ -47,11 +48,11 @@ describe('Google / Apple ile giriş (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
   });
 
   afterAll(async () => {
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

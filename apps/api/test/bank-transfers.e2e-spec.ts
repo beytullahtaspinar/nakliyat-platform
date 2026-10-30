@@ -11,7 +11,7 @@ import type { CreditSettings } from './../src/credits/credit-rules.js';
 import { CreditsService } from './../src/credits/credits.service.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { markVerified } from './helpers.js';
+import { markVerified, retryOnConflict } from './helpers.js';
 
 // Havale/EFT ile kredi yükleme: firma bildirir (dekontla), yönetim onaylar ya da reddeder.
 // Banka hesapları ortak ayarda; diğer test dosyaları paralel koştuğu için veritabanına yazılmaz,
@@ -57,7 +57,7 @@ describe('Havale bildirimi (e2e)', () => {
     configureApp(app);
     await app.init();
     prisma = app.get(PrismaService);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     const credits = app.get(CreditsService);
     const real = credits.getSettings.bind(credits);
@@ -90,7 +90,7 @@ describe('Havale bildirimi (e2e)', () => {
 
   afterAll(async () => {
     await app.get(DomainEvents).drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
     await rm(uploadDir, { recursive: true, force: true });
   });

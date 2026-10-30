@@ -6,6 +6,7 @@ import { configureApp } from './../src/app.setup.js';
 import { DomainEvents } from './../src/events/domain-events.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { EMAIL_CODE_SENDER, PHONE_CODE_SENDER, type CodeSender } from './../src/verification/senders/code-sender.js';
+import { retryOnConflict } from './helpers.js';
 
 // Çalışan bir MariaDB/MySQL gerektirir (DATABASE_URL).
 describe('E-posta ve telefon doğrulaması (e2e)', () => {
@@ -54,7 +55,7 @@ describe('E-posta ve telefon doğrulaması (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     await http()
       .post('/v1/auth/register')
@@ -70,7 +71,7 @@ describe('E-posta ve telefon doğrulaması (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 

@@ -8,7 +8,7 @@ import { DomainEvents } from './../src/events/domain-events.js';
 import { NOTIFICATION_CHANNELS, type ChannelProvider, type Recipient } from './../src/notifications/channels/channel.js';
 import type { NotificationContent } from './../src/notifications/templates.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { addApprovedDocuments, markVerified } from './helpers.js';
+import { addApprovedDocuments, markVerified, retryOnConflict } from './helpers.js';
 
 class FakeEmail implements ChannelProvider {
   readonly channel = 'EMAIL' as const;
@@ -69,7 +69,7 @@ describe('Değerlendirmeler (e2e)', () => {
     await app.init();
     prisma = app.get(PrismaService);
     events = app.get(DomainEvents);
-    await cleanup();
+    await retryOnConflict(cleanup);
 
     const names = { customer: 'Ayşe Yorumcu', company: 'Firma Yetkilisi', other: 'Başka Müşteri', otherCompany: 'Başka Firma' };
     for (const who of ['customer', 'company', 'other', 'otherCompany'] as const) {
@@ -124,7 +124,7 @@ describe('Değerlendirmeler (e2e)', () => {
 
   afterAll(async () => {
     await events.drain();
-    await cleanup();
+    await retryOnConflict(cleanup);
     await app.close();
   });
 
