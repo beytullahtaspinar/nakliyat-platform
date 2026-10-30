@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 import { PAGE_KIND_LABELS, listEditablePages } from "@/lib/local-page-admin";
 import { FilterTabs, PageHeader, Pager, SearchForm, query, td, th } from "../admin-bits";
+import { IndexNowButton } from "./indexnow-button";
 
 export const metadata: Metadata = { title: "Bölge sayfaları" };
 
@@ -34,7 +35,8 @@ export default async function AdminLocalPagesPage({ searchParams }: PageProps<"/
     <>
       <PageHeader
         title="Bölge sayfaları"
-        description="İl, ilçe ve şehirler arası sayfaların başlığını, metnini, kapak görselini ve ek içeriğini değiştir. Boş bıraktığın alanda otomatik metin kalır; kaydedince site hemen güncellenir."
+        description="İl, ilçe ve şehirler arası sayfaların başlığını, metnini, kapak görselini ve ek içeriğini değiştir. Boş bıraktığın alanda otomatik metin kalır; kaydedince site hemen güncellenir ve sayfa Bing'e bildirilir."
+        actions={<IndexNowButton />}
       />
 
       <div className="mb-4 space-y-3">

@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 /**
  * Bölge sayfaları: yönetici il sayfasının başlığını, giriş metnini, kapak görselini, ek içeriğini ve SSS'sini
@@ -11,8 +11,18 @@ import { expect, test, type Page } from "@playwright/test";
  */
 const PASSWORD = "yonetici-sifre-123";
 const IMAGE = path.join(__dirname, "fixtures", "oda.jpg");
-/** playwright.config.ts SECOND_WEB_PORT */
+/** playwright.config.ts SECOND_WEB_PORT ve INDEXNOW_MOCK_PORT */
 const SECOND_WEB_PORT = 3001;
+const INDEXNOW_MOCK = "http://127.0.0.1:4300";
+
+type IndexNowRequest = { host: string; key: string; keyLocation: string; urlList: string[] };
+
+/** Sahte IndexNow'a bu adresi içeren bildirim geldi mi */
+async function indexNowReceived(request: APIRequestContext, url: string) {
+  const res = await request.get(`${INDEXNOW_MOCK}/alinan`);
+  const all = (await res.json()) as IndexNowRequest[];
+  return all.find((r) => r.urlList.includes(url));
+}
 
 const uniqueDigits = (n: number) => `${Date.now()}${Math.floor(Math.random() * 1e6)}`.slice(-n);
 
@@ -66,6 +76,12 @@ test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsay
   await page.getByRole("button", { name: "Kaydet", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Kaydedildi; sitedeki sayfa güncellendi.");
 
+  // Kaydedilen sayfa Bing'e (IndexNow) bildirilir
+  const pageUrl = `https://evdenevenakliyat.app${url}`;
+  await expect.poll(async () => (await indexNowReceived(page.request, pageUrl))?.keyLocation).toBe(
+    "https://evdenevenakliyat.app/indexnow.txt",
+  );
+
   await page.goto("/yonetim/sayfalar?durum=duzenlenen");
   await expect(page.getByRole("link", { name: `${city.name} Evden Eve Nakliyat`, exact: true })).toBeVisible();
 
@@ -99,4 +115,19 @@ test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsay
   await expect(otherVisitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} Evden Eve Nakliyat`);
   await visitorContext.close();
   await otherProcess.close();
+});
+
+test("IndexNow anahtar dosyası yayında, yönetici tüm sayfaları bildirebilir", async ({ page, request }) => {
+  const key = await request.get("/indexnow.txt");
+  expect(key.status()).toBe(200);
+  const keyText = (await key.text()).trim();
+  expect(keyText).toMatch(/^[a-f0-9]{32}$/);
+
+  await loginAsAdmin(page);
+  await page.goto("/yonetim/sayfalar");
+  await page.getByRole("button", { name: "Tüm sayfaları Bing'e bildir" }).click();
+  await expect(page.getByRole("status")).toHaveText(/\d+ adres Bing ve Yandex'e bildirildi\./);
+  const sent = await indexNowReceived(request, "https://evdenevenakliyat.app/istanbul-evden-eve-nakliyat");
+  expect(sent?.key).toBe(keyText);
+  expect(sent?.urlList).toContain("https://evdenevenakliyat.app/evden-eve-nakliyat");
 });
