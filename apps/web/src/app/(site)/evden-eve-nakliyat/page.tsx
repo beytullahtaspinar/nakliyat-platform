@@ -4,12 +4,15 @@ import { citySlug, getCities, getCityByCode, getDistanceKm, routeSlug } from "@n
 import { estimatePrice } from "@nakliyat/pricing";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/local/breadcrumbs";
+import { CoverImage } from "@/components/local/cover-image";
 import { Faq, type FaqItem } from "@/components/local/faq";
 import { LinkGrid } from "@/components/local/link-grid";
 import { ButtonLink } from "@/components/ui/button";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { formatDate } from "@/lib/format";
-import { HUB_PATH } from "@/lib/local-content";
+import { BLOG_PROSE } from "@/lib/blog/prose";
+import { HUB_DEFAULTS, HUB_PATH } from "@/lib/local-content";
+import { getLocalPageContent } from "@/lib/local-page-content";
 import { LAUNCH_CITIES, currentYear } from "@/lib/local-seo";
 import { MARKETING_PAGES } from "@/lib/marketing";
 import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, formatTry } from "@/lib/pricing";
@@ -25,10 +28,14 @@ const EXAMPLE_FROM = getCityByCode("34")!;
 const EXAMPLE_TO = getCityByCode("06")!;
 const EXAMPLE_KM = getDistanceKm(EXAMPLE_FROM, EXAMPLE_TO)!;
 
-export function generateMetadata(): Metadata {
+/** Yönetimden düzenlenirken kullanılan adres (bölge sayfalarıyla aynı tablo) */
+const HUB_SLUG = HUB_PATH.slice(1);
+
+export async function generateMetadata(): Promise<Metadata> {
   const year = currentYear();
-  const title = `Evden Eve Nakliyat Fiyatları ${year} ve Ücretsiz Fiyat Teklifi`;
-  const description = `Evden eve nakliyat fiyatları ${year}: ev tipine göre tahmini fiyat tablosu, fiyatı belirleyen etkenler ve 81 ilde K3 belgeli, doğrulanmış firmalardan ücretsiz fiyat teklifi.`;
+  const custom = await getLocalPageContent(HUB_SLUG);
+  const title = custom?.seoTitle ?? HUB_DEFAULTS.metaTitle(year);
+  const description = custom?.seoDescription ?? HUB_DEFAULTS.description(year);
   return {
     title,
     description,
@@ -67,7 +74,7 @@ function faq(year: number, twoPlusOne: { min: number; max: number }, intercity: 
 }
 
 export default async function HubPage() {
-  const { settings, calibration, updatedAt } = await loadPricingModel();
+  const [{ settings, calibration, updatedAt }, custom] = await Promise.all([loadPricingModel(), getLocalPageContent(HUB_SLUG)]);
   const year = currentYear();
   const estimate = (homeType: (typeof HOME_TYPES)[number]["value"], distanceKm?: number) =>
     estimatePrice({ ...DEFAULT_INPUT, homeType, distanceKm }, settings, calibration);
@@ -77,11 +84,14 @@ export default async function HubPage() {
     intercity: estimate(t.value, EXAMPLE_KM),
   }));
   const twoPlusOne = rows.find((r) => r.label === "2+1")!;
-  const faqItems = faq(
-    year,
-    { min: twoPlusOne.local.minTry, max: twoPlusOne.local.maxTry },
-    { min: twoPlusOne.intercity.minTry, max: twoPlusOne.intercity.maxTry },
-  );
+  // Yönetimden yazılan metin otomatik metnin yerine geçer; boş alanlar otomatik kalır
+  const faqItems = custom?.faq.length
+    ? custom.faq
+    : faq(
+        year,
+        { min: twoPlusOne.local.minTry, max: twoPlusOne.local.maxTry },
+        { min: twoPlusOne.intercity.minTry, max: twoPlusOne.intercity.maxTry },
+      );
 
   const cityLinks = getCities().map((c) => ({ href: `/${citySlug(c)}`, label: c.name }));
   const routeLinks = LAUNCH_CITIES.flatMap((from) =>
@@ -99,15 +109,19 @@ export default async function HubPage() {
           { name: "Evden eve nakliyat", href: HUB_PATH },
         ]}
       />
-      <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">Evden eve nakliyat fiyatları ve teklif</h1>
-      <p className="mt-4 text-lg text-zinc-700">
-        Evden eve nakliyat; ev eşyalarının paketlenip araca yüklenmesi, yeni adrese taşınması ve yerleştirilmesidir.
-        Fiyatı en çok eşya hacmi, kat ve asansör durumu, mesafe ve ek hizmetler belirler. Bilgilerinizi bir kez girin,
-        Türkiye&apos;nin 81 ilinde K3 belgeli, doğrulanmış nakliyat firmaları size ücretsiz fiyat teklifi göndersin.
-      </p>
+      <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
+        {custom?.heading ?? HUB_DEFAULTS.heading}
+      </h1>
+      {(custom?.intro ?? HUB_DEFAULTS.intro).split(/\n\s*\n/).map((text) => (
+        <p key={text} className="mt-4 text-lg text-zinc-700">
+          {text}
+        </p>
+      ))}
       <ButtonLink href="/talep-olustur" size="lg" className="mt-6">
         Ücretsiz teklif al
       </ButtonLink>
+
+      {custom?.cover && <CoverImage image={custom.cover} />}
 
       <section className="mt-12">
         <h2 className="text-2xl font-semibold">Evden eve nakliyat fiyatları {year}</h2>
@@ -165,6 +179,11 @@ export default async function HubPage() {
 
       <LinkGrid title="İllere göre evden eve nakliyat" links={cityLinks} />
       <LinkGrid title="Popüler şehirler arası güzergâhlar" links={routeLinks} />
+
+      {custom?.html && (
+        // İçerik renderContent ile temizlendi: yalnızca izin verilen etiket ve nitelikler kalır
+        <section className={BLOG_PROSE} dangerouslySetInnerHTML={{ __html: custom.html }} />
+      )}
 
       <Faq items={faqItems} />
 

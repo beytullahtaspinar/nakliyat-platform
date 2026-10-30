@@ -5,6 +5,7 @@ import { resolveLocalPage, type LocalPage } from "@nakliyat/locations";
 import { estimatePrice, type PriceEstimate } from "@nakliyat/pricing";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/local/breadcrumbs";
+import { CoverImage } from "@/components/local/cover-image";
 import { Faq } from "@/components/local/faq";
 import { LinkGrid } from "@/components/local/link-grid";
 import { LocalCompanies } from "@/components/local/local-companies";
@@ -29,12 +30,14 @@ import {
   localPageTitle,
 } from "@/lib/local-seo";
 import { getLocalCompanies } from "@/lib/local-companies";
+import { getLocalPageContent } from "@/lib/local-page-content";
 import { CITY_RATING_SCHEMA_MIN, getCityRating, getLocalReviews, type CityRating } from "@/lib/latest-reviews";
 import { getLocalStats } from "@/lib/local-stats";
 import { formatDate } from "@/lib/format";
 import { DEFAULT_INPUT, calculatorHref, formatTry } from "@/lib/pricing";
 import { loadPricingModel } from "@/lib/pricing-model";
 import { HOME_TYPES } from "@/lib/request-options";
+import { BLOG_PROSE } from "@/lib/blog/prose";
 import { formatRating } from "@/lib/reviews";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 import type { LatestReview } from "@/lib/api";
@@ -58,8 +61,9 @@ async function loadPage(params: Props["params"]): Promise<LocalPage> {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const page = await loadPage(params);
-  const title = localPageMetaTitle(page);
-  const description = localPageDescription(page);
+  const custom = await getLocalPageContent(page.slug);
+  const title = custom?.seoTitle ?? localPageMetaTitle(page);
+  const description = custom?.seoDescription ?? localPageDescription(page);
   return {
     title,
     description,
@@ -134,7 +138,8 @@ async function priceTable(page: LocalPage) {
 
 export default async function LocalLandingPage({ params }: Props) {
   const page = await loadPage(params);
-  const [stats, companies, reviews, prices, rating] = await Promise.all([
+  const [custom, stats, companies, reviews, prices, rating] = await Promise.all([
+    getLocalPageContent(page.slug),
     getLocalStats(page),
     getLocalCompanies(page),
     getLocalReviews(page),
@@ -143,6 +148,9 @@ export default async function LocalLandingPage({ params }: Props) {
   ]);
   const year = currentYear();
   const source = prices.rows[0]?.estimate;
+  // Yönetimden yazılan metin otomatik metnin yerine geçer; boş alanlar otomatik kalır
+  const introParagraphs = custom?.intro ? custom.intro.split(/\n\s*\n/) : [intro(page)];
+  const faqItems = custom?.faq.length ? custom.faq : faq(page);
   // İlçe sayfasında da il geneli: firmalar il bazında hizmet verir
   const region = page.kind === "route" ? `${page.from.name} - ${page.to.name} arasında` : `${page.city.name} ilinde`;
 
@@ -151,7 +159,7 @@ export default async function LocalLandingPage({ params }: Props) {
       <Breadcrumbs items={breadcrumbs(page)} />
 
       <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
-        {localPageTitle(page)}
+        {custom?.heading ?? localPageTitle(page)}
       </h1>
       {rating && page.kind === "city" && (
         <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-zinc-700">
@@ -163,11 +171,17 @@ export default async function LocalLandingPage({ params }: Props) {
           <span className="text-sm text-zinc-600">({page.city.name} taşımalarında firmalara verilen puanlar)</span>
         </p>
       )}
-      <p className="mt-4 text-lg text-zinc-700 dark:text-zinc-300">{intro(page)}</p>
+      {introParagraphs.map((text) => (
+        <p key={text} className="mt-4 text-lg text-zinc-700">
+          {text}
+        </p>
+      ))}
 
       <ButtonLink href={requestHref(page)} size="lg" className="mt-6">
         Ücretsiz teklif al
       </ButtonLink>
+
+      {custom?.cover && <CoverImage image={custom.cover} />}
 
       <section className="mt-12">
         <h2 className="text-2xl font-semibold">
@@ -275,7 +289,12 @@ export default async function LocalLandingPage({ params }: Props) {
         </Link>
       </section>
 
-      <Faq items={faq(page)} />
+      {custom?.html && (
+        // İçerik renderContent ile temizlendi: yalnızca izin verilen etiket ve nitelikler kalır
+        <section className={BLOG_PROSE} dangerouslySetInnerHTML={{ __html: custom.html }} />
+      )}
+
+      <Faq items={faqItems} />
 
       {relatedLinks(page).map((group) => (
         <LinkGrid key={group.title} title={group.title} links={group.links} />

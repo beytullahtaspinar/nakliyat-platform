@@ -11,6 +11,16 @@ import { isIndexable, localPageTitle } from "./local-seo";
 
 export const HUB_PATH = "/evden-eve-nakliyat";
 
+/** Türkiye geneli merkez sayfasının otomatik metinleri (yönetimden değiştirilebilir) */
+export const HUB_DEFAULTS = {
+  metaTitle: (year: number) => `Evden Eve Nakliyat Fiyatları ${year} ve Ücretsiz Fiyat Teklifi`,
+  description: (year: number) =>
+    `Evden eve nakliyat fiyatları ${year}: ev tipine göre tahmini fiyat tablosu, fiyatı belirleyen etkenler ve 81 ilde K3 belgeli, doğrulanmış firmalardan ücretsiz fiyat teklifi.`,
+  heading: "Evden eve nakliyat fiyatları ve teklif",
+  intro:
+    "Evden eve nakliyat; ev eşyalarının paketlenip araca yüklenmesi, yeni adrese taşınması ve yerleştirilmesidir. Fiyatı en çok eşya hacmi, kat ve asansör durumu, mesafe ve ek hizmetler belirler. Bilgilerinizi bir kez girin, Türkiye'nin 81 ilinde K3 belgeli, doğrulanmış nakliyat firmaları size ücretsiz fiyat teklifi göndersin.",
+};
+
 const hoursOnRoad = (km: number) =>
   Math.max(1, Math.round((km / 70) * 2) / 2).toLocaleString("tr-TR");
 
