@@ -44,6 +44,29 @@ test("il sayfası açılır ve yapısal veri içerir", async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test("evden eve nakliyat merkez sayfası fiyat tablosu ve sık sorulan sorular içerir", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto("/evden-eve-nakliyat");
+  await expect(page).toHaveTitle(/^Evden Eve Nakliyat Fiyatları \d{4} ve Ücretsiz Fiyat Teklifi \|/);
+  await expect(page.getByRole("row", { name: /2\+1 .* TL .* TL/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "İstanbul", exact: true })).toBeVisible();
+  const jsonLd = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+  expect(jsonLd.some((d) => d["@type"] === "FAQPage")).toBe(true);
+  await expectAccessible(page);
+  expect(errors).toEqual([]);
+});
+
+test("ana sayfa başlığı ana kelimeyle başlar", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle(/^Evden Eve Nakliyat Fiyat Teklifi Al/);
+});
+
+test("llms.txt tahmini fiyat tablosu içerir", async ({ request }) => {
+  const res = await request.get("/llms.txt");
+  expect(res.ok()).toBe(true);
+  expect(await res.text()).toMatch(/\| 2\+1 \| [\d.]+ TL - [\d.]+ TL \|/);
+});
+
 test("olmayan sayfa 404 ve yönlendirici içerik döner", async ({ page }) => {
   const res = await page.goto("/boyle-bir-sayfa-yok");
   expect(res?.status()).toBe(404);

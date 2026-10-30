@@ -21,7 +21,11 @@ import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
 import { BRAND_PROMISE, BRAND_SLOGAN, DEFAULT_OG_IMAGES, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 // Paylaşım kartında da marka sloganı görünsün (kök düzendeki openGraph başlık taşımaz, alt sayfalara sızmasın)
+// Arama sonucu başlığı ana kelimeyle başlar ("evden eve nakliyat", "fiyat teklifi"); sloganlar H1 ve paylaşım kartında kalır
 export const metadata: Metadata = {
+  title: { absolute: `Evden Eve Nakliyat Fiyat Teklifi Al ve Karşılaştır | ${SITE_NAME}` },
+  description:
+    "Evden eve nakliyat için tek talep, çok teklif: taşınma bilgilerini bir kez gir, K3 belgeli firmaların fiyat tekliflerini karşılaştır, sana uygun olanı seç. Ücretsiz.",
   openGraph: {
     type: "website",
     locale: "tr_TR",
@@ -111,7 +115,7 @@ export default async function Home() {
             </p>
             <p className="mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-300">
               <strong className="font-semibold text-zinc-800 dark:text-zinc-100">{BRAND_PROMISE}</strong> Taşınma
-              bilgilerini bir kez gir; Türkiye genelinde doğrulanmış nakliyat firmaları sana teklif göndersin,
+              bilgilerini bir kez gir; Türkiye genelinde doğrulanmış evden eve nakliyat firmaları sana fiyat teklifi göndersin,
               fiyatı, kapsamı ve puanı yan yana görüp en uygununu seç.
             </p>
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
