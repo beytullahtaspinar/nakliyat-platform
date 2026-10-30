@@ -23,7 +23,11 @@ export default async function EditLocalPagePage({ params }: PageProps<"/yonetim/
     <>
       <PageHeader
         title={page.title}
-        back={{ href: "/yonetim/sayfalar", label: "Bölge sayfaları" }}
+        back={
+          page.city
+            ? { href: `/yonetim/sayfalar?il=${page.city.slug}`, label: `${page.city.name} bölge sayfaları` }
+            : { href: "/yonetim/sayfalar", label: "Bölge sayfaları" }
+        }
         description={`${PAGE_KIND_LABELS[page.kind]} sayfası · /${page.slug} · ${
           content ? `Son değişiklik: ${formatDateTime(content.updatedAt)}` : "Otomatik metinle çiziliyor"
         }`}
