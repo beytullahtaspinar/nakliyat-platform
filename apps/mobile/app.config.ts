@@ -48,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: v.name,
   slug: v.slug,
   scheme: v.scheme,
-  version: '0.1.0',
+  version: '1.0.0',
   orientation: 'portrait',
   icon: `${assets}/icon.png`,
   // Site gibi uygulama da her zaman açık zemin
