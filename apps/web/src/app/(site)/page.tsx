@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { citySlug, getCities } from "@nakliyat/locations";
+import { citySlug, getCities, getCityByCode, getDistanceKm, routeSlug } from "@nakliyat/locations";
+import { estimatePrice } from "@nakliyat/pricing";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { Badge, Card, SectionHeading } from "@/components/ui/card";
 import {
@@ -13,11 +14,15 @@ import {
   TruckIcon,
   WalletIcon,
 } from "@/components/ui/icons";
+import { Faq, type FaqItem } from "@/components/local/faq";
 import { LatestReviews } from "@/components/reviews/latest-reviews";
 import { HOME_MIN_REVIEWS, LATEST_REVIEW_LIMIT, getLatestReviews } from "@/lib/latest-reviews";
 import { HUB_PATH } from "@/lib/local-content";
-import { LAUNCH_CITIES } from "@/lib/local-seo";
+import { LAUNCH_CITIES, currentYear } from "@/lib/local-seo";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
+import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, formatTry } from "@/lib/pricing";
+import { loadPricingModel } from "@/lib/pricing-model";
+import { HOME_TYPES } from "@/lib/request-options";
 import { BRAND_PROMISE, BRAND_SLOGAN, DEFAULT_OG_IMAGES, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 // Paylaşım kartında da marka sloganı görünsün (kök düzendeki openGraph başlık taşımaz, alt sayfalara sızmasın)
@@ -87,12 +92,56 @@ const VERIFICATION = [
   "Teklif fiyat geçmişinin kaydı",
 ];
 
+/** Fiyat özetinde gösterilen ev tipleri ve şehirler arası örnek güzergâh (/evden-eve-nakliyat ile aynı) */
+const PRICE_HOME_TYPES = ["ONE_PLUS_ONE", "TWO_PLUS_ONE", "THREE_PLUS_ONE", "FOUR_PLUS_ONE"] as const;
+const EXAMPLE_FROM = getCityByCode("34")!;
+const EXAMPLE_TO = getCityByCode("06")!;
+const EXAMPLE_KM = getDistanceKm(EXAMPLE_FROM, EXAMPLE_TO)!;
+
+/** Lansman illeri arasında en çok aranan güzergâhlar: ilk il ile diğerleri, iki yönde */
+const POPULAR_ROUTES = LAUNCH_CITIES.slice(1, 4).flatMap((to) => [
+  { href: `/${routeSlug(LAUNCH_CITIES[0], to)}`, label: `${LAUNCH_CITIES[0].name} - ${to.name}` },
+  { href: `/${routeSlug(to, LAUNCH_CITIES[0])}`, label: `${to.name} - ${LAUNCH_CITIES[0].name}` },
+]);
+
+/** Ana sayfa SSS: kısa, alıntılanabilir yanıtlar (FAQPage yapısal verisiyle) */
+function homeFaq(year: number, twoPlusOne: { min: number; max: number }): FaqItem[] {
+  return [
+    {
+      question: "Evden eve nakliyat teklifi almak ücretli mi?",
+      answer:
+        "Hayır. Taşınma talebi oluşturmak ve firmalardan fiyat teklifi almak ücretsizdir. Gelen tekliflerden hiçbirini kabul etmek zorunda değilsiniz.",
+    },
+    {
+      question: `${year} yılında evden eve nakliyat ne kadar tutar?`,
+      answer: `Asansörlü binalar arasında, ortalama eşyalı bir 2+1 ev için şehir içi taşımanın tahmini fiyatı ${formatTry(twoPlusOne.min)} ile ${formatTry(twoPlusOne.max)} arasındadır. Kesin fiyatı eşya miktarı, kat ve asansör durumu, mesafe ve ek hizmetler belirler; firmalar bunları görerek teklif verir.`,
+    },
+    {
+      question: "Platformdaki nakliyat firmaları nasıl doğrulanıyor?",
+      answer:
+        "Her firmanın K3 yetki belgesi, vergi levhası, ticaret sicil kaydı ve taşımada kullandığı araçlar yayına alınmadan önce incelenir. K3 belgesinin süresi dolan firma teklif veremez.",
+    },
+    {
+      question: "Teklifi kabul ettikten sonra ne oluyor?",
+      answer:
+        "Seçtiğiniz firmayla taşınma ayrıntılarını platform üzerinden mesajlaşarak netleştirirsiniz. Taşınma tamamlandığında firmayı puanlar ve yorum yazarsınız; puanlar yalnızca gerçekten taşınan müşterilerden gelir.",
+    },
+  ];
+}
+
 // Son yorumlar bölümü saatte bir (yorum gelince hemen, 'firmalar' etiketiyle) yenilenir
 export const revalidate = 3600;
 
 export default async function Home() {
   const cities = getCities();
-  const latest = await getLatestReviews();
+  const [latest, { settings, calibration }] = await Promise.all([getLatestReviews(), loadPricingModel()]);
+  const year = currentYear();
+  const priceRows = PRICE_HOME_TYPES.map((homeType) => ({
+    label: HOME_TYPES.find((t) => t.value === homeType)!.label,
+    local: estimatePrice({ ...DEFAULT_INPUT, homeType }, settings, calibration),
+    intercity: estimatePrice({ ...DEFAULT_INPUT, homeType, distanceKm: EXAMPLE_KM }, settings, calibration),
+  }));
+  const twoPlusOne = priceRows[1].local;
 
   return (
     <main className="flex-1">
@@ -102,23 +151,26 @@ export default async function Home() {
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_28rem_at_90%_-10%,var(--color-brand-200),transparent_70%)] opacity-60 dark:bg-[radial-gradient(40rem_28rem_at_90%_-10%,var(--color-brand-800),transparent_70%)] dark:opacity-40"
         />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pt-16 pb-12 sm:px-6 lg:grid-cols-[1.15fr_1fr] lg:pt-24 lg:pb-16">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-8 px-4 pt-8 pb-10 sm:gap-12 sm:px-6 sm:pt-16 sm:pb-12 lg:grid-cols-[1.15fr_1fr] lg:pt-24 lg:pb-16">
           <div>
             <Badge tone="brand">
               <ShieldCheckIcon className="h-3.5 w-3.5" /> K3 belgeli, doğrulanmış firmalar
             </Badge>
-            <h1 className="mt-5 text-4xl font-extrabold leading-[1.1] text-zinc-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
+            {/* Ana kelime H1'in ilk satırında; marka sloganı görsel başlık olarak kalır */}
+            <h1 className="mt-4 text-[2.15rem] font-extrabold leading-[1.1] text-zinc-900 sm:mt-5 sm:text-5xl lg:text-[3.4rem] dark:text-white">
+              <span className="mb-2 block text-base font-bold tracking-normal text-accent-700 sm:mb-3 sm:text-lg">
+                Evden eve nakliyat fiyat teklifi
+              </span>
               Evden Eve Taşınmanın <span className="text-brand-700 dark:text-brand-300">Yeni Yolu</span>
             </h1>
-            <p className="mt-5 text-xl font-bold text-zinc-800 sm:text-2xl dark:text-zinc-100">
+            <p className="mt-4 text-xl font-bold text-zinc-800 sm:mt-5 sm:text-2xl dark:text-zinc-100">
               Tek Talep. Çok Teklif. <span className="text-accent-700">Doğru Seçim.</span>
             </p>
-            <p className="mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-300">
+            <p className="mt-3 max-w-xl text-base text-zinc-600 sm:mt-4 sm:text-lg dark:text-zinc-300">
               <strong className="font-semibold text-zinc-800 dark:text-zinc-100">{BRAND_PROMISE}</strong> Taşınma
-              bilgilerini bir kez gir; Türkiye genelinde doğrulanmış evden eve nakliyat firmaları sana fiyat teklifi göndersin,
-              fiyatı, kapsamı ve puanı yan yana görüp en uygununu seç.
+              bilgilerini bir kez gir, 81 ilde K3 belgeli nakliyat firmalarının tekliflerini yan yana görüp en uygununu seç.
             </p>
-            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            <ul className="mt-5 flex sm:mt-8 flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {["Ücretsiz", "Bağlayıcı değil", "81 ilde"].map((item) => (
                 <li key={item} className="flex items-center gap-1.5">
                   <CheckIcon className="h-4 w-4 text-accent-700" /> {item}
@@ -218,6 +270,60 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Fiyat özeti: arama ve yapay zekâ yanıtlarında alıntılanabilir rakamlar, ayrıntısı merkez sayfada */}
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+          <div>
+            <SectionHeading
+              eyebrow="Fiyatlar"
+              title={`Evden eve nakliyat fiyatları ${year}`}
+              description={`Ev tipine göre tahmini fiyat aralığı: ortalama eşya, iki adreste de asansörlü bina, paketleme ve montaj hariç. Şehirler arası sütun ${EXAMPLE_FROM.name} - ${EXAMPLE_TO.name} (yaklaşık ${EXAMPLE_KM} km) içindir.`}
+            />
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+              <Link
+                href={PRICE_CALCULATOR_PATH}
+                className="inline-flex items-center gap-1.5 py-1 font-semibold text-brand-700 hover:underline"
+              >
+                Kendi bilgilerinle fiyat hesapla <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+              <Link href={HUB_PATH} className="inline-flex items-center gap-1.5 py-1 font-semibold text-brand-700 hover:underline">
+                Fiyatı belirleyen etkenler <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+          <div
+            className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white"
+            tabIndex={0}
+            role="region"
+            aria-label="Ev tipine göre tahmini evden eve nakliyat fiyatları"
+          >
+            <table className="w-full text-left text-sm sm:text-base">
+              <thead className="bg-zinc-50 text-zinc-700">
+                <tr>
+                  <th scope="col" className="px-3 py-3 sm:px-4 font-semibold">Ev tipi</th>
+                  <th scope="col" className="px-3 py-3 sm:px-4 font-semibold">Şehir içi</th>
+                  <th scope="col" className="px-3 py-3 sm:px-4 font-semibold">Şehirler arası</th>
+                </tr>
+              </thead>
+              <tbody>
+                {priceRows.map((r) => (
+                  <tr key={r.label} className="border-t border-zinc-200">
+                    <th scope="row" className="px-3 py-3 sm:px-4 font-semibold text-zinc-900">{r.label}</th>
+                    {[r.local, r.intercity].map((range, i) => (
+                      // Dar ekranda aralık iki satıra kırılır, tablo yana kaymaz
+                      <td key={i} className="px-3 py-3 text-zinc-700 sm:px-4">
+                        <span className="whitespace-nowrap">{formatTry(range.minTry)} -</span>{" "}
+                        <span className="whitespace-nowrap">{formatTry(range.maxTry)}</span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       {/* Doğrulama */}
       <section className="bg-brand-900 text-white dark:bg-brand-950">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2">
@@ -288,7 +394,25 @@ export default async function Home() {
             </li>
           ))}
         </ul>
+        <h3 className="mt-10 font-bold text-zinc-900">Popüler şehirler arası güzergâhlar</h3>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {POPULAR_ROUTES.map((route) => (
+            <li key={route.href}>
+              <Link
+                href={route.href}
+                className="inline-flex rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:border-brand-300 hover:text-brand-700"
+              >
+                {route.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
+
+      {/* Sık sorulan sorular (FAQPage) */}
+      <div className="mx-auto max-w-3xl px-4 pb-20 sm:px-6 [&>section]:mt-0 [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:text-zinc-900 sm:[&_h2]:text-4xl">
+        <Faq items={homeFaq(year, { min: twoPlusOne.minTry, max: twoPlusOne.maxTry })} />
+      </div>
 
       {/* Firmalar için */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
