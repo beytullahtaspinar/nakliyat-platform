@@ -36,7 +36,7 @@ import { getLocalStats } from "@/lib/local-stats";
 import { formatDate } from "@/lib/format";
 import { DEFAULT_INPUT, calculatorHref, formatTry } from "@/lib/pricing";
 import { loadPricingModel } from "@/lib/pricing-model";
-import { HOME_TYPES } from "@/lib/request-options";
+import { HOME_TYPES, homeTypeLabel } from "@/lib/request-options";
 import { BLOG_PROSE } from "@/lib/blog/prose";
 import { formatRating } from "@/lib/reviews";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
@@ -219,30 +219,47 @@ export default async function LocalLandingPage({ params }: Props) {
 
       {stats && (
         <section className="mt-12">
-          <h2 className="text-2xl font-semibold">Bölgedeki güncel teklif verileri</h2>
-          <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-            {stats.verifiedCompanyCount} doğrulanmış firma, son 90 günde {stats.quoteCount} teklif.
+          <h2 className="text-2xl font-semibold">
+            {page.kind === "route"
+              ? `${page.from.name} - ${page.to.name} taşımalarında gerçek teklifler`
+              : `${page.city.name} içi taşımalarda gerçek teklifler`}
+          </h2>
+          <p className="mt-2 text-zinc-600">
+            Son {stats.days} günde{page.kind === "district" ? ` ${page.city.name} genelinde` : ""} {stats.requestCount} taşıma
+            talebine doğrulanmış firmalardan {stats.quoteCount} teklif geldi. Tabloda her ev tipi için tekliflerin ortadaki
+            yarısının aralığı ve ortanca teklif var; en düşük ve en yüksek uç teklifler aralığa girmez.
           </p>
-          <table className="mt-4 w-full text-left text-sm">
-            <thead>
-              <tr>
-                <th className="py-2">Ev tipi</th>
-                <th className="py-2">Teklif aralığı</th>
-                <th className="py-2">Teklif sayısı</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.priceRanges.map((r) => (
-                <tr key={r.homeType} className="border-t border-zinc-200 dark:border-zinc-800">
-                  <td className="py-2">{r.homeType}</td>
-                  <td className="py-2">
-                    {r.minTry.toLocaleString("tr-TR")} - {r.maxTry.toLocaleString("tr-TR")} TL
-                  </td>
-                  <td className="py-2">{r.sampleSize}</td>
+          <div
+            className="mt-4 overflow-x-auto"
+            tabIndex={0}
+            role="region"
+            aria-label="Ev tipine göre platformdaki gerçek teklifler"
+          >
+            <table className="w-full min-w-[28rem] text-left text-sm">
+              <thead>
+                <tr>
+                  <th scope="col" className="py-2">Ev tipi</th>
+                  <th scope="col" className="py-2">Tekliflerin çoğu</th>
+                  <th scope="col" className="py-2">Ortanca</th>
+                  <th scope="col" className="py-2">Teklif</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {stats.priceRanges.map((r) => (
+                  <tr key={r.homeType} className="border-t border-zinc-200">
+                    <td className="py-2">{homeTypeLabel(r.homeType)}</td>
+                    <td className="py-2">
+                      {formatTry(r.p25)} - {formatTry(r.p75)}
+                    </td>
+                    <td className="py-2">{formatTry(r.median)}</td>
+                    <td className="py-2">
+                      {r.quoteCount} teklif, {r.companyCount} firma
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 
