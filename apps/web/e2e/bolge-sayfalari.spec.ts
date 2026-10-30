@@ -51,9 +51,18 @@ test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsay
   page.on("dialog", (d) => d.accept());
   await loginAsAdmin(page);
 
-  await page.goto(`/yonetim/sayfalar?ara=${city.name}`);
+  // Liste illere göre gruplu: il açılınca il, ilçe ve şehirler arası sayfaları gelir
+  await page.goto("/yonetim/sayfalar");
+  await expectAccessible(page);
+  await page.getByRole("link", { name: city.name, exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/yonetim/sayfalar\\?il=${city.slug}$`));
+  await expect(page.getByRole("heading", { name: city.name, exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^İlçeler \(\d+\)$/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: new RegExp(`^${city.name} çıkışlı şehirler arası \\(80\\)$`) })).toBeVisible();
+  await expectAccessible(page);
   await page.getByRole("link", { name: `${city.name} Evden Eve Nakliyat`, exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/yonetim/sayfalar/${city.slug}-evden-eve-nakliyat$`));
+  await expect(page.getByRole("link", { name: `← ${city.name} bölge sayfaları` })).toBeVisible();
   // Boş alanlarda otomatik metin yer tutucu olarak görünür
   await expect(page.getByLabel("Sayfa başlığı (H1)")).toHaveAttribute("placeholder", `${city.name} Evden Eve Nakliyat`);
   await expectAccessible(page);

@@ -1,4 +1,4 @@
-import { getAllLocalPages, resolveLocalPage, type LocalPage } from "@nakliyat/locations";
+import { getAllLocalPages, getCityBySlug, resolveLocalPage, type CityRecord, type LocalPage } from "@nakliyat/locations";
 import { HUB_DEFAULTS, HUB_PATH, intro } from "@/lib/local-content";
 import { currentYear, isIndexable, localPageDescription, localPageMetaTitle, localPageTitle } from "@/lib/local-seo";
 
@@ -8,6 +8,8 @@ export type EditablePage = {
   kind: "hub" | LocalPage["kind"];
   title: string;
   indexable: boolean;
+  /** Yönetim listesinde bağlı olduğu il (güzergâhta çıkış ili); Türkiye geneli sayfasında yok */
+  city: { slug: string; name: string } | null;
   /** Yönetim formunda yer tutucu olarak görünen otomatik metinler */
   defaults: { seoTitle: string; seoDescription: string; heading: string; intro: string };
 };
@@ -28,6 +30,7 @@ function hubPage(): EditablePage {
     kind: "hub",
     title: "Türkiye geneli evden eve nakliyat",
     indexable: true,
+    city: null,
     defaults: {
       seoTitle: HUB_DEFAULTS.metaTitle(year),
       seoDescription: HUB_DEFAULTS.description(year),
@@ -43,6 +46,7 @@ function toEditable(page: LocalPage): EditablePage {
     kind: page.kind,
     title: localPageTitle(page),
     indexable: isIndexable(page),
+    city: (({ slug, name }) => ({ slug, name }))(page.kind === "route" ? page.from : page.city),
     defaults: {
       seoTitle: localPageMetaTitle(page),
       seoDescription: localPageDescription(page),
@@ -70,4 +74,38 @@ export function listEditablePages(q: string | undefined, edited: Set<string>): E
       ? p.title.toLocaleLowerCase("tr-TR").includes(needle) || p.slug.includes(needle)
       : p.indexable || edited.has(p.slug),
   );
+}
+
+/** Yönetimde il grubu: il sayfası, ilçe sayfaları ve o ilden çıkan şehirler arası sayfalar */
+export type CityGroup = {
+  city: CityRecord;
+  page: LocalPage;
+  districts: LocalPage[];
+  routes: LocalPage[];
+};
+
+const trCompare = (a: string, b: string) => a.localeCompare(b, "tr-TR");
+
+/** 81 il, adına göre sıralı; sayfalar metinsiz (sayım için hafif) */
+export function listCityGroups(): CityGroup[] {
+  const groups = new Map<string, CityGroup>();
+  const pages = getAllLocalPages();
+  for (const page of pages) {
+    if (page.kind === "city") groups.set(page.city.slug, { city: page.city, page, districts: [], routes: [] });
+  }
+  for (const page of pages) {
+    if (page.kind === "district") groups.get(page.city.slug)!.districts.push(page);
+    else if (page.kind === "route") groups.get(page.from.slug)!.routes.push(page);
+  }
+  return [...groups.values()].sort((a, b) => trCompare(a.city.name, b.city.name));
+}
+
+/** İl ayrıntısı: arama motoruna açık sayfalar önce, sonra ada göre */
+export function getCityGroupPages(slug: string) {
+  const city = getCityBySlug(slug);
+  if (!city) return null;
+  const group = listCityGroups().find((g) => g.city.slug === city.slug)!;
+  const sorted = (pages: LocalPage[]) =>
+    pages.map(toEditable).sort((a, b) => Number(b.indexable) - Number(a.indexable) || trCompare(a.title, b.title));
+  return { city, page: toEditable(group.page), districts: sorted(group.districts), routes: sorted(group.routes) };
 }
