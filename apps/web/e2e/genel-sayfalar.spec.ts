@@ -35,6 +35,10 @@ test("il sayfası açılır ve yapısal veri içerir", async ({ page }) => {
   const errors = collectConsoleErrors(page);
   await page.goto("/istanbul-evden-eve-nakliyat");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("İstanbul");
+  await expect(page).toHaveTitle(new RegExp(`^İstanbul Evden Eve Nakliyat Fiyatları ${new Date().getFullYear()} \\|`));
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /^İstanbul'da evden eve nakliyat fiyatları;/);
+  await expect(page.getByRole("heading", { name: /İstanbul Evden Eve Nakliyat fiyatları \d{4}/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /2\+1 .* TL/ })).toBeVisible();
   await expect(page.locator('script[type="application/ld+json"]').first()).toBeAttached();
   await expectAccessible(page);
   expect(errors).toEqual([]);

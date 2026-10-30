@@ -54,14 +54,44 @@ export function localPageTitle(page: LocalPage): string {
   }
 }
 
-export function localPageDescription(page: LocalPage): string {
+/**
+ * Türkçe bulunma eki, kesme işaretiyle: Bursa'da, İzmir'de, Muş'ta, Bitlis'te.
+ * Son ünlü kalın ise -da, ince ise -de; sert ünsüzle (f s t k ç ş h p) bitiyorsa -ta / -te.
+ */
+export function locative(name: string): string {
+  const lower = name.toLocaleLowerCase("tr-TR");
+  const vowels = [...lower].filter((ch) => "aeıioöuü".includes(ch));
+  const back = "aıou".includes(vowels.at(-1) ?? "a");
+  const hard = "fstkçşhp".includes(lower.at(-1) ?? "");
+  return `${name}'${hard ? "t" : "d"}${back ? "a" : "e"}`;
+}
+
+/** Türkiye saatine göre içinde bulunulan yıl (başlıklarda "Fiyatları 2026") */
+export const currentYear = (now = new Date()) =>
+  Number(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Istanbul", year: "numeric" }).format(now));
+
+/** Arama sonucunda görünen başlık (title). Sayfa başlığı (H1) localPageTitle olarak kalır. */
+export function localPageMetaTitle(page: LocalPage, year = currentYear()): string {
   switch (page.kind) {
     case "city":
-      return `${page.city.name} içinde ve ${page.city.name} çıkışlı taşınmanız için K3 belgeli, doğrulanmış nakliyat firmalarından ücretsiz teklif alın, fiyatları ve yorumları karşılaştırın.`;
+      return `${page.city.name} Evden Eve Nakliyat Fiyatları ${year}`;
     case "district":
-      return `${page.city.name}, ${page.district.name} evden eve nakliyat: bölgede hizmet veren doğrulanmış firmalardan teklif alın, fiyat, kapsam ve müşteri yorumlarını karşılaştırın.`;
+      return `${page.district.name} Evden Eve Nakliyat Fiyatları ${year} (${page.city.name})`;
     case "route":
-      return `${page.from.name} ile ${page.to.name} arası ${page.distanceKm} km şehirler arası taşınma: doğrulanmış nakliyat firmalarından teklif alın ve karşılaştırın.`;
+      return `${page.from.name} ${page.to.name} Evden Eve Nakliyat Fiyatları ${year}`;
+  }
+}
+
+const FACTORS_TEXT = "eşya miktarı, kat, asansör, paketleme ve mesafeye göre değişir";
+
+export function localPageDescription(page: LocalPage, year = currentYear()): string {
+  switch (page.kind) {
+    case "city":
+      return `${locative(page.city.name)} evden eve nakliyat fiyatları; ${FACTORS_TEXT}. ${year} tahmini fiyatları görün, doğrulanmış firmalardan ücretsiz teklif alın.`;
+    case "district":
+      return `${locative(page.district.name)} (${page.city.name}) evden eve nakliyat fiyatları; ${FACTORS_TEXT}. ${year} tahmini fiyatları görün, doğrulanmış firmalardan ücretsiz teklif alın.`;
+    case "route":
+      return `${page.from.name} ${page.to.name} arası ${page.distanceKm} km evden eve nakliyat fiyatları; eşya miktarı, kat, asansör ve paketlemeye göre değişir. ${year} tahmini fiyatları görün, firmalardan teklif alın.`;
   }
 }
 

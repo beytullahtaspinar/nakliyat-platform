@@ -265,6 +265,13 @@ describe('Değerlendirmeler (e2e)', () => {
     const bursa = await http().get('/v1/reviews/latest?city=16').expect(200);
     expect(bursa.body.items.map((r: { id: string }) => r.id)).not.toContain(reviewId);
     await http().get('/v1/reviews/latest?limit=100').expect(400);
+
+    // İl puanları: İzmir → Ankara taşıması iki ilde de sayılır
+    const cities = await http().get('/v1/reviews/cities').expect(200);
+    const byCode = (code: string) => cities.body.items.find((c: { cityCode: string }) => c.cityCode === code);
+    expect(byCode('35').count).toBeGreaterThanOrEqual(1);
+    expect(byCode('35').average).toBeGreaterThanOrEqual(1);
+    expect(byCode('06').count).toBeGreaterThanOrEqual(1);
   });
 
   it('müşteri yorumunu düzenler: puan güncellenir, düzenlendi görünür, firmaya bildirilir, yanıtını günceller', async () => {
