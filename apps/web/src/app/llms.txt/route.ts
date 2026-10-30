@@ -1,5 +1,12 @@
+import { getCityByCode, getDistanceKm } from "@nakliyat/locations";
+import { estimatePrice } from "@nakliyat/pricing";
 import { BLOG_PATH, categoryPath, getBlogIndex, postPath } from "@/lib/blog/api";
+import { currentYear } from "@/lib/local-seo";
+import { DEFAULT_INPUT, formatTry } from "@/lib/pricing";
+import { loadPricingModel } from "@/lib/pricing-model";
+import { HOME_TYPES } from "@/lib/request-options";
 import { SITE_URL } from "@/lib/site";
+
 
 // Blog bölümü yazı yayınlanınca yönetimden yenilenir (lib/actions/blog.ts)
 export const revalidate = 900;
@@ -35,7 +42,7 @@ Teklif aşamasında firmalar müşterinin adını, telefonunu ve açık adresini
 - [Nakliyat fiyat hesaplama: ev tipi, eşya miktarı, kat ve mesafeye göre tahmini fiyat aralığı ve ev tipine göre örnek fiyat tablosu](https://evdenevenakliyat.app/nakliyat-fiyat-hesaplama)
 - [Nakliyat firmaları için: katılım ve doğrulama](https://evdenevenakliyat.app/firmalar-icin)
 - [Hakkımızda: platformun ilkeleri](https://evdenevenakliyat.app/hakkimizda)
-- [Türkiye geneli evden eve nakliyat (81 il)](https://evdenevenakliyat.app/evden-eve-nakliyat)
+- [Evden eve nakliyat fiyatları ve ücretsiz fiyat teklifi (81 il)](https://evdenevenakliyat.app/evden-eve-nakliyat)
 - [İstanbul evden eve nakliyat](https://evdenevenakliyat.app/istanbul-evden-eve-nakliyat)
 - [Ankara evden eve nakliyat](https://evdenevenakliyat.app/ankara-evden-eve-nakliyat)
 - [İzmir evden eve nakliyat](https://evdenevenakliyat.app/izmir-evden-eve-nakliyat)
@@ -45,10 +52,33 @@ Teklif aşamasında firmalar müşterinin adını, telefonunu ve açık adresini
 /** Markdown bağlantı metninde köşeli parantez bozulmasın */
 const plain = (text: string) => text.replace(/[\[\]]/g, "").replace(/\s+/g, " ").trim();
 
+/** Yanıt motorları sayısal veriyi kaynak gösterir: hesaplayıcının katsayılarıyla ev tipine göre tahmini fiyatlar */
+async function priceSection() {
+  const { settings, calibration, updatedAt } = await loadPricingModel();
+  const from = getCityByCode("34")!;
+  const to = getCityByCode("06")!;
+  const km = getDistanceKm(from, to)!;
+  const range = (homeType: (typeof HOME_TYPES)[number]["value"], distanceKm?: number) => {
+    const e = estimatePrice({ ...DEFAULT_INPUT, homeType, distanceKm }, settings, calibration);
+    return `${formatTry(e.minTry)} - ${formatTry(e.maxTry)}`;
+  };
+  return [
+    `## Evden eve nakliyat fiyatları ${currentYear()} (tahmini)`,
+    "",
+    `Ortalama eşya, iki adreste 2. kat ve asansörlü bina, paketleme ve montaj hariç. Şehirler arası: ${from.name} - ${to.name} (${km} km).${updatedAt ? ` Katsayıların güncellenme tarihi: ${updatedAt.slice(0, 10)}.` : ""} Kaynak ve hesaplayıcı: ${SITE_URL}/nakliyat-fiyat-hesaplama`,
+    "",
+    "| Ev tipi | Şehir içi | Şehirler arası |",
+    "|---|---|---|",
+    ...HOME_TYPES.filter((t) => t.value !== "OFFICE").map((t) => `| ${t.label} | ${range(t.value)} | ${range(t.value, km)} |`),
+    "",
+  ];
+}
+
 export async function GET() {
-  const { posts, categories } = await getBlogIndex();
+  const [{ posts, categories }, prices] = await Promise.all([getBlogIndex(), priceSection()]);
   const lines = [
     INTRO,
+    ...prices,
     "## Taşınma rehberi (blog)",
     "",
     `- [Tüm yazılar](${SITE_URL}${BLOG_PATH}): evden eve nakliyat fiyatları, taşınma hazırlığı ve firma seçimi rehberleri`,

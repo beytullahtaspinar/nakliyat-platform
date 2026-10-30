@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCities, getCityByCode, getDistanceKm, routeSlug } from "@nakliyat/locations";
 import {
-  DEFAULT_PRICING_SETTINGS,
   PRICING_SETTING_SPECS,
   estimatePrice,
   type PricingSettingKey,
@@ -12,10 +11,10 @@ import { Breadcrumbs } from "@/components/local/breadcrumbs";
 import { Faq, type FaqItem } from "@/components/local/faq";
 import { ButtonLink } from "@/components/ui/button";
 import { ArrowRightIcon, CheckIcon } from "@/components/ui/icons";
-import { apiFetch } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { HUB_PATH } from "@/lib/local-content";
-import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, PRICING_CACHE_TAG, formatTry, type PricingModel } from "@/lib/pricing";
+import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, formatTry } from "@/lib/pricing";
+import { loadPricingModel } from "@/lib/pricing-model";
 import { HOME_TYPES } from "@/lib/request-options";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 import { PriceCalculator, type CalculatorCity } from "./price-calculator";
@@ -33,15 +32,6 @@ export const metadata: Metadata = {
   alternates: { canonical: PRICE_CALCULATOR_PATH },
   openGraph: { title: TITLE, description: DESCRIPTION, url: PRICE_CALCULATOR_PATH, type: "website", locale: "tr_TR", images: DEFAULT_OG_IMAGES },
 };
-
-/** API'ye ulaşılamazsa (ör. derleme sırasında) varsayılan katsayılarla çizilir, sonraki yenilemede düzelir */
-async function loadModel(): Promise<PricingModel> {
-  try {
-    return await apiFetch<PricingModel>("/pricing", { revalidate, tags: [PRICING_CACHE_TAG] });
-  } catch {
-    return { settings: DEFAULT_PRICING_SETTINGS, calibration: {}, updatedAt: null };
-  }
-}
 
 const cityRecords = getCities();
 const cities: CalculatorCity[] = cityRecords.map(({ code, name }) => ({ code, name }));
@@ -106,7 +96,7 @@ function faq(example: { min: number; max: number }): FaqItem[] {
 }
 
 export default async function PriceCalculatorPage() {
-  const { settings, calibration, updatedAt } = await loadModel();
+  const { settings, calibration, updatedAt } = await loadPricingModel();
   const example = (homeType: (typeof HOME_TYPES)[number]["value"], distanceKm?: number) =>
     estimatePrice({ ...DEFAULT_INPUT, homeType, distanceKm }, settings, calibration);
   const twoPlusOne = example("TWO_PLUS_ONE");

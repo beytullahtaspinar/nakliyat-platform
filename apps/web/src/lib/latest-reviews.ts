@@ -29,3 +29,24 @@ export async function getLocalReviews(page: LocalPage) {
   const local = (await getLatestReviews()).filter((r) => codes.every((code) => r.cityCodes.includes(code)));
   return local.slice(0, LATEST_REVIEW_LIMIT);
 }
+
+/** İl sayfasında puan gösterilir; Google'a yapısal veri olarak en az bu kadar değerlendirmeyle verilir */
+export const CITY_RATING_SCHEMA_MIN = 3;
+
+export type CityRating = { cityCode: string; count: number; average: number };
+
+/**
+ * İlin ortalama puanı: çıkışı ya da varışı o il olan, platform üzerinden yapılmış taşımaların yayındaki puanları.
+ * 81 il sayfası tek yanıtı paylaşır. Değerlendirme yoksa ya da API'ye ulaşılamazsa null (uydurma puan gösterilmez).
+ */
+export async function getCityRating(cityCode: string): Promise<CityRating | null> {
+  try {
+    const { items } = await apiFetch<{ items: CityRating[] }>("/reviews/cities", {
+      revalidate: 3600,
+      tags: [COMPANY_CACHE_TAG],
+    });
+    return items.find((c) => c.cityCode === cityCode && c.count > 0) ?? null;
+  } catch {
+    return null;
+  }
+}

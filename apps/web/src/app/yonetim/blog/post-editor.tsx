@@ -37,7 +37,7 @@ const toolButton =
   "rounded-md border border-slate-300 bg-white px-2.5 py-1 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50";
 
 /** Karakter sayacı: sınır aşılınca ya da önerilen aralık dışında uyarı renginde */
-function Counter({ value, max, ideal }: { value: string; max: number; ideal?: { min?: number; max: number } }) {
+export function Counter({ value, max, ideal }: { value: string; max: number; ideal?: { min?: number; max: number } }) {
   const n = value.length;
   const warn = n > max || (ideal && n > 0 && (n > ideal.max || (ideal.min !== undefined && n < ideal.min)));
   return (
@@ -663,7 +663,7 @@ export function PostEditor({
 }
 
 /** Sık sorulan sorular: sayfada soru-cevap olarak ve FAQPage yapısal verisinde görünür */
-function FaqEditor({ faq, onChange }: { faq: BlogFaqItem[]; onChange: (faq: BlogFaqItem[]) => void }) {
+export function FaqEditor({ faq, onChange }: { faq: BlogFaqItem[]; onChange: (faq: BlogFaqItem[]) => void }) {
   const update = (index: number, patch: Partial<BlogFaqItem>) => onChange(faq.map((f, i) => (i === index ? { ...f, ...patch } : f)));
   return (
     <div className={card}>

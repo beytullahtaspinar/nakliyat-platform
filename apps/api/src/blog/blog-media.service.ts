@@ -96,18 +96,19 @@ export class BlogMediaService {
     return toView((await this.prisma.blogMedia.findUnique({ where: { id } }))!);
   }
 
-  /** Kullanılan görsel (kapak, yazar fotoğrafı ya da içerikte) silinmez: sitede kırık görsel kalmasın */
+  /** Kullanılan görsel (kapak, yazar fotoğrafı, içerikte ya da bölge sayfasında) silinmez: sitede kırık görsel kalmasın */
   async remove(adminId: string, id: string) {
     const item = await this.prisma.blogMedia.findUnique({ where: { id } });
     if (!item) throw new NotFoundException('Görsel bulunamadı');
     const path = blogMediaPath(item.storageKey);
-    const [covers, authors, inContent] = await Promise.all([
+    const [covers, authors, inContent, localPages] = await Promise.all([
       this.prisma.blogPost.count({ where: { coverKey: item.storageKey } }),
       this.prisma.blogAuthor.count({ where: { photoKey: item.storageKey } }),
       this.prisma.blogPost.count({ where: { content: { contains: path } } }),
+      this.prisma.localPageContent.count({ where: { OR: [{ coverKey: item.storageKey }, { content: { contains: path } }] } }),
     ]);
-    if (covers + authors + inContent > 0) {
-      throw new ConflictException('Bu görsel bir yazıda ya da yazar profilinde kullanılıyor; önce oradan kaldırın');
+    if (covers + authors + inContent + localPages > 0) {
+      throw new ConflictException('Bu görsel bir yazıda, yazar profilinde ya da bölge sayfasında kullanılıyor; önce oradan kaldırın');
     }
     await this.prisma.$transaction([
       this.prisma.blogMedia.delete({ where: { id } }),

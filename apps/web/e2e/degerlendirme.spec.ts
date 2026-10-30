@@ -160,6 +160,12 @@ test("tamamlanan taşımada müşteri firmayı değerlendirir, yorum firma sayfa
   await expectAccessible(page);
   const companyUrl = page.url().split("#")[0];
 
+  // İl sayfası: İzmir çıkışlı taşımanın puanı ilin ortalamasında görünür
+  await page.goto("/izmir-evden-eve-nakliyat");
+  await expect(page.getByText("(İzmir taşımalarında firmalara verilen puanlar)")).toBeVisible();
+  await expect(page.getByText(/\d+ değerlendirme/).first()).toBeVisible();
+  await expectAccessible(page);
+
   // Müşteri yorumunu düzenler: puan ve metin değişir, "düzenlendi" görünür, firmanın yanıtı yerinde kalır
   const edited = "Ekip çok özenliydi, gecikmeyi de dikkatli çalışarak telafi ettiler.";
   await page.goto(`/hesabim/talepler/${requestId}`);

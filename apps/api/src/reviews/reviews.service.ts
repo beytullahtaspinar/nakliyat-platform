@@ -517,6 +517,31 @@ export class ReviewsService {
     };
   }
 
+  /**
+   * İl bazında yayındaki puanların ortalaması (il sayfaları). Bir taşıma hem çıkış hem varış ilinde sayılır,
+   * aynı il içindeyse bir kez. Yazısız puanlar da sayılır; yalnızca herkese açık firmalar.
+   */
+  async cityRatings() {
+    const rows = await this.prisma.review.findMany({
+      where: { isPublished: true, company: PUBLIC_COMPANY },
+      select: { rating: true, booking: { select: { request: { select: { fromCityCode: true, toCityCode: true } } } } },
+    });
+    const totals = new Map<string, { sum: number; count: number }>();
+    for (const { rating, booking } of rows) {
+      for (const code of new Set([booking.request.fromCityCode, booking.request.toCityCode])) {
+        const t = totals.get(code) ?? { sum: 0, count: 0 };
+        t.sum += rating;
+        t.count += 1;
+        totals.set(code, t);
+      }
+    }
+    return {
+      items: [...totals]
+        .map(([cityCode, t]) => ({ cityCode, count: t.count, average: Math.round((t.sum / t.count) * 100) / 100 }))
+        .sort((a, b) => a.cityCode.localeCompare(b.cityCode)),
+    };
+  }
+
   // ─── Yönetim ─────────────────────────────────────────────────
 
   async adminList({ page, limit, sort, q, ...filters }: AdminListReviewsDto) {

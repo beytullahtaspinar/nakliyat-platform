@@ -43,4 +43,10 @@ export class PublicReviewsController {
   latest(@Query() dto: LatestReviewsDto) {
     return this.reviews.latestPublic(dto);
   }
+
+  /** İl bazında ortalama puan ve değerlendirme sayısı (çıkışı ya da varışı o il olan taşımalar) */
+  @Get('cities')
+  cities() {
+    return this.reviews.cityRatings();
+  }
 }

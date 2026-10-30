@@ -1025,6 +1025,27 @@ model BlogSlugRedirect {
   @@index([postId])
 }
 
+/// Bölge sayfası (il, ilçe, güzergâh, /evden-eve-nakliyat) için yönetimden yazılan içerik.
+/// Boş alanlarda sayfanın otomatik metni kullanılır; satır yoksa sayfa tamamen otomatiktir.
+model LocalPageContent {
+  /// Sayfa adresi: istanbul-evden-eve-nakliyat, evden-eve-nakliyat …
+  slug           String   @id @db.VarChar(200)
+  seoTitle       String?  @db.VarChar(200)
+  seoDescription String?  @db.VarChar(400)
+  /// Sayfa başlığı (H1)
+  heading        String?  @db.VarChar(200)
+  intro          String?  @db.Text
+  /// Ek içerik (Markdown, blog görselleri kullanılabilir)
+  content        String?  @db.MediumText
+  /// Sık sorulan sorular: [{ question, answer }]; doluysa otomatik soruların yerine geçer
+  faq            Json?
+  coverKey       String?  @db.VarChar(300)
+  coverAlt       String?  @db.VarChar(200)
+  updatedById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 /// Blog görselleri (kapak, içerik, yazar fotoğrafı): büyük (1600 px) + önizleme (800 px) WebP
 model BlogMedia {
   id           String          @id @default(cuid())
