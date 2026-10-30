@@ -60,6 +60,22 @@ test("evden eve nakliyat merkez sayfası fiyat tablosu ve sık sorulan sorular i
 test("ana sayfa başlığı ana kelimeyle başlar", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/^Evden Eve Nakliyat Fiyat Teklifi Al/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Evden eve nakliyat fiyat teklifi");
+});
+
+test("ana sayfada fiyat özeti, güzergâhlar ve SSS yapısal verisi var", async ({ page }) => {
+  const errors = collectConsoleErrors(page);
+  await page.goto("/");
+  const prices = page.getByRole("region", { name: "Ev tipine göre tahmini evden eve nakliyat fiyatları" });
+  await expect(prices.getByRole("row", { name: /2\+1 .* TL .* TL/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "İstanbul - Ankara", exact: true })).toHaveAttribute(
+    "href",
+    "/istanbul-ankara-sehirler-arasi-nakliyat",
+  );
+  const jsonLd = (await page.locator('script[type="application/ld+json"]').allTextContents()).map((t) => JSON.parse(t));
+  expect(jsonLd.some((d) => d["@type"] === "FAQPage")).toBe(true);
+  await expectAccessible(page);
+  expect(errors).toEqual([]);
 });
 
 test("llms.txt tahmini fiyat tablosu içerir", async ({ request }) => {
