@@ -923,6 +923,15 @@ model PricingSettings {
   updatedAt   DateTime @updatedAt
 }
 
+/// Site geneli ayarlar (tek satır, id = 1): şimdilik arama motoru doğrulama kodları (Google, Bing, Yandex).
+/// Şekli site-settings/site-settings.service.ts'te; değişiklikler AuditLog'a yazılır.
+model SiteSettings {
+  id          Int      @id @default(1)
+  settings    Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
 model AuditLog {
   id         String   @id @default(cuid())
   actorId    String

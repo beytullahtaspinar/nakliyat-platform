@@ -1,7 +1,7 @@
 "use client";
 
 import { SideNav } from "@/components/panel/side-nav";
-import { BuildingIcon, CalculatorIcon, ChartIcon, ClipboardIcon, DocumentIcon, FlagIcon, GridIcon, MapPinIcon, PlateIcon, ScaleIcon, ShieldCheckIcon, StarIcon, TagIcon, UsersIcon, WalletIcon } from "@/components/ui/icons";
+import { BuildingIcon, CalculatorIcon, ChartIcon, ClipboardIcon, DocumentIcon, FlagIcon, GridIcon, MapPinIcon, PlateIcon, ScaleIcon, SearchIcon, ShieldCheckIcon, StarIcon, TagIcon, UsersIcon, WalletIcon } from "@/components/ui/icons";
 
 export function AdminNav({
   pendingCompanies,
@@ -76,6 +76,7 @@ export function AdminNav({
             { href: "/yonetim/fiyat-hesaplama", label: "Fiyat hesaplayıcı", icon: CalculatorIcon },
             { href: "/yonetim/blog", label: "Blog", icon: DocumentIcon },
             { href: "/yonetim/sayfalar", label: "Bölge sayfaları", icon: MapPinIcon },
+            { href: "/yonetim/arama-motorlari", label: "Arama motorları", icon: SearchIcon },
           ],
         },
       ]}

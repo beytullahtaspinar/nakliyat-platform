@@ -23,11 +23,12 @@ import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
 import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, formatTry } from "@/lib/pricing";
 import { loadPricingModel } from "@/lib/pricing-model";
 import { HOME_TYPES } from "@/lib/request-options";
+import { loadSearchVerification, verificationMetadata } from "@/lib/site-settings";
 import { BRAND_PROMISE, BRAND_SLOGAN, DEFAULT_OG_IMAGES, SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 // Paylaşım kartında da marka sloganı görünsün (kök düzendeki openGraph başlık taşımaz, alt sayfalara sızmasın)
 // Arama sonucu başlığı ana kelimeyle başlar ("evden eve nakliyat", "fiyat teklifi"); sloganlar H1 ve paylaşım kartında kalır
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   title: { absolute: `Evden Eve Nakliyat Fiyat Teklifi Al ve Karşılaştır | ${SITE_NAME}` },
   description:
     "Evden eve nakliyat için tek talep, çok teklif: taşınma bilgilerini bir kez gir, K3 belgeli firmaların fiyat tekliflerini karşılaştır, sana uygun olanı seç. Ücretsiz.",
@@ -41,6 +42,11 @@ export const metadata: Metadata = {
     images: DEFAULT_OG_IMAGES,
   },
 };
+
+// Arama motoru doğrulama kodları (yönetim > Arama motorları) yalnızca ana sayfada: Google, Bing ve Yandex orada arar
+export async function generateMetadata(): Promise<Metadata> {
+  return { ...baseMetadata, verification: verificationMetadata(await loadSearchVerification()) };
+}
 
 const selectClass =
   "mt-1.5 block w-full rounded-xl border border-zinc-300 bg-white px-3 py-3 text-base text-zinc-900 " +
