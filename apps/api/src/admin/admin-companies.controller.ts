@@ -32,7 +32,7 @@ import { CompaniesService } from '../companies/companies.service.js';
 import { CompanyNameChangesService } from '../companies/company-name-changes.service.js';
 import { CreditsService } from '../credits/credits.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { AdminCreateCompanyDto, ListCompaniesDto, RejectCompanyDto } from './dto/admin-companies.dto.js';
+import { AdminCreateCompanyDto, ListCompaniesDto, RejectCompanyDto, VerifyCompanyDto } from './dto/admin-companies.dto.js';
 import { newAccountData } from './new-account.js';
 import { phoneDigits } from './dto/admin-lists.dto.js';
 
@@ -273,17 +273,19 @@ export class AdminCompaniesController {
 
   /**
    * Zorunlu belgelerin (K3, vergi levhası, ticaret sicil) her biri onaylanmış ve süresi geçerli olmalı;
-   * en az bir aracı (ruhsat ve plakalı fotoğraflar) onaylanmış olmalı
+   * en az bir aracı (ruhsat ve plakalı fotoğraflar) onaylanmış olmalı. Eksik varsa yönetici
+   * overrideReason ile yine de onaylayabilir: eksikler ve gerekçe işlem geçmişine yazılır.
    */
   @Post(':id/verify')
   @HttpCode(HttpStatus.OK)
-  async verify(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
+  async verify(@CurrentUser() admin: AuthUser, @Param('id') id: string, @Body() dto: VerifyCompanyDto) {
     const missing = await this.documents.missingForVerification(id);
     if (!(await this.vehicles.hasVerifiedVehicle(id))) missing.push(VEHICLE_REQUIREMENT_LABEL);
-    if (missing.length) {
+    if (missing.length && !dto.overrideReason) {
       throw new ConflictException(`Firma onaylanamaz, şu belgeler onaylanmadı: ${missing.join(', ')}`);
     }
-    return this.setStatus(admin, id, VerificationStatus.VERIFIED);
+    const override = missing.length ? { override: true as const, missing, note: dto.overrideReason } : undefined;
+    return this.setStatus(admin, id, VerificationStatus.VERIFIED, undefined, override);
   }
 
   @Post(':id/reject')
@@ -328,7 +330,14 @@ export class AdminCompaniesController {
     return this.vehicles.review(admin.id, id, vehicleId, VerificationStatus.REJECTED, dto.reason);
   }
 
-  private async setStatus(admin: AuthUser, id: string, status: VerificationStatus, note?: string) {
+  /** extra: işlem geçmişine eklenen ayrıntı (eksiklere rağmen onayda eksikler ve gerekçe; firmaya gösterilmez) */
+  private async setStatus(
+    admin: AuthUser,
+    id: string,
+    status: VerificationStatus,
+    note?: string,
+    extra?: { override: true; missing: string[]; note?: string },
+  ) {
     const company = await this.prisma.company.findFirst({ where: { id, deletedAt: null } });
     if (!company) throw new NotFoundException('Firma bulunamadı');
 
@@ -348,7 +357,7 @@ export class AdminCompaniesController {
           action: status === VerificationStatus.VERIFIED ? 'company.verify' : 'company.reject',
           entityType: 'Company',
           entityId: id,
-          details: { from: company.verificationStatus, to: status, note: note ?? null },
+          details: { from: company.verificationStatus, to: status, note: note ?? null, ...extra },
         },
       }),
     ]);
