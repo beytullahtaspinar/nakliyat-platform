@@ -370,3 +370,84 @@ test("yönetici dönem seçerek istatistikleri görür", async ({ page }) => {
   await expect(page.getByRole("row")).not.toHaveCount(0);
   await expectAccessible(page);
 });
+
+test("yönetici belgesi ve aracı eksik firmayı gerekçe yazarak onaylar", async ({ page, request }) => {
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  const reg = await request.post(`${API}/auth/register`, {
+    data: { role: "COMPANY", fullName: "Firma Yetkilisi", phone: `0534${uniqueDigits(7)}`, password: PASSWORD },
+  });
+  const { accessToken } = await reg.json();
+  const companyName = `Eksik Belgeli ${uniqueDigits(5)}`;
+  const profile = await request.post(`${API}/company/profile`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    data: {
+      displayName: companyName,
+      legalName: `${companyName} Ltd. Şti.`,
+      taxNumber: uniqueDigits(10).replace(/^0/, "1"),
+      cityCode: "34",
+      serviceCityCodes: ["34"],
+    },
+  });
+  expect(profile.ok()).toBeTruthy();
+  const { id } = await profile.json();
+
+  await page.goto("/giris");
+  await page.getByLabel("Cep telefonu").fill(adminPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/yonetim$/);
+  await page.goto(`/yonetim/firmalar/${id}`);
+
+  await expect(page.getByRole("button", { name: "Firmayı onayla" })).toHaveCount(0);
+  await expect(page.getByText(/Onay için önce şunlar onaylanmalı/)).toContainText("K3 yetki belgesi");
+  await page.getByRole("button", { name: "Eksiklere rağmen onayla" }).click();
+  await page.getByLabel("Eksiklere rağmen onay gerekçesi").fill("Belgeleri e-postayla gönderdi, bu hafta yükleyecek.");
+  await expectAccessible(page);
+  await page.getByRole("button", { name: "Yine de onayla" }).click();
+  await expect(page.getByRole("status")).toContainText("Firma onaylandı");
+  // Karar geçmişinde eksikler ve gerekçe görünür; gerekçe firmaya gösterilmez
+  await expect(page.getByText("(eksiklere rağmen)")).toBeVisible();
+  await expect(page.getByText(/Eksikler: .*Onaylı araç/)).toBeVisible();
+  await expect(page.getByText("Gerekçe: Belgeleri e-postayla gönderdi, bu hafta yükleyecek.")).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await expectAccessible(page);
+  const own = await request.get(`${API}/company/profile`, { headers: { Authorization: `Bearer ${accessToken}` } });
+  expect(await own.json()).toMatchObject({ verificationStatus: "VERIFIED", verificationNote: null });
+});
+
+test("yönetim menüsü gruplu; geniş ekranda gruplar kapanır ve hatırlanır", async ({ page }, testInfo) => {
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  await page.goto("/giris");
+  await page.getByLabel("Cep telefonu").fill(adminPhone);
+  await page.getByLabel("Şifre").fill(PASSWORD);
+  await page.getByRole("button", { name: "Giriş yap" }).click();
+  await expect(page).toHaveURL(/\/yonetim$/);
+  const nav = page.getByRole("navigation", { name: "Yönetim" });
+  await expect(nav.getByRole("link", { name: "Arama motorları" })).toBeVisible();
+  await expectAccessible(page);
+  if (testInfo.project.name === "mobil") return; // Telefonda şerit: gruplar ayraç olarak görünür, kapanmaz
+
+  const group = nav.getByRole("button", { name: "İçerik ve SEO" });
+  await expect(group).toHaveAttribute("aria-expanded", "true");
+  await group.click();
+  await expect(group).toHaveAttribute("aria-expanded", "false");
+  await expect(nav.getByRole("link", { name: "Blog" })).toBeHidden();
+  await page.reload();
+  await expect(nav.getByRole("link", { name: "Blog" })).toBeHidden();
+  // Seçili sayfanın grubu hep açık
+  await page.goto("/yonetim/blog");
+  await expect(nav.getByRole("link", { name: "Blog" })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "İçerik ve SEO" })).toBeDisabled();
+  await page.goto("/yonetim");
+  await nav.getByRole("button", { name: "İçerik ve SEO" }).click();
+  await expect(nav.getByRole("link", { name: "Blog" })).toBeVisible();
+  await expectAccessible(page);
+});

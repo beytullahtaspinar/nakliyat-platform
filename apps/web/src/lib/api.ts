@@ -760,6 +760,9 @@ export type AdminCompanyDetail = AdminCompany &
       /** Görünen ad değişikliği */
       oldName?: string;
       newName?: string;
+      /** Zorunlu belge/araç eksikken yönetici gerekçeyle onayladı; o anki eksikler */
+      override?: boolean;
+      missing?: string[];
     } | null;
     createdAt: string;
     actor: { fullName: string };

@@ -274,11 +274,15 @@ export default async function AdminCompanyPage({ params, searchParams }: PagePro
                       {h.details?.plate && `: ${formatPlate(h.details.plate)}`}
                       {h.details?.newName && `: “${h.details.oldName}” → “${h.details.newName}”`}
                       {panelArea(h.details?.path) && ` (${panelArea(h.details?.path)})`}
+                      {h.details?.override && " (eksiklere rağmen)"}
                     </span>{" "}
                     <span className="text-zinc-500">
                       · {h.actor.fullName} ·{" "}
                       {h.action.startsWith("company.impersonate") ? formatDateTime(h.createdAt) : formatDate(h.createdAt)}
                     </span>
+                    {h.details?.override && h.details.missing && (
+                      <p className="text-amber-800">Eksikler: {h.details.missing.join(", ")}</p>
+                    )}
                     {h.details?.note && <p className="text-zinc-700">Gerekçe: {h.details.note}</p>}
                   </li>
                 ))}
