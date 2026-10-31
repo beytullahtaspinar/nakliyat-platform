@@ -21,6 +21,8 @@ export type ErrorContext = {
   path?: string;
   tags?: Record<string, TagValue>;
   extra?: Record<string, unknown>;
+  /** Aynı kökten gelen farklı hataları Sentry'de tek kayıtta toplamak için (ör. ["veritabani-erisilemiyor"]) */
+  fingerprint?: string[];
 };
 
 export type ReporterOptions = {
@@ -178,6 +180,7 @@ export function createErrorReporter(options: ReporterOptions): ErrorReporter {
       environment: options.environment,
       tags,
       extra: ctx.extra,
+      fingerprint: ctx.fingerprint?.length ? ctx.fingerprint : undefined,
       transaction: ctx.path ? `${ctx.method ?? ""} ${ctx.path}`.trim() : undefined,
       request: ctx.path ? { method: ctx.method, url: ctx.path } : undefined,
       exception: {

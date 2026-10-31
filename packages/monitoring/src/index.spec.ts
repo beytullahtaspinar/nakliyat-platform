@@ -108,6 +108,17 @@ describe("createErrorReporter", () => {
     expect(payload.tags).not.toHaveProperty("bos");
   });
 
+  it("fingerprint verilince Sentry olayına ekler, verilmezse eklemez", async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response("{}"));
+    const reporter = createErrorReporter({ service: "api", dsn: "https://pub@o1.ingest.sentry.io/9", log: () => {}, fetch });
+    reporter.capture(new Error("a"), { fingerprint: ["veritabani-erisilemiyor"] });
+    reporter.capture(new Error("b"));
+    await reporter.flush();
+    const payloads = fetch.mock.calls.map(([, init]) => JSON.parse(init.body.trim().split("\n")[2]));
+    expect(payloads[0].fingerprint).toEqual(["veritabani-erisilemiyor"]);
+    expect(payloads[1]).not.toHaveProperty("fingerprint");
+  });
+
   it("dakikalık sınırı aşınca Sentry'ye göndermeyi keser ama loglamaya devam eder", () => {
     let t = 0;
     const lines: string[] = [];
