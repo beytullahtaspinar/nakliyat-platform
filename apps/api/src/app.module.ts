@@ -21,6 +21,7 @@ import { ModerationModule } from './moderation/moderation.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { ObservabilityModule } from './observability/observability.module.js';
 import { PricingModule } from './pricing/pricing.module.js';
+import { SiteSettingsModule } from './site-settings/site-settings.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QuotesModule } from './quotes/quotes.module.js';
 import { RequestsModule } from './requests/requests.module.js';
@@ -47,6 +48,7 @@ import { ReviewsModule } from './reviews/reviews.module.js';
     ModerationModule,
     ReviewsModule,
     PricingModule,
+    SiteSettingsModule,
     BlogModule,
     AdminModule,
     NotificationsModule,
