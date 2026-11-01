@@ -65,6 +65,17 @@ describe('Hesabımı sil (e2e)', () => {
     expect((await http().get('/v1/auth/me').set(auth('oauth')).expect(200)).body.hasPassword).toBe(false);
   });
 
+  it('kullanıcı adını düzeltir; boşluklar toplanır, denetim kaydına yazılır', async () => {
+    const res = await http().patch('/v1/auth/me').set(auth('customer')).send({ fullName: '  Silme   Müşteri  ' }).expect(200);
+    expect(res.body.fullName).toBe('Silme Müşteri');
+    await http().patch('/v1/auth/me').set(auth('customer')).send({ fullName: 'ab' }).expect(400);
+    await http().patch('/v1/auth/me').send({ fullName: 'Oturumsuz Ad' }).expect(401);
+    const id = await idOf('customer');
+    const log = await prisma.auditLog.findFirstOrThrow({ where: { action: 'user.update_name', entityId: id } });
+    expect(log.details).toEqual({ before: 'Silme customer', after: 'Silme Müşteri' });
+    await prisma.auditLog.deleteMany({ where: { action: 'user.update_name', entityId: id } });
+  });
+
   it('şifreli hesap şifresini doğru girmeden silinemez', async () => {
     await http().delete('/v1/auth/me').set(auth('customer')).send({}).expect(400);
     await http().delete('/v1/auth/me').set(auth('customer')).send({ password: 'YanlisSifre1' }).expect(400);

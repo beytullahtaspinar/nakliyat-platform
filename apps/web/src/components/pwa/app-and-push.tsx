@@ -24,12 +24,15 @@ export function AppAndPush({
   publicKey,
   devices,
   impersonating,
+  viewer = "COMPANY",
 }: {
   /** API'nin VAPID açık anahtarı; null ise anlık bildirim sunucuda kapalı */
   publicKey: string | null;
   /** Hesapta bildirimi açık cihaz sayısı */
   devices: number;
   impersonating: boolean;
+  /** Bildirim türlerinin anlatımı: firma (yeni talep) ya da müşteri (yeni teklif) */
+  viewer?: "COMPANY" | "CUSTOMER";
 }) {
   const [standalone, setStandalone] = useState(false);
   const [ios, setIos] = useState(false);
@@ -149,12 +152,14 @@ export function AppAndPush({
             Bu cihazda anlık bildirim
           </h3>
           <p className="mt-1 text-sm text-zinc-600">
-            Site kapalıyken de yeni talep, teklif kabulü ve mesajlar telefonuna bildirim olarak gelir.
+            {viewer === "CUSTOMER"
+              ? "Site kapalıyken de yeni teklifler ve firma mesajları telefonuna bildirim olarak gelir."
+              : "Site kapalıyken de yeni talep, teklif kabulü ve mesajlar telefonuna bildirim olarak gelir."}
             {deviceCount > 0 && ` Hesabında ${deviceCount} cihazda açık.`}
           </p>
           <div className="mt-3">
             {impersonating ? (
-              <p className="text-sm text-zinc-600">Firma görünümündeyken bu cihaz için bildirim açılamaz.</p>
+              <p className="text-sm text-zinc-600">Yönetici görünümündeyken bu cihaz için bildirim açılamaz.</p>
             ) : push === "checking" ? (
               <p className="text-sm text-zinc-500">Kontrol ediliyor…</p>
             ) : push === "unsupported" ? (
