@@ -32,10 +32,26 @@ const failure = (err: unknown, fallback: string): AdminActionState => ({
 });
 
 export async function verifyCompany(companyId: string): Promise<AdminActionState> {
+  return sendVerify(companyId, {});
+}
+
+/** Zorunlu belge ya da onaylı araç eksikken onay: gerekçe karar geçmişine yazılır, firmaya gösterilmez. */
+export async function verifyCompanyWithOverride(
+  companyId: string,
+  _prev: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length < 5) return { error: "Eksiklere rağmen neden onayladığını kısaca yaz (en az 5 karakter)." };
+  return sendVerify(companyId, { overrideReason: reason });
+}
+
+async function sendVerify(companyId: string, body: { overrideReason?: string }): Promise<AdminActionState> {
   try {
     await apiFetch(`/admin/companies/${encodeURIComponent(companyId)}/verify`, {
       method: "POST",
       token: await adminToken(),
+      body,
     });
   } catch (err) {
     return failure(err, "Firma onaylanamadı.");

@@ -27,5 +27,18 @@ export class RejectCompanyDto {
   reason: string;
 }
 
+/**
+ * Firma onayı. Zorunlu belge ya da onaylı araç eksikse yönetici gerekçe yazarak yine de onaylayabilir;
+ * gerekçe ve o anki eksikler işlem geçmişine yazılır, firmaya gösterilmez.
+ */
+export class VerifyCompanyDto {
+  @ApiPropertyOptional({ example: 'Belgeleri e-postayla gönderdi, sisteme yükleyecek.' })
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @Length(5, 500)
+  overrideReason?: string;
+}
+
 /** Yönetimden firma açılışı: firma bilgileri + yetkilinin hesabı (fullName yetkilinin adıdır) */
 export class AdminCreateCompanyDto extends IntersectionType(CreateCompanyProfileDto, AdminCreateUserDto) {}

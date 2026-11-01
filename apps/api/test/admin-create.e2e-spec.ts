@@ -106,6 +106,22 @@ describe('Yönetimden hesap açma (e2e)', () => {
     expect(own.body.id).toBe(res.body.id);
   });
 
+  it('belgesi ve aracı eksik firma yalnızca gerekçeyle onaylanır; eksikler ve gerekçe geçmişe yazılır', async () => {
+    const company = await prisma.company.findUniqueOrThrow({ where: { taxNumber } });
+    const url = `/v1/admin/companies/${company.id}/verify`;
+    const blocked = await http().post(url).set(asAdmin()).expect(409);
+    expect(blocked.body.message).toContain('Onaylı araç');
+    await http().post(url).set(asAdmin()).send({ overrideReason: 'kısa' }).expect(400);
+
+    const reason = 'Belgeleri e-postayla gönderdi, yükleyecek.';
+    const res = await http().post(url).set(asAdmin()).send({ overrideReason: `  ${reason} ` }).expect(200);
+    expect(res.body).toMatchObject({ verificationStatus: 'VERIFIED', verificationNote: null });
+    const detail = await http().get(`/v1/admin/companies/${company.id}`).set(asAdmin()).expect(200);
+    const entry = detail.body.history.find((h: { action: string }) => h.action === 'company.verify');
+    expect(entry.details).toMatchObject({ from: 'PENDING', to: 'VERIFIED', override: true, note: reason });
+    expect(entry.details.missing).toEqual(expect.arrayContaining(['K3 yetki belgesi', 'Onaylı araç (ruhsat ve plakalı fotoğraflar)']));
+  });
+
   it('vergi no ya da telefon çakışırsa firma da hesap da açılmaz; uçlar yalnızca yöneticiye açık', async () => {
     const body = {
       fullName: 'Başka Yetkili',

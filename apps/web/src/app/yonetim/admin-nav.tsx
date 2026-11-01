@@ -23,11 +23,17 @@ export function AdminNav({
   return (
     <SideNav
       label="Yönetim"
+      collapsible={{ storageKey: "yonetim-menu-kapali" }}
       sections={[
         {
           items: [
             { href: "/yonetim", label: "Pano", icon: GridIcon, exact: true },
             { href: "/yonetim/istatistikler", label: "İstatistikler", icon: ChartIcon },
+          ],
+        },
+        {
+          title: "Firmalar",
+          items: [
             {
               href: "/yonetim/firmalar",
               label: "Firmalar",
@@ -52,21 +58,36 @@ export function AdminNav({
               icon: TagIcon,
               badge: { count: pendingNameChanges, label: "onay bekleyen ad değişikliği" },
             },
+          ],
+        },
+        {
+          title: "Müşteriler ve talepler",
+          items: [
             { href: "/yonetim/talepler", label: "Talepler", icon: ClipboardIcon },
+            { href: "/yonetim/kullanicilar", label: "Kullanıcılar", icon: UsersIcon },
+            { href: "/yonetim/degerlendirmeler", label: "Değerlendirmeler", icon: StarIcon },
+          ],
+        },
+        {
+          title: "Destek",
+          items: [
             {
               href: "/yonetim/itirazlar",
               label: "İtirazlar",
               icon: ScaleIcon,
               badge: { count: openDisputes, label: "bekleyen itiraz" },
             },
-            { href: "/yonetim/degerlendirmeler", label: "Değerlendirmeler", icon: StarIcon },
             {
               href: "/yonetim/sikayetler",
               label: "Şikayetler",
               icon: FlagIcon,
               badge: { count: openReports, label: "açık şikayet" },
             },
-            { href: "/yonetim/kullanicilar", label: "Kullanıcılar", icon: UsersIcon },
+          ],
+        },
+        {
+          title: "Finans",
+          items: [
             {
               href: "/yonetim/krediler",
               label: "Krediler",
@@ -74,6 +95,11 @@ export function AdminNav({
               badge: { count: pendingTransfers, label: "onay bekleyen havale" },
             },
             { href: "/yonetim/fiyat-hesaplama", label: "Fiyat hesaplayıcı", icon: CalculatorIcon },
+          ],
+        },
+        {
+          title: "İçerik ve SEO",
+          items: [
             { href: "/yonetim/blog", label: "Blog", icon: DocumentIcon },
             { href: "/yonetim/sayfalar", label: "Bölge sayfaları", icon: MapPinIcon },
             { href: "/yonetim/arama-motorlari", label: "Arama motorları", icon: SearchIcon },
