@@ -3,7 +3,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { BRAND_SLOGAN, BRAND_TAGLINE, SITE_NAME, SITE_URL } from "@/lib/site";
 
-/** Herkese açık site ve müşteri/firma panelleri: üst menü ve altbilgi. Yönetim paneli bu düzenin dışında. */
+/** Herkese açık site: üst menü ve altbilgi. Müşteri hesabı, firma paneli ve yönetim kendi panel kabuklarında. */
 const organizationJsonLd = [
   {
     "@context": "https://schema.org",

@@ -21,6 +21,7 @@ import { getAccessToken, getCurrentUser, homeFor, verificationPath } from "@/lib
 import { CompanyLogo } from "@/components/company-logo";
 import { BadgeLegend, CompanyBadges } from "@/components/company-badges";
 import { ConfirmButton } from "@/components/forms/confirm-button";
+import { PageHeader, PanelSection } from "@/components/panel/panel-bits";
 import { BookingFollowUp } from "@/components/bookings/booking-follow-up";
 import { CancelBookingForm } from "@/components/bookings/cancel-booking-form";
 import { DisputeBookingForm } from "@/components/bookings/dispute-booking-form";
@@ -33,10 +34,7 @@ import { RequestMediaManager } from "@/components/media/request-media-manager";
 import { RouteOverview } from "@/components/map/route-overview";
 import { routeText } from "@/lib/geo";
 
-export const metadata: Metadata = {
-  title: "Talep ve teklifler",
-  robots: { index: false, follow: false },
-};
+export const metadata: Metadata = { title: "Talep ve teklifler" };
 
 async function load(id: string, token: string) {
   try {
@@ -80,26 +78,23 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
   const status = REQUEST_STATUS[request.status];
 
   return (
-    <main data-panel className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-      <Link href="/hesabim" className="text-sm text-zinc-500 hover:underline">
-        ← Taleplerim
-      </Link>
-
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {place(request.fromCityName, request.fromDistrictName)} → {place(request.toCityName, request.toDistrictName)}
-        </h1>
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>{status.label}</span>
-      </div>
-      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        {homeTypeLabel(request.homeType)} · {formatDate(request.moveDate)}
-        {request.isDateFlexible && " (esnek)"}
-        {routeText(request) ? ` · ${routeText(request)}` : request.distanceKm ? ` · ${request.distanceKm} km` : ""}
-        {request.estimatedVolumeM3 ? ` · yaklaşık ${request.estimatedVolumeM3} m³` : ""}
-      </p>
+    <div className="space-y-6">
+      <PageHeader
+        back={{ href: "/hesabim", label: "Taleplerim" }}
+        title={`${place(request.fromCityName, request.fromDistrictName)} → ${place(request.toCityName, request.toDistrictName)}`}
+        description={
+          <>
+            <span className={`mr-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>{status.label}</span>
+            {homeTypeLabel(request.homeType)} · {formatDate(request.moveDate)}
+            {request.isDateFlexible && " (esnek)"}
+            {routeText(request) ? ` · ${routeText(request)}` : request.distanceKm ? ` · ${request.distanceKm} km` : ""}
+            {request.estimatedVolumeM3 ? ` · yaklaşık ${request.estimatedVolumeM3} m³` : ""}
+          </>
+        }
+      />
 
       {draft && (
-        <p role="status" className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Talebin hazır, ancak firmalara iletilmesi için hesabını doğrulaman gerekiyor.{" "}
           <Link href={verificationPath(`/hesabim/talepler/${request.id}`)} className="font-semibold underline">
             Şimdi doğrula
@@ -108,7 +103,7 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
       )}
 
       {medya === "eksik" && (
-        <p role="status" className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Talebin oluşturuldu, ancak bazı fotoğraf veya videolar yüklenemedi. Aşağıdan tekrar
           ekleyebilirsin.
         </p>
@@ -119,31 +114,29 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
       {booking?.status === "COMPLETED" && <ReviewSection booking={booking} />}
 
       {conversation && (
-        <section id="mesajlar" className="mt-10 scroll-mt-20">
-          <h2 className="text-xl font-semibold">{conversation.counterpart} ile mesajlar</h2>
-          <div className="mt-4">
-            <Conversation initial={conversation} />
-          </div>
-        </section>
+        <PanelSection id="mesajlar" title={`${conversation.counterpart} ile mesajlar`}>
+          <Conversation initial={conversation} />
+        </PanelSection>
       )}
 
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold">Teklifler</h2>
+      <PanelSection
+        id="teklifler"
+        title="Teklifler"
+        description={
+          pending.length > 1 && acceptable
+            ? `${pending.length} geçerli teklif, ${formatMoney(Math.min(...prices))} ile ${formatMoney(Math.max(...prices))} arasında. Teklifler fiyata göre sıralı.`
+            : undefined
+        }
+      >
         {quotes.length === 0 ? (
-          <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-slate-600">
             {acceptable
               ? `Henüz teklif gelmedi. Bölgendeki doğrulanmış firmalar talebini görüyor; teklif verdikçe burada listelenecek. Teklif toplama ${formatDate(request.expiresAt)} tarihinde sona erer.`
               : "Bu talebe teklif gelmedi."}
           </p>
         ) : (
           <>
-            {pending.length > 1 && acceptable && (
-              <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                {pending.length} geçerli teklif, {formatMoney(Math.min(...prices))} ile{" "}
-                {formatMoney(Math.max(...prices))} arasında. Teklifler fiyata göre sıralı.
-              </p>
-            )}
-            <ul className="mt-4 space-y-4">
+            <ul className="space-y-4">
               {quotes.map((q) => (
                 <QuoteCard
                   key={q.id}
@@ -157,27 +150,26 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
             {quotes.some((q) => q.company.badges?.length) && <BadgeLegend />}
           </>
         )}
-      </section>
+      </PanelSection>
 
       <RequestDetails request={request} />
 
       {(acceptable || draft || request.media.length > 0) && (
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold">Fotoğraf ve videolar</h2>
-          {(acceptable || draft) && (
-            <p className="mt-1 text-sm text-zinc-600">
-              Eşyalarını görmek firmaların daha doğru fiyat vermesini sağlar. Firmalar yalnızca bu dosyaları görür,
-              adres ve iletişim bilgilerini görmez.
-            </p>
-          )}
-          <div className="mt-4">
-            <RequestMediaManager requestId={request.id} media={request.media} editable={acceptable || draft} />
-          </div>
-        </section>
+        <PanelSection
+          id="medya"
+          title="Fotoğraf ve videolar"
+          description={
+            acceptable || draft
+              ? "Eşyalarını görmek firmaların daha doğru fiyat vermesini sağlar. Firmalar yalnızca bu dosyaları görür, adres ve iletişim bilgilerini görmez."
+              : undefined
+          }
+        >
+          <RequestMediaManager requestId={request.id} media={request.media} editable={acceptable || draft} />
+        </PanelSection>
       )}
 
       {(acceptable || draft) && (
-        <div className="mt-8">
+        <div>
           <ConfirmButton
             action={cancelRequest.bind(null, request.id)}
             label="Talebi iptal et"
@@ -187,7 +179,7 @@ export default async function RequestDetailPage({ params, searchParams }: PagePr
           />
         </div>
       )}
-    </main>
+    </div>
   );
 }
 
@@ -214,7 +206,7 @@ function CompanyLine({ company }: { company: PublicCompany }) {
           )}
         </p>
         <CompanyBadges badges={company.badges} className="mt-1.5" />
-        <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-0.5 text-sm text-slate-600">
           {company.cityName}
           {company.ratingCount > 0 ? ` · ★ ${formatRating(rating)} (${company.ratingCount} yorum)` : " · Henüz yorum yok"}
           {company.completedJobs > 0 && ` · ${company.completedJobs} tamamlanan iş`}
@@ -252,18 +244,18 @@ function QuoteCard({
     <li
       className={`rounded-xl border p-5 ${
         quote.status === "ACCEPTED"
-          ? "border-green-300 dark:border-green-800"
+          ? "border-green-300"
           : isCheapest
-            ? "border-blue-300 dark:border-blue-800"
-            : "border-zinc-200 dark:border-zinc-800"
+            ? "border-brand-300 ring-1 ring-brand-300"
+            : "border-slate-200"
       } ${note && quote.status !== "ACCEPTED" ? "opacity-60" : ""}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <CompanyLine company={quote.company} />
         <div className="sm:text-right">
           <p className="text-2xl font-semibold">{formatMoney(quote.priceTry)}</p>
-          {isCheapest && <p className="text-xs font-medium text-blue-700">En uygun fiyat</p>}
-          {note && <p className="text-xs font-medium text-zinc-500">{note}</p>}
+          {isCheapest && <p className="text-xs font-medium text-brand-700">En uygun fiyat</p>}
+          {note && <p className="text-xs font-medium text-slate-500">{note}</p>}
         </div>
       </div>
 
@@ -277,25 +269,25 @@ function QuoteCard({
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
         <div>
-          <dt className="text-zinc-500">Araç</dt>
+          <dt className="text-slate-500">Araç</dt>
           <dd>{VEHICLE_LABELS[quote.vehicleType] ?? quote.vehicleType}</dd>
         </div>
         <div>
-          <dt className="text-zinc-500">Ekip</dt>
+          <dt className="text-slate-500">Ekip</dt>
           <dd>{quote.crewSize} kişi</dd>
         </div>
         <div>
-          <dt className="text-zinc-500">Geçerlilik</dt>
+          <dt className="text-slate-500">Geçerlilik</dt>
           <dd>{formatDate(quote.validUntil)}</dd>
         </div>
         <div className="col-span-2 sm:col-span-3">
-          <dt className="text-zinc-500">Fiyata dahil</dt>
+          <dt className="text-slate-500">Fiyata dahil</dt>
           <dd>{included.length > 0 ? included.join(", ") : "Yalnızca taşıma"}</dd>
         </div>
       </dl>
 
       {quote.message && (
-        <p className="mt-4 whitespace-pre-line rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900">{quote.message}</p>
+        <p className="mt-4 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-sm">{quote.message}</p>
       )}
 
       {canAccept && (
@@ -316,7 +308,7 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
   const completed = booking.status === "COMPLETED";
   if (booking.status === "CANCELLED") {
     return (
-      <section className="mt-6 rounded-xl border border-zinc-300 bg-zinc-50 p-5 text-zinc-900">
+      <section className="rounded-xl border border-slate-300 bg-white p-5 text-slate-900 shadow-sm">
         <h2 className="text-lg font-semibold">Taşıma iptal edildi</h2>
         <p className="mt-1 text-sm">
           {booking.company.displayName} · {formatMoney(booking.priceTry)} · {formatDate(booking.scheduledAt)}
@@ -335,7 +327,7 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
     );
   }
   return (
-    <section className="mt-6 rounded-xl border border-green-300 bg-green-50 p-5 text-green-950 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
+    <section className="rounded-xl border border-green-300 bg-green-50 p-5 text-green-950 shadow-sm">
       <h2 className="text-lg font-semibold">
         {completed ? "Taşıman tamamlandı" : justAccepted ? "Teklifi kabul ettin, taşıman planlandı" : "Taşıman planlandı"}
       </h2>
@@ -388,10 +380,17 @@ function BookingCard({ booking, justAccepted }: { booking: CustomerBooking; just
 function ReviewSection({ booking }: { booking: CustomerBooking }) {
   const { review, company } = booking;
   return (
-    <section id="degerlendirme" className="mt-10 scroll-mt-20">
-      <h2 className="text-xl font-semibold">{review ? "Değerlendirmen" : `${company.displayName} firmasını değerlendir`}</h2>
+    <PanelSection
+      id="degerlendirme"
+      title={review ? "Değerlendirmen" : `${company.displayName} firmasını değerlendir`}
+      description={
+        review
+          ? undefined
+          : "Puanın firmanın ortalamasına eklenir ve taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder. Fikrin değişirse değerlendirmeni sonradan düzenleyebilirsin."
+      }
+    >
       {review ? (
-        <div className="mt-4">
+        <div>
           <ReviewCard review={review} companyName={company.displayName}>
             {!review.isPublished && (
               <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -406,7 +405,7 @@ function ReviewSection({ booking }: { booking: CustomerBooking }) {
             )}
           </ReviewCard>
           {review.isPublished && company.verified && (
-            <p className="mt-2 text-sm text-zinc-600">
+            <p className="mt-2 text-sm text-slate-600">
               Yorumun{" "}
               <Link href={`${companyPath(company)}#yorumlar`} className="font-medium text-brand-700 underline">
                 firma sayfasında
@@ -426,17 +425,9 @@ function ReviewSection({ booking }: { booking: CustomerBooking }) {
           )}
         </div>
       ) : (
-        <>
-          <p className="mt-1 text-sm text-zinc-600">
-            Puanın firmanın ortalamasına eklenir ve taşınacak diğer ailelerin doğru firmayı seçmesine yardım eder.
-            Fikrin değişirse değerlendirmeni sonradan düzenleyebilirsin.
-          </p>
-          <div className="mt-4">
-            <ReviewForm bookingId={booking.id} pagePath={`/hesabim/talepler/${booking.requestId}`} companyName={company.displayName} />
-          </div>
-        </>
+        <ReviewForm bookingId={booking.id} pagePath={`/hesabim/talepler/${booking.requestId}`} companyName={company.displayName} />
       )}
-    </section>
+    </PanelSection>
   );
 }
 
@@ -454,15 +445,14 @@ function RequestDetails({ request }: { request: MovingRequestDetail }) {
   ].filter(Boolean) as string[];
   const row = (label: string, value: string) => (
     <div className="grid grid-cols-3 gap-2 py-2">
-      <dt className="text-zinc-500">{label}</dt>
+      <dt className="text-slate-500">{label}</dt>
       <dd className="col-span-2">{value}</dd>
     </div>
   );
   const elevator = (has: boolean) => (has ? "asansörlü" : "asansörsüz");
   return (
-    <section className="mt-10">
-      <h2 className="text-xl font-semibold">Talep bilgilerin</h2>
-      <dl className="mt-3 divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+    <PanelSection id="talep-bilgileri" title="Talep bilgilerin">
+      <dl className="-mt-2 divide-y divide-slate-100 text-sm">
         {row("Çıkış adresi", `${request.fromAddress || "Açık adres yazılmadı"} · ${floorLabel(request.fromFloor)}, ${elevator(request.fromHasElevator)}`)}
         {row("Varış adresi", `${request.toAddress || "Açık adres yazılmadı"} · ${floorLabel(request.toFloor)}, ${elevator(request.toHasElevator)}`)}
         {request.routeKm != null && row("Yol", `${routeText(request)} (haritadaki işaretlerine göre, kamyonla)`)}
@@ -479,9 +469,9 @@ function RequestDetails({ request }: { request: MovingRequestDetail }) {
           />
         </div>
       )}
-      <p className="mt-2 text-xs text-zinc-500">
+      <p className="mt-2 text-xs text-slate-500">
         Açık adresin ve haritadaki işaretin yalnızca teklifini kabul ettiğin firmayla paylaşılır.
       </p>
-    </section>
+    </PanelSection>
   );
 }

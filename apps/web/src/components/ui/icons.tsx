@@ -239,3 +239,16 @@ export const DocumentIcon = (p: P) => (
     <path d="M14 3.5V8h4.5M9 12.5h6M9 16h6" />
   </Icon>
 );
+
+export const UserIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="12" cy="8" r="3.75" />
+    <path d="M4.5 20.5c.8-3.9 3.8-6.25 7.5-6.25s6.7 2.35 7.5 6.25" />
+  </Icon>
+);
+
+export const PlusIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+);

@@ -17,6 +17,7 @@ import type { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-res
 import type { LoginDto } from './dto/login.dto.js';
 import type { ChangePasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
+import type { UpdateMeDto } from './dto/update-me.dto.js';
 import { consentData } from './dto/consent.js';
 
 export interface AccessTokenPayload {
@@ -186,6 +187,27 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.deletedAt) throw new UnauthorizedException();
     return this.toAuthUser(user);
+  }
+
+  async updateMe(userId: string, dto: UpdateMeDto): Promise<AuthUserDto> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.deletedAt) throw new UnauthorizedException();
+    const fullName = dto.fullName.trim().replace(/\s+/g, ' ');
+    if (fullName.length < 3) throw new BadRequestException('Ad soyad en az 3 karakter olmalı');
+    if (fullName === user.fullName) return this.toAuthUser(user);
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { fullName } }),
+      this.prisma.auditLog.create({
+        data: {
+          actorId: userId,
+          action: 'user.update_name',
+          entityType: 'User',
+          entityId: userId,
+          details: { before: user.fullName, after: fullName },
+        },
+      }),
+    ]);
+    return this.toAuthUser(updated);
   }
 
   private async issueTokens(user: Pick<User, 'id' | 'role'>): Promise<AuthTokensDto> {

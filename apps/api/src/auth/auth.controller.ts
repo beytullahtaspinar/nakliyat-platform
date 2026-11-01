@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
@@ -9,6 +9,7 @@ import { LoginDto } from './dto/login.dto.js';
 import { ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
+import { UpdateMeDto } from './dto/update-me.dto.js';
 
 // Kaba kuvvet denemelerine karşı: IP başına dakikada 10 istek. Tarayıcı testleri tüm girişleri
 // tek IP'den yaptığı için sınırı AUTH_RATE_LIMIT ile yükseltir; canlıda tanımlanmaz.
@@ -89,5 +90,14 @@ export class AuthController {
   @ApiOkResponse({ type: AuthUserDto })
   me(@CurrentUser() user: AuthUser) {
     return this.auth.me(user.id);
+  }
+
+  /** Kullanıcı kendi adını düzeltir (ör. kayıtta yanlış yazılan ad). Telefon ve e-posta doğrulamayla değişir. */
+  @ApiBearerAuth()
+  @Patch('me')
+  @ApiOkResponse({ type: AuthUserDto })
+  updateMe(@CurrentUser() user: AuthUser, @Body() dto: UpdateMeDto) {
+    if (user.impersonatorId) throw new ForbiddenException('Yönetici görünümündeyken ad değiştirilemez');
+    return this.auth.updateMe(user.id, dto);
   }
 }

@@ -43,7 +43,7 @@ test("müşteri talep oluşturur ve hesabında görür", async ({ page }) => {
   await expect(page.getByText(/Çankaya/).first()).toBeVisible();
 
   // Bildirim ayarları: e-posta eklenir, bir bildirim kapatılır, kayıt kalıcıdır
-  await page.getByRole("link", { name: "Bildirim ayarları" }).click();
+  await page.getByRole("navigation", { name: "Hesabım" }).getByRole("link", { name: "Bildirimler" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bildirim ayarları");
   await page.getByLabel("Bildirim e-postası").fill(`musteri${phone}@test.local`);
   const accepted = page.getByRole("listitem").filter({ hasText: "Teklif kabulü" });
