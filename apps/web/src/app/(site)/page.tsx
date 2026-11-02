@@ -32,6 +32,7 @@ const baseMetadata: Metadata = {
   title: { absolute: `Evden Eve Nakliyat Fiyat Teklifi Al ve Karşılaştır | ${SITE_NAME}` },
   description:
     "Evden eve nakliyat için tek talep, çok teklif: taşınma bilgilerini bir kez gir, K3 belgeli firmaların fiyat tekliflerini karşılaştır, sana uygun olanı seç. Ücretsiz.",
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "tr_TR",

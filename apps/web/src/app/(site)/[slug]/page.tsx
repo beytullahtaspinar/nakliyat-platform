@@ -73,7 +73,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function serviceJsonLd(page: LocalPage) {
+/** Fiyat tablosundaki en düşük ve en yüksek tahmin: yanıt motorları ve Google için sayısal fiyat aralığı */
+function offerJsonLd(rows: { estimate: PriceEstimate }[]) {
+  if (rows.length === 0) return undefined;
+  return {
+    "@type": "AggregateOffer",
+    priceCurrency: "TRY",
+    lowPrice: Math.min(...rows.map((r) => r.estimate.minTry)),
+    highPrice: Math.max(...rows.map((r) => r.estimate.maxTry)),
+    description: "Ev tipine göre tahmini fiyat aralığı; kesin fiyatı firmalar teklifle verir.",
+  };
+}
+
+function serviceJsonLd(page: LocalPage, rows: { estimate: PriceEstimate }[]) {
   const area =
     page.kind === "route"
       ? [page.from, page.to].map((c) => ({ "@type": "City", name: c.name }))
@@ -93,6 +105,7 @@ function serviceJsonLd(page: LocalPage) {
     url: `${SITE_URL}/${page.slug}`,
     areaServed: area,
     provider: { "@id": `${SITE_URL}/#organization` },
+    offers: offerJsonLd(rows),
   };
 }
 
@@ -317,7 +330,7 @@ export default async function LocalLandingPage({ params }: Props) {
         <LinkGrid key={group.title} title={group.title} links={group.links} />
       ))}
 
-      <JsonLd data={serviceJsonLd(page)} />
+      <JsonLd data={serviceJsonLd(page, prices.rows)} />
       {rating && rating.count >= CITY_RATING_SCHEMA_MIN && <JsonLd data={ratingJsonLd(page, rating, reviews)} />}
     </main>
   );

@@ -1,7 +1,7 @@
-import { getCityByCode, getDistanceKm } from "@nakliyat/locations";
+import { getCityByCode, getDistanceKm, type LocalPage } from "@nakliyat/locations";
 import { estimatePrice } from "@nakliyat/pricing";
 import { BLOG_PATH, categoryPath, getBlogIndex, postPath } from "@/lib/blog/api";
-import { currentYear } from "@/lib/local-seo";
+import { currentYear, getIndexableLocalPages, localPageMetaTitle } from "@/lib/local-seo";
 import { DEFAULT_INPUT, formatTry } from "@/lib/pricing";
 import { loadPricingModel } from "@/lib/pricing-model";
 import { HOME_TYPES } from "@/lib/request-options";
@@ -43,11 +43,26 @@ Teklif aşamasında firmalar müşterinin adını, telefonunu ve açık adresini
 - [Nakliyat firmaları için: katılım ve doğrulama](https://evdenevenakliyat.app/firmalar-icin)
 - [Hakkımızda: platformun ilkeleri](https://evdenevenakliyat.app/hakkimizda)
 - [Evden eve nakliyat fiyatları ve ücretsiz fiyat teklifi (81 il)](https://evdenevenakliyat.app/evden-eve-nakliyat)
-- [İstanbul evden eve nakliyat](https://evdenevenakliyat.app/istanbul-evden-eve-nakliyat)
-- [Ankara evden eve nakliyat](https://evdenevenakliyat.app/ankara-evden-eve-nakliyat)
-- [İzmir evden eve nakliyat](https://evdenevenakliyat.app/izmir-evden-eve-nakliyat)
-- [İstanbul - Ankara şehirler arası nakliyat](https://evdenevenakliyat.app/istanbul-ankara-sehirler-arasi-nakliyat)
 `;
+
+/**
+ * Dizine açık il ve şehirler arası sayfalar: her birinde tahmini fiyat tablosu, firmalar, yorumlar ve SSS var.
+ * İlçe sayfaları çok sayıda olduğu için listelenmez; il sayfasından bağlantılıdır.
+ */
+function regionSection() {
+  const pages = getIndexableLocalPages();
+  const link = (page: LocalPage) => `- [${localPageMetaTitle(page)}](${SITE_URL}/${page.slug})`;
+  return [
+    "## İllere göre evden eve nakliyat fiyatları",
+    "",
+    ...pages.filter((p) => p.kind === "city").map(link),
+    "",
+    "## Şehirler arası nakliyat fiyatları",
+    "",
+    ...pages.filter((p) => p.kind === "route").map(link),
+    "",
+  ];
+}
 
 /** Markdown bağlantı metninde köşeli parantez bozulmasın */
 const plain = (text: string) => text.replace(/[\[\]]/g, "").replace(/\s+/g, " ").trim();
@@ -79,6 +94,7 @@ export async function GET() {
   const lines = [
     INTRO,
     ...prices,
+    ...regionSection(),
     "## Taşınma rehberi (blog)",
     "",
     `- [Tüm yazılar](${SITE_URL}${BLOG_PATH}): evden eve nakliyat fiyatları, taşınma hazırlığı ve firma seçimi rehberleri`,

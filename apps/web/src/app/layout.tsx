@@ -27,7 +27,8 @@ export const metadata: Metadata = {
     template: "%s | evdenevenakliyat.app",
   },
   description: SITE_DESCRIPTION,
-  alternates: { canonical: "/" },
+  // Kanonik adres kökte verilmez: veren her sayfa kendi adresini yazar. Kökte "/" olsaydı kanonik
+  // vermeyen sayfalar (giriş, kayıt, 404) kendini ana sayfanın kopyası gibi bildirirdi.
   openGraph: {
     type: "website",
     locale: "tr_TR",
