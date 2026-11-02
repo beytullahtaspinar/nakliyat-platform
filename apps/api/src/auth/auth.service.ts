@@ -11,6 +11,7 @@ import bcrypt from 'bcryptjs';
 import type { User } from '../generated/prisma/client.js';
 import { UserRole, UserStatus } from '../generated/prisma/enums.js';
 import { normalizeTrMobile } from '../common/utils/phone.js';
+import { DomainEvents } from '../events/domain-events.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { VerificationService } from '../verification/verification.service.js';
 import type { AuthResponseDto, AuthTokensDto, AuthUserDto } from './dto/auth-response.dto.js';
@@ -42,6 +43,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly verification: VerificationService,
+    private readonly events: DomainEvents,
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
@@ -74,6 +76,7 @@ export class AuthService {
     if (email) {
       await this.verification.sendEmailCode(user.id).catch(() => this.logger.warn('Kayıt sonrası e-posta kodu gönderilemedi'));
     }
+    if (user.role === UserRole.COMPANY) this.events.emit('company_account.created', { userId: user.id });
     return this.signIn(user);
   }
 

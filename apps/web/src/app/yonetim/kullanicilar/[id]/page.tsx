@@ -7,6 +7,7 @@ import { ApiError, apiFetch, type AdminUserDetail } from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { PageHeader, ROLE_LABELS, VerificationBadge } from "../../admin-bits";
 import { ImpersonateCustomerButton } from "./impersonate-button";
+import { OnboardingCard } from "./onboarding-card";
 import { DeleteUserForm, PasswordForm, UserForm } from "./user-forms";
 
 export const metadata: Metadata = { title: "Kullanıcı" };
@@ -18,6 +19,7 @@ const ACTION_LABELS: Record<string, string> = {
   "user.delete": "Hesap silindi",
   "user.impersonate": "Müşteri hesabına geçildi",
   "user.impersonate.action": "Müşteri hesabında değişiklik",
+  "user.onboarding_reminder": "Kayıt hatırlatması gönderildi",
 };
 const FIELD_LABELS: Record<string, string> = {
   fullName: "ad soyad",
@@ -75,6 +77,15 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
         </p>
       )}
 
+      {u.role === "COMPANY" && !u.company && u.status === "ACTIVE" && (
+        <OnboardingCard
+          userId={u.id}
+          fullName={u.fullName}
+          phone={u.phone}
+          reminderStep={u.onboardingReminderStep}
+          remindedAt={u.onboardingRemindedAt}
+        />
+      )}
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="p-5">
           <h2 className="font-semibold">Hesap bilgileri</h2>
@@ -122,7 +133,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
                       {area ? ` (${area})` : ""}{" "}
                       <span className="text-zinc-500">
                         · {h.actor.fullName} ·{" "}
-                        {h.action.startsWith("user.impersonate") ? formatDateTime(h.createdAt) : formatDate(h.createdAt)}
+                        {h.action.startsWith("user.impersonate") || h.action === "user.onboarding_reminder" ? formatDateTime(h.createdAt) : formatDate(h.createdAt)}
                       </span>
                     </li>
                   );

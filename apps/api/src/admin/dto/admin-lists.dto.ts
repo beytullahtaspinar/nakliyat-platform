@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
+  IsIn,
   IsOptional,
   IsString,
   Length,
@@ -42,6 +43,11 @@ export class AdminListUsersDto extends PaginationDto {
   @IsString()
   @MaxLength(100)
   q?: string;
+
+  @ApiPropertyOptional({ enum: ['missing'], description: 'missing: firma bilgilerini girmemiş firma hesapları' })
+  @IsOptional()
+  @IsIn(['missing'])
+  profile?: 'missing';
 }
 
 export class AdminUpdateUserDto {

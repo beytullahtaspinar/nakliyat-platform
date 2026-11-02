@@ -38,6 +38,12 @@ export default async function AdminHomePage() {
       href: "/yonetim/itirazlar",
       highlight: summary.disputes.open > 0,
     },
+    {
+      label: "Kaydı yarım firma",
+      value: summary.users.missingCompanyProfile,
+      href: "/yonetim/kullanicilar?rol=kaydi-yarim",
+      highlight: summary.users.missingCompanyProfile > 0,
+    },
     { label: "Onaylı firma", value: summary.companies.verified, href: "/yonetim/firmalar?durum=onayli" },
     { label: "Teklif bekleyen talep", value: summary.requests.open, href: "/yonetim/talepler?durum=acik" },
     { label: "Planlanmış iş", value: summary.bookings.scheduled, href: "/yonetim/talepler?durum=firma-secildi" },

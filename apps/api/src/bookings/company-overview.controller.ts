@@ -3,8 +3,8 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser, type AuthUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { CompaniesService, serviceArea } from '../companies/companies.service.js';
-import { BookingStatus, QuoteStatus, RequestStatus, UserRole } from '../generated/prisma/enums.js';
-import { todayInTurkey } from '../media/company-document-rules.js';
+import { BookingStatus, QuoteStatus, RequestStatus, UserRole, VerificationStatus } from '../generated/prisma/enums.js';
+import { REQUIRED_DOCUMENT_TYPES, todayInTurkey } from '../media/company-document-rules.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addDays, dayStart } from './calendar-rules.js';
 import { monthRange, winRate, WIN_RATE_DAYS } from './company-overview-rules.js';
@@ -46,7 +46,7 @@ export class CompanyOverviewController {
         _sum: { priceTry: true },
       });
 
-    const [openRequests, notQuoted, quotes, decided, bookings, next7Days, revenueThis, revenueLast, vehicles] =
+    const [openRequests, notQuoted, quotes, decided, bookings, next7Days, revenueThis, revenueLast, vehicles, documents] =
       await Promise.all([
         this.prisma.movingRequest.count({
           where: {
@@ -83,6 +83,11 @@ export class CompanyOverviewController {
         revenue(thisMonth),
         revenue(lastMonth),
         this.prisma.vehicle.groupBy({ by: ['status'], where: own, orderBy: { status: 'asc' }, _count: { _all: true } }),
+        this.prisma.companyDocument.findMany({
+          where: { ...own, type: { in: REQUIRED_DOCUMENT_TYPES }, status: { not: VerificationStatus.REJECTED } },
+          distinct: ['type'],
+          select: { type: true },
+        }),
       ]);
 
     const count = <K extends string>(rows: { status: K; _count: { _all: number } }[]) =>
@@ -113,6 +118,8 @@ export class CompanyOverviewController {
       rating: { average: Number(company.ratingAverage), count: company.ratingCount },
       // Onaylı aracı olmayan firmaya panelde araç ekleme uyarısı gösterilir
       vehicles: { verified: byVehicle.VERIFIED ?? 0, pending: byVehicle.PENDING ?? 0, rejected: byVehicle.REJECTED ?? 0 },
+      // Kayıt adımları rehberi: zorunlu belgelerden kaçı yüklendi (reddedilenler sayılmaz)
+      documents: { requiredUploaded: documents.length, requiredTotal: REQUIRED_DOCUMENT_TYPES.length },
     };
   }
 }

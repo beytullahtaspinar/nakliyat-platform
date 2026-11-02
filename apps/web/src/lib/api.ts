@@ -536,6 +536,8 @@ export type CompanyOverview = {
   revenue: { month: string; thisMonthTry: number; lastMonthTry: number };
   rating: { average: number; count: number };
   vehicles: { verified: number; pending: number; rejected: number };
+  /** Zorunlu belgelerden yüklenmiş (reddedilmemiş) olanların sayısı */
+  documents: { requiredUploaded: number; requiredTotal: number };
 };
 
 /** GET /company/reviews */
@@ -583,7 +585,8 @@ export type UnreadMessages = { total: number; items: { bookingId: string; reques
 export type AdminSummary = {
   companies: { pending: number; verified: number; rejected: number };
   requests: { open: number; booked: number; total: number };
-  users: { customers: number; companies: number; total: number };
+  /** missingCompanyProfile: firma olarak kayıt olup firma bilgilerini girmeyen hesaplar */
+  users: { customers: number; companies: number; total: number; missingCompanyProfile: number };
   bookings: { scheduled: number };
   documents: { pending: number };
   vehicles: { pending: number };
@@ -811,6 +814,10 @@ export type AdminUser = {
   phone: string;
   email: string | null;
   phoneVerifiedAt: string | null;
+  /** Firma bilgilerini girmeyen firma hesabına giden otomatik hatırlatma sayısı (0-2) */
+  onboardingReminderStep: number;
+  /** Son kayıt hatırlatması (otomatik ya da yöneticinin gönderdiği) */
+  onboardingRemindedAt: string | null;
   createdAt: string;
   company: { id: string; displayName: string; verificationStatus: VerificationStatus } | null;
   requestCount: number;

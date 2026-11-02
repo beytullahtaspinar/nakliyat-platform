@@ -55,6 +55,11 @@ export const NOTIFICATION_TYPES = {
     description: 'Firma hesabın ya da ad değişikliğin onaylandığında veya reddedildiğinde',
     roles: [UserRole.COMPANY],
   },
+  COMPANY_ONBOARDING: {
+    label: 'Firma kaydını tamamlama',
+    description: 'Firma bilgilerini girmediysen kayıttan sonra hangi adımların kaldığını hatırlatmak için',
+    roles: [UserRole.COMPANY],
+  },
   CREDIT_TOPUP: {
     label: 'Kredi yüklemesi',
     description: 'Kartla ya da havaleyle kredin yüklendiğinde, havale bildirimin reddedildiğinde',

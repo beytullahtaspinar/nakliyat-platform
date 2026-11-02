@@ -12,7 +12,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { createHash } from 'node:crypto';
 import { Prisma, type User } from '../../generated/prisma/client.js';
-import { IdentityProvider } from '../../generated/prisma/enums.js';
+import { DomainEvents } from '../../events/domain-events.js';
+import { IdentityProvider, UserRole } from '../../generated/prisma/enums.js';
 import { ErrorReporterService } from '../../observability/error-reporter.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { normalizeTrMobile } from '../../common/utils/phone.js';
@@ -67,6 +68,7 @@ export class OAuthService {
     private readonly auth: AuthService,
     private readonly verification: VerificationService,
     private readonly errors: ErrorReporterService,
+    private readonly events: DomainEvents,
     config: ConfigService,
     @Inject(OAUTH_PROVIDERS) private readonly providers: OAuthProvider[],
   ) {
@@ -235,6 +237,7 @@ export class OAuthService {
     if (user.email && !user.emailVerifiedAt) {
       await this.verification.sendEmailCode(user.id).catch(() => this.logger.warn('Kayıt sonrası e-posta kodu gönderilemedi'));
     }
+    if (user.role === UserRole.COMPANY) this.events.emit('company_account.created', { userId: user.id });
     return this.auth.signIn(user);
   }
 

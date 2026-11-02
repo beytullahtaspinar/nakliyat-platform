@@ -41,6 +41,10 @@ export interface DomainEventMap {
   /** Müşteri tamamlanan işin firmasını değerlendirdi */
   'review.created': { reviewId: string };
   'review.updated': { reviewId: string; previousRating: number };
+  /** Kullanıcı firma hesabı açtı (henüz firma bilgisi yok) */
+  'company_account.created': { userId: string };
+  /** Firma bilgilerini girmeyen hesaba hatırlatma zamanı: 1 ve 2 otomatik, 'manual' yöneticinin gönderdiği */
+  'company_account.reminder_due': { userId: string; step: number | 'manual' };
 }
 
 export type DomainEventName = keyof DomainEventMap;

@@ -3,7 +3,15 @@ import { getCityByCode, getDistrict } from '@nakliyat/locations';
 import { formatTrPhone } from '../common/utils/phone.js';
 import { DomainEvents } from '../events/domain-events.js';
 import type { MovingRequest } from '../generated/prisma/client.js';
-import { BankTransferStatus, BookingActor, BookingStatus, UserStatus, VerificationStatus } from '../generated/prisma/enums.js';
+import {
+  BankTransferStatus,
+  BookingActor,
+  BookingStatus,
+  RequestStatus,
+  UserRole,
+  UserStatus,
+  VerificationStatus,
+} from '../generated/prisma/enums.js';
 import { autoCompleteDay } from '../reviews/review-rules.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from './notifications.service.js';
@@ -58,6 +66,33 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('company.name_change_reviewed', ({ changeId }) => this.onNameChangeReviewed(changeId));
     this.events.on('credit.transfer_reviewed', ({ transferId }) => this.onTransferReviewed(transferId));
     this.events.on('credit.card_paid', ({ paymentId }) => this.onCardPaid(paymentId));
+    this.events.on('company_account.created', ({ userId }) => this.onCompanyAccountCreated(userId));
+    this.events.on('company_account.reminder_due', ({ userId, step }) => this.onCompanyOnboardingReminder(userId, step));
+  }
+
+  /** Firma bilgisi girilmemiş firma hesabı; profil oluşmuşsa null */
+  private async incompleteCompanyAccount(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, fullName: true, company: { select: { id: true } } },
+    });
+    if (!user || user.role !== UserRole.COMPANY || user.company) return null;
+    return { firstName: user.fullName.trim().split(/\s+/)[0] ?? user.fullName };
+  }
+
+  async onCompanyAccountCreated(userId: string) {
+    const account = await this.incompleteCompanyAccount(userId);
+    if (!account) return;
+    await this.notifications.notify(userId, templates.companyWelcome(account));
+  }
+
+  async onCompanyOnboardingReminder(userId: string, step: number | 'manual') {
+    const account = await this.incompleteCompanyAccount(userId);
+    if (!account) return;
+    const openRequests = await this.prisma.movingRequest.count({
+      where: { status: RequestStatus.OPEN, deletedAt: null, expiresAt: { gt: new Date() } },
+    });
+    await this.notifications.notify(userId, templates.companyOnboardingReminder({ ...account, step, openRequests }));
   }
 
   /** Talebin çıkış veya varış iline hizmet veren doğrulanmış firmalara haber ver. */
