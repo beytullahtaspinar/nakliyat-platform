@@ -56,8 +56,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
       />
       {filter.profile === "missing" && (
         <p className="mb-4 text-sm text-slate-600">
-          Firma olarak kayıt olup firma bilgilerini girmeyen hesaplar. Kayıttan 1 ve 3 gün sonra otomatik hatırlatma
-          gider; kişinin sayfasından elle hatırlatma gönderebilir ya da hazır mesajı WhatsApp ile iletebilirsin.
+          Firma bilgilerini girmeyen ya da zorunlu belgesini veya aracını yüklemeyen firma hesapları (yüklenip
+          incelemede olanlar eksik sayılmaz). Son ilerlemeden 1 ve 3 gün sonra otomatik hatırlatma gider; kişinin
+          sayfasından elle hatırlatma gönderebilir ya da hazır mesajı WhatsApp ile iletebilirsin.
         </p>
       )}
       {params.silindi && (
@@ -105,6 +106,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
                       {u.company.displayName}
                     </Link>
                     <VerificationBadge status={u.company.verificationStatus} />
+                    {u.onboardingMissing && (
+                      <span className="w-full text-xs text-amber-800">Eksik: {u.onboardingMissing.join(", ")}</span>
+                    )}
                   </span>
                 ) : u.role === "CUSTOMER" ? (
                   `${u.requestCount} talep`

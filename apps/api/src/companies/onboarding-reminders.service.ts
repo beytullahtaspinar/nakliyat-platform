@@ -1,21 +1,22 @@
 import { Injectable, Logger, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 import { DomainEvents } from '../events/domain-events.js';
-import { UserRole, UserStatus } from '../generated/prisma/enums.js';
+import { UserStatus } from '../generated/prisma/enums.js';
 import { ErrorReporterService } from '../observability/error-reporter.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
   dueOnboardingStep,
   isSendingHour,
-  ONBOARDING_MAX_AGE_DAYS,
-  ONBOARDING_REMINDER_DAYS,
+  lastOnboardingProgress,
+  ONBOARDING_COMPANY_SELECT,
+  onboardingIncompleteWhere,
+  onboardingMissing,
 } from './onboarding-rules.js';
 
 const CHECK_INTERVAL_MS = 30 * 60_000;
-const DAY_MS = 86_400_000;
 
 /**
- * Firma olarak kayıt olup firma bilgilerini girmeyen hesaplara kayıttan 1 ve 3 gün sonra hatırlatma
- * olayı yayınlar (bildirimi notifications modülü gönderir). Profil oluşturulunca hatırlatma durur.
+ * Kaydı yarım firma hesaplarına (firma bilgisi yok ya da zorunlu belge/araç yüklenmemiş) son ilerlemeden
+ * 1 ve 3 gün sonra hatırlatma olayı yayınlar (bildirimi notifications modülü gönderir). Eksik kalmayınca durur.
  * Uygulama ayaktayken 30 dakikada bir, yalnızca TSİ 09:00-21:00 arasında çalışır.
  */
 @Injectable()
@@ -46,34 +47,37 @@ export class OnboardingRemindersService implements OnModuleInit, OnApplicationSh
   async sendDue(now = new Date()) {
     if (!isSendingHour(now)) return 0;
     const candidates = await this.prisma.user.findMany({
-      where: {
-        role: UserRole.COMPANY,
-        status: UserStatus.ACTIVE,
-        deletedAt: null,
-        company: { is: null },
-        onboardingReminderStep: { lt: ONBOARDING_REMINDER_DAYS.length },
-        createdAt: {
-          gte: new Date(now.getTime() - ONBOARDING_MAX_AGE_DAYS * DAY_MS),
-          lte: new Date(now.getTime() - ONBOARDING_REMINDER_DAYS[0] * DAY_MS),
-        },
+      where: { ...onboardingIncompleteWhere(), status: UserStatus.ACTIVE },
+      select: {
+        id: true,
+        createdAt: true,
+        onboardingReminderStep: true,
+        onboardingRemindedAt: true,
+        company: { select: ONBOARDING_COMPANY_SELECT },
       },
-      select: { id: true, createdAt: true, onboardingReminderStep: true, onboardingRemindedAt: true },
-      take: 200,
+      take: 500,
     });
     let sent = 0;
     for (const user of candidates) {
-      const step = dueOnboardingStep(user, now);
+      if (!onboardingMissing(user.company)) continue;
+      const since = lastOnboardingProgress(user);
+      // Son hatırlatmadan sonra ilerleme olduysa (yeni belge, araç...) hatırlatmalar baştan sayılır
+      const fresh = !user.onboardingRemindedAt || user.onboardingRemindedAt < since;
+      const step = dueOnboardingStep(
+        { createdAt: since, onboardingReminderStep: fresh ? 0 : user.onboardingReminderStep, onboardingRemindedAt: user.onboardingRemindedAt },
+        now,
+      );
       if (!step) continue;
       // Satırı sahiplen: aynı anda çalışan iki süreç aynı hatırlatmayı iki kez göndermesin
       const claimed = await this.prisma.user.updateMany({
-        where: { id: user.id, onboardingReminderStep: user.onboardingReminderStep },
+        where: { id: user.id, onboardingReminderStep: user.onboardingReminderStep, onboardingRemindedAt: user.onboardingRemindedAt },
         data: { onboardingReminderStep: step, onboardingRemindedAt: now },
       });
       if (claimed.count !== 1) continue;
       this.events.emit('company_account.reminder_due', { userId: user.id, step });
       sent++;
     }
-    if (sent > 0) this.logger.log(`Firma bilgilerini girmeyen ${sent} hesaba hatırlatma gönderildi`);
+    if (sent > 0) this.logger.log(`Kaydı yarım ${sent} firma hesabına hatırlatma gönderildi`);
     return sent;
   }
 }

@@ -43,11 +43,14 @@ export async function uploadVehicle(request: APIRequestContext, token: string, p
   expect(saved.ok()).toBeTruthy();
 }
 
-/** Firmanın zorunlu üç belgesini ve bir aracını API üzerinden yükler (yönetim testleri için) */
-export async function uploadRequiredDocuments(request: APIRequestContext, token: string) {
+/**
+ * Firmanın zorunlu üç belgesini ve bir aracını API üzerinden yükler (yönetim testleri için).
+ * only: yalnızca bu belgeler yüklenir, araç eklenmez (kaydı yarım firma testleri)
+ */
+export async function uploadRequiredDocuments(request: APIRequestContext, token: string, only?: string[]) {
   const pdf = readFileSync(PDF_PATH);
   const headers = { Authorization: `Bearer ${token}` };
-  for (const type of ["K3_LICENSE", "TAX_CERTIFICATE", "TRADE_REGISTRY"]) {
+  for (const type of only ?? ["K3_LICENSE", "TAX_CERTIFICATE", "TRADE_REGISTRY"]) {
     const ticket = await request.post(`${API}/company/documents/uploads`, {
       headers,
       data: { mimeType: "application/pdf", sizeBytes: pdf.length },
@@ -62,5 +65,5 @@ export async function uploadRequiredDocuments(request: APIRequestContext, token:
     });
     expect(attach.ok()).toBeTruthy();
   }
-  await uploadVehicle(request, token);
+  if (!only) await uploadVehicle(request, token);
 }

@@ -24,7 +24,13 @@ import { normalizeTrMobile } from '../common/utils/phone.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { UserRole, UserStatus } from '../generated/prisma/enums.js';
 import { AccountDeletionService } from '../account/account-deletion.service.js';
-import { canRemindManually, ONBOARDING_MIN_GAP_HOURS } from '../companies/onboarding-rules.js';
+import {
+  canRemindManually,
+  ONBOARDING_COMPANY_SELECT,
+  ONBOARDING_MIN_GAP_HOURS,
+  onboardingIncompleteWhere,
+  onboardingMissing,
+} from '../companies/onboarding-rules.js';
 import { DomainEvents } from '../events/domain-events.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { IMPERSONATION_TTL_SECONDS } from './admin-companies.controller.js';
@@ -49,12 +55,18 @@ const USER_FIELDS = {
   onboardingReminderStep: true,
   onboardingRemindedAt: true,
   createdAt: true,
-  company: { select: { id: true, displayName: true, verificationStatus: true } },
+  company: { select: { id: true, displayName: true, ...ONBOARDING_COMPANY_SELECT } },
   _count: { select: { requests: true } },
 } satisfies Prisma.UserSelect;
 
 type UserRow = Prisma.UserGetPayload<{ select: typeof USER_FIELDS }>;
-const toUser = ({ _count, ...u }: UserRow) => ({ ...u, requestCount: _count.requests });
+/** onboardingMissing: kaydı yarım firma hesabının eksikleri (firma bilgisi, belge, araç); yoksa null */
+const toUser = ({ _count, company, ...u }: UserRow) => ({
+  ...u,
+  company: company && { id: company.id, displayName: company.displayName, verificationStatus: company.verificationStatus },
+  requestCount: _count.requests,
+  onboardingMissing: u.role === UserRole.COMPANY ? onboardingMissing(company) : null,
+});
 
 @ApiTags('Admin: kullanıcılar')
 @ApiBearerAuth()
@@ -75,7 +87,7 @@ export class AdminUsersController {
     const where: Prisma.UserWhereInput = {
       deletedAt: null,
       ...(role && { role }),
-      ...(profile === 'missing' && { role: UserRole.COMPANY, company: { is: null } }),
+      ...(profile === 'missing' && { AND: [onboardingIncompleteWhere()] }),
       ...(q && {
         OR: [
           { fullName: { contains: q } },
@@ -158,7 +170,7 @@ export class AdminUsersController {
   }
 
   /**
-   * Firma bilgilerini girmemiş firma hesabına kaydını tamamlaması için hatırlatma (e-posta, anlık
+   * Kaydı yarım firma hesabına (firma bilgisi, zorunlu belge ya da araç eksik) kaydını tamamlaması için hatırlatma (e-posta, anlık
    * bildirim, uygulama içi) gönderir. Kişiyi bunaltmamak için son hatırlatmadan 12 saat geçmiş olmalı.
    */
   @Post(':id/onboarding-reminder')
@@ -166,11 +178,11 @@ export class AdminUsersController {
   async sendOnboardingReminder(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
     const user = await this.prisma.user.findFirst({
       where: { id, deletedAt: null },
-      select: { role: true, status: true, onboardingRemindedAt: true, company: { select: { id: true } } },
+      select: { role: true, status: true, onboardingRemindedAt: true, company: { select: ONBOARDING_COMPANY_SELECT } },
     });
     if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
-    if (user.role !== UserRole.COMPANY || user.company) {
-      throw new BadRequestException('Hatırlatma yalnızca firma bilgilerini girmemiş firma hesaplarına gönderilir');
+    if (user.role !== UserRole.COMPANY || !onboardingMissing(user.company)) {
+      throw new BadRequestException('Hatırlatma yalnızca kaydı yarım (firma bilgisi, belge ya da aracı eksik) firma hesaplarına gönderilir');
     }
     if (user.status !== UserStatus.ACTIVE) throw new BadRequestException('Hesap askıya alınmış');
     const now = new Date();

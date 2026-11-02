@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { BankTransferStatus, BookingStatus, ReportStatus, RequestStatus, UserRole, VerificationStatus } from '../generated/prisma/enums.js';
+import { onboardingIncompleteWhere } from '../companies/onboarding-rules.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @ApiTags('Admin: özet')
@@ -46,8 +47,8 @@ export class AdminOverviewController {
       this.prisma.bankTransfer.count({ where: { status: BankTransferStatus.PENDING } }),
       this.prisma.contentReport.count({ where: { status: ReportStatus.OPEN } }),
       this.prisma.booking.count({ where: { status: BookingStatus.SCHEDULED, disputedAt: { not: null } } }),
-      // Firma olarak kayıt olup firma bilgilerini girmeyen hesaplar
-      this.prisma.user.count({ where: { role: UserRole.COMPANY, deletedAt: null, company: { is: null } } }),
+      // Kaydı yarım firma hesapları: firma bilgisi yok ya da zorunlu belge/araç yüklenmemiş
+      this.prisma.user.count({ where: onboardingIncompleteWhere() }),
     ]);
     const count = <K extends string>(rows: ({ _count: { _all: number } } & Record<string, unknown>)[], key: string) =>
       Object.fromEntries(rows.map((r) => [r[key] as K, r._count._all])) as Partial<Record<K, number>>;

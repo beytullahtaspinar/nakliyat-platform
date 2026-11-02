@@ -12,6 +12,7 @@ import {
   UserStatus,
   VerificationStatus,
 } from '../generated/prisma/enums.js';
+import { ONBOARDING_COMPANY_SELECT, onboardingMissing } from '../companies/onboarding-rules.js';
 import { autoCompleteDay } from '../reviews/review-rules.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { NotificationsService } from './notifications.service.js';
@@ -70,19 +71,21 @@ export class NotificationsListener implements OnModuleInit {
     this.events.on('company_account.reminder_due', ({ userId, step }) => this.onCompanyOnboardingReminder(userId, step));
   }
 
-  /** Firma bilgisi girilmemiş firma hesabı; profil oluşmuşsa null */
+  /** Kaydı yarım firma hesabı ve eksikleri; firmanın yapacağı bir şey kalmadıysa null */
   private async incompleteCompanyAccount(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, fullName: true, company: { select: { id: true } } },
+      select: { role: true, fullName: true, company: { select: ONBOARDING_COMPANY_SELECT } },
     });
-    if (!user || user.role !== UserRole.COMPANY || user.company) return null;
-    return { firstName: user.fullName.trim().split(/\s+/)[0] ?? user.fullName };
+    if (!user || user.role !== UserRole.COMPANY) return null;
+    const missing = onboardingMissing(user.company);
+    if (!missing) return null;
+    return { firstName: user.fullName.trim().split(/\s+/)[0] ?? user.fullName, hasProfile: !!user.company, missing };
   }
 
   async onCompanyAccountCreated(userId: string) {
     const account = await this.incompleteCompanyAccount(userId);
-    if (!account) return;
+    if (!account || account.hasProfile) return;
     await this.notifications.notify(userId, templates.companyWelcome(account));
   }
 
