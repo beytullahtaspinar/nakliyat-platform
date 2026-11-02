@@ -11,6 +11,7 @@ import { isImpersonating } from "@/lib/session";
 import { AppPrompt } from "@/components/pwa/app-prompt";
 import { VerifyNotice } from "@/components/verify-notice";
 import { ImpersonationBanner } from "./impersonation-banner";
+import { OnboardingSteps, companyOnboardingSteps } from "./onboarding-steps";
 import { PanelNav } from "./panel-nav";
 import { ProfileForm } from "./profile-form";
 
@@ -41,6 +42,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
             numaranı, belgelerini (K3 yetki belgesi, vergi levhası, ticaret sicil) ve aracının ruhsatını kontrol
             ettikten sonra firman doğrulanır. Belgeleri ve aracını bir sonraki adımda yükleyeceksin.
           </p>
+          <OnboardingSteps steps={companyOnboardingSteps(null, null)} />
           <PanelSection id="firma-bilgileri" title="Firma bilgileri" className="mt-6">
             <ProfileForm cities={cityOptions} />
           </PanelSection>
@@ -96,6 +98,7 @@ export default async function CompanyPanelLayout({ children }: LayoutProps<"/fir
       {/* Uyarıların kendi üst boşluğu ilkinde sıfırlanır; hiçbiri yoksa kap yer kaplamaz */}
       <div className="mb-6 empty:hidden [&>*:first-child]:mt-0">
         <VerifyNotice user={user} returnTo="/firma-paneli" />
+        {!verified && <OnboardingSteps steps={companyOnboardingSteps(profile, overview)} />}
         <VerificationBanner profile={profile} vehicles={overview?.vehicles} />
         {!impersonating && <AppPrompt settingsPath="/firma-paneli/bildirimler" />}
       </div>

@@ -24,6 +24,8 @@ import { normalizeTrMobile } from '../common/utils/phone.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { UserRole, UserStatus } from '../generated/prisma/enums.js';
 import { AccountDeletionService } from '../account/account-deletion.service.js';
+import { canRemindManually, ONBOARDING_MIN_GAP_HOURS } from '../companies/onboarding-rules.js';
+import { DomainEvents } from '../events/domain-events.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { IMPERSONATION_TTL_SECONDS } from './admin-companies.controller.js';
 import { newAccountData } from './new-account.js';
@@ -44,6 +46,8 @@ const USER_FIELDS = {
   phone: true,
   email: true,
   phoneVerifiedAt: true,
+  onboardingReminderStep: true,
+  onboardingRemindedAt: true,
   createdAt: true,
   company: { select: { id: true, displayName: true, verificationStatus: true } },
   _count: { select: { requests: true } },
@@ -61,15 +65,17 @@ export class AdminUsersController {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly deletion: AccountDeletionService,
+    private readonly events: DomainEvents,
   ) {}
 
   /** Kullanıcılar, en yenisi önce. */
   @Get()
-  async list(@Query() { role, q, page, limit }: AdminListUsersDto) {
+  async list(@Query() { role, q, profile, page, limit }: AdminListUsersDto) {
     const digits = phoneDigits(q);
     const where: Prisma.UserWhereInput = {
       deletedAt: null,
       ...(role && { role }),
+      ...(profile === 'missing' && { role: UserRole.COMPANY, company: { is: null } }),
       ...(q && {
         OR: [
           { fullName: { contains: q } },
@@ -149,6 +155,39 @@ export class AdminUsersController {
       data: { actorId: admin.id, action: 'user.impersonate', entityType: 'User', entityId: id },
     });
     return { accessToken, expiresIn: IMPERSONATION_TTL_SECONDS, user: { id: user.id, fullName: user.fullName } };
+  }
+
+  /**
+   * Firma bilgilerini girmemiş firma hesabına kaydını tamamlaması için hatırlatma (e-posta, anlık
+   * bildirim, uygulama içi) gönderir. Kişiyi bunaltmamak için son hatırlatmadan 12 saat geçmiş olmalı.
+   */
+  @Post(':id/onboarding-reminder')
+  @HttpCode(HttpStatus.OK)
+  async sendOnboardingReminder(@CurrentUser() admin: AuthUser, @Param('id') id: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, deletedAt: null },
+      select: { role: true, status: true, onboardingRemindedAt: true, company: { select: { id: true } } },
+    });
+    if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
+    if (user.role !== UserRole.COMPANY || user.company) {
+      throw new BadRequestException('Hatırlatma yalnızca firma bilgilerini girmemiş firma hesaplarına gönderilir');
+    }
+    if (user.status !== UserStatus.ACTIVE) throw new BadRequestException('Hesap askıya alınmış');
+    const now = new Date();
+    if (!canRemindManually(user.onboardingRemindedAt, now)) {
+      throw new ConflictException(`Bu hesaba son ${ONBOARDING_MIN_GAP_HOURS} saat içinde hatırlatma gitti. Biraz bekleyip yeniden dene.`);
+    }
+    // Aynı anda iki tıklama iki hatırlatma göndermesin
+    const claimed = await this.prisma.user.updateMany({
+      where: { id, onboardingRemindedAt: user.onboardingRemindedAt },
+      data: { onboardingRemindedAt: now },
+    });
+    if (claimed.count !== 1) throw new ConflictException('Hatırlatma az önce gönderildi');
+    await this.prisma.auditLog.create({
+      data: { actorId: admin.id, action: 'user.onboarding_reminder', entityType: 'User', entityId: id },
+    });
+    this.events.emit('company_account.reminder_due', { userId: id, step: 'manual' });
+    return this.detail(id);
   }
 
   /** Ad, telefon, e-posta ve hesap durumu. Askıya alınan hesabın açık oturumları kapatılır. */

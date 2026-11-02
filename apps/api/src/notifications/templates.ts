@@ -27,6 +27,14 @@ interface Route {
   to: string;
   moveDate: Date;
 }
+/** Firma kaydının adımları: hoş geldin ve hatırlatma e-postalarında */
+const ONBOARDING_STEPS = [
+  '1. Firma bilgileri: görünen ad, ticari unvan, vergi numarası, hizmet verdiğin iller',
+  '2. Belgeler: K3 yetki belgesi, vergi levhası, ticaret sicil belgesi',
+  '3. Araç: ruhsat ve plakası görünen önden, yandan, arkadan fotoğraf',
+  '4. Onay: ekibimiz kontrol eder, onaydan sonra teklif verirsin',
+];
+
 const routeLine = ({ from, to }: Route) => `${from} → ${to}`;
 
 export const templates = {
@@ -305,6 +313,34 @@ export const templates = {
       details: [`Tutar: ${formatTry(p.amountTry)}`, `Yüklenen: ${credits} kredi`, `Bakiye: ${p.balance.toLocaleString('tr-TR')} kredi`],
       path: '/firma-paneli/kredi',
       actionLabel: 'Kredi hareketlerini gör',
+    };
+  },
+
+  /** Firma hesabı açılınca: kalan adımlar */
+  companyWelcome(p: { firstName: string }): NotificationContent {
+    return {
+      type: 'COMPANY_ONBOARDING',
+      title: 'Hoş geldin! Firma kaydını tamamla',
+      body: `Merhaba ${p.firstName}, taleplere teklif verebilmek için firma bilgilerini gir, belgelerini ve aracını yükle. Ekibimiz kontrol edip firmanı onaylar.`,
+      details: ONBOARDING_STEPS,
+      path: '/firma-paneli',
+      actionLabel: 'Firma bilgilerini gir',
+    };
+  },
+
+  /** Firma bilgilerini girmeyen hesaba hatırlatma. step: 1 (1. gün), 2 (3. gün) ya da yöneticinin gönderdiği */
+  companyOnboardingReminder(p: { firstName: string; step: number | 'manual'; openRequests: number }): NotificationContent {
+    const requests =
+      p.openRequests > 0 ? `Şu an platformda teklif bekleyen ${p.openRequests.toLocaleString('tr-TR')} taşıma talebi var. ` : '';
+    const title =
+      p.step === 1 ? 'Firma kaydın yarım kaldı' : p.step === 2 ? 'Talepler seni bekliyor' : 'Firma kaydını tamamlaman bekleniyor';
+    return {
+      type: 'COMPANY_ONBOARDING',
+      title,
+      body: `Merhaba ${p.firstName}, firma hesabını açtın ama firma bilgilerini henüz girmedin. ${requests}Bilgilerini girip belgelerini yüklediğinde ekibimiz firmanı onaylar ve teklif vermeye başlarsın.`,
+      details: [...ONBOARDING_STEPS, 'Takıldığın bir yer olursa bu e-postayı yanıtlaman ya da destek@evdenevenakliyat.app adresine yazman yeterli.'],
+      path: '/firma-paneli',
+      actionLabel: 'Kaydımı tamamla',
     };
   },
 };

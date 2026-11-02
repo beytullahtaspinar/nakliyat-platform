@@ -21,10 +21,11 @@ import {
 
 export const metadata: Metadata = { title: "Kullanıcılar" };
 
-const FILTERS: { value: string; label: string; role?: UserRole }[] = [
+const FILTERS: { value: string; label: string; role?: UserRole; profile?: "missing" }[] = [
   { value: "tumu", label: "Tümü" },
   { value: "musteri", label: "Müşteriler", role: "CUSTOMER" },
   { value: "firma", label: "Firmalar", role: "COMPANY" },
+  { value: "kaydi-yarim", label: "Kaydı yarım firmalar", profile: "missing" },
   { value: "yonetici", label: "Yöneticiler", role: "ADMIN" },
 ];
 const LIMIT = 25;
@@ -36,7 +37,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
   const q = oneParam(params.ara)?.trim().slice(0, 100) || undefined;
   const page = pageParam(params.sayfa);
   const { items, total } = await apiFetch<Paginated<AdminUser>>(
-    `/admin/users${query({ role: filter.role, q, page, limit: LIMIT })}`,
+    `/admin/users${query({ role: filter.role, profile: filter.profile, q, page, limit: LIMIT })}`,
     { token },
   );
   const href = (rol: string, sayfa = 1) =>
@@ -53,6 +54,12 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
           </ButtonLink>
         }
       />
+      {filter.profile === "missing" && (
+        <p className="mb-4 text-sm text-slate-600">
+          Firma olarak kayıt olup firma bilgilerini girmeyen hesaplar. Kayıttan 1 ve 3 gün sonra otomatik hatırlatma
+          gider; kişinin sayfasından elle hatırlatma gönderebilir ya da hazır mesajı WhatsApp ile iletebilirsin.
+        </p>
+      )}
       {params.silindi && (
         <p role="status" className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
           Hesap silindi.
@@ -101,6 +108,13 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
                   </span>
                 ) : u.role === "CUSTOMER" ? (
                   `${u.requestCount} talep`
+                ) : u.role === "COMPANY" ? (
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <Badge tone="warning">Firma bilgisi yok</Badge>
+                    {u.onboardingRemindedAt && (
+                      <span className="text-xs text-slate-500">Son hatırlatma {formatDate(u.onboardingRemindedAt)}</span>
+                    )}
+                  </span>
                 ) : (
                   <span className="text-slate-400">—</span>
                 )}

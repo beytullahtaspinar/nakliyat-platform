@@ -305,6 +305,20 @@ export async function setUserPassword(
   return { notice: "Yeni şifre kaydedildi; kullanıcının açık oturumları kapatıldı. Şifreyi kullanıcıya güvenli bir yoldan ilet." };
 }
 
+/** Firma bilgilerini girmeyen firma hesabına kaydını tamamlaması için hatırlatma gönderir */
+export async function sendOnboardingReminder(userId: string): Promise<AdminActionState> {
+  try {
+    await apiFetch(`/admin/users/${encodeURIComponent(userId)}/onboarding-reminder`, {
+      method: "POST",
+      token: await adminToken(),
+    });
+  } catch (err) {
+    return failure(err, "Hatırlatma gönderilemedi.");
+  }
+  revalidatePath("/yonetim", "layout");
+  return { notice: "Hatırlatma gönderildi (e-posta, anlık bildirim ve hesabındaki bildirimler)." };
+}
+
 export async function deleteUser(userId: string): Promise<AdminActionState> {
   try {
     await apiFetch(`/admin/users/${encodeURIComponent(userId)}`, { method: "DELETE", token: await adminToken() });

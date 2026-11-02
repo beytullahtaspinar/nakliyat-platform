@@ -14,7 +14,7 @@ export class AdminOverviewController {
   /** Yönetim ekranının ilk sayfası: bekleyen işler ve toplamlar */
   @Get()
   async summary() {
-    const [companies, requests, users, scheduledBookings, pendingDocuments, pendingVehicles, pendingNameChanges, pendingTransfers, openReports, openDisputes] = await this.prisma.$transaction([
+    const [companies, requests, users, scheduledBookings, pendingDocuments, pendingVehicles, pendingNameChanges, pendingTransfers, openReports, openDisputes, missingProfiles] = await this.prisma.$transaction([
       this.prisma.company.groupBy({
         by: ['verificationStatus'],
         where: { deletedAt: null },
@@ -46,6 +46,8 @@ export class AdminOverviewController {
       this.prisma.bankTransfer.count({ where: { status: BankTransferStatus.PENDING } }),
       this.prisma.contentReport.count({ where: { status: ReportStatus.OPEN } }),
       this.prisma.booking.count({ where: { status: BookingStatus.SCHEDULED, disputedAt: { not: null } } }),
+      // Firma olarak kayıt olup firma bilgilerini girmeyen hesaplar
+      this.prisma.user.count({ where: { role: UserRole.COMPANY, deletedAt: null, company: { is: null } } }),
     ]);
     const count = <K extends string>(rows: ({ _count: { _all: number } } & Record<string, unknown>)[], key: string) =>
       Object.fromEntries(rows.map((r) => [r[key] as K, r._count._all])) as Partial<Record<K, number>>;
@@ -55,7 +57,7 @@ export class AdminOverviewController {
     return {
       companies: { pending: byStatus.PENDING ?? 0, verified: byStatus.VERIFIED ?? 0, rejected: byStatus.REJECTED ?? 0 },
       requests: { open: byRequest.OPEN ?? 0, booked: byRequest.BOOKED ?? 0, total: sum(byRequest) },
-      users: { customers: byRole.CUSTOMER ?? 0, companies: byRole.COMPANY ?? 0, total: sum(byRole) },
+      users: { customers: byRole.CUSTOMER ?? 0, companies: byRole.COMPANY ?? 0, total: sum(byRole), missingCompanyProfile: missingProfiles },
       bookings: { scheduled: scheduledBookings },
       documents: { pending: pendingDocuments },
       vehicles: { pending: pendingVehicles },

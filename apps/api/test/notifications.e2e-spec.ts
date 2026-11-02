@@ -89,6 +89,10 @@ describe('Bildirimler (e2e)', () => {
       .expect(201);
     companyId = profile.body.id;
     await addApprovedDocuments(prisma, [companyId]);
+    // Kayıtta firma hesabına giden hoş geldin bildirimi bu dosyanın konusu değil (bkz. onboarding.e2e-spec.ts)
+    await events.drain();
+    email.sent.length = 0;
+    await prisma.notification.deleteMany({ where: { type: 'COMPANY_ONBOARDING', user: { phone: phones.company } } });
   });
 
   afterAll(async () => {
