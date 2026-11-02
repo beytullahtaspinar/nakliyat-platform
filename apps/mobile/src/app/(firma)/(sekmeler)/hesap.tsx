@@ -75,6 +75,7 @@ export default function AccountScreen() {
       </Section>
 
       <Section title="Hesap">
+        <Row icon="person-outline" label="Hesap bilgileri" value={user.fullName} to="/hesap-bilgileri" />
         <Row icon="notifications-outline" label="Bildirim tercihleri" to="/bildirimler" />
         <Row icon="key-outline" label={user.hasPassword ? 'Şifremi değiştir' : 'Şifre belirle'} to="/sifre" />
       </Section>
@@ -139,7 +140,7 @@ function Row({
         <AppText weight="medium">{label}</AppText>
         {hint ? <AppText style={{ color: colors.accent700, fontSize: 13, lineHeight: 18 }}>{hint}</AppText> : null}
       </View>
-      {value ? <AppText style={{ color: colors.zinc600 }}>{value}</AppText> : null}
+      {value ? <AppText numberOfLines={1} style={{ color: colors.zinc600, maxWidth: '45%' }}>{value}</AppText> : null}
       <Ionicons name={external ? 'open-outline' : 'chevron-forward'} size={18} color={colors.zinc500} />
     </Pressable>
   );

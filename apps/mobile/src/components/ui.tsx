@@ -22,9 +22,10 @@ export function AppText({ weight = 'regular', style, ...props }: TextProps & { w
   return <Text {...props} style={[styles.text, { fontFamily: fonts[weight] }, style]} />;
 }
 
-type ButtonKind = 'primary' | 'secondary' | 'danger';
+/** accent: sitedeki turuncu "Teklif al" düğmesi (turuncu zeminde lacivert yazı; beyaz okunmaz) */
+type ButtonKind = 'primary' | 'secondary' | 'danger' | 'accent';
 
-const BUTTON_FG: Record<ButtonKind, string> = { primary: colors.white, secondary: colors.brand700, danger: colors.white };
+const BUTTON_FG: Record<ButtonKind, string> = { primary: colors.white, secondary: colors.brand700, danger: colors.white, accent: colors.brand900 };
 
 export function Button({
   title,
@@ -48,7 +49,13 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.button,
-        kind === 'primary' ? styles.buttonPrimary : kind === 'danger' ? styles.buttonDanger : styles.buttonSecondary,
+        kind === 'primary'
+          ? styles.buttonPrimary
+          : kind === 'danger'
+            ? styles.buttonDanger
+            : kind === 'accent'
+              ? styles.buttonAccent
+              : styles.buttonSecondary,
         (pressed || loading) && { opacity: 0.85 },
         disabled && !loading && { opacity: 0.5 },
       ]}
@@ -287,6 +294,7 @@ const styles = StyleSheet.create({
   buttonPrimary: { backgroundColor: colors.brand700 },
   buttonSecondary: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.zinc300 },
   buttonDanger: { backgroundColor: colors.red700 },
+  buttonAccent: { backgroundColor: colors.accent500 },
   input: {
     minHeight: 50,
     borderWidth: 1,
