@@ -47,6 +47,7 @@ export function ImageUpload({ kind, label, remaining }: { kind: "LOGO" | "PHOTO"
     if (!picked.length) return;
     setError(undefined);
     const queue = photo && remaining !== undefined ? picked.slice(0, remaining) : picked.slice(0, 1);
+    let failed = false;
     try {
       for (const [index, file] of queue.entries()) {
         setStatus(queue.length > 1 ? `Yükleniyor… ${index + 1}/${queue.length}` : "Yükleniyor…");
@@ -54,11 +55,14 @@ export function ImageUpload({ kind, label, remaining }: { kind: "LOGO" | "PHOTO"
       }
       if (picked.length > queue.length) setError(`En fazla ${remaining} fotoğraf daha eklenebilirdi; fazlası eklenmedi.`);
     } catch (err) {
+      failed = true;
       setError(err instanceof MediaError ? err.message : "Görsel yüklenemedi, bağlantını kontrol edip tekrar dene.");
     } finally {
       setStatus(null);
       if (input.current) input.current.value = "";
-      router.refresh();
+      // Her başarılı ekleme sayfayı zaten yeniler; yalnızca yarıda kalınca yenile (geç dönen fazladan yenileme,
+      // hemen ardından yazılan fotoğraf açıklamasıyla yarışıyordu)
+      if (failed) router.refresh();
     }
   };
 

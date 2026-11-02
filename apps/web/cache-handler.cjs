@@ -8,6 +8,11 @@
  * kaydedilen sayfa, kaydı karşılamayan süreçlerde saatlerce eski haliyle sunuluyordu. Burada her geçersizleştirme
  * .next/cache altındaki ortak bir dosyaya da yazılır ve her süreç önbellekten okumadan önce dosyadaki yeni
  * kayıtları kendi belleğine alır. Sayfa ve fetch dosyaları zaten ortak diskte (.next/server, .next/cache).
+ *
+ * İkinci sorun: Next, önbelleğe yazılan kaydın tarihini yazma anı sayar. Bir sayfa üretimi (ör. "Sayfanı gör"
+ * bağlantısının ön yüklemesi) güncellemeden önce başlayıp veriyi eski haliyle okur, updateTag'den sonra biterse
+ * eski içerik "taze" diye bir saat sunuluyordu (firma fotoğraf açıklaması, yorum düzenleme). Etiketi kısa süre
+ * önce geçersizleştirilmiş kayıt bu yüzden hiç yazılmaz; o süre içindeki ziyaretler sayfayı yeniden üretir.
  */
 const fs = require("node:fs");
 const path = require("node:path");
@@ -15,6 +20,13 @@ const FileSystemCache = require("next/dist/server/lib/incremental-cache/file-sys
 const { tagsManifest } = require("next/dist/server/lib/incremental-cache/tags-manifest.external.js");
 
 /** @typedef {{ stale?: number; expired?: number }} TagEntry */
+
+/**
+ * Bir etiket bu kadar süre önce geçersizleştirildiyse o etiketli kayıt önbelleğe yazılmaz: bu sürede başlamış bir
+ * sayfa üretimi güncellemeden önceki veriyi okumuş olabilir. Sayfa üretimi bundan uzun sürmez.
+ */
+const RECENT_INVALIDATION_MS = 30_000;
+const NEXT_CACHE_TAGS_HEADER = "x-next-cache-tags";
 
 /** İki kaydın her alanında en yenisi */
 function merge(/** @type {TagEntry | undefined} */ a, /** @type {TagEntry} */ b) {
@@ -71,6 +83,17 @@ class SharedTagsCacheHandler extends FileSystemCache {
   }
 
   /**
+   * @param {string} key
+   * @param {any} data
+   * @param {any} ctx
+   */
+  async set(key, data, ctx) {
+    this.syncFromFile();
+    if (data && wasRecentlyInvalidated(cacheTagsOf(data, ctx), Date.now())) return;
+    return super.set(key, data, ctx);
+  }
+
+  /**
    * @param {string | string[]} tags
    * @param {any} [durations]
    */
@@ -96,4 +119,32 @@ class SharedTagsCacheHandler extends FileSystemCache {
   }
 }
 
+/**
+ * Kaydın etiketleri: fetch için istekteki etiketler, sayfa/route için Next'in yanıt başlığına yazdığı liste
+ * (revalidatePath'in yol etiketleri dahil).
+ * @param {any} data
+ * @param {any} ctx
+ * @returns {string[]}
+ */
+function cacheTagsOf(data, ctx) {
+  if (data.kind === "FETCH") return [...(ctx?.tags ?? []), ...(ctx?.softTags ?? [])];
+  const header = data.headers?.[NEXT_CACHE_TAGS_HEADER];
+  return typeof header === "string" && header ? header.split(",") : [];
+}
+
+/**
+ * @param {string[]} tags
+ * @param {number} now
+ */
+function wasRecentlyInvalidated(tags, now) {
+  return tags.some((tag) => {
+    const entry = tagsManifest.get(tag);
+    return [entry?.expired, entry?.stale].some(
+      (at) => typeof at === "number" && at <= now && now - at < RECENT_INVALIDATION_MS,
+    );
+  });
+}
+
 module.exports = SharedTagsCacheHandler;
+module.exports.wasRecentlyInvalidated = wasRecentlyInvalidated;
+module.exports.cacheTagsOf = cacheTagsOf;
