@@ -77,8 +77,10 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
         </p>
       )}
 
-      {u.role === "COMPANY" && !u.company && u.status === "ACTIVE" && (
+      {u.onboardingMissing && u.status === "ACTIVE" && (
         <OnboardingCard
+          missing={u.onboardingMissing}
+          hasProfile={!!u.company}
           userId={u.id}
           fullName={u.fullName}
           phone={u.phone}

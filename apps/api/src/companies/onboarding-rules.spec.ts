@@ -1,4 +1,4 @@
-import { canRemindManually, dueOnboardingStep, isSendingHour } from './onboarding-rules.js';
+import { canRemindManually, dueOnboardingStep, isSendingHour, lastOnboardingProgress, onboardingMissing } from './onboarding-rules.js';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -42,5 +42,52 @@ describe('firma kaydı hatırlatma kuralları', () => {
     expect(isSendingHour(new Date('2026-11-02T06:00:00Z'))).toBe(true); // 09:00 TSİ
     expect(isSendingHour(new Date('2026-11-02T17:59:00Z'))).toBe(true); // 20:59 TSİ
     expect(isSendingHour(new Date('2026-11-02T18:00:00Z'))).toBe(false); // 21:00 TSİ
+  });
+});
+
+describe('kaydı yarım firmanın eksikleri', () => {
+  const company = (documents: { type: 'K3_LICENSE' | 'TAX_CERTIFICATE' | 'TRADE_REGISTRY'; status: 'PENDING' | 'VERIFIED' | 'REJECTED' }[], vehicles: ('PENDING' | 'VERIFIED' | 'REJECTED')[] = [], verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED' = 'PENDING') => ({
+    verificationStatus,
+    documents,
+    vehicles: vehicles.map((status) => ({ status })),
+  });
+
+  it('firma bilgisi yoksa yalnızca firma bilgileri eksik', () => {
+    expect(onboardingMissing(null)).toEqual(['Firma bilgileri']);
+  });
+
+  it('yalnızca vergi levhası onaylıysa kalan belgeler ve araç eksik', () => {
+    expect(onboardingMissing(company([{ type: 'TAX_CERTIFICATE', status: 'VERIFIED' }]))).toEqual([
+      'K3 yetki belgesi',
+      'Ticaret sicil gazetesi / faaliyet belgesi',
+      'Araç (ruhsat ve plakalı fotoğraflar)',
+    ]);
+  });
+
+  it('incelemedeki belge eksik sayılmaz, reddedilen sayılır', () => {
+    const docs = [
+      { type: 'K3_LICENSE' as const, status: 'PENDING' as const },
+      { type: 'TAX_CERTIFICATE' as const, status: 'VERIFIED' as const },
+      { type: 'TRADE_REGISTRY' as const, status: 'REJECTED' as const },
+    ];
+    expect(onboardingMissing(company(docs, ['PENDING']))).toEqual(['Ticaret sicil gazetesi / faaliyet belgesi']);
+    expect(onboardingMissing(company([...docs, { type: 'TRADE_REGISTRY', status: 'PENDING' }], ['REJECTED']))).toEqual([
+      'Araç (ruhsat ve plakalı fotoğraflar)',
+    ]);
+  });
+
+  it('her şey yüklüyse ya da firma onaylı/reddedilmişse firmanın yapacağı bir şey yok', () => {
+    const all = (['K3_LICENSE', 'TAX_CERTIFICATE', 'TRADE_REGISTRY'] as const).map((type) => ({ type, status: 'PENDING' as const }));
+    expect(onboardingMissing(company(all, ['PENDING']))).toBeNull();
+    expect(onboardingMissing(company([], [], 'VERIFIED'))).toBeNull();
+    expect(onboardingMissing(company([], [], 'REJECTED'))).toBeNull();
+  });
+
+  it('hatırlatma sayacı son ilerlemeden başlar', () => {
+    const d = (day: number) => new Date(`2026-11-0${day}T09:00:00Z`);
+    expect(lastOnboardingProgress({ createdAt: d(1), company: null })).toEqual(d(1));
+    expect(
+      lastOnboardingProgress({ createdAt: d(1), company: { createdAt: d(2), documents: [{ createdAt: d(4) }], vehicles: [{ createdAt: d(3) }] } }),
+    ).toEqual(d(4));
   });
 });

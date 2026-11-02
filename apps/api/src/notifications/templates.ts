@@ -328,10 +328,35 @@ export const templates = {
     };
   },
 
-  /** Firma bilgilerini girmeyen hesaba hatırlatma. step: 1 (1. gün), 2 (3. gün) ya da yöneticinin gönderdiği */
-  companyOnboardingReminder(p: { firstName: string; step: number | 'manual'; openRequests: number }): NotificationContent {
+  /**
+   * Kaydı yarım firmaya hatırlatma. step: 1 (1. gün), 2 (3. gün) ya da yöneticinin gönderdiği.
+   * hasProfile: firma bilgileri girilmiş, yalnızca belge/araç eksik (missing).
+   */
+  companyOnboardingReminder(p: {
+    firstName: string;
+    step: number | 'manual';
+    openRequests: number;
+    hasProfile: boolean;
+    missing: string[];
+  }): NotificationContent {
     const requests =
       p.openRequests > 0 ? `Şu an platformda teklif bekleyen ${p.openRequests.toLocaleString('tr-TR')} taşıma talebi var. ` : '';
+    if (p.hasProfile) {
+      const docsMissing = p.missing.some((m) => !m.startsWith('Araç'));
+      return {
+        type: 'COMPANY_ONBOARDING',
+        title:
+          p.step === 1 ? 'Firma kaydında eksikler var' : p.step === 2 ? 'Eksiklerini tamamla, teklif vermeye başla' : 'Firma kaydını tamamlaman bekleniyor',
+        body: `Merhaba ${p.firstName}, firmanın onaylanması için şunlar eksik: ${p.missing.join(', ')}. ${requests}Eksikleri yüklediğinde ekibimiz kontrol edip firmanı onaylar.`,
+        details: [
+          ...p.missing.map((m) => `Eksik: ${m}`),
+          'Yüklediğin ve incelemede olan belgeler için bir şey yapmana gerek yok.',
+          'Takıldığın bir yer olursa bu e-postayı yanıtlaman ya da destek@evdenevenakliyat.app adresine yazman yeterli.',
+        ],
+        path: docsMissing ? '/firma-paneli/belgeler' : '/firma-paneli/araclar',
+        actionLabel: docsMissing ? 'Belgelerimi yükle' : 'Aracımı ekle',
+      };
+    }
     const title =
       p.step === 1 ? 'Firma kaydın yarım kaldı' : p.step === 2 ? 'Talepler seni bekliyor' : 'Firma kaydını tamamlaman bekleniyor';
     return {

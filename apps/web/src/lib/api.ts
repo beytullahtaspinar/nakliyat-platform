@@ -821,6 +821,8 @@ export type AdminUser = {
   createdAt: string;
   company: { id: string; displayName: string; verificationStatus: VerificationStatus } | null;
   requestCount: number;
+  /** Kaydı yarım firma hesabının eksikleri ("Firma bilgileri", belge adları, araç); eksik yoksa null */
+  onboardingMissing: string[] | null;
 };
 
 export type AdminUserDetail = AdminUser & {

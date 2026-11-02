@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { uploadRequiredDocuments } from "./belgeler";
 
 // Firma olarak kayıt olup firma bilgilerini girmeyen hesap: panelde adım rehberi, yönetimde liste ve hatırlatma.
 const API = `http://localhost:${process.env.API_PORT ?? 4000}/v1`;
@@ -78,4 +79,49 @@ test("kaydı yarım firma: panelde adımlar, yönetimde liste ve hatırlatma", a
   await expectAccessible(page);
   await shot(page, "3-yonetim-kullanici-hatirlatma", project);
   await page.close();
+});
+
+test("firma bilgisi girilmiş ama yalnızca vergi levhası yüklenmiş firma eksikleriyle listelenir", async ({ browser, request }, testInfo) => {
+  const project = testInfo.project.name === "mobil" ? "mobil" : "masaustu";
+  const fullName = `Eksik Belgeli ${uniqueDigits(5)}`;
+  const reg = await request.post(`${API}/auth/register`, {
+    data: { role: "COMPANY", fullName, phone: `0536${uniqueDigits(7)}`, password: PASSWORD },
+  });
+  expect(reg.ok()).toBeTruthy();
+  const { accessToken } = await reg.json();
+  const profile = await request.post(`${API}/company/profile`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    data: {
+      displayName: `${fullName} Nakliyat`,
+      legalName: `${fullName} Nakliyat Ltd. Şti.`,
+      taxNumber: uniqueDigits(10).replace(/^0/, "1"),
+      cityCode: "34",
+      serviceCityCodes: ["34"],
+    },
+  });
+  expect(profile.ok()).toBeTruthy();
+  await uploadRequiredDocuments(request, accessToken, ["TAX_CERTIFICATE"]);
+
+  const adminPhone = `0533${uniqueDigits(7)}`;
+  execFileSync("node", ["dist/create-admin.js"], {
+    cwd: path.resolve(__dirname, "../../api"),
+    env: { ...process.env, ADMIN_PHONE: adminPhone, ADMIN_PASSWORD: PASSWORD, ADMIN_NAME: "Test Yönetici" },
+  });
+  const page = await (await browser.newContext(testInfo.project.use)).newPage();
+  await login(page, adminPhone);
+  await expect(page).toHaveURL(/\/yonetim$/);
+  await page.goto(`/yonetim/kullanicilar?rol=kaydi-yarim&ara=${encodeURIComponent(fullName)}`);
+  const row = page.getByRole("row", { name: new RegExp(fullName) });
+  await expect(row.getByText("Eksik: K3 yetki belgesi, Ticaret sicil gazetesi / faaliyet belgesi, Araç (ruhsat ve plakalı fotoğraflar)")).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await expectAccessible(page);
+  await shot(page, "4-yonetim-eksik-belgeli-liste", project);
+
+  await row.getByRole("link", { name: fullName, exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Kaydı yarım kaldı: 3 eksik" })).toBeVisible();
+  await expect(page.getByText(/Firmanızın onaylanıp taleplere teklif verebilmesi için şunlar eksik: K3 yetki belgesi/)).toBeVisible();
+  await page.getByRole("button", { name: "Hatırlatma gönder" }).click();
+  await expect(page.getByText("Hatırlatma gönderildi")).toBeVisible();
+  await expectAccessible(page);
+  await shot(page, "5-yonetim-eksik-belgeli-kisi", project);
 });
