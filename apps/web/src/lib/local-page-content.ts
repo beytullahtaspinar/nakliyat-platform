@@ -27,17 +27,30 @@ export type LocalPageContent = {
 
 export type LocalPageView = LocalPageContent & { html: string | null };
 
+const fetchLocalPageContents = async () =>
+  (
+    await apiFetch<{ items: LocalPageContent[] }>("/local-pages", {
+      revalidate: 3600,
+      tags: [LOCAL_PAGE_CACHE_TAG],
+    })
+  ).items;
+
+/** Düzenlenmiş sayfaların son güncellenme zamanı (site haritası için); API'ye ulaşılamazsa boş */
+export async function getLocalPageUpdates(): Promise<Map<string, string>> {
+  try {
+    return new Map((await fetchLocalPageContents()).map((p) => [p.slug, p.updatedAt]));
+  } catch {
+    return new Map();
+  }
+}
+
 /**
  * Sayfanın düzenlenmiş içeriği; düzenlenmediyse ya da API'ye ulaşılamazsa null (sayfa otomatik metinle çizilir).
  * Yüzlerce bölge sayfası tek yanıtı paylaşır; yönetimde kaydedilince etiketle hemen yenilenir.
  */
 export async function getLocalPageContent(slug: string): Promise<LocalPageView | null> {
   try {
-    const { items } = await apiFetch<{ items: LocalPageContent[] }>("/local-pages", {
-      revalidate: 3600,
-      tags: [LOCAL_PAGE_CACHE_TAG],
-    });
-    const page = items.find((p) => p.slug === slug);
+    const page = (await fetchLocalPageContents()).find((p) => p.slug === slug);
     if (!page) return null;
     return { ...page, html: page.content ? renderContent(page.content, { images: page.images }) : null };
   } catch {

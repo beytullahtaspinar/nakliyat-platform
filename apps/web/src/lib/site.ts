@@ -23,5 +23,9 @@ export const DEFAULT_OG_IMAGES = [
   },
 ];
 
-/** Arama motorlarına ve yapay zekâ tarayıcılarına kapalı tutulan panel yolları */
-export const PRIVATE_PATHS = ["/hesabim", "/firma-paneli", "/yonetim", "/giris", "/kayit", "/api/", "/uygulama"];
+/**
+ * Arama motorlarına ve yapay zekâ tarayıcılarına kapalı tutulan panel yolları.
+ * /giris ve /kayit burada yok: sayfalar kendi `noindex` etiketini taşır. robots.txt ile engellenseydi
+ * Google etiketi okuyamaz, her sayfadan bağlantı aldıkları için "engellendi ama dizine eklendi" olurlardı.
+ */
+export const PRIVATE_PATHS = ["/hesabim", "/firma-paneli", "/yonetim", "/api/", "/uygulama"];

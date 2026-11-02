@@ -85,6 +85,32 @@ test("llms.txt tahmini fiyat tablosu içerir", async ({ request }) => {
   expect(await res.text()).toMatch(/\| 2\+1 \| [\d.]+ TL - [\d.]+ TL \|/);
 });
 
+test("llms.txt il ve şehirler arası sayfaları listeler", async ({ request }) => {
+  const text = await (await request.get("/llms.txt")).text();
+  expect(text).toContain("](https://evdenevenakliyat.app/bayburt-evden-eve-nakliyat)");
+  expect(text).toContain("](https://evdenevenakliyat.app/istanbul-ankara-sehirler-arasi-nakliyat)");
+});
+
+test("robots.txt giriş ve kayıt sayfalarını engellemez (noindex etiketi okunabilsin)", async ({ request, page }) => {
+  const robots = await (await request.get("/robots.txt")).text();
+  expect(robots).toContain("Disallow: /yonetim");
+  expect(robots).not.toMatch(/Disallow: \/(giris|kayit)/);
+  await page.goto("/giris");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  // Kökten "/" kanonik adresi sızmamalı
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+});
+
+test("bölge sayfası Service verisinde tahmini fiyat aralığı ve kurum logosu var", async ({ page }) => {
+  await page.goto("/bursa-evden-eve-nakliyat");
+  const jsonLd = (await page.locator('script[type="application/ld+json"]').allTextContents()).flatMap((t) => JSON.parse(t));
+  const service = jsonLd.find((d) => d["@type"] === "Service");
+  expect(service.offers).toMatchObject({ "@type": "AggregateOffer", priceCurrency: "TRY" });
+  expect(service.offers.lowPrice).toBeLessThan(service.offers.highPrice);
+  const org = jsonLd.find((d) => d["@type"] === "Organization");
+  expect(org.logo.url).toMatch(/simge-512\.png$/);
+});
+
 test("olmayan sayfa 404 ve yönlendirici içerik döner", async ({ page }) => {
   const res = await page.goto("/boyle-bir-sayfa-yok");
   expect(res?.status()).toBe(404);

@@ -4,6 +4,8 @@ import { BLOG_PATH, authorPath, categoryPath, getBlogIndex, postPath } from "@/l
 import { HUB_PATH } from "@/lib/local-content";
 import { LEGAL_LINKS } from "@/lib/legal";
 import { getIndexableLocalPages } from "@/lib/local-seo";
+import { getLocalPageUpdates } from "@/lib/local-page-content";
+import { loadPricingModel } from "@/lib/pricing-model";
 import { MARKETING_LINKS } from "@/lib/marketing";
 import { COMPANY_CACHE_TAG, companyPath } from "@/lib/reviews";
 import { SITE_URL } from "@/lib/site";
@@ -52,14 +54,21 @@ async function blogEntries(): Promise<MetadataRoute.Sitemap> {
   ];
 }
 
+const latest = (...dates: (string | null | undefined)[]) =>
+  dates.filter((d): d is string => !!d).sort().at(-1);
+
 // Yalnızca dizine açık sayfalar listelenir
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Bölge sayfası, yönetimden düzenlenince ya da fiyat tablosu (katsayılar) değişince güncellenmiş sayılır
+  const [updates, pricing] = await Promise.all([getLocalPageUpdates(), loadPricingModel()]);
+  const localModified = (slug: string) => latest(updates.get(slug), pricing.updatedAt);
   return [
-    { url: SITE_URL, changeFrequency: "weekly", priority: 1 },
-    { url: `${SITE_URL}${HUB_PATH}`, changeFrequency: "monthly", priority: 0.9 },
+    { url: SITE_URL, lastModified: pricing.updatedAt ?? undefined, changeFrequency: "weekly", priority: 1 },
+    { url: `${SITE_URL}${HUB_PATH}`, lastModified: localModified(HUB_PATH.slice(1)), changeFrequency: "monthly", priority: 0.9 },
     ...MARKETING_LINKS.map((link) => ({ url: `${SITE_URL}${link.href}`, changeFrequency: "monthly" as const, priority: 0.7 })),
     ...getIndexableLocalPages().map((page) => ({
       url: `${SITE_URL}/${page.slug}`,
+      lastModified: localModified(page.slug),
       changeFrequency: "weekly" as const,
       priority: page.kind === "city" ? 0.8 : page.kind === "district" ? 0.7 : 0.6,
     })),
