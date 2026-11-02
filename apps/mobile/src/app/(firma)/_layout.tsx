@@ -40,6 +40,7 @@ export default function Layout() {
       <Stack.Screen name="hesap-sil" />
       <Stack.Screen name="bildirimler" />
       <Stack.Screen name="sifre" />
+      <Stack.Screen name="hesap-bilgileri" />
     </Stack>
   );
 }

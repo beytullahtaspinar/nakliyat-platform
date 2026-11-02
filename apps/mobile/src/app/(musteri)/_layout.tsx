@@ -21,6 +21,7 @@ export default function Layout() {
       <Stack.Screen name="hesabimi-sil" />
       <Stack.Screen name="bildirimler" />
       <Stack.Screen name="sifre" />
+      <Stack.Screen name="hesap-bilgileri" />
     </Stack>
   );
 }

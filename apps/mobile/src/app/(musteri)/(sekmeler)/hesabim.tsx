@@ -29,6 +29,7 @@ export default function AccountScreen() {
 
       <Section title="Hesap">
         {!user.verified ? <Row icon="shield-checkmark-outline" label="Hesabını doğrula" hint="Taleplerinin firmalara iletilmesi için gerekli" to="/dogrulama" /> : null}
+        <Row icon="person-outline" label="Hesap bilgileri" hint="Ad soyad, telefon ve e-posta" hintTone="muted" to="/hesap-bilgileri" />
         <Row icon="notifications-outline" label="Bildirim tercihleri" to="/bildirimler" />
         <Row icon="key-outline" label={user.hasPassword ? 'Şifremi değiştir' : 'Şifre belirle'} to="/sifre" />
       </Section>
@@ -57,6 +58,7 @@ function Row({
   icon,
   label,
   hint,
+  hintTone = 'accent',
   to,
   external,
   onPress,
@@ -64,6 +66,8 @@ function Row({
   icon: ComponentProps<typeof Ionicons>['name'];
   label: string;
   hint?: string;
+  /** accent: dikkat isteyen durum (turuncu); muted: açıklama (gri) */
+  hintTone?: 'accent' | 'muted';
   to?: Href;
   external?: boolean;
   onPress?: () => void;
@@ -78,7 +82,7 @@ function Row({
       <Ionicons name={icon} size={22} color={colors.brand700} />
       <View style={{ flex: 1 }}>
         <AppText weight="medium">{label}</AppText>
-        {hint ? <AppText style={{ color: colors.accent700, fontSize: 13, lineHeight: 18 }}>{hint}</AppText> : null}
+        {hint ? <AppText style={{ color: hintTone === 'accent' ? colors.accent700 : colors.zinc600, fontSize: 13, lineHeight: 18 }}>{hint}</AppText> : null}
       </View>
       <Ionicons name={external ? 'open-outline' : 'chevron-forward'} size={18} color={colors.zinc500} />
     </Pressable>
