@@ -68,7 +68,8 @@ test("ana sayfada fiyat özeti, güzergâhlar ve SSS yapısal verisi var", async
   await page.goto("/");
   const prices = page.getByRole("region", { name: "Ev tipine göre tahmini evden eve nakliyat fiyatları" });
   await expect(prices.getByRole("row", { name: /2\+1 .* TL .* TL/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: "İstanbul - Ankara", exact: true })).toHaveAttribute(
+  // Altbilgide de aynı güzergâh bağlantısı var; burada ana içerikteki popüler güzergâhlar denetlenir
+  await expect(page.getByRole("main").getByRole("link", { name: "İstanbul - Ankara", exact: true })).toHaveAttribute(
     "href",
     "/istanbul-ankara-sehirler-arasi-nakliyat",
   );

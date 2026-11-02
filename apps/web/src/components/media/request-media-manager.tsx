@@ -35,10 +35,12 @@ export function RequestMediaManager({
     setUploading(false);
     if (result.error || result.failed) {
       setError(result.error ?? "Bazı dosyalar yüklenemedi. Tekrar denemek için yeniden ekle düğmesine bas.");
+      // Bir kısmı eklenmiş olabilir; listeyi yenile
+      router.refresh();
     } else {
+      // Ekleme eylemi sayfayı zaten yeniledi; fazladan yenileme gereksiz ve hemen ardından yapılan silmeyle yarışıyordu
       picker.clear();
     }
-    router.refresh();
   };
 
   return (

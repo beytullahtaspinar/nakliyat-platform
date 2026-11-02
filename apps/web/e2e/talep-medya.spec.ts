@@ -2,6 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import path from "node:path";
 import { verifyEmail } from "./dogrulama";
 
+// Mobil ve masaüstü aynı anda koşar: numara aynı milisaniyede üretilse de çakışmasın
+const uniqueDigits = (n: number) => `${Date.now()}${Math.floor(Math.random() * 1e6)}`.slice(-n);
+
 const fixture = (name: string) => path.join(__dirname, "fixtures", name);
 
 async function fillRequestForm(page: Page, phone: string) {
@@ -30,7 +33,7 @@ async function fillRequestForm(page: Page, phone: string) {
 
 // Fotoğraf tarayıcıda küçültülür (en uzun kenar 1600 px), talep oluşunca yüklenir ve talep sayfasında görünür.
 test("müşteri talebe fotoğraf ekler, sonradan silebilir", async ({ page }) => {
-  const phone = `0533${String(Date.now()).slice(-7)}`;
+  const phone = `0533${uniqueDigits(7)}`;
   await fillRequestForm(page, phone);
 
   await page.getByLabel("Fotoğraf veya video seç").setInputFiles(fixture("esya.jpg"));
@@ -63,9 +66,11 @@ test("müşteri talebe fotoğraf ekler, sonradan silebilir", async ({ page }) =>
   await expect(gallery).toBeInViewport();
 
   // Sil, görünen dosyayı siler
+  // İlk "Sil" onay kutusunu açar; ikinci tıklama açılan onay kutusundaki düğmeye
   for (const remaining of [1, 0]) {
     await page.getByRole("button", { name: "Sil", exact: true }).click();
-    await page.getByRole("button", { name: "Sil", exact: true }).click();
+    const confirm = page.locator("form").filter({ hasText: "Bu dosya silinecek." });
+    await confirm.getByRole("button", { name: "Sil", exact: true }).click();
     await expect(page.getByRole("img", { name: /Eşya fotoğrafı/ })).toHaveCount(remaining);
   }
 });
@@ -83,7 +88,7 @@ test("video tarayıcıda 720p'ye küçültülüp eklenir", async ({ page }) => {
   });
   test.skip(!canEncode, "Bu tarayıcıda video kodlayıcı yok");
 
-  const phone = `0534${String(Date.now()).slice(-7)}`;
+  const phone = `0534${uniqueDigits(7)}`;
   await fillRequestForm(page, phone);
   await page.getByLabel("Fotoğraf veya video seç").setInputFiles(fixture("oda.webm"));
   await expect(page.getByText(/Yüklenecek:/)).toBeVisible({ timeout: 30_000 });
