@@ -35,10 +35,12 @@ const fetchLocalPageContents = async () =>
     })
   ).items;
 
-/** Düzenlenmiş sayfaların son güncellenme zamanı (site haritası için); API'ye ulaşılamazsa boş */
-export async function getLocalPageUpdates(): Promise<Map<string, string>> {
+/** Düzenlenmiş sayfaların son güncellenme zamanı ve kapak görseli (site haritası için); API'ye ulaşılamazsa boş */
+export async function getLocalPageUpdates(): Promise<Map<string, { updatedAt: string; coverSrc: string | null }>> {
   try {
-    return new Map((await fetchLocalPageContents()).map((p) => [p.slug, p.updatedAt]));
+    return new Map(
+      (await fetchLocalPageContents()).map((p) => [p.slug, { updatedAt: p.updatedAt, coverSrc: p.cover?.src ?? null }]),
+    );
   } catch {
     return new Map();
   }

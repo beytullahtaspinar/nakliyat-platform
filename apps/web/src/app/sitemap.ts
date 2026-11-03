@@ -61,7 +61,11 @@ const latest = (...dates: (string | null | undefined)[]) =>
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Bölge sayfası, yönetimden düzenlenince ya da fiyat tablosu (katsayılar) değişince güncellenmiş sayılır
   const [updates, pricing] = await Promise.all([getLocalPageUpdates(), loadPricingModel()]);
-  const localModified = (slug: string) => latest(updates.get(slug), pricing.updatedAt);
+  const localModified = (slug: string) => latest(updates.get(slug)?.updatedAt, pricing.updatedAt);
+  const localImages = (slug: string) => {
+    const src = updates.get(slug)?.coverSrc;
+    return src ? { images: [`${SITE_URL}${src}`] } : {};
+  };
   return [
     { url: SITE_URL, lastModified: pricing.updatedAt ?? undefined, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}${HUB_PATH}`, lastModified: localModified(HUB_PATH.slice(1)), changeFrequency: "monthly", priority: 0.9 },
@@ -71,6 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: localModified(page.slug),
       changeFrequency: "weekly" as const,
       priority: page.kind === "city" ? 0.8 : page.kind === "district" ? 0.7 : 0.6,
+      ...localImages(page.slug),
     })),
     ...(await indexableCompanies()).map((company) => ({
       url: `${SITE_URL}${companyPath(company)}`,

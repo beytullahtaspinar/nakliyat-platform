@@ -31,10 +31,11 @@ export const MIME_BY_EXTENSION: Record<string, string> = Object.fromEntries(
 export const REQUEST_MIME_TYPES = ['image/webp', 'image/jpeg', 'video/mp4', 'video/webm'];
 
 /**
- * talepler/<talepId>/<32 hex>.<uzantı>, firmalar/<firmaId>/<32 hex>.<uzantı> ya da blog/<32 hex>.<uzantı>.
- * Yol geçişine (../) izin vermeyen tek biçim.
+ * talepler/<talepId>/<32 hex>.<uzantı>, firmalar/<firmaId>/<32 hex>.<uzantı> ya da blog/<ad>.<uzantı>
+ * (ad: 32 hex ya da SEO'ya uygun açıklayıcı ad, ör. usak-eski-evleri-3fa9c2d1). Yol geçişine (../) izin vermeyen tek biçim.
  */
-export const STORAGE_KEY_PATTERN = /^(?:(?:talepler|firmalar)\/[a-z0-9]{10,40}|blog)\/[a-f0-9]{32}\.(webp|jpg|png|pdf|mp4|webm)$/;
+export const STORAGE_KEY_PATTERN =
+  /^(?:(?:talepler|firmalar)\/[a-z0-9]{10,40}\/[a-f0-9]{32}|blog\/[a-z0-9]+(?:-[a-z0-9]+){0,15})\.(webp|jpg|png|pdf|mp4|webm)$/;
 
 /** Firma tanıtım görselinin herkese açık adresi (web sitesi API'den aktarır): /medya/firmalar/<firmaId>/<dosya> */
 export const publicMediaPath = (key: string) => `/medya/${key}`;

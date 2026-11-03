@@ -46,11 +46,14 @@ export function slugify(text: string, max: number = BLOG_RULES.slugMax): string 
 /** Adreste kullanılabilecek kısa ad: küçük harf, rakam ve tire */
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** Blog görselinin depo anahtarı: blog/<32 hex>.webp */
-export const BLOG_MEDIA_KEY_PATTERN = /^blog\/[a-f0-9]{32}\.(webp|jpg)$/;
+/**
+ * Görsel anahtarı: blog/<32 hex>.webp (yönetimden yüklenen) ya da SEO'ya uygun açıklayıcı ad:
+ * blog/usak-eski-evleri-3fa9c2d1.webp (hazır il kapakları). Küçük harf, rakam ve tire; klasör ya da nokta yok.
+ */
+export const BLOG_MEDIA_KEY_PATTERN = /^blog\/[a-z0-9]+(?:-[a-z0-9]+){0,15}\.(webp|jpg)$/;
 
-/** İçerikteki blog görseli adresleri: /medya/blog/<32 hex>.webp */
-const CONTENT_IMAGE = /\/medya\/(blog\/[a-f0-9]{32}\.(?:webp|jpg))/g;
+/** İçerikteki blog görseli adresleri: /medya/blog/<ad>.webp */
+const CONTENT_IMAGE = /\/medya\/(blog\/[a-z0-9]+(?:-[a-z0-9]+){0,15}\.(?:webp|jpg))/g;
 
 export const blogMediaPath = (key: string) => `/medya/${key}`;
 

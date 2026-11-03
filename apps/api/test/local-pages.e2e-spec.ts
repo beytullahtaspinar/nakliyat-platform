@@ -66,7 +66,8 @@ describe('Bölge sayfaları (e2e)', () => {
     await http().patch(`/v1/admin/local-pages/${SLUG}`).send({ heading: 'X' }).expect(401);
     await http().patch(`/v1/admin/local-pages/${SLUG}`).set(auth('customer')).send({ heading: 'X' }).expect(403);
     await http().patch('/v1/admin/local-pages/olmayan-sayfa').set(auth('admin')).send({ heading: 'X' }).expect(404);
-    await http().patch(`/v1/admin/local-pages/${SLUG}`).set(auth('admin')).send({ coverKey: 'blog/yok.webp' }).expect(400);
+    await http().patch(`/v1/admin/local-pages/${SLUG}`).set(auth('admin')).send({ coverKey: 'blog/../yok.webp' }).expect(400);
+    await http().patch(`/v1/admin/local-pages/${SLUG}`).set(auth('admin')).send({ coverKey: 'blog/yok.webp' }).expect(404);
 
     expect((await http().get(`/v1/admin/local-pages/${SLUG}`).set(auth('admin')).expect(200)).body).toEqual({});
 

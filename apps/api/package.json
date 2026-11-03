@@ -71,6 +71,7 @@
   },
   "files": [
     "dist",
+    "il-kapaklari",
     "prisma",
     "prisma.config.ts",
     "app.cjs",
