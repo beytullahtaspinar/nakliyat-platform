@@ -76,7 +76,7 @@ export class BlogController {
     res.set({
       'Content-Type': found.mimeType,
       ...(found.sizeBytes > 0 && { 'Content-Length': String(found.sizeBytes) }),
-      // Dosya adı rastgele ve içerik değişmez
+      // Dosya adında rastgele ek var, içerik değişmez
       'Cache-Control': 'public, max-age=31536000, immutable',
       'Cross-Origin-Resource-Policy': 'cross-origin',
       'X-Content-Type-Options': 'nosniff',

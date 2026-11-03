@@ -7,15 +7,19 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { MediaService } from '../media/media.service.js';
 import { isLocalPageSlug } from './local-page-rules.js';
 
+const NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+){0,12}$/;
+
 /** Hazır il kapakları: apps/api/il-kapaklari (manifest.json + WebP dosyaları), sürüm paketine girer. Testte değiştirilebilir. */
 const coversDir = () => process.env.CITY_COVERS_DIR ?? resolve(import.meta.dirname, '../../il-kapaklari');
 
 export type CityCoverEntry = {
   /** Bölge sayfası adresi: usak-evden-eve-nakliyat */
   slug: string;
-  /** Büyük boy (1600 px'e kadar) ve önizleme (800 px) WebP dosyaları, klasöre göre */
-  file: string;
-  thumb: string;
+  /**
+   * SEO'ya uygun dosya adı (fotoğrafta görünen): usak-eski-evleri. Klasörde <ad>.webp (1600 px) ve <ad>-800.webp
+   * (önizleme) bulunur; sitede /medya/blog/<ad>-<8 hex>.webp adresinden sunulur.
+   */
+  name: string;
   width: number;
   height: number;
   thumbWidth: number;
@@ -42,7 +46,15 @@ export class CityCoversService {
   async manifest(dir = coversDir()): Promise<CityCoverEntry[]> {
     try {
       const entries = JSON.parse(await readFile(resolve(dir, 'manifest.json'), 'utf8')) as CityCoverEntry[];
-      return entries.filter((e) => isLocalPageSlug(e.slug) && e.credit?.author && e.credit?.license && e.credit?.sourceUrl);
+      return entries.filter(
+        (e) =>
+          isLocalPageSlug(e.slug) &&
+          NAME_PATTERN.test(e.name ?? '') &&
+          e.name.length <= 90 &&
+          e.credit?.author &&
+          e.credit?.license &&
+          e.credit?.sourceUrl,
+      );
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
       throw err;
@@ -102,15 +114,16 @@ export class CityCoversService {
     });
     if (existing) return existing.storageKey;
 
-    const upload = async (name: string) => {
-      const path = resolve(dir, name);
+    // Açıklayıcı ad + kısa rastgele ek: aynı adlı başka görselle çakışmasın
+    const base = `blog/${entry.name}-${randomBytes(4).toString('hex')}`;
+    const upload = async (file: string, key: string) => {
+      const path = resolve(dir, file);
       const { size } = await stat(path);
-      const key = `blog/${randomBytes(16).toString('hex')}.webp`;
       const location = await this.media.receive(key, 'image/webp', size, createReadStream(path));
       return { key, location, size };
     };
-    const main = await upload(entry.file);
-    const thumb = await upload(entry.thumb);
+    const main = await upload(`${entry.name}.webp`, `${base}.webp`);
+    const thumb = await upload(`${entry.name}-800.webp`, `${base}-800.webp`);
     await this.prisma.blogMedia.create({
       data: {
         storageKey: main.key,

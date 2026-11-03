@@ -51,8 +51,7 @@ describe('Hazır il kapakları (e2e)', () => {
     delete process.env.R2_ACCOUNT_ID;
     const entries = SLUGS.map((slug) => ({
       slug,
-      file: `${slug}.webp`,
-      thumb: `${slug}-800.webp`,
+      name: `${slug.split('-')[0]}-sehir-manzarasi`,
       width: 1600,
       height: 1067,
       thumbWidth: 800,
@@ -63,10 +62,12 @@ describe('Hazır il kapakları (e2e)', () => {
     // Klasörde manifestte olmayan ya da atıfsız kayıt yok sayılır
     entries.push({ ...entries[0], slug: 'olmayan-sayfa' });
     entries.push({ ...entries[0], slug: 'yozgat-evden-eve-nakliyat', credit: { ...entries[0].credit, author: '' } });
+    entries.push({ ...entries[0], slug: 'sivas-evden-eve-nakliyat', name: '../kacak' });
     await writeFile(join(dir, 'manifest.json'), JSON.stringify(entries));
     for (const slug of SLUGS) {
-      await writeFile(join(dir, `${slug}.webp`), Buffer.alloc(2000, 1));
-      await writeFile(join(dir, `${slug}-800.webp`), Buffer.alloc(500, 1));
+      const name = `${slug.split('-')[0]}-sehir-manzarasi`;
+      await writeFile(join(dir, `${name}.webp`), Buffer.alloc(2000, 1));
+      await writeFile(join(dir, `${name}-800.webp`), Buffer.alloc(500, 1));
     }
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -118,11 +119,16 @@ describe('Hazır il kapakları (e2e)', () => {
     const pages = (await http().get('/v1/local-pages').expect(200)).body.items as {
       slug: string;
       intro: string | null;
-      cover: { alt: string; credit: unknown } | null;
+      cover: { src: string; alt: string; credit: unknown; thumb: { src: string } } | null;
     }[];
     const page = (slug: string) => pages.find((p) => p.slug === slug)!;
     expect(page(MANUAL).cover).toMatchObject({ alt: 'Elle seçilen', credit: null });
     expect(page(TEXT_ONLY).intro).toBe('Bartın için özel giriş.');
+    expect(page(FRESH).cover!.src).toMatch(/^\/medya\/blog\/ardahan-sehir-manzarasi-[a-f0-9]{8}\.webp$/);
+    expect(page(FRESH).cover!.thumb.src).toMatch(/^\/medya\/blog\/ardahan-sehir-manzarasi-[a-f0-9]{8}-800\.webp$/);
+    // Açıklayıcı adlı görsel herkese açık adresten okunur
+    const file = page(FRESH).cover!.src.replace('/medya/', '');
+    await http().get(`/v1/public-media/${file}`).expect(200);
     expect(page(FRESH).cover).toMatchObject({
       alt: `${FRESH} şehir manzarası`,
       credit: {

@@ -7,7 +7,7 @@ import { API_BASE } from "@/lib/api";
  */
 export async function GET(_request: Request, { params }: RouteContext<"/medya/blog/[file]">) {
   const { file } = await params;
-  if (!/^[a-f0-9]{32}\.(webp|jpg)$/.test(file)) return new Response("Bulunamadı", { status: 404 });
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+){0,15}\.(webp|jpg)$/.test(file) || file.length > 140) return new Response("Bulunamadı", { status: 404 });
   let upstream: Response;
   try {
     upstream = await fetch(`${API_BASE}/public-media/blog/${file}`, { cache: "no-store" });
