@@ -16,6 +16,7 @@ import {
 } from "@/lib/local-page-admin";
 import { isIndexable } from "@/lib/local-seo";
 import { FilterTabs, PageHeader, Pager, SearchForm, query, td, th } from "../admin-bits";
+import { CityCoversButton } from "./city-covers-button";
 import { IndexNowButton } from "./indexnow-button";
 
 export const metadata: Metadata = { title: "Bölge sayfaları" };
@@ -37,7 +38,10 @@ export default async function AdminLocalPagesPage({ searchParams }: PageProps<"/
   const onlyEdited = oneParam(params.durum) === "duzenlenen";
   const citySlug = oneParam(params.il);
   const page = pageParam(params.sayfa);
-  const { items: edits } = await apiFetch<{ items: { slug: string; updatedAt: string }[] }>("/admin/local-pages", { token });
+  const [{ items: edits }, covers] = await Promise.all([
+    apiFetch<{ items: { slug: string; updatedAt: string }[] }>("/admin/local-pages", { token }),
+    apiFetch<{ total: number; available: number }>("/admin/local-pages/city-covers", { token }),
+  ]);
   const editedAt = new Map(edits.map((e) => [e.slug, e.updatedAt]));
 
   const href = (durum: string | undefined, sayfa = 1) => `/yonetim/sayfalar${query({ durum, ara: q, sayfa })}`;
@@ -48,7 +52,12 @@ export default async function AdminLocalPagesPage({ searchParams }: PageProps<"/
       <PageHeader
         title="Bölge sayfaları"
         description="İl, ilçe ve şehirler arası sayfaların başlığını, metnini, kapak görselini ve ek içeriğini değiştir. Boş bıraktığın alanda otomatik metin kalır; kaydedince site hemen güncellenir ve sayfa Bing'e bildirilir."
-        actions={<IndexNowButton />}
+        actions={
+          <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-start">
+            {covers.available > 0 && <CityCoversButton available={covers.available} />}
+            <IndexNowButton />
+          </div>
+        }
       />
 
       <div className="mb-4 space-y-3">

@@ -80,3 +80,21 @@ export async function submitSitemapToIndexNow(): Promise<LocalPageActionState> {
     return { error: describeIndexNowError(err) };
   }
 }
+
+/** Hazır, lisanslı il kapaklarını kapağı olmayan il sayfalarına ekler; eklenen sayfalar yenilenir ve Bing'e bildirilir */
+export async function importCityCovers(): Promise<LocalPageActionState> {
+  try {
+    const { added } = await apiFetch<{ added: string[]; skipped: number }>("/admin/local-pages/city-covers", {
+      method: "POST",
+      token: await adminToken(),
+    });
+    if (!added.length) return { notice: "Eklenecek görsel kalmadı: tüm il sayfalarında kapak var." };
+    updateTag(LOCAL_PAGE_CACHE_TAG);
+    for (const slug of added) revalidatePath(`/${slug}`);
+    revalidatePath("/yonetim/sayfalar", "layout");
+    notifyIndexNow(added.map((slug) => `/${slug}`));
+    return { notice: `${added.length} il sayfasına kapak görseli eklendi.` };
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Görseller eklenemedi." };
+  }
+}

@@ -14,7 +14,10 @@ export type BlogImage = {
   height: number;
   thumb: { src: string; width: number; height: number };
   alt: string;
+  /** Lisanslı görselin atfı (ör. Wikimedia Commons); görselin altında gösterilmesi lisans şartı */
+  credit?: BlogImageCredit | null;
 };
+export type BlogImageCredit = { author: string; license: string; licenseUrl: string | null; sourceUrl: string | null };
 export type BlogCategory = { slug: string; name: string; description: string | null; postCount: number };
 export type BlogAuthor = {
   slug: string;

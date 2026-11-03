@@ -1075,6 +1075,11 @@ model BlogMedia {
   thumbHeight  Int
   /// Varsayılan alt metin
   alt          String?         @db.VarChar(200)
+  /// Lisanslı görselin atfı (ör. Wikimedia Commons): görselin altında yazılır, yapısal veriye de konur
+  creditAuthor     String?     @db.VarChar(200)
+  creditLicense    String?     @db.VarChar(100)
+  creditLicenseUrl String?     @db.VarChar(300)
+  creditSourceUrl  String?     @db.VarChar(500)
   createdAt    DateTime        @default(now())
 
   @@index([storage])

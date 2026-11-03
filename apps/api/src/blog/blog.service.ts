@@ -500,6 +500,18 @@ export function toImage(m: BlogMedia) {
     height: m.height,
     thumb: { src: blogMediaPath(m.thumbKey), width: m.thumbWidth, height: m.thumbHeight },
     alt: m.alt ?? '',
+    credit: creditOf(m),
+  };
+}
+
+/** Lisanslı görselin atfı; fotoğrafçı ve lisans birlikte yoksa null */
+function creditOf(m: BlogMedia) {
+  if (!m.creditAuthor || !m.creditLicense) return null;
+  return {
+    author: m.creditAuthor,
+    license: m.creditLicense,
+    licenseUrl: m.creditLicenseUrl,
+    sourceUrl: m.creditSourceUrl,
   };
 }
 

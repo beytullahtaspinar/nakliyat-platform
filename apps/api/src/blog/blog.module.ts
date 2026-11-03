@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MediaModule } from '../media/media.module.js';
 import { AdminBlogController } from './admin-blog.controller.js';
 import { BlogMediaService } from './blog-media.service.js';
+import { CityCoversService } from './city-covers.service.js';
 import { BlogController } from './blog.controller.js';
 import { BlogService } from './blog.service.js';
 import { AdminLocalPagesController, LocalPagesController } from './local-pages.controller.js';
@@ -14,6 +15,6 @@ import { LocalPagesService } from './local-pages.service.js';
 @Module({
   imports: [MediaModule],
   controllers: [BlogController, AdminBlogController, LocalPagesController, AdminLocalPagesController],
-  providers: [BlogService, BlogMediaService, LocalPagesService],
+  providers: [BlogService, BlogMediaService, LocalPagesService, CityCoversService],
 })
 export class BlogModule {}

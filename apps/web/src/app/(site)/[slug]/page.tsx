@@ -5,7 +5,7 @@ import { resolveLocalPage, type LocalPage } from "@nakliyat/locations";
 import { estimatePrice, type PriceEstimate } from "@nakliyat/pricing";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/local/breadcrumbs";
-import { CoverImage } from "@/components/local/cover-image";
+import { CoverImage, imageObjectJsonLd } from "@/components/local/cover-image";
 import { Faq } from "@/components/local/faq";
 import { LinkGrid } from "@/components/local/link-grid";
 import { LocalCompanies } from "@/components/local/local-companies";
@@ -41,6 +41,7 @@ import { BLOG_PROSE } from "@/lib/blog/prose";
 import { formatRating } from "@/lib/reviews";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 import type { LatestReview } from "@/lib/api";
+import type { BlogImage } from "@/lib/blog/api";
 
 // Dizine açık sayfalar derlemede üretilir; diğerleri ilk ziyarette üretilip önbelleğe alınır.
 export const dynamicParams = true;
@@ -85,7 +86,7 @@ function offerJsonLd(rows: { estimate: PriceEstimate }[]) {
   };
 }
 
-function serviceJsonLd(page: LocalPage, rows: { estimate: PriceEstimate }[]) {
+function serviceJsonLd(page: LocalPage, rows: { estimate: PriceEstimate }[], cover: BlogImage | null) {
   const area =
     page.kind === "route"
       ? [page.from, page.to].map((c) => ({ "@type": "City", name: c.name }))
@@ -106,6 +107,7 @@ function serviceJsonLd(page: LocalPage, rows: { estimate: PriceEstimate }[]) {
     areaServed: area,
     provider: { "@id": `${SITE_URL}/#organization` },
     offers: offerJsonLd(rows),
+    ...(cover && { image: imageObjectJsonLd(cover, SITE_URL) }),
   };
 }
 
@@ -330,7 +332,7 @@ export default async function LocalLandingPage({ params }: Props) {
         <LinkGrid key={group.title} title={group.title} links={group.links} />
       ))}
 
-      <JsonLd data={serviceJsonLd(page, prices.rows)} />
+      <JsonLd data={serviceJsonLd(page, prices.rows, custom?.cover ?? null)} />
       {rating && rating.count >= CITY_RATING_SCHEMA_MIN && <JsonLd data={ratingJsonLd(page, rating, reviews)} />}
     </main>
   );
