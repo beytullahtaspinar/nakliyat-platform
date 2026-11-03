@@ -42,7 +42,7 @@ for (const [slug, q] of Object.entries(SIM)) {
   const top = [...cands.values()].sort((a, b) => b.score - a.score).slice(0, 4);
   for (const [i, c] of top.entries()) {
     // Standart küçük resim adresi: .../thumb/x/xy/Ad.jpg/500px-Ad.jpg
-    const parts = c.url.split('/commons/')[1];
+    const parts = c.url.split('?')[0].split('/commons/')[1];
     const file = parts.split('/').pop();
     const thumb = `https://upload.wikimedia.org/wikipedia/commons/thumb/${parts}/500px-${file}`;
     await writeFile(`${OUT}/kucuk/${slug}-${i}.jpg`, Buffer.from(await (await get(thumb)).arrayBuffer()));
