@@ -3,6 +3,7 @@ Seçilen il fotoğraflarını sitede kullanılacak biçime çevirir ve manifest.
   python3 donustur.py <il-gorsel-secilen klasörü> <meta.json> <apps/api/il-kapaklari>
 - 3:2 oranına ortadan kırpılır; 1440x960 ve 800x533 WebP, üst veri (EXIF, konum) silinir.
 - Atıf: fotoğrafçı, lisans, lisans adresi ve Commons sayfası (lisans şartı).
+- Var olan manifest.json korunur; aynı sayfa (slug) için gelen kayıt eskisinin yerine geçer (il + ilçe aynı dosyada).
 """
 import json, re, sys
 from pathlib import Path
@@ -22,6 +23,9 @@ def author(m):
     if m['name'] in AUTHOR_FIX:
         return AUTHOR_FIX[m['name']]
     a = re.sub(r'^User:', '', m['artist']).strip()
+    # Commons imza artıkları: "(mesaj)" bağlantısı, © işareti, kesilmiş "…" kısmı
+    a = re.sub(r'\s*\((mesaj|talk|tartışma)\)$', '', a)
+    a = re.sub(r'\s*\([^)]*…$', '', a).replace('©', '').strip()
     if not a or '@' in a or len(a) > 60:
         a = m['uploader']
     return a
@@ -30,9 +34,13 @@ def license_label(lic):
     return 'Kamu malı' if lic.lower() == 'public domain' else lic
 
 # Kenarında çerçeve olan fotoğraflar: kırpmadan önce kenarlardan bu oranda içeri girilir
-INSET = {'kayseri-burunguz-camii-erciyes-dagi': 0.03}
+INSET = {'kayseri-burunguz-camii-erciyes-dagi': 0.03, 'kocaeli-derince-60-evler-sahili': 0.06}
+# Alt kenarında tarih damgası ya da yazı olan fotoğraflar: kırpma üstten yapılır
+TOP = {'antalya-akseki-toros-daglari', 'istanbul-atasehir-gokdelenler-silueti'}
+# Alttan ayrıca kesilecek oran (tarih damgası kırpmadan sonra da kalıyorsa)
+BOTTOM = {'antalya-akseki-toros-daglari': 0.2, 'istanbul-atasehir-gokdelenler-silueti': 0.08}
 
-def crop_3_2(im, inset=0.0):
+def crop_3_2(im, inset=0.0, top=False):
     if inset:
         w, h = im.size; dx, dy = round(w * inset), round(h * inset)
         im = im.crop((dx, dy, w - dx, h - dy))
@@ -40,13 +48,18 @@ def crop_3_2(im, inset=0.0):
     if w / h > 1.5:
         nw = round(h * 1.5); left = (w - nw) // 2
         return im.crop((left, 0, left + nw, h))
-    nh = round(w / 1.5); top = (h - nh) // 2
-    return im.crop((0, top, w, top + nh))
+    nh = round(w / 1.5); y = 0 if top else (h - nh) // 2
+    return im.crop((0, y, w, y + nh))
 
-manifest = []
+old = out / 'manifest.json'
+manifest = json.loads(old.read_text(encoding='utf-8')) if old.exists() else []
+new_slugs = {m['slug'] for m in meta}
+manifest = [e for e in manifest if e['slug'] not in new_slugs]
 for m in meta:
     im = Image.open(src / 'buyuk' / f"{m['name']}.jpg").convert('RGB')
-    im = crop_3_2(im, INSET.get(m['name'], 0.0))
+    if m['name'] in BOTTOM:
+        im = im.crop((0, 0, im.width, round(im.height * (1 - BOTTOM[m['name']]))))
+    im = crop_3_2(im, INSET.get(m['name'], 0.0), m['name'] in TOP)
     big = im.resize((1440, 960), Image.LANCZOS)
     small = im.resize((800, 533), Image.LANCZOS)
     big.save(out / f"{m['name']}.webp", 'WEBP', quality=55, method=6)

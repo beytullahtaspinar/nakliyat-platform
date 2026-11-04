@@ -1,0 +1,854 @@
+[
+ {
+  "slug": "ankara-akyurt-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Akyurt",
+  "key": "ankara-akyurt"
+ },
+ {
+  "slug": "ankara-altindag-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Altındağ",
+  "key": "ankara-altindag"
+ },
+ {
+  "slug": "ankara-ayas-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Ayaş",
+  "key": "ankara-ayas"
+ },
+ {
+  "slug": "ankara-bala-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Bala",
+  "key": "ankara-bala"
+ },
+ {
+  "slug": "ankara-beypazari-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Beypazarı",
+  "key": "ankara-beypazari"
+ },
+ {
+  "slug": "ankara-camlidere-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Çamlıdere",
+  "key": "ankara-camlidere"
+ },
+ {
+  "slug": "ankara-cankaya-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Çankaya",
+  "key": "ankara-cankaya"
+ },
+ {
+  "slug": "ankara-cubuk-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Çubuk",
+  "key": "ankara-cubuk"
+ },
+ {
+  "slug": "ankara-elmadag-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Elmadağ",
+  "key": "ankara-elmadag"
+ },
+ {
+  "slug": "ankara-etimesgut-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Etimesgut",
+  "key": "ankara-etimesgut"
+ },
+ {
+  "slug": "ankara-evren-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Evren",
+  "key": "ankara-evren"
+ },
+ {
+  "slug": "ankara-golbasi-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Gölbaşı",
+  "key": "ankara-golbasi"
+ },
+ {
+  "slug": "ankara-gudul-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Güdül",
+  "key": "ankara-gudul"
+ },
+ {
+  "slug": "ankara-haymana-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Haymana",
+  "key": "ankara-haymana"
+ },
+ {
+  "slug": "ankara-kahramankazan-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Kahramankazan",
+  "key": "ankara-kahramankazan"
+ },
+ {
+  "slug": "ankara-kalecik-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Kalecik",
+  "key": "ankara-kalecik"
+ },
+ {
+  "slug": "ankara-kecioren-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Keçiören",
+  "key": "ankara-kecioren"
+ },
+ {
+  "slug": "ankara-kizilcahamam-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Kızılcahamam",
+  "key": "ankara-kizilcahamam"
+ },
+ {
+  "slug": "ankara-mamak-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Mamak",
+  "key": "ankara-mamak"
+ },
+ {
+  "slug": "ankara-nallihan-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Nallıhan",
+  "key": "ankara-nallihan"
+ },
+ {
+  "slug": "ankara-polatli-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Polatlı",
+  "key": "ankara-polatli"
+ },
+ {
+  "slug": "ankara-pursaklar-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Pursaklar",
+  "key": "ankara-pursaklar"
+ },
+ {
+  "slug": "ankara-sincan-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Sincan",
+  "key": "ankara-sincan"
+ },
+ {
+  "slug": "ankara-sereflikochisar-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Şereflikoçhisar",
+  "key": "ankara-sereflikochisar"
+ },
+ {
+  "slug": "ankara-yenimahalle-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Yenimahalle",
+  "key": "ankara-yenimahalle"
+ },
+ {
+  "slug": "antalya-akseki-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Akseki",
+  "key": "antalya-akseki"
+ },
+ {
+  "slug": "antalya-aksu-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Aksu",
+  "key": "antalya-aksu"
+ },
+ {
+  "slug": "antalya-alanya-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Alanya",
+  "key": "antalya-alanya"
+ },
+ {
+  "slug": "antalya-demre-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Demre",
+  "key": "antalya-demre"
+ },
+ {
+  "slug": "antalya-dosemealti-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Döşemealtı",
+  "key": "antalya-dosemealti"
+ },
+ {
+  "slug": "antalya-elmali-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Elmalı",
+  "key": "antalya-elmali"
+ },
+ {
+  "slug": "antalya-finike-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Finike",
+  "key": "antalya-finike"
+ },
+ {
+  "slug": "antalya-gazipasa-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Gazipaşa",
+  "key": "antalya-gazipasa"
+ },
+ {
+  "slug": "antalya-gundogmus-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Gündoğmuş",
+  "key": "antalya-gundogmus"
+ },
+ {
+  "slug": "antalya-ibradi-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "İbradı",
+  "key": "antalya-ibradi"
+ },
+ {
+  "slug": "antalya-kas-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Kaş",
+  "key": "antalya-kas"
+ },
+ {
+  "slug": "antalya-kemer-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Kemer",
+  "key": "antalya-kemer"
+ },
+ {
+  "slug": "antalya-kepez-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Kepez",
+  "key": "antalya-kepez"
+ },
+ {
+  "slug": "antalya-konyaalti-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Konyaaltı",
+  "key": "antalya-konyaalti"
+ },
+ {
+  "slug": "antalya-korkuteli-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Korkuteli",
+  "key": "antalya-korkuteli"
+ },
+ {
+  "slug": "antalya-kumluca-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Kumluca",
+  "key": "antalya-kumluca"
+ },
+ {
+  "slug": "antalya-manavgat-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Manavgat",
+  "key": "antalya-manavgat"
+ },
+ {
+  "slug": "antalya-muratpasa-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Muratpaşa",
+  "key": "antalya-muratpasa"
+ },
+ {
+  "slug": "antalya-serik-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Serik",
+  "key": "antalya-serik"
+ },
+ {
+  "slug": "bursa-buyukorhan-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Büyükorhan",
+  "key": "bursa-buyukorhan"
+ },
+ {
+  "slug": "bursa-gemlik-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Gemlik",
+  "key": "bursa-gemlik"
+ },
+ {
+  "slug": "bursa-gursu-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Gürsu",
+  "key": "bursa-gursu"
+ },
+ {
+  "slug": "bursa-harmancik-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Harmancık",
+  "key": "bursa-harmancik"
+ },
+ {
+  "slug": "bursa-inegol-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "İnegöl",
+  "key": "bursa-inegol"
+ },
+ {
+  "slug": "bursa-iznik-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "İznik",
+  "key": "bursa-iznik"
+ },
+ {
+  "slug": "bursa-karacabey-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Karacabey",
+  "key": "bursa-karacabey"
+ },
+ {
+  "slug": "bursa-keles-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Keles",
+  "key": "bursa-keles"
+ },
+ {
+  "slug": "bursa-kestel-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Kestel",
+  "key": "bursa-kestel"
+ },
+ {
+  "slug": "bursa-mudanya-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Mudanya",
+  "key": "bursa-mudanya"
+ },
+ {
+  "slug": "bursa-mustafakemalpasa-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Mustafakemalpaşa",
+  "key": "bursa-mustafakemalpasa"
+ },
+ {
+  "slug": "bursa-nilufer-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Nilüfer",
+  "key": "bursa-nilufer"
+ },
+ {
+  "slug": "bursa-orhaneli-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Orhaneli",
+  "key": "bursa-orhaneli"
+ },
+ {
+  "slug": "bursa-orhangazi-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Orhangazi",
+  "key": "bursa-orhangazi"
+ },
+ {
+  "slug": "bursa-osmangazi-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Osmangazi",
+  "key": "bursa-osmangazi"
+ },
+ {
+  "slug": "bursa-yenisehir-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Yenişehir",
+  "key": "bursa-yenisehir"
+ },
+ {
+  "slug": "bursa-yildirim-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Yıldırım",
+  "key": "bursa-yildirim"
+ },
+ {
+  "slug": "istanbul-adalar-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Adalar",
+  "key": "istanbul-adalar"
+ },
+ {
+  "slug": "istanbul-arnavutkoy-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Arnavutköy",
+  "key": "istanbul-arnavutkoy"
+ },
+ {
+  "slug": "istanbul-atasehir-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Ataşehir",
+  "key": "istanbul-atasehir"
+ },
+ {
+  "slug": "istanbul-avcilar-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Avcılar",
+  "key": "istanbul-avcilar"
+ },
+ {
+  "slug": "istanbul-bagcilar-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bağcılar",
+  "key": "istanbul-bagcilar"
+ },
+ {
+  "slug": "istanbul-bahcelievler-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bahçelievler",
+  "key": "istanbul-bahcelievler"
+ },
+ {
+  "slug": "istanbul-bakirkoy-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bakırköy",
+  "key": "istanbul-bakirkoy"
+ },
+ {
+  "slug": "istanbul-basaksehir-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Başakşehir",
+  "key": "istanbul-basaksehir"
+ },
+ {
+  "slug": "istanbul-bayrampasa-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bayrampaşa",
+  "key": "istanbul-bayrampasa"
+ },
+ {
+  "slug": "istanbul-besiktas-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Beşiktaş",
+  "key": "istanbul-besiktas"
+ },
+ {
+  "slug": "istanbul-beykoz-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Beykoz",
+  "key": "istanbul-beykoz"
+ },
+ {
+  "slug": "istanbul-beylikduzu-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Beylikdüzü",
+  "key": "istanbul-beylikduzu"
+ },
+ {
+  "slug": "istanbul-beyoglu-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Beyoğlu",
+  "key": "istanbul-beyoglu"
+ },
+ {
+  "slug": "istanbul-buyukcekmece-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Büyükçekmece",
+  "key": "istanbul-buyukcekmece"
+ },
+ {
+  "slug": "istanbul-catalca-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Çatalca",
+  "key": "istanbul-catalca"
+ },
+ {
+  "slug": "istanbul-cekmekoy-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Çekmeköy",
+  "key": "istanbul-cekmekoy"
+ },
+ {
+  "slug": "istanbul-esenler-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Esenler",
+  "key": "istanbul-esenler"
+ },
+ {
+  "slug": "istanbul-esenyurt-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Esenyurt",
+  "key": "istanbul-esenyurt"
+ },
+ {
+  "slug": "istanbul-eyupsultan-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Eyüpsultan",
+  "key": "istanbul-eyupsultan"
+ },
+ {
+  "slug": "istanbul-fatih-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Fatih",
+  "key": "istanbul-fatih"
+ },
+ {
+  "slug": "istanbul-gaziosmanpasa-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Gaziosmanpaşa",
+  "key": "istanbul-gaziosmanpasa"
+ },
+ {
+  "slug": "istanbul-gungoren-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Güngören",
+  "key": "istanbul-gungoren"
+ },
+ {
+  "slug": "istanbul-kadikoy-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Kadıköy",
+  "key": "istanbul-kadikoy"
+ },
+ {
+  "slug": "istanbul-kagithane-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Kağıthane",
+  "key": "istanbul-kagithane"
+ },
+ {
+  "slug": "istanbul-kartal-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Kartal",
+  "key": "istanbul-kartal"
+ },
+ {
+  "slug": "istanbul-kucukcekmece-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Küçükçekmece",
+  "key": "istanbul-kucukcekmece"
+ },
+ {
+  "slug": "istanbul-maltepe-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Maltepe",
+  "key": "istanbul-maltepe"
+ },
+ {
+  "slug": "istanbul-pendik-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Pendik",
+  "key": "istanbul-pendik"
+ },
+ {
+  "slug": "istanbul-sancaktepe-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Sancaktepe",
+  "key": "istanbul-sancaktepe"
+ },
+ {
+  "slug": "istanbul-sariyer-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Sarıyer",
+  "key": "istanbul-sariyer"
+ },
+ {
+  "slug": "istanbul-silivri-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Silivri",
+  "key": "istanbul-silivri"
+ },
+ {
+  "slug": "istanbul-sultanbeyli-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Sultanbeyli",
+  "key": "istanbul-sultanbeyli"
+ },
+ {
+  "slug": "istanbul-sultangazi-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Sultangazi",
+  "key": "istanbul-sultangazi"
+ },
+ {
+  "slug": "istanbul-sile-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Şile",
+  "key": "istanbul-sile"
+ },
+ {
+  "slug": "istanbul-sisli-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Şişli",
+  "key": "istanbul-sisli"
+ },
+ {
+  "slug": "istanbul-tuzla-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Tuzla",
+  "key": "istanbul-tuzla"
+ },
+ {
+  "slug": "istanbul-umraniye-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Ümraniye",
+  "key": "istanbul-umraniye"
+ },
+ {
+  "slug": "istanbul-uskudar-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Üsküdar",
+  "key": "istanbul-uskudar"
+ },
+ {
+  "slug": "istanbul-zeytinburnu-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Zeytinburnu",
+  "key": "istanbul-zeytinburnu"
+ },
+ {
+  "slug": "izmir-aliaga-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Aliağa",
+  "key": "izmir-aliaga"
+ },
+ {
+  "slug": "izmir-balcova-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Balçova",
+  "key": "izmir-balcova"
+ },
+ {
+  "slug": "izmir-bayindir-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Bayındır",
+  "key": "izmir-bayindir"
+ },
+ {
+  "slug": "izmir-bayrakli-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Bayraklı",
+  "key": "izmir-bayrakli"
+ },
+ {
+  "slug": "izmir-bergama-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Bergama",
+  "key": "izmir-bergama"
+ },
+ {
+  "slug": "izmir-beydag-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Beydağ",
+  "key": "izmir-beydag"
+ },
+ {
+  "slug": "izmir-bornova-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Bornova",
+  "key": "izmir-bornova"
+ },
+ {
+  "slug": "izmir-buca-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Buca",
+  "key": "izmir-buca"
+ },
+ {
+  "slug": "izmir-cesme-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Çeşme",
+  "key": "izmir-cesme"
+ },
+ {
+  "slug": "izmir-cigli-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Çiğli",
+  "key": "izmir-cigli"
+ },
+ {
+  "slug": "izmir-dikili-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Dikili",
+  "key": "izmir-dikili"
+ },
+ {
+  "slug": "izmir-foca-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Foça",
+  "key": "izmir-foca"
+ },
+ {
+  "slug": "izmir-gaziemir-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Gaziemir",
+  "key": "izmir-gaziemir"
+ },
+ {
+  "slug": "izmir-guzelbahce-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Güzelbahçe",
+  "key": "izmir-guzelbahce"
+ },
+ {
+  "slug": "izmir-karabaglar-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Karabağlar",
+  "key": "izmir-karabaglar"
+ },
+ {
+  "slug": "izmir-karaburun-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Karaburun",
+  "key": "izmir-karaburun"
+ },
+ {
+  "slug": "izmir-karsiyaka-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Karşıyaka",
+  "key": "izmir-karsiyaka"
+ },
+ {
+  "slug": "izmir-kemalpasa-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Kemalpaşa",
+  "key": "izmir-kemalpasa"
+ },
+ {
+  "slug": "izmir-kinik-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Kınık",
+  "key": "izmir-kinik"
+ },
+ {
+  "slug": "izmir-kiraz-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Kiraz",
+  "key": "izmir-kiraz"
+ },
+ {
+  "slug": "izmir-konak-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Konak",
+  "key": "izmir-konak"
+ },
+ {
+  "slug": "izmir-menderes-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Menderes",
+  "key": "izmir-menderes"
+ },
+ {
+  "slug": "izmir-menemen-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Menemen",
+  "key": "izmir-menemen"
+ },
+ {
+  "slug": "izmir-narlidere-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Narlıdere",
+  "key": "izmir-narlidere"
+ },
+ {
+  "slug": "izmir-odemis-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Ödemiş",
+  "key": "izmir-odemis"
+ },
+ {
+  "slug": "izmir-seferihisar-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Seferihisar",
+  "key": "izmir-seferihisar"
+ },
+ {
+  "slug": "izmir-selcuk-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Selçuk",
+  "key": "izmir-selcuk"
+ },
+ {
+  "slug": "izmir-tire-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Tire",
+  "key": "izmir-tire"
+ },
+ {
+  "slug": "izmir-torbali-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Torbalı",
+  "key": "izmir-torbali"
+ },
+ {
+  "slug": "izmir-urla-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Urla",
+  "key": "izmir-urla"
+ },
+ {
+  "slug": "kocaeli-basiskele-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Başiskele",
+  "key": "kocaeli-basiskele"
+ },
+ {
+  "slug": "kocaeli-cayirova-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Çayırova",
+  "key": "kocaeli-cayirova"
+ },
+ {
+  "slug": "kocaeli-darica-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Darıca",
+  "key": "kocaeli-darica"
+ },
+ {
+  "slug": "kocaeli-derince-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Derince",
+  "key": "kocaeli-derince"
+ },
+ {
+  "slug": "kocaeli-dilovasi-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Dilovası",
+  "key": "kocaeli-dilovasi"
+ },
+ {
+  "slug": "kocaeli-gebze-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Gebze",
+  "key": "kocaeli-gebze"
+ },
+ {
+  "slug": "kocaeli-golcuk-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Gölcük",
+  "key": "kocaeli-golcuk"
+ },
+ {
+  "slug": "kocaeli-izmit-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "İzmit",
+  "key": "kocaeli-izmit"
+ },
+ {
+  "slug": "kocaeli-kandira-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Kandıra",
+  "key": "kocaeli-kandira"
+ },
+ {
+  "slug": "kocaeli-karamursel-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Karamürsel",
+  "key": "kocaeli-karamursel"
+ },
+ {
+  "slug": "kocaeli-kartepe-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Kartepe",
+  "key": "kocaeli-kartepe"
+ },
+ {
+  "slug": "kocaeli-korfez-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Körfez",
+  "key": "kocaeli-korfez"
+ }
+]

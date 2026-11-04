@@ -30,8 +30,11 @@ export type CityCoverEntry = {
   credit: { author: string; license: string; licenseUrl: string | null; sourceUrl: string };
 };
 
+/** Bir istekte kapak eklenecek en fazla sayfa */
+export const IMPORT_BATCH = 60;
+
 /**
- * İl sayfalarına hazır, lisanslı kapak görseli ekler. Yönetimde kapak seçilmiş sayfaya dokunmaz
+ * İl ve ilçe sayfalarına hazır, lisanslı kapak görseli ekler. Yönetimde kapak seçilmiş sayfaya dokunmaz
  * (ör. elle eklenen Uşak görseli kalır); tekrar çalıştırılırsa aynı dosyayı ikinci kez yüklemez.
  */
 @Injectable()
@@ -61,17 +64,22 @@ export class CityCoversService {
     }
   }
 
-  /** Kaç il sayfasına eklenebilir (kapağı olmayanlar) */
+  /** Kaç bölge sayfasına eklenebilir (kapağı olmayanlar) */
   async status(dir = coversDir()) {
     const entries = await this.manifest(dir);
     const covered = await this.coveredSlugs(entries.map((e) => e.slug));
     return { total: entries.length, available: entries.filter((e) => !covered.has(e.slug)).length };
   }
 
-  async import(adminId: string, dir = coversDir()) {
+  /**
+   * Bir istekte en fazla `limit` sayfa işlenir (her biri iki dosya yükler); istek zaman aşımına uğramasın diye.
+   * Kalan varsa düğmeye tekrar basılır, eklenenler atlanır.
+   */
+  async import(adminId: string, dir = coversDir(), limit = IMPORT_BATCH) {
     const entries = await this.manifest(dir);
     const covered = await this.coveredSlugs(entries.map((e) => e.slug));
-    const todo = entries.filter((e) => !covered.has(e.slug));
+    const pending = entries.filter((e) => !covered.has(e.slug));
+    const todo = pending.slice(0, limit);
     const added: string[] = [];
     for (const entry of todo) {
       const storageKey = await this.mediaFor(entry, dir);
@@ -94,8 +102,8 @@ export class CityCoversService {
         data: { actorId: adminId, action: 'local-page.city-covers', entityType: 'LocalPageContent', entityId: 'il-kapaklari', details: { slugs: added } },
       });
     }
-    this.logger.log(`${added.length} il sayfasına kapak eklendi`);
-    return { added, skipped: entries.length - added.length };
+    this.logger.log(`${added.length} bölge sayfasına kapak eklendi`);
+    return { added, skipped: entries.length - added.length, remaining: pending.length - todo.length };
   }
 
   private async coveredSlugs(slugs: string[]) {
