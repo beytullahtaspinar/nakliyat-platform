@@ -120,6 +120,21 @@
   }
  },
  {
+  "slug": "ankara-bala-evden-eve-nakliyat",
+  "name": "ankara-bala-kesikkopru-kizilirmak",
+  "width": 1440,
+  "height": 960,
+  "thumbWidth": 800,
+  "thumbHeight": 533,
+  "alt": "Bala'nın Kesikköprü beldesinde Kızılırmak kıyısı ve köy",
+  "credit": {
+   "author": "Tevfik Teker",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kesikkopru_Village_-_panoramio.jpg"
+  }
+ },
+ {
   "slug": "ankara-beypazari-evden-eve-nakliyat",
   "name": "ankara-beypazari-tarihi-konaklar-carsi",
   "width": 1440,
@@ -1815,6 +1830,21 @@
   }
  },
  {
+  "slug": "istanbul-sancaktepe-evden-eve-nakliyat",
+  "name": "istanbul-sancaktepe-metro-istasyonu",
+  "width": 1440,
+  "height": 960,
+  "thumbWidth": 800,
+  "thumbHeight": 533,
+  "alt": "Sancaktepe metro istasyonunun peronu",
+  "credit": {
+   "author": "Alikam1896",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sancaktepe_station_(6).jpg"
+  }
+ },
+ {
   "slug": "istanbul-sariyer-evden-eve-nakliyat",
   "name": "istanbul-sariyer-bogaz-kiyisi-kopru",
   "width": 1440,
@@ -1857,6 +1887,21 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:SilivriPedestrianBridge.jpg"
+  }
+ },
+ {
+  "slug": "istanbul-sisli-evden-eve-nakliyat",
+  "name": "istanbul-sisli-sisli-camii",
+  "width": 1440,
+  "height": 960,
+  "thumbWidth": 800,
+  "thumbHeight": 533,
+  "alt": "Şişli Camii ve avlu girişi, arkasında yüksek bina",
+  "credit": {
+   "author": "Rapsar",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:%C5%9Ei%C5%9Fli_Mosque-2.jpg"
   }
  },
  {
@@ -2295,6 +2340,21 @@
   }
  },
  {
+  "slug": "izmir-tire-evden-eve-nakliyat",
+  "name": "izmir-tire-yahsi-bey-camii",
+  "width": 1440,
+  "height": 960,
+  "thumbWidth": 800,
+  "thumbHeight": 533,
+  "alt": "Tire'de minareli tarihi Yahşi Bey (Yeşil İmaret) Camii ve revaklı avlusu",
+  "credit": {
+   "author": "Dosseman",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tire_Yah%C5%9Fi_Bey_Cami_5532.jpg"
+  }
+ },
+ {
   "slug": "izmir-torbali-evden-eve-nakliyat",
   "name": "izmir-torbali-zeytinlik-papatyalar",
   "width": 1440,
@@ -2487,6 +2547,21 @@
    "license": "CC BY-SA 4.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Yuvac%C4%B1k_Baraj%C4%B1_Ba%C5%9Fiskele_Kocaeli.jpg"
+  }
+ },
+ {
+  "slug": "kocaeli-cayirova-evden-eve-nakliyat",
+  "name": "kocaeli-cayirova-tren-istasyonu",
+  "width": 1440,
+  "height": 960,
+  "thumbWidth": 800,
+  "thumbHeight": 533,
+  "alt": "Çayırova Tren İstasyonu'nun peronu ve raylar",
+  "credit": {
+   "author": "Tarih",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "sourceUrl": "https://commons.wikimedia.org/wiki/File:%C3%87ay%C4%B1rova_Tren_%C4%B0stasyonu1.jpg"
   }
  },
  {
