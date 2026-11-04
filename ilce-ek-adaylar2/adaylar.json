@@ -1,0 +1,754 @@
+{
+ "ankara-akyurt": [
+  {
+   "title": "File:Çankaya, Ankara.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:%C3%87ankaya,_Ankara.jpg",
+   "width": 5616,
+   "height": 3744,
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "artist": "Engin_Akyurt",
+   "uploader": "Görkem Yavuz",
+   "description": "Çankaya, Ankara",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/%C3%87ankaya%2C_Ankara.jpg/500px-%C3%87ankaya%2C_Ankara.jpg"
+  },
+  {
+   "title": "File:Kızılay'da bir üst geçit.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C4%B1z%C4%B1lay%27da_bir_%C3%BCst_ge%C3%A7it.jpg",
+   "width": 5478,
+   "height": 3652,
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "artist": "Engin_Akyurt",
+   "uploader": "Görkem Yavuz",
+   "description": "Kızılay'da bir üst geçit",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/K%C4%B1z%C4%B1lay%27da_bir_%C3%BCst_ge%C3%A7it.jpg/500px-K%C4%B1z%C4%B1lay%27da_bir_%C3%BCst_ge%C3%A7it.jpg"
+  },
+  {
+   "title": "File:Balıkhisarcamii - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Bal%C4%B1khisarcamii_-_panoramio.jpg",
+   "width": 1600,
+   "height": 1200,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "ekerek22",
+   "uploader": "Panoramio upload bot",
+   "description": "balıkhisarcamii",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Bal%C4%B1khisarcamii_-_panoramio.jpg/500px-Bal%C4%B1khisarcamii_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Kocatepe Camii, siyah-beyaz.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Kocatepe_Camii,_siyah-beyaz.jpg",
+   "width": 2948,
+   "height": 1982,
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "artist": "Engin_Akyurt",
+   "uploader": "Görkem Yavuz",
+   "description": "Kocatepe Camii",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Kocatepe_Camii%2C_siyah-beyaz.jpg/500px-Kocatepe_Camii%2C_siyah-beyaz.jpg"
+  }
+ ],
+ "ankara-bala": [
+  {
+   "title": "File:Kesikköprü Bridge - Kırşehir - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Kesikk%C3%B6pr%C3%BC_Bridge_-_K%C4%B1r%C5%9Fehir_-_panoramio.jpg",
+   "width": 2816,
+   "height": 2112,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Semih Ekinci",
+   "uploader": "Panoramio upload bot",
+   "description": "Kesikköprü Bridge / Kırşehir",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Kesikk%C3%B6pr%C3%BC_Bridge_-_K%C4%B1r%C5%9Fehir_-_panoramio.jpg/500px-Kesikk%C3%B6pr%C3%BC_Bridge_-_K%C4%B1r%C5%9Fehir_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Kesikkopru Bridge - panoramio (3).jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Kesikkopru_Bridge_-_panoramio_(3).jpg",
+   "width": 5167,
+   "height": 3371,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Tevfik Teker",
+   "uploader": "Panoramio upload bot",
+   "description": "Kesikkopru Bridge",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Kesikkopru_Bridge_-_panoramio_%283%29.jpg/500px-Kesikkopru_Bridge_-_panoramio_%283%29.jpg"
+  },
+  {
+   "title": "File:Mount Ekecik - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Mount_Ekecik_-_panoramio.jpg",
+   "width": 5202,
+   "height": 3465,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Tevfik Teker",
+   "uploader": "Panoramio upload bot",
+   "description": "Mount Ekecik",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mount_Ekecik_-_panoramio.jpg/500px-Mount_Ekecik_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Kesikkopru Village - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Kesikkopru_Village_-_panoramio.jpg",
+   "width": 5184,
+   "height": 3456,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Tevfik Teker",
+   "uploader": "Panoramio upload bot",
+   "description": "Kesikkopru Village",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Kesikkopru_Village_-_panoramio.jpg/500px-Kesikkopru_Village_-_panoramio.jpg"
+  }
+ ],
+ "ankara-elmadag": [
+  {
+   "title": "File:Ritual standard, Hasanoglan?, 3rd millennium BC, MACA, 3065.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Ritual_standard,_Hasanoglan%3F,_3rd_millennium_BC,_MACA,_3065.jpg",
+   "width": 1601,
+   "height": 1161,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Zde",
+   "uploader": "Zde",
+   "description": "Ritual standard with an animal, bronze, 30 cm high. Hasanoglan ?, early (?) Bronze Age, 3rd millennium BC. Museum of Anatolian Civilizations, Ankara, 11952.",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Ritual_standard%2C_Hasanoglan%3F%2C_3rd_millennium_BC%2C_MACA%2C_3065.jpg/500px-Ritual_standard%2C_Hasanoglan%3F%2C_3rd_millennium_BC%2C_MACA%2C_3065.jpg"
+  },
+  {
+   "title": "File:Mart Volmer Hasanoglan 29.04.08 (2454366282).jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Mart_Volmer_Hasanoglan_29.04.08_(2454366282).jpg",
+   "width": 2816,
+   "height": 2112,
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Estonian Foreign Ministry",
+   "uploader": "File Upload Bot (Magnus Manske)",
+   "description": "Estonian ambasasdor Märt Volmer at the Estonian Embassy tree planting event in Turkey, Hasanoglan",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Mart_Volmer_Hasanoglan_29.04.08_%282454366282%29.jpg/500px-Mart_Volmer_Hasanoglan_29.04.08_%282454366282%29.jpg"
+  },
+  {
+   "title": "File:Mart Volmer Hanifi Avci Hasanoglan 29.04.08 (2454366274).jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Mart_Volmer_Hanifi_Avci_Hasanoglan_29.04.08_(2454366274).jpg",
+   "width": 2816,
+   "height": 2112,
+   "license": "CC BY 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+   "artist": "Estonian Foreign Ministry",
+   "uploader": "File Upload Bot (Magnus Manske)",
+   "description": "Director General from Ministry of Environment and Forestry of Turkey Hanifi Avci and Estonian ambassador Märt Volmer planting trees",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Mart_Volmer_Hanifi_Avci_Hasanoglan_29.04.08_%282454366274%29.jpg/500px-Mart_Volmer_Hanifi_Avci_Hasanoglan_29.04.08_%282454366274%29.jpg"
+  },
+  {
+   "title": "File:20180108 Anatolian 2630 (25956558678).jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:20180108_Anatolian_2630_(25956558678).jpg",
+   "width": 7952,
+   "height": 5304,
+   "license": "CC BY-SA 2.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+   "artist": "Ray Swi-hymn from Sijhih-Taipei, Taiwan",
+   "uploader": "Mohammed Galib Hasan",
+   "description": "20180108_Anatolian_2630",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/20180108_Anatolian_2630_%2825956558678%29.jpg/500px-20180108_Anatolian_2630_%2825956558678%29.jpg"
+  }
+ ],
+ "ankara-pursaklar": [
+  {
+   "title": "File:Countryside of Ankara - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Countryside_of_Ankara_-_panoramio.jpg",
+   "width": 2608,
+   "height": 1952,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Melih Rustu CALIKOGL…",
+   "uploader": "Panoramio upload bot",
+   "description": "Countryside of Ankara",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Countryside_of_Ankara_-_panoramio.jpg/500px-Countryside_of_Ankara_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Anıl-ap - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:An%C4%B1l-ap_-_panoramio.jpg",
+   "width": 3072,
+   "height": 2304,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "crlzx",
+   "uploader": "Panoramio upload bot",
+   "description": "anıl:ap",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/An%C4%B1l-ap_-_panoramio.jpg/500px-An%C4%B1l-ap_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Tiny flood - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Tiny_flood_-_panoramio.jpg",
+   "width": 2608,
+   "height": 1952,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Melih Rustu CALIKOGL…",
+   "uploader": "Panoramio upload bot",
+   "description": "Tiny flood",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Tiny_flood_-_panoramio.jpg/500px-Tiny_flood_-_panoramio.jpg"
+  },
+  {
+   "title": "File:The light comes from Anatolia - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:The_light_comes_from_Anatolia_-_panoramio.jpg",
+   "width": 2608,
+   "height": 1952,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Melih Rustu CALIKOGL…",
+   "uploader": "Panoramio upload bot",
+   "description": "The light comes from Anatolia",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/The_light_comes_from_Anatolia_-_panoramio.jpg/500px-The_light_comes_from_Anatolia_-_panoramio.jpg"
+  }
+ ],
+ "bursa-buyukorhan": [
+  {
+   "title": "File:Kinik016.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Kinik016.jpg",
+   "width": 2526,
+   "height": 1288,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "16kink",
+   "uploader": "16kink",
+   "description": "kınık bursa türkiye",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Kinik016.jpg/500px-Kinik016.jpg"
+  },
+  {
+   "title": "File:Kinikasd123.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Kinikasd123.jpg",
+   "width": 2526,
+   "height": 1288,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Kinik16",
+   "uploader": "Kinik16",
+   "description": "kınık bursa türkiye üsten görünüm",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Kinikasd123.jpg/500px-Kinikasd123.jpg"
+  },
+  {
+   "title": "File:Kınık Höyük 05.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_05.jpg",
+   "width": 5168,
+   "height": 2920,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Ingeborg Simon",
+   "uploader": "Isimon49",
+   "description": "Kınık Höyük, Siedlungshügel in der Südtürkei",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_05.jpg/500px-K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_05.jpg"
+  },
+  {
+   "title": "File:Kınık, Kaş 5179.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C4%B1n%C4%B1k,_Ka%C5%9F_5179.jpg",
+   "width": 4256,
+   "height": 2832,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Dosseman",
+   "uploader": "Dosseman",
+   "description": "As fortifications on a hill are no longer necessary the modern village from where to climb to Xanthos lies below, with a river at one side. This is one of some random pictures taken in town, or from the hill of Xanthos. The region has a lot of glasshouses.",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/K%C4%B1n%C4%B1k%2C_Ka%C5%9F_5179.jpg/500px-K%C4%B1n%C4%B1k%2C_Ka%C5%9F_5179.jpg"
+  }
+ ],
+ "bursa-gursu": [
+  {
+   "title": "File:Sinan Emlak Gürsu - panoramio (1).jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Sinan_Emlak_G%C3%BCrsu_-_panoramio_(1).jpg",
+   "width": 1600,
+   "height": 1200,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "bymka",
+   "uploader": "Panoramio upload bot",
+   "description": "Sinan_Emlak_Gürsu",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Sinan_Emlak_G%C3%BCrsu_-_panoramio_%281%29.jpg/500px-Sinan_Emlak_G%C3%BCrsu_-_panoramio_%281%29.jpg"
+  },
+  {
+   "title": "File:Sinan Emlak Gürsu - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Sinan_Emlak_G%C3%BCrsu_-_panoramio.jpg",
+   "width": 1600,
+   "height": 1200,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "bymka",
+   "uploader": "Panoramio upload bot",
+   "description": "Sinan_Emlak_Gürsu",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Sinan_Emlak_G%C3%BCrsu_-_panoramio.jpg/500px-Sinan_Emlak_G%C3%BCrsu_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Cizîra Botan 2009.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Ciz%C3%AEra_Botan_2009.jpg",
+   "width": 2592,
+   "height": 1944,
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "",
+   "uploader": "MikaelF",
+   "description": "",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Ciz%C3%AEra_Botan_2009.jpg/500px-Ciz%C3%AEra_Botan_2009.jpg"
+  },
+  {
+   "title": "File:ISS019-E-21813 - View of Turkey.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:ISS019-E-21813_-_View_of_Turkey.jpg",
+   "width": 4256,
+   "height": 2832,
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "Earth Science and Remote Sensing Unit, Lyndon B. Johnson Space Center",
+   "uploader": "AskeBot",
+   "description": "View of Turkey taken during ISS Expedition 19.",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/ISS019-E-21813_-_View_of_Turkey.jpg/500px-ISS019-E-21813_-_View_of_Turkey.jpg"
+  }
+ ],
+ "bursa-orhaneli": [
+  {
+   "title": "File:ULUDAĞ MANZARA - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:ULUDA%C4%9E_MANZARA_-_panoramio.jpg",
+   "width": 3072,
+   "height": 2304,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "MERMERCİ ÖZGÜR1",
+   "uploader": "Panoramio upload bot",
+   "description": "ULUDAĞ MANZARA",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/ULUDA%C4%9E_MANZARA_-_panoramio.jpg/500px-ULUDA%C4%9E_MANZARA_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Karagöz heykeli - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Karag%C3%B6z_heykeli_-_panoramio.jpg",
+   "width": 3264,
+   "height": 2448,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "nami yildirim",
+   "uploader": "Panoramio upload bot",
+   "description": "karagöz heykeli",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Karag%C3%B6z_heykeli_-_panoramio.jpg/500px-Karag%C3%B6z_heykeli_-_panoramio.jpg"
+  },
+  {
+   "title": "File:ERENLER KÖYÜ TAŞBURNU MEVKİİNDEN - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:ERENLER_K%C3%96Y%C3%9C_TA%C5%9EBURNU_MEVK%C4%B0%C4%B0NDEN_-_panoramio.jpg",
+   "width": 3072,
+   "height": 2304,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "MERMERCİ ÖZGÜR1",
+   "uploader": "Panoramio upload bot",
+   "description": "ERENLER KÖYÜ TAŞBURNU MEVKİİNDEN",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/ERENLER_K%C3%96Y%C3%9C_TA%C5%9EBURNU_MEVK%C4%B0%C4%B0NDEN_-_panoramio.jpg/500px-ERENLER_K%C3%96Y%C3%9C_TA%C5%9EBURNU_MEVK%C4%B0%C4%B0NDEN_-_panoramio.jpg"
+  },
+  {
+   "title": "File:MİKRONİZE SIFIR KRİSTAL OCAĞI ALTINSOY - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:M%C4%B0KRON%C4%B0ZE_SIFIR_KR%C4%B0STAL_OCA%C4%9EI_ALTINSOY_-_panoramio.jpg",
+   "width": 3072,
+   "height": 2304,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "MERMERCİ ÖZGÜR1",
+   "uploader": "Panoramio upload bot",
+   "description": "MİKRONİZE SIFIR KRİSTAL OCAĞI ALTINSOY",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/M%C4%B0KRON%C4%B0ZE_SIFIR_KR%C4%B0STAL_OCA%C4%9EI_ALTINSOY_-_panoramio.jpg/500px-M%C4%B0KRON%C4%B0ZE_SIFIR_KR%C4%B0STAL_OCA%C4%9EI_ALTINSOY_-_panoramio.jpg"
+  }
+ ],
+ "istanbul-bayrampasa": [
+  {
+   "title": "File:Edirne Asfaltı Çukurçeşme - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Edirne_Asfalt%C4%B1_%C3%87ukur%C3%A7e%C5%9Fme_-_panoramio.jpg",
+   "width": 2592,
+   "height": 1944,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Aziz Akbiyik",
+   "uploader": "Panoramio upload bot",
+   "description": "Edirne Asfaltı Çukurçeşme",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Edirne_Asfalt%C4%B1_%C3%87ukur%C3%A7e%C5%9Fme_-_panoramio.jpg/500px-Edirne_Asfalt%C4%B1_%C3%87ukur%C3%A7e%C5%9Fme_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Bosna Çukurçeşme - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Bosna_%C3%87ukur%C3%A7e%C5%9Fme_-_panoramio.jpg",
+   "width": 2592,
+   "height": 1944,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Aziz Akbiyik",
+   "uploader": "Panoramio upload bot",
+   "description": "Bosna Çukurçeşme",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Bosna_%C3%87ukur%C3%A7e%C5%9Fme_-_panoramio.jpg/500px-Bosna_%C3%87ukur%C3%A7e%C5%9Fme_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Esenler Bus Terminus.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Esenler_Bus_Terminus.jpg",
+   "width": 4032,
+   "height": 3024,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Maurice Flesier",
+   "uploader": "Adem",
+   "description": "Büyük İstanbul Otogarı, Esenler, İstanbul, Türkiye.",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Esenler_Bus_Terminus.jpg/500px-Esenler_Bus_Terminus.jpg"
+  },
+  {
+   "title": "File:Bakırköy Marina... - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Bak%C4%B1rk%C3%B6y_Marina..._-_panoramio.jpg",
+   "width": 4608,
+   "height": 3456,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Sinan Şahin",
+   "uploader": "Panoramio upload bot",
+   "description": "Bakırköy Marina...",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Bak%C4%B1rk%C3%B6y_Marina..._-_panoramio.jpg/500px-Bak%C4%B1rk%C3%B6y_Marina..._-_panoramio.jpg"
+  }
+ ],
+ "istanbul-sancaktepe": [
+  {
+   "title": "File:Bahar - panoramio - aachim3.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Bahar_-_panoramio_-_aachim3.jpg",
+   "width": 2816,
+   "height": 2112,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "aachim3",
+   "uploader": "Panoramio upload bot",
+   "description": "Bahar",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Bahar_-_panoramio_-_aachim3.jpg/500px-Bahar_-_panoramio_-_aachim3.jpg"
+  },
+  {
+   "title": "File:Anadolu Otoyolu ıstanbul Decamber 2010 - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Anadolu_Otoyolu_%C4%B1stanbul_Decamber_2010_-_panoramio.jpg",
+   "width": 4320,
+   "height": 3240,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "Mehrdad Sarhangi",
+   "uploader": "Panoramio upload bot",
+   "description": "Anadolu Otoyolu, Sancaktepe, Istanbul",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Anadolu_Otoyolu_%C4%B1stanbul_Decamber_2010_-_panoramio.jpg/500px-Anadolu_Otoyolu_%C4%B1stanbul_Decamber_2010_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Paşaköy, Sancaktepe, Istanbul.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Pa%C5%9Fak%C3%B6y,_Sancaktepe,_Istanbul.jpg",
+   "width": 3872,
+   "height": 2592,
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "artist": "hüsamettin_alpaslan",
+   "uploader": "Panoramio upload bot",
+   "description": "DSC_5185",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Pa%C5%9Fak%C3%B6y%2C_Sancaktepe%2C_Istanbul.jpg/500px-Pa%C5%9Fak%C3%B6y%2C_Sancaktepe%2C_Istanbul.jpg"
+  },
+  {
+   "title": "File:M5 Veysel Karani Metro İstasyonu İnşaatı.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:M5_Veysel_Karani_Metro_%C4%B0stasyonu_%C4%B0n%C5%9Faat%C4%B1.jpg",
+   "width": 4128,
+   "height": 2322,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Alikam1896",
+   "uploader": "Alikam1896",
+   "description": "M5 Veysel Karani Metro İstasyonu İnşaatı Eylül 2022",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/M5_Veysel_Karani_Metro_%C4%B0stasyonu_%C4%B0n%C5%9Faat%C4%B1.jpg/500px-M5_Veysel_Karani_Metro_%C4%B0stasyonu_%C4%B0n%C5%9Faat%C4%B1.jpg"
+  }
+ ],
+ "istanbul-sultangazi": [
+  {
+   "title": "File:Sultangazi 2012 February Snow Day - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Sultangazi_2012_February_Snow_Day_-_panoramio.jpg",
+   "width": 2048,
+   "height": 1536,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "mehmet yalcin",
+   "uploader": "Panoramio upload bot",
+   "description": "01/02/2012 kışı",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Sultangazi_2012_February_Snow_Day_-_panoramio.jpg/500px-Sultangazi_2012_February_Snow_Day_-_panoramio.jpg"
+  },
+  {
+   "title": "File:01-02-2012 kışı - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:01-02-2012_k%C4%B1%C5%9F%C4%B1_-_panoramio.jpg",
+   "width": 2048,
+   "height": 1536,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "mehmet yalcin",
+   "uploader": "Panoramio upload bot",
+   "description": "01/02/2012 kışı",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/01-02-2012_k%C4%B1%C5%9F%C4%B1_-_panoramio.jpg/500px-01-02-2012_k%C4%B1%C5%9F%C4%B1_-_panoramio.jpg"
+  },
+  {
+   "title": "File:01-02-2012 kışı - panoramio (2).jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:01-02-2012_k%C4%B1%C5%9F%C4%B1_-_panoramio_(2).jpg",
+   "width": 2048,
+   "height": 1536,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "mehmet yalcin",
+   "uploader": "Panoramio upload bot",
+   "description": "01/02/2012 kışı",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/01-02-2012_k%C4%B1%C5%9F%C4%B1_-_panoramio_%282%29.jpg/500px-01-02-2012_k%C4%B1%C5%9F%C4%B1_-_panoramio_%282%29.jpg"
+  },
+  {
+   "title": "File:Aftermath of the 2012 Sultangazi suicide bombing.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Aftermath_of_the_2012_Sultangazi_suicide_bombing.jpg",
+   "width": 3500,
+   "height": 2420,
+   "license": "Public domain",
+   "licenseUrl": null,
+   "artist": "Voice of America",
+   "uploader": "Kurmanbek",
+   "description": "2012 Sultangazi saldırısı sonrasında, saldırının hedefi olan karakolun önünden bir görünüm",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Aftermath_of_the_2012_Sultangazi_suicide_bombing.jpg/500px-Aftermath_of_the_2012_Sultangazi_suicide_bombing.jpg"
+  }
+ ],
+ "istanbul-sisli": [
+  {
+   "title": "File:Cars and Streets of Istanbul, Turkey 38.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Cars_and_Streets_of_Istanbul,_Turkey_38.jpg",
+   "width": 5312,
+   "height": 2988,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Mostafameraji",
+   "uploader": "Mostafameraji",
+   "description": "Istanbul formerly known as Byzantium and Constantinople, is the most populous city in Turkey and the country's economic, cultural and historic center. Istanbul is a transcontinental city in Eurasia, straddling the Bosporus strait (which separates Europe and Asia) between the Sea of Marmara and the B",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Cars_and_Streets_of_Istanbul%2C_Turkey_38.jpg/500px-Cars_and_Streets_of_Istanbul%2C_Turkey_38.jpg"
+  },
+  {
+   "title": "File:Cars and Streets of Istanbul, Turkey 37.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Cars_and_Streets_of_Istanbul,_Turkey_37.jpg",
+   "width": 5312,
+   "height": 2988,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Mostafameraji",
+   "uploader": "Mostafameraji",
+   "description": "Istanbul formerly known as Byzantium and Constantinople, is the most populous city in Turkey and the country's economic, cultural and historic center. Istanbul is a transcontinental city in Eurasia, straddling the Bosporus strait (which separates Europe and Asia) between the Sea of Marmara and the B",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Cars_and_Streets_of_Istanbul%2C_Turkey_37.jpg/500px-Cars_and_Streets_of_Istanbul%2C_Turkey_37.jpg"
+  },
+  {
+   "title": "File:Mecidiyeköy peronlarında yağmurlu bir gün.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Mecidiyek%C3%B6y_peronlar%C4%B1nda_ya%C4%9Fmurlu_bir_g%C3%BCn.jpg",
+   "width": 4224,
+   "height": 2368,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Mereyü",
+   "uploader": "Mereyü",
+   "description": "Mecidiyeköy",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Mecidiyek%C3%B6y_peronlar%C4%B1nda_ya%C4%9Fmurlu_bir_g%C3%BCn.jpg/500px-Mecidiyek%C3%B6y_peronlar%C4%B1nda_ya%C4%9Fmurlu_bir_g%C3%BCn.jpg"
+  },
+  {
+   "title": "File:Zorlu Center - Istanbul, Turkey, Apple Store 03.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Zorlu_Center_-_Istanbul,_Turkey,_Apple_Store_03.jpg",
+   "width": 5312,
+   "height": 2988,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Mostafameraji",
+   "uploader": "Mostafameraji",
+   "description": "Zorlu Center is a multiple-use complex in the Beşiktaş district on the European side of Istanbul, Turkey. Built in 2013 to a design by Emre Arolat Architects and Tabanlıoğlu Architects, the center is situated at the junction of the European connection of the Bosphorus Bridge and Büyükdere Avenue, wh",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Zorlu_Center_-_Istanbul%2C_Turkey%2C_Apple_Store_03.jpg/500px-Zorlu_Center_-_Istanbul%2C_Turkey%2C_Apple_Store_03.jpg"
+  }
+ ],
+ "izmir-beydag": [],
+ "izmir-karabaglar": [
+  {
+   "title": "File:Gulf of İzmir from Esenlik 1.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Gulf_of_%C4%B0zmir_from_Esenlik_1.jpg",
+   "width": 3264,
+   "height": 1836,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Ayratayrat",
+   "uploader": "Ayratayrat",
+   "description": "Gulf of İzmir from Esenlik",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Gulf_of_%C4%B0zmir_from_Esenlik_1.jpg/500px-Gulf_of_%C4%B0zmir_from_Esenlik_1.jpg"
+  },
+  {
+   "title": "File:Gulf of İzmir from Esenlik 3.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Gulf_of_%C4%B0zmir_from_Esenlik_3.jpg",
+   "width": 3264,
+   "height": 1836,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Ayratayrat",
+   "uploader": "Ayratayrat",
+   "description": "Gulf of İzmir from Esenlik",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Gulf_of_%C4%B0zmir_from_Esenlik_3.jpg/500px-Gulf_of_%C4%B0zmir_from_Esenlik_3.jpg"
+  },
+  {
+   "title": "File:Gulf of İzmir from Esenlik 2.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Gulf_of_%C4%B0zmir_from_Esenlik_2.jpg",
+   "width": 3264,
+   "height": 1836,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Ayratayrat",
+   "uploader": "Ayratayrat",
+   "description": "Gulf of İzmir from Esenlik",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Gulf_of_%C4%B0zmir_from_Esenlik_2.jpg/500px-Gulf_of_%C4%B0zmir_from_Esenlik_2.jpg"
+  },
+  {
+   "title": "File:Yaşar Kemal neighbourhood 1.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Ya%C5%9Far_Kemal_neighbourhood_1.jpg",
+   "width": 4000,
+   "height": 2000,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Ayratayrat",
+   "uploader": "Ayratayrat",
+   "description": "Yaşar Kemal neighbourhood",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Ya%C5%9Far_Kemal_neighbourhood_1.jpg/500px-Ya%C5%9Far_Kemal_neighbourhood_1.jpg"
+  }
+ ],
+ "izmir-kinik": [
+  {
+   "title": "File:Kınık Höyük 05.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_05.jpg",
+   "width": 5168,
+   "height": 2920,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Ingeborg Simon",
+   "uploader": "Isimon49",
+   "description": "Kınık Höyük, Siedlungshügel in der Südtürkei",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_05.jpg/500px-K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_05.jpg"
+  },
+  {
+   "title": "File:Kınık, Kaş 5179.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C4%B1n%C4%B1k,_Ka%C5%9F_5179.jpg",
+   "width": 4256,
+   "height": 2832,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Dosseman",
+   "uploader": "Dosseman",
+   "description": "As fortifications on a hill are no longer necessary the modern village from where to climb to Xanthos lies below, with a river at one side. This is one of some random pictures taken in town, or from the hill of Xanthos. The region has a lot of glasshouses.",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/K%C4%B1n%C4%B1k%2C_Ka%C5%9F_5179.jpg/500px-K%C4%B1n%C4%B1k%2C_Ka%C5%9F_5179.jpg"
+  },
+  {
+   "title": "File:Kınık Höyük 10.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_10.jpg",
+   "width": 5100,
+   "height": 2652,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Ingeborg Simon",
+   "uploader": "Isimon49",
+   "description": "Kınık Höyük, Siedlungshügel in der Südtürkei",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_10.jpg/500px-K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_10.jpg"
+  },
+  {
+   "title": "File:Kınık Höyük 11.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_11.jpg",
+   "width": 4672,
+   "height": 2584,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Ingeborg Simon",
+   "uploader": "Isimon49",
+   "description": "Kınık Höyük, Siedlungshügel in der Südtürkei",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_11.jpg/500px-K%C4%B1n%C4%B1k_H%C3%B6y%C3%BCk_11.jpg"
+  }
+ ],
+ "izmir-kiraz": [],
+ "izmir-tire": [
+  {
+   "title": "File:Tire Yahşi Bey Cami text aka Yeşil Imaret Zaviyesi 5533.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Tire_Yah%C5%9Fi_Bey_Cami_text_aka_Ye%C5%9Fil_Imaret_Zaviyesi_5533.jpg",
+   "width": 3008,
+   "height": 2000,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Dosseman",
+   "uploader": "Dosseman",
+   "description": "On a website I found, translated and edited: Yahsi Bey Mosque. It was built by Halil Yahşi Bey, the first Aydın Sanjak Bey, one of the commanders of Murat II, who put an end to the Aydınoğulları Principality in 1426. It was built as a Mevlevi zaviye according to its foundation charter dated 1442. Ta",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Tire_Yah%C5%9Fi_Bey_Cami_text_aka_Ye%C5%9Fil_Imaret_Zaviyesi_5533.jpg/500px-Tire_Yah%C5%9Fi_Bey_Cami_text_aka_Ye%C5%9Fil_Imaret_Zaviyesi_5533.jpg"
+  },
+  {
+   "title": "File:Tire Yahşi Bey Cami 3049.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Tire_Yah%C5%9Fi_Bey_Cami_3049.jpg",
+   "width": 4928,
+   "height": 3280,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Dosseman",
+   "uploader": "Dosseman",
+   "description": "On a website I found, translated and edited: Yahsi Bey Mosque. It was built by Halil Yahşi Bey, the first Aydın Sanjak Bey, one of the commanders of Murat II, who put an end to the Aydınoğulları Principality in 1426. It was built as a Mevlevi zaviye according to its foundation charter dated 1442. Ta",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Tire_Yah%C5%9Fi_Bey_Cami_3049.jpg/500px-Tire_Yah%C5%9Fi_Bey_Cami_3049.jpg"
+  },
+  {
+   "title": "File:Tire Yahşi Bey Cami 5532.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Tire_Yah%C5%9Fi_Bey_Cami_5532.jpg",
+   "width": 3008,
+   "height": 2000,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Dosseman",
+   "uploader": "Dosseman",
+   "description": "On a website I found, translated and edited: Yahsi Bey Mosque. It was built by Halil Yahşi Bey, the first Aydın Sanjak Bey, one of the commanders of Murat II, who put an end to the Aydınoğulları Principality in 1426. It was built as a Mevlevi zaviye according to its foundation charter dated 1442. Ta",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Tire_Yah%C5%9Fi_Bey_Cami_5532.jpg/500px-Tire_Yah%C5%9Fi_Bey_Cami_5532.jpg"
+  },
+  {
+   "title": "File:Tire Yahşi Bey Cami 3048.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Tire_Yah%C5%9Fi_Bey_Cami_3048.jpg",
+   "width": 4928,
+   "height": 3280,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Dosseman",
+   "uploader": "Dosseman",
+   "description": "On a website I found, translated and edited: Yahsi Bey Mosque. It was built by Halil Yahşi Bey, the first Aydın Sanjak Bey, one of the commanders of Murat II, who put an end to the Aydınoğulları Principality in 1426. It was built as a Mevlevi zaviye according to its foundation charter dated 1442. Ta",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Tire_Yah%C5%9Fi_Bey_Cami_3048.jpg/500px-Tire_Yah%C5%9Fi_Bey_Cami_3048.jpg"
+  }
+ ],
+ "kocaeli-cayirova": [
+  {
+   "title": "File:Çayırova Ali Haydar Efendi Cd. Fatih Tünelinden Gebze Yönü - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:%C3%87ay%C4%B1rova_Ali_Haydar_Efendi_Cd._Fatih_T%C3%BCnelinden_Gebze_Y%C3%B6n%C3%BC_-_panoramio.jpg",
+   "width": 3056,
+   "height": 2292,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "HuSeYiN",
+   "uploader": "Panoramio upload bot",
+   "description": "Çayırova Ali Haydar Efendi Cd. Fatih Tünelinden Gebze Yönü",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/%C3%87ay%C4%B1rova_Ali_Haydar_Efendi_Cd._Fatih_T%C3%BCnelinden_Gebze_Y%C3%B6n%C3%BC_-_panoramio.jpg/500px-%C3%87ay%C4%B1rova_Ali_Haydar_Efendi_Cd._Fatih_T%C3%BCnelinden_Gebze_Y%C3%B6n%C3%BC_-_panoramio.jpg"
+  },
+  {
+   "title": "File:Şekerpınar - panoramio - Öner Akgün.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:%C5%9Eekerp%C4%B1nar_-_panoramio_-_%C3%96ner_Akg%C3%BCn.jpg",
+   "width": 2304,
+   "height": 1728,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "Öner Akgün",
+   "uploader": "Panoramio upload bot",
+   "description": "şekerpınar",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/%C5%9Eekerp%C4%B1nar_-_panoramio_-_%C3%96ner_Akg%C3%BCn.jpg/500px-%C5%9Eekerp%C4%B1nar_-_panoramio_-_%C3%96ner_Akg%C3%BCn.jpg"
+  },
+  {
+   "title": "File:Çayırova Tren İstasyonu1.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:%C3%87ay%C4%B1rova_Tren_%C4%B0stasyonu1.jpg",
+   "width": 4128,
+   "height": 2322,
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "artist": "Tarih",
+   "uploader": "Tarih",
+   "description": "Çayırova Tren İstasyonu",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/%C3%87ay%C4%B1rova_Tren_%C4%B0stasyonu1.jpg/500px-%C3%87ay%C4%B1rova_Tren_%C4%B0stasyonu1.jpg"
+  },
+  {
+   "title": "File:Çayırova Alaattin Şahbaz Parkı - panoramio.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:%C3%87ay%C4%B1rova_Alaattin_%C5%9Eahbaz_Park%C4%B1_-_panoramio.jpg",
+   "width": 3056,
+   "height": 2292,
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "artist": "HuSeYiN",
+   "uploader": "Panoramio upload bot",
+   "description": "Çayırova Alaattin Şahbaz Parkı",
+   "thumb": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/%C3%87ay%C4%B1rova_Alaattin_%C5%9Eahbaz_Park%C4%B1_-_panoramio.jpg/500px-%C3%87ay%C4%B1rova_Alaattin_%C5%9Eahbaz_Park%C4%B1_-_panoramio.jpg"
+  }
+ ]
+}
