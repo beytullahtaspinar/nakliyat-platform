@@ -8,11 +8,12 @@ import request from 'supertest';
 import { AppModule } from './../src/app.module.js';
 import { configureApp } from './../src/app.setup.js';
 import { FILE_STORAGE, type MediaStorage } from './../src/media/storage.js';
+import { CityCoversService } from './../src/blog/city-covers.service.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { retryOnConflict } from './helpers.js';
 
 // Hazır il kapakları: lisanslı fotoğraflar atfıyla yüklenir; elle seçilmiş kapağa dokunulmaz, ikinci çalıştırma bir şey eklemez.
-describe('Hazır il kapakları (e2e)', () => {
+describe('Hazır il ve ilçe kapakları (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let dir: string;
@@ -113,8 +114,14 @@ describe('Hazır il kapakları (e2e)', () => {
     const before = await http().get('/v1/admin/local-pages/city-covers').set(auth('admin')).expect(200);
     expect(before.body).toEqual({ total: 3, available: 2 });
 
+    // Bir istekte sınırlı sayıda sayfa işlenir; kalan bir sonraki basışta eklenir
+    const admin = await prisma.user.findUniqueOrThrow({ where: { phone: phones.admin } });
+    const first = await app.get(CityCoversService).import(admin.id, dir, 1);
+    expect(first.added).toHaveLength(1);
+    expect(first.remaining).toBe(1);
     const result = await http().post('/v1/admin/local-pages/city-covers').set(auth('admin')).expect(201);
-    expect(result.body.added.sort()).toEqual([FRESH, TEXT_ONLY].sort());
+    expect([...first.added, ...result.body.added].sort()).toEqual([FRESH, TEXT_ONLY].sort());
+    expect(result.body.remaining).toBe(0);
 
     const pages = (await http().get('/v1/local-pages').expect(200)).body.items as {
       slug: string;

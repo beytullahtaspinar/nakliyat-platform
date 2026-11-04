@@ -23,6 +23,9 @@ def author(m):
     if m['name'] in AUTHOR_FIX:
         return AUTHOR_FIX[m['name']]
     a = re.sub(r'^User:', '', m['artist']).strip()
+    # Commons imza artıkları: "(mesaj)" bağlantısı, © işareti, kesilmiş "…" kısmı
+    a = re.sub(r'\s*\((mesaj|talk|tartışma)\)$', '', a)
+    a = re.sub(r'\s*\([^)]*…$', '', a).replace('©', '').strip()
     if not a or '@' in a or len(a) > 60:
         a = m['uploader']
     return a
@@ -34,6 +37,8 @@ def license_label(lic):
 INSET = {'kayseri-burunguz-camii-erciyes-dagi': 0.03, 'kocaeli-derince-60-evler-sahili': 0.06}
 # Alt kenarında tarih damgası ya da yazı olan fotoğraflar: kırpma üstten yapılır
 TOP = {'antalya-akseki-toros-daglari', 'istanbul-atasehir-gokdelenler-silueti'}
+# Alttan ayrıca kesilecek oran (tarih damgası kırpmadan sonra da kalıyorsa)
+BOTTOM = {'antalya-akseki-toros-daglari': 0.2, 'istanbul-atasehir-gokdelenler-silueti': 0.08}
 
 def crop_3_2(im, inset=0.0, top=False):
     if inset:
@@ -52,6 +57,8 @@ new_slugs = {m['slug'] for m in meta}
 manifest = [e for e in manifest if e['slug'] not in new_slugs]
 for m in meta:
     im = Image.open(src / 'buyuk' / f"{m['name']}.jpg").convert('RGB')
+    if m['name'] in BOTTOM:
+        im = im.crop((0, 0, im.width, round(im.height * (1 - BOTTOM[m['name']]))))
     im = crop_3_2(im, INSET.get(m['name'], 0.0), m['name'] in TOP)
     big = im.resize((1440, 960), Image.LANCZOS)
     small = im.resize((800, 533), Image.LANCZOS)

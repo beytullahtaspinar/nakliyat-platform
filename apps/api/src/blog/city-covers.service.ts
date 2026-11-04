@@ -30,6 +30,9 @@ export type CityCoverEntry = {
   credit: { author: string; license: string; licenseUrl: string | null; sourceUrl: string };
 };
 
+/** Bir istekte kapak eklenecek en fazla sayfa */
+export const IMPORT_BATCH = 60;
+
 /**
  * İl ve ilçe sayfalarına hazır, lisanslı kapak görseli ekler. Yönetimde kapak seçilmiş sayfaya dokunmaz
  * (ör. elle eklenen Uşak görseli kalır); tekrar çalıştırılırsa aynı dosyayı ikinci kez yüklemez.
@@ -68,10 +71,15 @@ export class CityCoversService {
     return { total: entries.length, available: entries.filter((e) => !covered.has(e.slug)).length };
   }
 
-  async import(adminId: string, dir = coversDir()) {
+  /**
+   * Bir istekte en fazla `limit` sayfa işlenir (her biri iki dosya yükler); istek zaman aşımına uğramasın diye.
+   * Kalan varsa düğmeye tekrar basılır, eklenenler atlanır.
+   */
+  async import(adminId: string, dir = coversDir(), limit = IMPORT_BATCH) {
     const entries = await this.manifest(dir);
     const covered = await this.coveredSlugs(entries.map((e) => e.slug));
-    const todo = entries.filter((e) => !covered.has(e.slug));
+    const pending = entries.filter((e) => !covered.has(e.slug));
+    const todo = pending.slice(0, limit);
     const added: string[] = [];
     for (const entry of todo) {
       const storageKey = await this.mediaFor(entry, dir);
@@ -95,7 +103,7 @@ export class CityCoversService {
       });
     }
     this.logger.log(`${added.length} bölge sayfasına kapak eklendi`);
-    return { added, skipped: entries.length - added.length };
+    return { added, skipped: entries.length - added.length, remaining: pending.length - todo.length };
   }
 
   private async coveredSlugs(slugs: string[]) {
