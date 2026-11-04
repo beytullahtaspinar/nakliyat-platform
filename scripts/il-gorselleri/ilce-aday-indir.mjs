@@ -4,6 +4,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 const UA = 'NakliyatPlatformImageCurator/1.0 (https://evdenevenakliyat.app; destek@evdenevenakliyat.app)';
 const OUT = process.argv[3] ?? 'ilce-gorsel-adaylari';
+// Az fotoğraflı yerler için alt genişlik sınırı düşürülebilir: MIN_W=1200 node ...
+const MIN_W = Number(process.env.MIN_W) || 1600;
 await mkdir(`${OUT}/kucuk`, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function get(url) {
@@ -38,7 +40,7 @@ for (const d of list) {
       const m = ii?.extmetadata ?? {};
       const lic = (m.LicenseShortName?.value ?? '').trim();
       if (!ii || cands.has(pg.title) || cands.size >= 4 || !OK.test(lic) || ii.mime !== 'image/jpeg') continue;
-      if (ii.width < 1600 || ii.width / ii.height < 1.3 || ii.width / ii.height > 2.1) continue;
+      if (ii.width < MIN_W || ii.width / ii.height < 1.3 || ii.width / ii.height > 2.1) continue;
       if (BAD.test(pg.title) || (m.Restrictions?.value ?? '').trim()) continue;
       cands.set(pg.title, { title: pg.title, page: ii.descriptionurl, width: ii.width, height: ii.height, license: lic,
         licenseUrl: m.LicenseUrl?.value ?? null, artist: strip(m.Artist?.value), uploader: ii.user,
