@@ -31,7 +31,7 @@ export type CityCoverEntry = {
 };
 
 /**
- * İl sayfalarına hazır, lisanslı kapak görseli ekler. Yönetimde kapak seçilmiş sayfaya dokunmaz
+ * İl ve ilçe sayfalarına hazır, lisanslı kapak görseli ekler. Yönetimde kapak seçilmiş sayfaya dokunmaz
  * (ör. elle eklenen Uşak görseli kalır); tekrar çalıştırılırsa aynı dosyayı ikinci kez yüklemez.
  */
 @Injectable()
@@ -61,7 +61,7 @@ export class CityCoversService {
     }
   }
 
-  /** Kaç il sayfasına eklenebilir (kapağı olmayanlar) */
+  /** Kaç bölge sayfasına eklenebilir (kapağı olmayanlar) */
   async status(dir = coversDir()) {
     const entries = await this.manifest(dir);
     const covered = await this.coveredSlugs(entries.map((e) => e.slug));
@@ -94,7 +94,7 @@ export class CityCoversService {
         data: { actorId: adminId, action: 'local-page.city-covers', entityType: 'LocalPageContent', entityId: 'il-kapaklari', details: { slugs: added } },
       });
     }
-    this.logger.log(`${added.length} il sayfasına kapak eklendi`);
+    this.logger.log(`${added.length} bölge sayfasına kapak eklendi`);
     return { added, skipped: entries.length - added.length };
   }
 
