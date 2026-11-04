@@ -1,0 +1,425 @@
+[
+ {
+  "slug": "ankara-akyurt-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Akyurt",
+  "key": "ankara-akyurt",
+  "q": [
+   "Akyurt Ankara",
+   "Balıkhisar Akyurt"
+  ]
+ },
+ {
+  "slug": "ankara-bala-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Bala",
+  "key": "ankara-bala",
+  "q": [
+   "Bala Ankara Turkey",
+   "Bala ilçesi Ankara"
+  ]
+ },
+ {
+  "slug": "ankara-elmadag-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Elmadağ",
+  "key": "ankara-elmadag",
+  "q": [
+   "Elmadağ Ankara",
+   "Hasanoğlan"
+  ]
+ },
+ {
+  "slug": "ankara-evren-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Evren",
+  "key": "ankara-evren",
+  "q": [
+   "Hirfanlı Barajı",
+   "Evren Ankara"
+  ]
+ },
+ {
+  "slug": "ankara-golbasi-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Gölbaşı",
+  "key": "ankara-golbasi",
+  "q": [
+   "Mogan Gölü",
+   "Eymir Gölü"
+  ]
+ },
+ {
+  "slug": "ankara-kahramankazan-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Kahramankazan",
+  "key": "ankara-kahramankazan",
+  "q": [
+   "Kahramankazan",
+   "Kazan Ankara Turkey"
+  ]
+ },
+ {
+  "slug": "ankara-kecioren-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Keçiören",
+  "key": "ankara-kecioren",
+  "q": [
+   "Keçiören",
+   "Estergon Kalesi"
+  ]
+ },
+ {
+  "slug": "ankara-pursaklar-evden-eve-nakliyat",
+  "il": "Ankara",
+  "ilce": "Pursaklar",
+  "key": "ankara-pursaklar",
+  "q": [
+   "Pursaklar"
+  ]
+ },
+ {
+  "slug": "antalya-dosemealti-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Döşemealtı",
+  "key": "antalya-dosemealti",
+  "q": [
+   "Karain Mağarası",
+   "Karain Cave",
+   "Döşemealtı"
+  ]
+ },
+ {
+  "slug": "antalya-elmali-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Elmalı",
+  "key": "antalya-elmali",
+  "q": [
+   "Elmalı Antalya Turkey",
+   "Ömerpaşa Camii Elmalı"
+  ]
+ },
+ {
+  "slug": "antalya-kepez-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Kepez",
+  "key": "antalya-kepez",
+  "q": [
+   "Düden Şelalesi",
+   "Upper Düden Waterfall"
+  ]
+ },
+ {
+  "slug": "antalya-kumluca-evden-eve-nakliyat",
+  "il": "Antalya",
+  "ilce": "Kumluca",
+  "key": "antalya-kumluca",
+  "q": [
+   "Adrasan",
+   "Kumluca Antalya"
+  ]
+ },
+ {
+  "slug": "bursa-buyukorhan-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Büyükorhan",
+  "key": "bursa-buyukorhan",
+  "q": [
+   "Büyükorhan"
+  ]
+ },
+ {
+  "slug": "bursa-gursu-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Gürsu",
+  "key": "bursa-gursu",
+  "q": [
+   "Gürsu Bursa",
+   "Ağlayan Kaya Gürsu"
+  ]
+ },
+ {
+  "slug": "bursa-orhaneli-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Orhaneli",
+  "key": "bursa-orhaneli",
+  "q": [
+   "Orhaneli",
+   "Orhaneli Barajı"
+  ]
+ },
+ {
+  "slug": "bursa-yildirim-evden-eve-nakliyat",
+  "il": "Bursa",
+  "ilce": "Yıldırım",
+  "key": "bursa-yildirim",
+  "q": [
+   "Yeşil Cami Bursa",
+   "Yeşil Türbe Bursa",
+   "Emir Sultan Camii"
+  ]
+ },
+ {
+  "slug": "istanbul-bagcilar-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bağcılar",
+  "key": "istanbul-bagcilar",
+  "q": [
+   "Bağcılar"
+  ]
+ },
+ {
+  "slug": "istanbul-bahcelievler-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bahçelievler",
+  "key": "istanbul-bahcelievler",
+  "q": [
+   "Bahçelievler İstanbul",
+   "Yenibosna"
+  ]
+ },
+ {
+  "slug": "istanbul-bakirkoy-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bakırköy",
+  "key": "istanbul-bakirkoy",
+  "q": [
+   "Bakırköy sahil",
+   "Ataköy marina",
+   "Bakırköy"
+  ]
+ },
+ {
+  "slug": "istanbul-bayrampasa-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Bayrampaşa",
+  "key": "istanbul-bayrampasa",
+  "q": [
+   "Bayrampaşa"
+  ]
+ },
+ {
+  "slug": "istanbul-esenyurt-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Esenyurt",
+  "key": "istanbul-esenyurt",
+  "q": [
+   "Esenyurt"
+  ]
+ },
+ {
+  "slug": "istanbul-eyupsultan-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Eyüpsultan",
+  "key": "istanbul-eyupsultan",
+  "q": [
+   "Eyüp Sultan Camii",
+   "Pierre Loti Hill",
+   "Eyüp"
+  ]
+ },
+ {
+  "slug": "istanbul-gaziosmanpasa-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Gaziosmanpaşa",
+  "key": "istanbul-gaziosmanpasa",
+  "q": [
+   "Gaziosmanpaşa İstanbul"
+  ]
+ },
+ {
+  "slug": "istanbul-kadikoy-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Kadıköy",
+  "key": "istanbul-kadikoy",
+  "q": [
+   "Haydarpaşa Garı",
+   "Moda Kadıköy",
+   "Kadıköy iskele"
+  ]
+ },
+ {
+  "slug": "istanbul-kucukcekmece-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Küçükçekmece",
+  "key": "istanbul-kucukcekmece",
+  "q": [
+   "Küçükçekmece Gölü",
+   "Küçükçekmece Lake",
+   "Halkalı"
+  ]
+ },
+ {
+  "slug": "istanbul-sancaktepe-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Sancaktepe",
+  "key": "istanbul-sancaktepe",
+  "q": [
+   "Sancaktepe"
+  ]
+ },
+ {
+  "slug": "istanbul-silivri-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Silivri",
+  "key": "istanbul-silivri",
+  "q": [
+   "Silivri sahil",
+   "Silivri harbour",
+   "Silivri"
+  ]
+ },
+ {
+  "slug": "istanbul-sisli-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Şişli",
+  "key": "istanbul-sisli",
+  "q": [
+   "Nişantaşı",
+   "Abide-i Hürriyet",
+   "Şişli"
+  ]
+ },
+ {
+  "slug": "istanbul-sultangazi-evden-eve-nakliyat",
+  "il": "İstanbul",
+  "ilce": "Sultangazi",
+  "key": "istanbul-sultangazi",
+  "q": [
+   "Sultangazi",
+   "Cebeci Sultangazi"
+  ]
+ },
+ {
+  "slug": "izmir-beydag-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Beydağ",
+  "key": "izmir-beydag",
+  "q": [
+   "Beydağ İzmir",
+   "Beydağ Barajı"
+  ]
+ },
+ {
+  "slug": "izmir-cesme-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Çeşme",
+  "key": "izmir-cesme",
+  "q": [
+   "Çeşme Kalesi",
+   "Çeşme Castle",
+   "Alaçatı"
+  ]
+ },
+ {
+  "slug": "izmir-gaziemir-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Gaziemir",
+  "key": "izmir-gaziemir",
+  "q": [
+   "Gaziemir"
+  ]
+ },
+ {
+  "slug": "izmir-guzelbahce-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Güzelbahçe",
+  "key": "izmir-guzelbahce",
+  "q": [
+   "Güzelbahçe İzmir",
+   "Güzelbahçe sahil"
+  ]
+ },
+ {
+  "slug": "izmir-karabaglar-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Karabağlar",
+  "key": "izmir-karabaglar",
+  "q": [
+   "Karabağlar İzmir",
+   "Uzundere İzmir"
+  ]
+ },
+ {
+  "slug": "izmir-kinik-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Kınık",
+  "key": "izmir-kinik",
+  "q": [
+   "Kınık İzmir",
+   "Kınık Bakırçay"
+  ]
+ },
+ {
+  "slug": "izmir-kiraz-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Kiraz",
+  "key": "izmir-kiraz",
+  "q": [
+   "Kiraz İzmir",
+   "Kiraz Bozdağlar"
+  ]
+ },
+ {
+  "slug": "izmir-menderes-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Menderes",
+  "key": "izmir-menderes",
+  "q": [
+   "Gümüldür",
+   "Özdere",
+   "Notion antik kent"
+  ]
+ },
+ {
+  "slug": "izmir-seferihisar-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Seferihisar",
+  "key": "izmir-seferihisar",
+  "q": [
+   "Sığacık",
+   "Teos"
+  ]
+ },
+ {
+  "slug": "izmir-selcuk-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Selçuk",
+  "key": "izmir-selcuk",
+  "q": [
+   "Celsus Library",
+   "Ephesus",
+   "İsa Bey Camii"
+  ]
+ },
+ {
+  "slug": "izmir-tire-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Tire",
+  "key": "izmir-tire",
+  "q": [
+   "Tire İzmir",
+   "Tire Turkey"
+  ]
+ },
+ {
+  "slug": "izmir-torbali-evden-eve-nakliyat",
+  "il": "İzmir",
+  "ilce": "Torbalı",
+  "key": "izmir-torbali",
+  "q": [
+   "Metropolis Torbalı",
+   "Torbalı"
+  ]
+ },
+ {
+  "slug": "kocaeli-cayirova-evden-eve-nakliyat",
+  "il": "Kocaeli",
+  "ilce": "Çayırova",
+  "key": "kocaeli-cayirova",
+  "q": [
+   "Çayırova Kocaeli",
+   "Şekerpınar"
+  ]
+ }
+]

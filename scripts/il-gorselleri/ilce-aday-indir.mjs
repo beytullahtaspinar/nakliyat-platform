@@ -1,8 +1,9 @@
 // Dizine açık ilçe sayfaları için Wikimedia Commons'tan ilçe başına 4 aday fotoğraf (500 px) + üst veri
-// Kullanım: node ilce-aday-indir.mjs ilceler.json  -> ./ilce-gorsel-adaylari/
+// Kullanım: node ilce-aday-indir.mjs ilceler.json [çıktı klasörü]  -> ./ilce-gorsel-adaylari/
+// Listede "q" (arama ifadeleri) verilen ilçelerde ilçe adı yerine simge yapılar aranır.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 const UA = 'NakliyatPlatformImageCurator/1.0 (https://evdenevenakliyat.app; destek@evdenevenakliyat.app)';
-const OUT = 'ilce-gorsel-adaylari';
+const OUT = process.argv[3] ?? 'ilce-gorsel-adaylari';
 await mkdir(`${OUT}/kucuk`, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function get(url) {
@@ -26,7 +27,8 @@ try {
 for (const d of list) {
   if (all[d.key]) continue;
   const cands = new Map();
-  for (const query of [`"${d.ilce}" ${d.il} filetype:bitmap`, `"${d.ilce}" filetype:bitmap`]) {
+  const queries = d.q ? d.q.map((q) => `${q} filetype:bitmap`) : [`"${d.ilce}" ${d.il} filetype:bitmap`, `"${d.ilce}" filetype:bitmap`];
+  for (const query of queries) {
     if (cands.size >= 4) break;
     const p = new URLSearchParams({ action: 'query', generator: 'search', gsrnamespace: '6', gsrlimit: '50', gsrsearch: query,
       prop: 'imageinfo', iiprop: 'url|size|extmetadata|mime|user', iiurlwidth: '500', format: 'json', formatversion: '2' });
