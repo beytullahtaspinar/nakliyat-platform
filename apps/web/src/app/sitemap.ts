@@ -8,6 +8,7 @@ import { getLocalPageUpdates } from "@/lib/local-page-content";
 import { loadPricingModel } from "@/lib/pricing-model";
 import { MARKETING_LINKS } from "@/lib/marketing";
 import { COMPANY_CACHE_TAG, companyPath } from "@/lib/reviews";
+import { SERVICE_PAGES, servicePath } from "@/lib/service-pages";
 import { SITE_URL } from "@/lib/site";
 
 // Firma listesi saatte bir yenilenir
@@ -69,6 +70,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: SITE_URL, lastModified: pricing.updatedAt ?? undefined, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}${HUB_PATH}`, lastModified: localModified(HUB_PATH.slice(1)), changeFrequency: "monthly", priority: 0.9 },
+    ...SERVICE_PAGES.map((page) => ({
+      url: `${SITE_URL}${servicePath(page.slug)}`,
+      lastModified: localModified(page.slug),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+      ...localImages(page.slug),
+    })),
     ...MARKETING_LINKS.map((link) => ({ url: `${SITE_URL}${link.href}`, changeFrequency: "monthly" as const, priority: 0.7 })),
     ...getIndexableLocalPages().map((page) => ({
       url: `${SITE_URL}/${page.slug}`,

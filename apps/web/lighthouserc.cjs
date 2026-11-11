@@ -10,6 +10,9 @@
 const PUBLIC_PAGES = [
   "/",
   "/evden-eve-nakliyat",
+  // Hizmet sayfaları: en geniş fiyat tablosu (şehirler arası) ve ofis
+  "/sehirler-arasi-nakliyat",
+  "/ofis-tasima",
   // Blog içeriği sahte blog API'sinden (e2e/blog-api-mock.mjs, lighthouse.yml)
   "/blog",
   "/blog/tasinma-kontrol-listesi",

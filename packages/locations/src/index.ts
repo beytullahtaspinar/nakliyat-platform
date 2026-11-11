@@ -41,6 +41,22 @@ export function getNearestCities(city: CityRecord, limit = 6): { city: CityRecor
 export const LOCAL_SUFFIX = 'evden-eve-nakliyat';
 export const ROUTE_SUFFIX = 'sehirler-arasi-nakliyat';
 
+/**
+ * Hizmet sayfaları (ofis taşıma, parça eşya vb.): kökte, il adı olmadan. Metinleri web tarafında
+ * (apps/web/src/lib/service-pages.ts); burada yalnızca adresler var, API yönetimden düzenlemeyi bunlarla doğrular.
+ */
+export const SERVICE_PAGE_SLUGS = [
+  'sehirler-arasi-nakliyat',
+  'ofis-tasima',
+  'parca-esya-tasima',
+  'asansorlu-nakliyat',
+  'esya-depolama',
+  'ogrenci-tasima',
+] as const;
+export type ServicePageSlug = (typeof SERVICE_PAGE_SLUGS)[number];
+export const isServicePageSlug = (slug: string): slug is ServicePageSlug =>
+  (SERVICE_PAGE_SLUGS as readonly string[]).includes(slug);
+
 export type LocalPage =
   | { kind: 'city'; slug: string; city: CityRecord }
   | { kind: 'district'; slug: string; city: CityRecord; district: DistrictRecord }

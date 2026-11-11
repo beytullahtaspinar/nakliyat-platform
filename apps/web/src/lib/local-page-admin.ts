@@ -1,11 +1,19 @@
-import { getAllLocalPages, getCityBySlug, resolveLocalPage, type CityRecord, type LocalPage } from "@nakliyat/locations";
+import {
+  getAllLocalPages,
+  getCityBySlug,
+  isServicePageSlug,
+  resolveLocalPage,
+  type CityRecord,
+  type LocalPage,
+} from "@nakliyat/locations";
 import { HUB_DEFAULTS, HUB_PATH, intro } from "@/lib/local-content";
 import { currentYear, isIndexable, localPageDescription, localPageMetaTitle, localPageTitle } from "@/lib/local-seo";
+import { SERVICE_PAGES, getServicePage, type ServicePage } from "@/lib/service-pages";
 
 /** Yönetimde düzenlenebilen bölge sayfası: merkez sayfa ya da il, ilçe, güzergâh sayfası */
 export type EditablePage = {
   slug: string;
-  kind: "hub" | LocalPage["kind"];
+  kind: "hub" | "service" | LocalPage["kind"];
   title: string;
   indexable: boolean;
   /** Yönetim listesinde bağlı olduğu il (güzergâhta çıkış ili); Türkiye geneli sayfasında yok */
@@ -16,6 +24,7 @@ export type EditablePage = {
 
 export const PAGE_KIND_LABELS: Record<EditablePage["kind"], string> = {
   hub: "Türkiye geneli",
+  service: "Hizmet",
   city: "İl",
   district: "İlçe",
   route: "Şehirler arası",
@@ -40,6 +49,28 @@ function hubPage(): EditablePage {
   };
 }
 
+function serviceEditable(page: ServicePage): EditablePage {
+  const year = currentYear();
+  return {
+    slug: page.slug,
+    kind: "service",
+    title: page.name,
+    indexable: true,
+    city: null,
+    defaults: {
+      seoTitle: page.metaTitle(year),
+      seoDescription: page.description(year),
+      heading: page.heading,
+      intro: page.intro,
+    },
+  };
+}
+
+/** Hizmet sayfaları (ofis taşıma, parça eşya vb.): yönetim listesinde merkez sayfanın altında */
+export function listServicePages(): EditablePage[] {
+  return SERVICE_PAGES.map(serviceEditable);
+}
+
 function toEditable(page: LocalPage): EditablePage {
   return {
     slug: page.slug,
@@ -58,6 +89,7 @@ function toEditable(page: LocalPage): EditablePage {
 
 export function getEditablePage(slug: string): EditablePage | null {
   if (slug === HUB_SLUG) return hubPage();
+  if (isServicePageSlug(slug)) return serviceEditable(getServicePage(slug));
   const page = resolveLocalPage(slug);
   return page ? toEditable(page) : null;
 }
@@ -68,7 +100,7 @@ export function getEditablePage(slug: string): EditablePage | null {
  */
 export function listEditablePages(q: string | undefined, edited: Set<string>): EditablePage[] {
   const needle = q?.toLocaleLowerCase("tr-TR");
-  const pages = [hubPage(), ...getAllLocalPages().map(toEditable)];
+  const pages = [hubPage(), ...listServicePages(), ...getAllLocalPages().map(toEditable)];
   return pages.filter((p) =>
     needle
       ? p.title.toLocaleLowerCase("tr-TR").includes(needle) || p.slug.includes(needle)

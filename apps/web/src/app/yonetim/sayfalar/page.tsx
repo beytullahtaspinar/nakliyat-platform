@@ -12,6 +12,7 @@ import {
   HUB_SLUG,
   listCityGroups,
   listEditablePages,
+  listServicePages,
   type EditablePage,
 } from "@/lib/local-page-admin";
 import { isIndexable } from "@/lib/local-seo";
@@ -51,7 +52,7 @@ export default async function AdminLocalPagesPage({ searchParams }: PageProps<"/
     <>
       <PageHeader
         title="Bölge sayfaları"
-        description="İl, ilçe ve şehirler arası sayfaların başlığını, metnini, kapak görselini ve ek içeriğini değiştir. Boş bıraktığın alanda otomatik metin kalır; kaydedince site hemen güncellenir ve sayfa Bing'e bildirilir."
+        description="İl, ilçe, şehirler arası ve hizmet sayfalarının başlığını, metnini, kapak görselini ve ek içeriğini değiştir. Boş bıraktığın alanda otomatik metin kalır; kaydedince site hemen güncellenir ve sayfa Bing'e bildirilir."
         actions={
           <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-start">
             {covers.available > 0 && <CityCoversButton available={covers.available} />}
@@ -72,7 +73,7 @@ export default async function AdminLocalPagesPage({ searchParams }: PageProps<"/
         <SearchForm
           action="/yonetim/sayfalar"
           q={q}
-          placeholder="İl, ilçe ya da güzergâh ara (ör. Kadıköy, Bursa Ankara)"
+          placeholder="İl, ilçe, güzergâh ya da hizmet ara (ör. Kadıköy, Bursa Ankara, ofis)"
           keep={{ durum: onlyEdited ? "duzenlenen" : undefined }}
         />
       </div>
@@ -88,7 +89,7 @@ export default async function AdminLocalPagesPage({ searchParams }: PageProps<"/
 
 type Edited = Map<string, string>;
 
-/** 81 il ve Türkiye geneli sayfası; her ilde ilçe ve güzergâh sayısı ile düzenlenen sayfa sayısı */
+/** Türkiye geneli sayfası, hizmet sayfaları ve 81 il; her ilde ilçe ve güzergâh sayısı ile düzenlenen sayfa sayısı */
 function CityList({ editedAt }: { editedAt: Edited }) {
   const hub = getEditablePage(HUB_SLUG)!;
   const groups = listCityGroups();
@@ -105,20 +106,22 @@ function CityList({ editedAt }: { editedAt: Edited }) {
           </tr>
         </thead>
         <tbody className="max-lg:block max-lg:divide-y max-lg:divide-slate-200">
-          <tr className="hover:bg-slate-50 max-lg:block max-lg:p-4">
-            <td className={cell}>
-              <Link href={`/yonetim/sayfalar/${hub.slug}`} className={link}>
-                {hub.title}
-              </Link>
-              <div className="text-xs text-slate-500">/{hub.slug}</div>
-            </td>
-            <td className={cell}>
-              <Badge>{PAGE_KIND_LABELS.hub}</Badge>
-            </td>
-            <td className={cell}>
-              <EditedCell at={editedAt.get(hub.slug)} />
-            </td>
-          </tr>
+          {[hub, ...listServicePages()].map((p) => (
+            <tr key={p.slug} className="hover:bg-slate-50 max-lg:block max-lg:p-4">
+              <td className={cell}>
+                <Link href={`/yonetim/sayfalar/${p.slug}`} className={link}>
+                  {p.title}
+                </Link>
+                <div className="text-xs text-slate-500">/{p.slug}</div>
+              </td>
+              <td className={cell}>
+                <Badge>{PAGE_KIND_LABELS[p.kind]}</Badge>
+              </td>
+              <td className={cell}>
+                <EditedCell at={editedAt.get(p.slug)} />
+              </td>
+            </tr>
+          ))}
           {groups.map((g) => {
             const subPages = [...g.districts, ...g.routes];
             const edited = count([g.page, ...subPages]);
