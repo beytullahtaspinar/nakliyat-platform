@@ -21,7 +21,7 @@ describe('Bölge sayfaları (e2e)', () => {
   const auth = (who: keyof typeof phones) => ({ Authorization: `Bearer ${tokens[who]}` });
 
   const cleanup = async () => {
-    await prisma.localPageContent.deleteMany({ where: { slug: { in: [SLUG, 'evden-eve-nakliyat'] } } });
+    await prisma.localPageContent.deleteMany({ where: { slug: { in: [SLUG, 'evden-eve-nakliyat', 'ofis-tasima'] } } });
     await prisma.blogMedia.deleteMany({ where: { storageKey: { in: [coverKey, imageKey] } } });
     const users = { phone: { in: Object.values(phones) } };
     await prisma.auditLog.deleteMany({ where: { actor: users } });
@@ -104,6 +104,10 @@ describe('Bölge sayfaları (e2e)', () => {
 
     // Merkez sayfa da düzenlenebilir
     await http().patch('/v1/admin/local-pages/evden-eve-nakliyat').set(auth('admin')).send({ intro: 'Merkez giriş' }).expect(200);
+
+    // Hizmet sayfaları da düzenlenebilir
+    await http().patch('/v1/admin/local-pages/ofis-tasima').set(auth('admin')).send({ intro: 'Ofis giriş' }).expect(200);
+    await http().delete('/v1/admin/local-pages/ofis-tasima').set(auth('admin')).expect(204);
 
     // Tüm alanlar boşsa varsayılana döner
     await http().patch('/v1/admin/local-pages/evden-eve-nakliyat').set(auth('admin')).send({ intro: '' }).expect(200);

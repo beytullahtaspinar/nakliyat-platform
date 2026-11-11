@@ -5,6 +5,7 @@ import { currentYear, getIndexableLocalPages, localPageMetaTitle } from "@/lib/l
 import { DEFAULT_INPUT, formatTry } from "@/lib/pricing";
 import { loadPricingModel } from "@/lib/pricing-model";
 import { HOME_TYPES } from "@/lib/request-options";
+import { SERVICE_PAGES, servicePath } from "@/lib/service-pages";
 import { SITE_URL } from "@/lib/site";
 
 
@@ -51,8 +52,13 @@ Teklif aşamasında firmalar müşterinin adını, telefonunu ve açık adresini
  */
 function regionSection() {
   const pages = getIndexableLocalPages();
+  const year = currentYear();
   const link = (page: LocalPage) => `- [${localPageMetaTitle(page)}](${SITE_URL}/${page.slug})`;
   return [
+    "## Hizmetler",
+    "",
+    ...SERVICE_PAGES.map((p) => `- [${p.metaTitle(year)}](${SITE_URL}${servicePath(p.slug)}): ${p.description(year)}`),
+    "",
     "## İllere göre evden eve nakliyat fiyatları",
     "",
     ...pages.filter((p) => p.kind === "city").map(link),

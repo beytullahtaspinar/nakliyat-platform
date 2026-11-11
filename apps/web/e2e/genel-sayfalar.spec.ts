@@ -211,3 +211,41 @@ test("veri yokken gerçek teklif bölümü görünmez", async ({ page }) => {
   await page.goto("/bayburt-evden-eve-nakliyat");
   await expect(page.getByRole("heading", { name: /gerçek teklifler/ })).toHaveCount(0);
 });
+
+const SERVICE_PAGES = [
+  { path: "/sehirler-arasi-nakliyat", title: /^Şehirler Arası Nakliyat Fiyatları \d{4}/, table: /İstanbul - Ankara .* km .* TL/ },
+  { path: "/ofis-tasima", title: /^Ofis Taşıma Fiyatları \d{4}/, table: /Orta ofis .* TL .* TL/ },
+  { path: "/parca-esya-tasima", title: /^Parça Eşya Taşıma \d{4}/ },
+  { path: "/asansorlu-nakliyat", title: /^Asansörlü Nakliyat Fiyatları \d{4}/, table: /2\+1 .* TL .* TL/ },
+  { path: "/esya-depolama", title: /^Eşya Depolama \d{4}/ },
+  { path: "/ogrenci-tasima", title: /^Öğrenci Taşıma Fiyatları \d{4}/, table: /1\+1 öğrenci evi .* TL .* TL/ },
+];
+
+for (const service of SERVICE_PAGES) {
+  test(`hizmet sayfası ${service.path} açılır, SSS ve Service verisi içerir`, async ({ page }) => {
+    const errors = collectConsoleErrors(page);
+    await page.goto(service.path);
+    await expect(page).toHaveTitle(service.title);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`${service.path}$`));
+    if (service.table) await expect(page.getByRole("row", { name: service.table }).first()).toBeVisible();
+    const types = await jsonLdTypes(page);
+    expect(types).toEqual(expect.arrayContaining(["Service", "FAQPage", "BreadcrumbList"]));
+    // Diğer hizmetlere bağlantı verir, kendine vermez
+    const others = page.locator("section").filter({ has: page.getByRole("heading", { name: "Diğer hizmetler", exact: true }) });
+    await expect(others.getByRole("link")).toHaveCount(SERVICE_PAGES.length - 1);
+    await expectAccessible(page);
+    expect(errors).toEqual([]);
+  });
+}
+
+test("hizmet sayfaları site haritasında, llms.txt'de ve il sayfasında bağlantılı", async ({ request, page }) => {
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  const llms = await (await request.get("/llms.txt")).text();
+  for (const { path } of SERVICE_PAGES) {
+    expect(sitemap).toContain(`<loc>https://evdenevenakliyat.app${path}</loc>`);
+    expect(llms).toContain(`](https://evdenevenakliyat.app${path})`);
+  }
+  await page.goto("/bursa-evden-eve-nakliyat");
+  await expect(page.getByRole("main").getByRole("link", { name: "Ofis taşıma", exact: true })).toHaveAttribute("href", "/ofis-tasima");
+});

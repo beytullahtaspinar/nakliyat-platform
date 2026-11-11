@@ -39,6 +39,7 @@ import { loadPricingModel } from "@/lib/pricing-model";
 import { HOME_TYPES, homeTypeLabel } from "@/lib/request-options";
 import { BLOG_PROSE } from "@/lib/blog/prose";
 import { formatRating } from "@/lib/reviews";
+import { SERVICE_LINKS } from "@/lib/service-pages";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 import type { LatestReview } from "@/lib/api";
 import type { BlogImage } from "@/lib/blog/api";
@@ -335,6 +336,7 @@ export default async function LocalLandingPage({ params }: Props) {
       {relatedLinks(page).map((group) => (
         <LinkGrid key={group.title} title={group.title} links={group.links} />
       ))}
+      <LinkGrid title="Hizmetler" links={SERVICE_LINKS} />
 
       <JsonLd data={serviceJsonLd(page, prices.rows, custom?.cover ?? null)} />
       {rating && rating.count >= CITY_RATING_SCHEMA_MIN && <JsonLd data={ratingJsonLd(page, rating, reviews)} />}

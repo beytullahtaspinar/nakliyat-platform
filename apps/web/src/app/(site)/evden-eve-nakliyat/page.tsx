@@ -18,6 +18,7 @@ import { MARKETING_PAGES } from "@/lib/marketing";
 import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, formatTry } from "@/lib/pricing";
 import { loadPricingModel } from "@/lib/pricing-model";
 import { HOME_TYPES } from "@/lib/request-options";
+import { SERVICE_LINKS } from "@/lib/service-pages";
 import { DEFAULT_OG_IMAGES, SITE_URL } from "@/lib/site";
 
 // Fiyat tablosu katsayılarla birlikte yenilenir (fiyat etiketi, 1 saat)
@@ -177,6 +178,7 @@ export default async function HubPage() {
         </Link>
       </section>
 
+      <LinkGrid title="Hizmetler" links={SERVICE_LINKS} />
       <LinkGrid title="İllere göre evden eve nakliyat" links={cityLinks} />
       <LinkGrid title="Popüler şehirler arası güzergâhlar" links={routeLinks} />
 

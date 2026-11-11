@@ -6,6 +6,7 @@ import { COMPANY, LEGAL_LINKS } from "@/lib/legal";
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
+import { SERVICE_LINKS } from "@/lib/service-pages";
 import { BRAND_PROMISE, BRAND_SLOGAN, BRAND_TAGLINE, SITE_NAME } from "@/lib/site";
 
 /**
@@ -43,6 +44,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
       { href: "/giris?next=/firma-paneli", label: "Firma paneli" },
     ],
   },
+  { title: "Hizmetler", links: SERVICE_LINKS },
   {
     title: "Popüler iller",
     links: [
@@ -67,8 +69,8 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-zinc-200 bg-zinc-50">
       {/* Marka çizgisi: lacivertten turuncuya (yalnız CSS, görsel yükü yok) */}
       <div aria-hidden className="site-footer-columns h-1 bg-gradient-to-r from-brand-700 to-accent-500" />
-      <div className="site-footer-columns mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-12 sm:px-6 md:grid-cols-4 lg:grid-cols-[1.5fr_repeat(4,1fr)] lg:gap-x-8">
-        <div className="col-span-2 md:col-span-4 lg:col-span-1">
+      <div className="site-footer-columns mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-12 sm:px-6 md:grid-cols-5 lg:grid-cols-[1.5fr_repeat(5,1fr)] lg:gap-x-8">
+        <div className="col-span-2 md:col-span-5 lg:col-span-1">
           <p>
             <Logo full />
             <span className="sr-only">Evden Eve Nakliyat ({SITE_NAME})</span>

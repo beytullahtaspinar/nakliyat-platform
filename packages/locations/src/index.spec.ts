@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  SERVICE_PAGE_SLUGS,
+  isServicePageSlug,
   getAllLocalPages,
   getCities,
   getCityBySlug,
@@ -59,6 +61,14 @@ describe('resolveLocalPage', () => {
     'istanbul-ankara-izmir-sehirler-arasi-nakliyat',
   ])('%s tanınmaz', (slug) => {
     expect(resolveLocalPage(slug)).toBeUndefined();
+  });
+
+  it('hizmet sayfası adresleri bölge sayfalarıyla çakışmaz', () => {
+    for (const slug of SERVICE_PAGE_SLUGS) {
+      expect(resolveLocalPage(slug)).toBeUndefined();
+      expect(isServicePageSlug(slug)).toBe(true);
+    }
+    expect(isServicePageSlug('istanbul-evden-eve-nakliyat')).toBe(false);
   });
 
   it('tüm adresler benzersiz ve geri çözülebilir', () => {
