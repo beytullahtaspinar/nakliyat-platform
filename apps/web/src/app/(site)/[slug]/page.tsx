@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { resolveLocalPage, type LocalPage } from "@nakliyat/locations";
+import { citySlug, resolveLocalPage, type LocalPage } from "@nakliyat/locations";
 import { estimatePrice, type PriceEstimate } from "@nakliyat/pricing";
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs } from "@/components/local/breadcrumbs";
@@ -30,7 +30,7 @@ import {
   localPageTitle,
 } from "@/lib/local-seo";
 import { getLocalCompanies } from "@/lib/local-companies";
-import { getLocalPageContent } from "@/lib/local-page-content";
+import { getLocalPageContent, getLocalPageCover } from "@/lib/local-page-content";
 import { CITY_RATING_SCHEMA_MIN, getCityRating, getLocalReviews, type CityRating } from "@/lib/latest-reviews";
 import { getLocalStats } from "@/lib/local-stats";
 import { formatDate } from "@/lib/format";
@@ -153,14 +153,18 @@ async function priceTable(page: LocalPage) {
 
 export default async function LocalLandingPage({ params }: Props) {
   const page = await loadPage(params);
-  const [custom, stats, companies, reviews, prices, rating] = await Promise.all([
+  const [custom, stats, companies, reviews, prices, rating, cityCover] = await Promise.all([
     getLocalPageContent(page.slug),
     getLocalStats(page),
     getLocalCompanies(page),
     getLocalReviews(page),
     priceTable(page),
     page.kind === "city" ? getCityRating(page.city.code) : null,
+    page.kind === "district" ? getLocalPageCover(citySlug(page.city)) : null,
   ]);
+  // İlçenin kendi fotoğrafı yoksa ilin kapak fotoğrafı gösterilir (atıfıyla). Yapısal veriye ve site haritasına
+  // yalnızca sayfanın kendi kapağı girer: aynı il fotoğrafı ilçelerde tekrar görsel sonucu olarak bildirilmez.
+  const cover = custom?.cover ?? cityCover;
   const year = currentYear();
   const source = prices.rows[0]?.estimate;
   // Yönetimden yazılan metin otomatik metnin yerine geçer; boş alanlar otomatik kalır
@@ -196,7 +200,7 @@ export default async function LocalLandingPage({ params }: Props) {
         Ücretsiz teklif al
       </ButtonLink>
 
-      {custom?.cover && <CoverImage image={custom.cover} />}
+      {cover && <CoverImage image={cover} />}
 
       <section className="mt-12">
         <h2 className="text-2xl font-semibold">

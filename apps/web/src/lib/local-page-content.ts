@@ -59,3 +59,15 @@ export async function getLocalPageContent(slug: string): Promise<LocalPageView |
     return null;
   }
 }
+
+/**
+ * Yalnızca kapak görseli (ilçe sayfasında kendi kapağı yoksa il kapağı yedek olarak gösterilir).
+ * Aynı önbellekli yanıtı kullanır, ek istek yapmaz.
+ */
+export async function getLocalPageCover(slug: string): Promise<BlogImage | null> {
+  try {
+    return (await fetchLocalPageContents()).find((p) => p.slug === slug)?.cover ?? null;
+  } catch {
+    return null;
+  }
+}

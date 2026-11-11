@@ -46,8 +46,12 @@ async function loginAsAdmin(page: Page) {
 }
 
 test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsayılana döner", async ({ page, browser }, testInfo) => {
-  const city = testInfo.project.name === "mobil" ? { name: "Sinop", slug: "sinop" } : { name: "Yozgat", slug: "yozgat" };
+  const city =
+    testInfo.project.name === "mobil"
+      ? { name: "Sinop", slug: "sinop", district: "boyabat" }
+      : { name: "Yozgat", slug: "yozgat", district: "sorgun" };
   const url = `/${city.slug}-evden-eve-nakliyat`;
+  const districtUrl = `/${city.slug}-${city.district}-evden-eve-nakliyat`;
   page.on("dialog", (d) => d.accept());
   await loginAsAdmin(page);
 
@@ -113,12 +117,18 @@ test("yönetici il sayfasının metnini ve görselini değiştirir, sonra varsay
   await expect(otherVisitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} evden eve nakliyat rehberi`);
   await expect(otherVisitor.getByRole("img", { name: `${city.name} taşıma görseli` })).toBeVisible();
 
+  // Kendi kapağı olmayan ilçe sayfası ilin kapak görselini gösterir
+  await visitor.goto(districtUrl);
+  await expect(visitor.getByRole("img", { name: `${city.name} taşıma görseli` })).toBeVisible();
+
   // Varsayılana dön
   await page.goto(`/yonetim/sayfalar/${city.slug}-evden-eve-nakliyat`);
   await page.getByRole("button", { name: /Varsayılana dön/ }).click();
   await expect(page.getByRole("status")).toHaveText("Sayfa otomatik metne döndü.");
   await visitor.goto(url);
   await expect(visitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} Evden Eve Nakliyat`);
+  await expect(visitor.getByRole("img", { name: `${city.name} taşıma görseli` })).toHaveCount(0);
+  await visitor.goto(districtUrl);
   await expect(visitor.getByRole("img", { name: `${city.name} taşıma görseli` })).toHaveCount(0);
   await otherVisitor.goto(url);
   await expect(otherVisitor.getByRole("heading", { level: 1 })).toHaveText(`${city.name} Evden Eve Nakliyat`);
