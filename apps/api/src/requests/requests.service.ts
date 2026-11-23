@@ -17,6 +17,13 @@ import type { UpdateRequestDto } from './dto/update-request.dto.js';
 import { VerificationService } from '../verification/verification.service.js';
 import { estimateMove } from './estimate.js';
 import { RouteService, type Point, type Route } from './route-service.js';
+import { assertNoContactInfo, CUSTOMER_CONTACT_HINT } from '../companies/showcase-rules.js';
+
+/** Talep notu ve özel eşyalar teklif vermeden önce firmalara görünür: iletişim bilgisi yazılamaz */
+function assertNoCustomerContact(dto: { notes?: string | null; specialItems?: string[] | null }) {
+  assertNoContactInfo(dto.notes, 'Not', CUSTOMER_CONTACT_HINT);
+  for (const item of dto.specialItems ?? []) assertNoContactInfo(item, 'Özel eşya', CUSTOMER_CONTACT_HINT);
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Teklif toplama süresi: taşınma tarihine kadar, en fazla 30 gün */
@@ -60,6 +67,7 @@ export class RequestsService {
   ) {}
 
   async create(customerId: string, dto: CreateRequestDto) {
+    assertNoCustomerContact(dto);
     const now = new Date();
     const { distanceKm } = this.validateLocations(dto);
     this.validateMoveDate(dto.moveDate, now);
@@ -119,6 +127,7 @@ export class RequestsService {
   }
 
   async update(customerId: string, id: string, dto: UpdateRequestDto) {
+    assertNoCustomerContact(dto);
     const { _count, ...current } = await this.findOwned(customerId, id);
     if (!isEditable(current.status)) {
       throw new ConflictException('Yalnızca açık talepler düzenlenebilir');

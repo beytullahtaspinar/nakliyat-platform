@@ -12,3 +12,13 @@ onlyBuiltDependencies:
 
 # Workspace paketleri symlink kalsın (geliştirme kolaylığı); pnpm deploy eski yöntemle kopyalar.
 forceLegacyDeploy: true
+
+# Güvenlik: dolaylı bağımlılıklarda bilinen açıklar kapansın (pnpm audit, 2026-11-23)
+overrides:
+  mariadb@>=3.4.0 <3.4.7: ~3.4.8
+  mysql2@<3.22.0: ^3.22.0
+  body-parser@>=2.0.0 <2.4.0: ^2.4.0
+  multer@>=2.0.0 <2.5.0: ^2.5.0
+  deepmerge-ts@<8.0.0: ^8.0.0
+  source-map-js@>=1.0.0 <1.2.2: ^1.2.2
+  effect@<=3.22.0: ^3.22.1

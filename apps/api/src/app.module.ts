@@ -10,6 +10,8 @@ import { BookingsModule } from './bookings/bookings.module.js';
 import { CompaniesModule } from './companies/companies.module.js';
 import { CreditsModule } from './credits/credits.module.js';
 import { EventsModule } from './events/domain-events.js';
+import type { Request } from 'express';
+import { clientIpForLimit } from './common/utils/client-ip.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { ImpersonationAuditInterceptor } from './common/interceptors/impersonation-audit.interceptor.js';
@@ -33,7 +35,11 @@ import { ReviewsModule } from './reviews/reviews.module.js';
     ObservabilityModule,
     // IP başına dakikada 120 istek. Tarayıcı testleri tüm istekleri tek IP'den yaptığı için RATE_LIMIT ile
     // yükseltir; canlıda tanımlanmaz.
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: Number(process.env.RATE_LIMIT) || 120 }]),
+    // Sayaç ziyaretçinin IP'sine göre tutulur (vekil arkasında X-Forwarded-For): yoksa tüm ziyaretçiler tek sayacı paylaşır
+    ThrottlerModule.forRoot({
+      throttlers: [{ name: 'default', ttl: 60_000, limit: Number(process.env.RATE_LIMIT) || 120 }],
+      getTracker: (req) => clientIpForLimit(req as unknown as Request),
+    }),
     PrismaModule,
     EventsModule,
     AuthModule,

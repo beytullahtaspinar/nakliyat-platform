@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { AuthUser } from '../common/decorators/current-user.decorator.js';
 import { CompaniesService, PUBLIC_COMPANY, toPublicCompany } from '../companies/companies.service.js';
-import { servicesOf } from '../companies/showcase-rules.js';
+import { assertNoContactInfo, servicesOf } from '../companies/showcase-rules.js';
 import { publicMediaPath } from '../media/media-rules.js';
 import { CompanyBadgesService } from '../companies/company-badges.service.js';
 import { cityName } from '../common/utils/locations.js';
@@ -371,6 +371,8 @@ export class ReviewsService {
    * Müşteri yorumunu yanıttan sonra düzenlediyse firma yanıtını bir kez daha güncelleyebilir.
    */
   async reply(ownerId: string, reviewId: string, body: string) {
+    // Yanıt herkese açık firma sayfasında görünür
+    assertNoContactInfo(body, 'Yanıt');
     const company = await this.companies.requireCompany(ownerId);
     const review = await this.prisma.review.findFirst({ where: { id: reviewId, companyId: company.id } });
     if (!review) throw new NotFoundException('Değerlendirme bulunamadı');
