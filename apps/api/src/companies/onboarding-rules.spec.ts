@@ -22,12 +22,22 @@ describe('firma kaydı hatırlatma kuralları', () => {
     expect(dueOnboardingStep(user(5 * DAY, 2), now)).toBeNull();
   });
 
+  it('1 hafta ve 1 ay sonra birer hatırlatma daha, aydan sonra hiç', () => {
+    expect(dueOnboardingStep(user(6 * DAY, 2), now)).toBeNull();
+    expect(dueOnboardingStep(user(7 * DAY, 2), now)).toBe(3);
+    expect(dueOnboardingStep(user(29 * DAY, 3), now)).toBeNull();
+    expect(dueOnboardingStep(user(30 * DAY, 3), now)).toBe(4);
+    expect(dueOnboardingStep(user(30 * DAY + 20 * HOUR, 4), now)).toBeNull();
+    // Ay dolduktan bir gün sonra, hiç hatırlatma almamış eski hesaba da gitmez
+    expect(dueOnboardingStep(user(32 * DAY), now)).toBeNull();
+  });
+
   it('iki adım birden geçmişse yalnızca sonuncusu gider', () => {
     expect(dueOnboardingStep(user(4 * DAY), now)).toBe(2);
   });
 
-  it('10 günden eski hesaplara otomatik hatırlatma gitmez', () => {
-    expect(dueOnboardingStep(user(11 * DAY), now)).toBeNull();
+  it('31 günden eski hesaplara otomatik hatırlatma gitmez', () => {
+    expect(dueOnboardingStep(user(31 * DAY + HOUR), now)).toBeNull();
   });
 
   it('yönetici 12 saat içinde hatırlattıysa otomatik hatırlatma bekler', () => {

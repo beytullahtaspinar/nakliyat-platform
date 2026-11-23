@@ -59,7 +59,7 @@ export function OnboardingCard({
         {hasProfile
           ? `Firma bilgilerini girdi ama onay için şunları yüklemedi: ${missing.join(", ")}. Yüklenip incelemede olanlar eksik sayılmaz.`
           : "Firma olarak kayıt oldu ama firma bilgilerini girmedi, bu yüzden belge ve araç da yükleyemedi."}{" "}
-        Son ilerlemeden 1 ve 3 gün sonra otomatik hatırlatma gider. {auto}
+        Son ilerlemeden 1, 3, 7 ve 30 gün sonra otomatik hatırlatma gider (aydan sonra gitmez). {auto}
         {remindedAt ? ` Son hatırlatma: ${formatDateTime(remindedAt)}.` : ""}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">

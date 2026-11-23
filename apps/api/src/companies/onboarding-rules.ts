@@ -7,10 +7,16 @@ import { DOCUMENT_LABELS, REQUIRED_DOCUMENT_TYPES } from '../media/company-docum
  * Saatler Türkiye saatine göredir.
  */
 
-/** Otomatik hatırlatmalar: kayıttan kaç gün sonra */
-export const ONBOARDING_REMINDER_DAYS = [1, 3] as const;
-/** Bundan eski hesaplara otomatik hatırlatma gitmez (eski deneme hesapları rahatsız edilmesin) */
-export const ONBOARDING_MAX_AGE_DAYS = 10;
+/**
+ * Otomatik hatırlatmalar: son ilerlemeden kaç gün sonra (1. gün, 3. gün, 1 hafta, 1 ay).
+ * Aydan sonra otomatik hatırlatma gitmez (kullanıcı kararı 2026-11-23).
+ */
+export const ONBOARDING_REMINDER_DAYS = [1, 3, 7, 30] as const;
+/**
+ * Bundan eski hesaplara otomatik hatırlatma gitmez. Son hatırlatmanın (30. gün) gönderim saatine
+ * (TSİ 09-21) denk gelmesi için bir gün pay bırakılır.
+ */
+export const ONBOARDING_MAX_AGE_DAYS = 31;
 /** Yöneticinin elle gönderdiği hatırlatmadan sonra bu süre içinde yenisi gönderilmez (otomatik ya da elle) */
 export const ONBOARDING_MIN_GAP_HOURS = 12;
 /** Hatırlatmalar yalnızca bu saatler arasında gönderilir (gece anlık bildirim gitmesin) */
@@ -112,7 +118,7 @@ export const ONBOARDING_COMPANY_SELECT = {
 
 /**
  * Hatırlatma sayacının başladığı an: kayıt, firma bilgisi, son belge ya da araç yüklemesi.
- * Firma ilerleme kaydettikçe hatırlatmalar yeniden 1. ve 3. günde gider.
+ * Firma ilerleme kaydettikçe hatırlatmalar yeniden 1., 3., 7. ve 30. günde gider.
  */
 export function lastOnboardingProgress(user: {
   createdAt: Date;

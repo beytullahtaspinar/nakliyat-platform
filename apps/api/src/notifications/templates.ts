@@ -35,6 +35,10 @@ const ONBOARDING_STEPS = [
   '4. Onay: ekibimiz kontrol eder, onaydan sonra teklif verirsin',
 ];
 
+/** Kayıt hatırlatmasının başlığı: otomatik sıraya göre (1. gün, 3. gün, 1 hafta, 1 ay); yöneticinin gönderdiği için ortak başlık */
+const onboardingTitle = (step: number | 'manual', titles: Record<number, string>) =>
+  (step !== 'manual' && titles[step]) || 'Firma kaydını tamamlaman bekleniyor';
+
 const routeLine = ({ from, to }: Route) => `${from} → ${to}`;
 
 export const templates = {
@@ -345,8 +349,12 @@ export const templates = {
       const docsMissing = p.missing.some((m) => !m.startsWith('Araç'));
       return {
         type: 'COMPANY_ONBOARDING',
-        title:
-          p.step === 1 ? 'Firma kaydında eksikler var' : p.step === 2 ? 'Eksiklerini tamamla, teklif vermeye başla' : 'Firma kaydını tamamlaman bekleniyor',
+        title: onboardingTitle(p.step, {
+          1: 'Firma kaydında eksikler var',
+          2: 'Eksiklerini tamamla, teklif vermeye başla',
+          3: 'Bir haftadır eksiklerin bekliyor',
+          4: 'Son hatırlatma: eksiklerini tamamla',
+        }),
         body: `Merhaba ${p.firstName}, firmanın onaylanması için şunlar eksik: ${p.missing.join(', ')}. ${requests}Eksikleri yüklediğinde ekibimiz kontrol edip firmanı onaylar.`,
         details: [
           ...p.missing.map((m) => `Eksik: ${m}`),
@@ -357,8 +365,12 @@ export const templates = {
         actionLabel: docsMissing ? 'Belgelerimi yükle' : 'Aracımı ekle',
       };
     }
-    const title =
-      p.step === 1 ? 'Firma kaydın yarım kaldı' : p.step === 2 ? 'Talepler seni bekliyor' : 'Firma kaydını tamamlaman bekleniyor';
+    const title = onboardingTitle(p.step, {
+      1: 'Firma kaydın yarım kaldı',
+      2: 'Talepler seni bekliyor',
+      3: 'Bir haftadır firma bilgilerin bekliyor',
+      4: 'Son hatırlatma: firma kaydını tamamla',
+    });
     return {
       type: 'COMPANY_ONBOARDING',
       title,

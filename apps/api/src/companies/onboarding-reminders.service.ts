@@ -16,7 +16,7 @@ const CHECK_INTERVAL_MS = 30 * 60_000;
 
 /**
  * Kaydı yarım firma hesaplarına (firma bilgisi yok ya da zorunlu belge/araç yüklenmemiş) son ilerlemeden
- * 1 ve 3 gün sonra hatırlatma olayı yayınlar (bildirimi notifications modülü gönderir). Eksik kalmayınca durur.
+ * 1, 3, 7 ve 30 gün sonra hatırlatma olayı yayınlar (bildirimi notifications modülü gönderir). Eksik kalmayınca durur.
  * Uygulama ayaktayken 30 dakikada bir, yalnızca TSİ 09:00-21:00 arasında çalışır.
  */
 @Injectable()
