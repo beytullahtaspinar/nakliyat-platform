@@ -66,11 +66,14 @@ export const servicesOf = (services: unknown): ServiceCode[] =>
   Array.isArray(services) ? SERVICE_CODES.filter((code) => services.includes(code)) : [];
 
 /** Tanıtım yazısındaki iletişim bilgisi hatası; firma profilinde ve tanıtım sayfasında aynı */
-export function assertNoContactInfo(text: string | null | undefined, field: string) {
+export function assertNoContactInfo(
+  text: string | null | undefined,
+  field: string,
+  hint = 'İletişim bilgilerin, müşteri teklifini kabul edince ona otomatik iletilir.',
+) {
   const found = text ? findContactInfo(text) : null;
-  if (found) {
-    throw new BadRequestException(
-      `${field} ${found} içeremez. İletişim bilgilerin, müşteri teklifini kabul edince ona otomatik iletilir.`,
-    );
-  }
+  if (found) throw new BadRequestException(`${field} ${found} içeremez. ${hint}`);
 }
+
+/** Müşterinin talep notunda iletişim bilgisi: telefonu, bir teklifi kabul edince firmaya zaten iletilir */
+export const CUSTOMER_CONTACT_HINT = 'Telefon numaran, bir teklifi kabul edince o firmaya otomatik iletilir.';

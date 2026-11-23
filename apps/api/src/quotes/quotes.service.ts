@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { getCityByCode, getDistrict } from '@nakliyat/locations';
 import type { MovingRequest, Quote } from '../generated/prisma/client.js';
+import { assertNoContactInfo } from '../companies/showcase-rules.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { QuoteStatus, RequestStatus } from '../generated/prisma/enums.js';
 import {
@@ -109,6 +110,8 @@ export class QuotesService {
   }
 
   async createQuote(ownerId: string, requestId: string, dto: CreateQuoteDto) {
+    // Kabulden önce müşteriye giden metin: platform dışında anlaşma için iletişim bilgisi yazılamaz
+    assertNoContactInfo(dto.message, 'Teklif mesajı');
     const company = await this.companies.requireVerifiedCompany(ownerId);
     await this.verification.assertComplete(ownerId);
     const request = await this.prisma.movingRequest.findFirst({
@@ -153,6 +156,7 @@ export class QuotesService {
   }
 
   async updateQuote(ownerId: string, quoteId: string, dto: UpdateQuoteDto) {
+    assertNoContactInfo(dto.message, 'Teklif mesajı');
     const { quote, request } = await this.findOwnQuote(ownerId, quoteId);
     if (quote.status !== QuoteStatus.PENDING) {
       throw new ConflictException('Yalnızca bekleyen teklifler güncellenebilir');

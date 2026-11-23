@@ -44,6 +44,7 @@ export class CompaniesService {
   async create(ownerId: string, dto: CreateCompanyProfileDto) {
     assertCityCodes([dto.cityCode, ...dto.serviceCityCodes], 'İl');
     assertNoContactInfo(dto.description, 'Tanıtım yazısı');
+    assertNoContactInfo(dto.displayName, 'Firma adı');
     if (await this.prisma.company.findUnique({ where: { ownerId } })) {
       throw new ConflictException('Bu hesaba ait bir firma profili zaten var');
     }
@@ -93,6 +94,7 @@ export class CompaniesService {
     }
 
     assertNoContactInfo(dto.description, 'Tanıtım yazısı');
+    assertNoContactInfo(dto.displayName, 'Firma adı');
     const identityChanged = IDENTITY_FIELDS.some(
       (field) => dto[field] !== undefined && dto[field] !== company[field],
     );

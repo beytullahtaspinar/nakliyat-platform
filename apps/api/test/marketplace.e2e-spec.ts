@@ -170,6 +170,27 @@ describe('Pazaryeri akışı (e2e)', () => {
     quoteB = b.body.id;
   });
 
+  it('platform atlatılmaz: teklif mesajı, talep notu ve firma adı iletişim bilgisi içeremez', async () => {
+    const phone = '0532 123 45 67';
+    const quote = await http()
+      .patch(`/v1/company/quotes/${quoteA}`)
+      .set(auth('companyA'))
+      .send({ message: `Bizi arayın: ${phone}` })
+      .expect(400);
+    expect(quote.body.message).toContain('Teklif mesajı telefon içeremez');
+    await http().patch(`/v1/company/quotes/${quoteA}`).set(auth('companyA')).send({ message: 'bilgi@firma.com' }).expect(400);
+    await http()
+      .patch(`/v1/company/profile`)
+      .set(auth('companyA'))
+      .send({ displayName: `Nakliyat ${phone}` })
+      .expect(400);
+    const notes = await http().patch(`/v1/requests/${requestId}`).set(auth('customer')).send({ notes: `Numaram ${phone}` }).expect(400);
+    expect(notes.body.message).toContain('Not telefon içeremez');
+    await http().patch(`/v1/requests/${requestId}`).set(auth('customer')).send({ specialItems: ['Piyano', phone] }).expect(400);
+    // Tutar ve kat bilgisi telefon sayılmaz
+    await http().patch(`/v1/company/quotes/${quoteA}`).set(auth('companyA')).send({ message: 'Fiyat 15.000 TL, 3. kat dahil.' }).expect(200);
+  });
+
   it('fiyat güncellemesi geçmişe kaydedilir; başka firma güncelleyemez', async () => {
     await http().patch(`/v1/company/quotes/${quoteA}`).set(auth('companyA')).send({ priceTry: 19000 }).expect(200);
     await http().patch(`/v1/company/quotes/${quoteA}`).set(auth('companyB')).send({ priceTry: 1000 }).expect(404);

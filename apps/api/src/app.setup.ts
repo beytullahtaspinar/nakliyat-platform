@@ -32,5 +32,9 @@ export function configureApp(app: INestApplication) {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
-  SwaggerModule.setup('docs', app, () => buildOpenApiDocument(app));
+  // Canlıda API haritası (/docs) herkese açık olmasın: saldırgana tüm uçları listeler. İstemci tipleri
+  // export-openapi.ts ile derlemede üretilir; gerekirse canlıda API_DOCS=1 ile geçici açılır.
+  if (process.env.NODE_ENV !== 'production' || process.env.API_DOCS === '1') {
+    SwaggerModule.setup('docs', app, () => buildOpenApiDocument(app));
+  }
 }
