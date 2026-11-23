@@ -163,6 +163,26 @@ describe('Kaydı yarım firmalar (e2e)', () => {
     expect(mails(emails.idle).map((m) => m.title)).toEqual(['Firma kaydın yarım kaldı', 'Talepler seni bekliyor']);
     const user = await prisma.user.findUniqueOrThrow({ where: { id: ids.idle } });
     expect(user.onboardingReminderStep).toBe(2);
+
+    // 1 hafta ve 1 ay sonra birer hatırlatma daha, sonra hiç
+    for (const [days, title] of [
+      [7, 'Bir haftadır firma bilgilerin bekliyor'],
+      [30, 'Son hatırlatma: firma kaydını tamamla'],
+    ] as const) {
+      await ageBy('idle', days);
+      await prisma.user.update({ where: { id: ids.idle }, data: { onboardingRemindedAt: new Date(noon.getTime() - 86_400_000) } });
+      email.sent.length = 0;
+      await reminders.sendDue(noon);
+      await events.drain();
+      expect(mails(emails.idle).map((m) => m.title)).toEqual([title]);
+    }
+    await ageBy('idle', 31);
+    await prisma.user.update({ where: { id: ids.idle }, data: { onboardingRemindedAt: new Date(noon.getTime() - 86_400_000) } });
+    email.sent.length = 0;
+    await reminders.sendDue(noon);
+    await events.drain();
+    expect(mails(emails.idle)).toEqual([]);
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: ids.idle } })).onboardingReminderStep).toBe(4);
   });
 
   it('firma yeni belge yükleyince hatırlatmalar o günden yeniden sayılır, eksik kalmayınca durur', async () => {

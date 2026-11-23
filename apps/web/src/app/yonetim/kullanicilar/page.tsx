@@ -57,7 +57,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/yonet
       {filter.profile === "missing" && (
         <p className="mb-4 text-sm text-slate-600">
           Firma bilgilerini girmeyen ya da zorunlu belgesini veya aracını yüklemeyen firma hesapları (yüklenip
-          incelemede olanlar eksik sayılmaz). Son ilerlemeden 1 ve 3 gün sonra otomatik hatırlatma gider; kişinin
+          incelemede olanlar eksik sayılmaz). Son ilerlemeden 1, 3, 7 ve 30 gün sonra otomatik hatırlatma gider (aydan sonra gitmez); kişinin
           sayfasından elle hatırlatma gönderebilir ya da hazır mesajı WhatsApp ile iletebilirsin.
         </p>
       )}
