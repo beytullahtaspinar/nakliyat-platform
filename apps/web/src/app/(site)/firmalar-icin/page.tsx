@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
 import { Faq, type FaqItem } from "@/components/local/faq";
+import { StoreBadges } from "@/components/store-badges";
 import { PageHero } from "@/components/marketing/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card, SectionHeading } from "@/components/ui/card";
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/icons";
 import { DOCUMENT_TYPES } from "@/lib/company-documents";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
+import { itunesMeta, mobileAppJsonLd } from "@/lib/mobile-apps";
 
 const PATH = MARKETING_PAGES.forCompanies.href;
 
@@ -22,6 +25,7 @@ export const metadata: Metadata = {
   description:
     "Evden eve nakliyat firması olarak platforma katıl: hizmet verdiğin illerdeki gerçek taşınma taleplerini gör, teklif ver, iyi hizmetini müşteri puanlarıyla görünür kıl.",
   alternates: { canonical: PATH },
+  itunes: itunesMeta("firma"),
 };
 
 const BENEFITS = [
@@ -186,6 +190,18 @@ export default function ForCompaniesPage() {
             ))}
           </ul>
         </div>
+      </section>
+
+      <section id="firma-uygulamasi" className="mx-auto max-w-6xl scroll-mt-20 px-4 pb-16 sm:px-6">
+        <JsonLd data={mobileAppJsonLd("firma")} />
+        <Card className="grid items-center gap-6 p-6 sm:p-8 md:grid-cols-[1fr_auto]">
+          <SectionHeading
+            eyebrow="Firma uygulaması"
+            title="Talepleri telefonundan yakala"
+            description="Yeni talep geldiğinde bildirim al, teklifini sahadan ver, işlerini ve müşteri mesajlarını tek uygulamadan yönet. Kayıt ve belge yükleme sitede yapılır; uygulamaya aynı telefon numarası ve şifreyle girersin."
+          />
+          <StoreBadges app="firma" />
+        </Card>
       </section>
 
       <div className="mx-auto max-w-3xl px-4 sm:px-6">

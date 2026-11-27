@@ -36,6 +36,11 @@ Platformdaki firmalardan Ulaştırma ve Altyapı Bakanlığı K3 yetki belgesi, 
 
 Teklif aşamasında firmalar müşterinin adını, telefonunu ve açık adresini görmez; bu bilgiler yalnızca müşterinin kabul ettiği teklifin sahibi firmayla paylaşılır. Platform bir nakliyat firması değil, aracıdır: taşıma hizmeti ve ödeme, müşteri ile seçtiği firma arasında yürütülür.
 
+## Mobil uygulamalar
+
+- Müşteri uygulaması (Evden Eve Nakliyat): [Google Play](https://play.google.com/store/apps/details?id=app.evdenevenakliyat.musteri), [App Store](https://apps.apple.com/tr/app/evden-eve-nakliyat-app/id6821929870)
+- Firma uygulaması (Evden Eve Nakliyat Firma): [Google Play](https://play.google.com/store/apps/details?id=app.evdenevenakliyat.firma), [App Store](https://apps.apple.com/tr/app/evden-eve-nakliyat-firma/id6821928977)
+
 ## Sayfalar
 
 - [Ana sayfa](https://evdenevenakliyat.app/)

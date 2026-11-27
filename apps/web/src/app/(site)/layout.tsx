@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { JsonLd } from "@/components/json-ld";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { COMPANY } from "@/lib/legal";
+import { itunesMeta } from "@/lib/mobile-apps";
 import { BRAND_SLOGAN, BRAND_TAGLINE, SITE_NAME, SITE_URL } from "@/lib/site";
+
+/** iPhone Safari'de müşteri uygulaması şeridi; firma sayfaları (firmalar-icin, firma kaydı) kendi uygulamasını verir */
+export const metadata: Metadata = { itunes: itunesMeta("musteri") };
 
 /** Herkese açık site: üst menü ve altbilgi. Müşteri hesabı, firma paneli ve yönetim kendi panel kabuklarında. */
 const organizationJsonLd = [

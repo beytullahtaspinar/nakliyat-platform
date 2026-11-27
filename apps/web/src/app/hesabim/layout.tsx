@@ -5,6 +5,7 @@ import { PlusIcon } from "@/components/ui/icons";
 import { VerifyNotice } from "@/components/verify-notice";
 import { apiFetch, type UnreadMessages } from "@/lib/api";
 import { formatPhone } from "@/lib/format";
+import { itunesMeta } from "@/lib/mobile-apps";
 import { getAccessToken, getCurrentUser, isImpersonating } from "@/lib/session";
 import { AccountNav } from "./account-nav";
 import { CustomerImpersonationBanner } from "./impersonation-banner";
@@ -12,6 +13,7 @@ import { CustomerImpersonationBanner } from "./impersonation-banner";
 export const metadata: Metadata = {
   title: { default: "Hesabım", template: "%s | Hesabım" },
   robots: { index: false, follow: false },
+  itunes: itunesMeta("musteri"),
 };
 
 /**

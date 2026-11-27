@@ -5,11 +5,17 @@ import { SignedInNotice } from "@/components/signed-in-notice";
 import { RegisterForm } from "./register-form";
 import { SocialLogin } from "@/components/social-login";
 import { getOAuthProviders } from "@/lib/oauth";
+import { StoreBadges } from "@/components/store-badges";
+import { itunesMeta } from "@/lib/mobile-apps";
 
-export const metadata: Metadata = {
-  title: "Kayıt ol",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ searchParams }: PageProps<"/kayit">): Promise<Metadata> {
+  const { rol } = await searchParams;
+  return {
+    title: "Kayıt ol",
+    robots: { index: false, follow: false },
+    itunes: itunesMeta(rol === "firma" ? "firma" : "musteri"),
+  };
+}
 
 export default async function RegisterPage({ searchParams }: PageProps<"/kayit">) {
   const params = await searchParams;
@@ -42,6 +48,14 @@ export default async function RegisterPage({ searchParams }: PageProps<"/kayit">
       <div className="mt-6 space-y-4">
         <SocialLogin providers={await getOAuthProviders()} next={next} role={role} />
         <RegisterForm key={role} role={role} next={next} />
+      </div>
+      <div className="mt-10 border-t border-zinc-200 pt-6">
+        <p className="text-sm text-zinc-600">
+          {role === "COMPANY"
+            ? "Kayıt ve belgeleri burada tamamla; talepleri ve tekliflerini firma uygulamasından da takip edebilirsin."
+            : "Taşınma talebini ve teklifleri telefonundan da takip edebilirsin."}
+        </p>
+        <StoreBadges app={role === "COMPANY" ? "firma" : "musteri"} size="sm" className="mt-3" />
       </div>
     </main>
   );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { MOBILE_APPS } from "@/lib/mobile-apps";
 import { detectDevice, PUSH_CHANGE_EVENT } from "@/lib/pwa";
 
 const DISMISS_KEY = "nk_uygulama_ipucu";
@@ -40,10 +41,17 @@ export function AppPrompt({ settingsPath }: { settingsPath: string }) {
   return (
     <div role="status" className="mt-4 flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
       <p className="flex-1">
-        <strong>Yeni talepleri anında gör.</strong> Siteyi telefonuna uygulama olarak kur ve bildirimleri aç; müşteri talep
-        oluşturduğunda ya da teklifini kabul ettiğinde telefonun çalsın.{" "}
+        <strong>Yeni talepleri anında gör.</strong> Firma uygulamasını indir (
+        <a href={MOBILE_APPS.firma.playUrl} target="_blank" rel="noopener" className="font-semibold underline">
+          Google Play
+        </a>
+        ,{" "}
+        <a href={MOBILE_APPS.firma.appStoreUrl} target="_blank" rel="noopener" className="font-semibold underline">
+          App Store
+        </a>
+        ) ya da bu cihazda bildirimleri aç; müşteri talep oluşturduğunda veya teklifini kabul ettiğinde telefonun çalsın.{" "}
         <Link href={settingsPath} className="font-semibold underline">
-          Nasıl yapılır?
+          Bildirim ayarları
         </Link>
       </p>
       <button type="button" onClick={dismiss} aria-label="Hatırlatmayı kapat" className="-m-1 rounded p-1 text-brand-800 hover:bg-brand-100">

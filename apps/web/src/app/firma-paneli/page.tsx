@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CompanyBadges } from "@/components/company-badges";
 import { DataTable, EmptyRow, PageHeader, StatGrid, TableHeading, td, th, type Stat } from "@/components/panel/panel-bits";
+import { AppDownloadCard } from "@/components/store-badges";
 import { ButtonLink } from "@/components/ui/button";
 import {
   apiFetch,
@@ -189,6 +190,12 @@ export default async function CompanyDashboardPage() {
             </tbody>
           </DataTable>
         </section>
+
+        <AppDownloadCard
+          app="firma"
+          title="Firma uygulamasını indir"
+          text="Bölgendeki yeni talepleri telefonunda anında gör, teklifini oradan ver, işlerini ve mesajlarını takip et. Aynı telefon numarası ve şifreyle giriş yaparsın."
+        />
       </div>
     </>
   );
