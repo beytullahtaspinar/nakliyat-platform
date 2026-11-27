@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { FilterTabs, PageHeader } from "@/components/panel/panel-bits";
+import { AppDownloadCard } from "@/components/store-badges";
 import { ArrowRightIcon, PlusIcon } from "@/components/ui/icons";
 import { apiFetch, type MovingRequest, type Paginated, type RequestStatus, type UnreadMessages } from "@/lib/api";
 import { formatDate, place } from "@/lib/format";
@@ -92,6 +93,12 @@ export default async function AccountPage({ searchParams }: PageProps<"/hesabim"
           </section>
         </>
       )}
+
+      <AppDownloadCard
+        app="musteri"
+        title="Taleplerini telefondan takip et"
+        text="Evden Eve Nakliyat uygulamasını indir; yeni teklif ve mesaj geldiğinde telefonuna bildirim gelsin. Aynı telefon numarası ve şifreyle giriş yaparsın."
+      />
     </div>
   );
 }

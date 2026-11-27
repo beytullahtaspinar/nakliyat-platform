@@ -15,9 +15,12 @@ import {
   WalletIcon,
 } from "@/components/ui/icons";
 import { Faq, type FaqItem } from "@/components/local/faq";
+import { JsonLd } from "@/components/json-ld";
+import { StoreBadges } from "@/components/store-badges";
 import { LatestReviews } from "@/components/reviews/latest-reviews";
 import { HOME_MIN_REVIEWS, LATEST_REVIEW_LIMIT, getLatestReviews } from "@/lib/latest-reviews";
 import { HUB_PATH } from "@/lib/local-content";
+import { mobileAppJsonLd } from "@/lib/mobile-apps";
 import { LAUNCH_CITIES, currentYear } from "@/lib/local-seo";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
 import { DEFAULT_INPUT, PRICE_CALCULATOR_PATH, formatTry } from "@/lib/pricing";
@@ -420,6 +423,32 @@ export default async function Home() {
       <div className="mx-auto max-w-3xl px-4 pb-20 sm:px-6 [&>section]:mt-0 [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:text-zinc-900 sm:[&_h2]:text-4xl">
         <Faq items={homeFaq(year, { min: twoPlusOne.minTry, max: twoPlusOne.maxTry })} />
       </div>
+
+      {/* Mobil uygulamalar (MobileApplication yapısal verisi bu sayfada) */}
+      <JsonLd data={[mobileAppJsonLd("musteri"), mobileAppJsonLd("firma")]} />
+      <section id="mobil-uygulama" className="scroll-mt-20 mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+        <SectionHeading
+          eyebrow="Mobil uygulama"
+          title="Taşınmanı cebinden takip et"
+          description="Teklifleri, mesajları ve taşınma gününü telefonundan izle; yeni teklif gelince anında haberin olsun."
+        />
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <Card className="p-6">
+            <h3 className="font-display text-lg font-bold text-zinc-900">Müşteri uygulaması</h3>
+            <p className="mt-1.5 text-sm text-zinc-600">
+              Talebini oluştur, gelen teklifleri karşılaştır, firmayla mesajlaş ve taşınmanı değerlendir.
+            </p>
+            <StoreBadges app="musteri" className="mt-5" />
+          </Card>
+          <Card className="p-6">
+            <h3 className="font-display text-lg font-bold text-zinc-900">Firma uygulaması</h3>
+            <p className="mt-1.5 text-sm text-zinc-600">
+              Nakliyat firmaları bölgesindeki yeni talepleri anında görür, telefondan teklif verir, işlerini yönetir.
+            </p>
+            <StoreBadges app="firma" className="mt-5" />
+          </Card>
+        </div>
+      </section>
 
       {/* Firmalar için */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">

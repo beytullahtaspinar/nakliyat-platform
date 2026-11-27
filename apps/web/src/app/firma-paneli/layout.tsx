@@ -6,6 +6,7 @@ import { ExternalIcon } from "@/components/ui/icons";
 import { apiFetch, type CompanyOverview, type CompanyProfile, type UnreadMessages } from "@/lib/api";
 import { cityOptions, getCompanyContext } from "@/lib/company";
 import type { CompanyCreditSummary } from "@/lib/credits";
+import { itunesMeta } from "@/lib/mobile-apps";
 import { companyPath } from "@/lib/reviews";
 import { isImpersonating } from "@/lib/session";
 import { AppPrompt } from "@/components/pwa/app-prompt";
@@ -18,6 +19,7 @@ import { ProfileForm } from "./profile-form";
 export const metadata: Metadata = {
   title: { default: "Firma paneli", template: "%s | Firma paneli" },
   robots: { index: false, follow: false },
+  itunes: itunesMeta("firma"),
 };
 
 /**

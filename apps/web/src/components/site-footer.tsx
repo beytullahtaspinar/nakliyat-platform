@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { citySlug, routeSlug } from "@nakliyat/locations";
+import { StoreBadges } from "@/components/store-badges";
 import { ButtonLink } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { COMPANY, LEGAL_LINKS } from "@/lib/legal";
 import { HUB_PATH } from "@/lib/local-content";
 import { LAUNCH_CITIES } from "@/lib/local-seo";
 import { COMPANY_SIGNUP_PATH, MARKETING_PAGES } from "@/lib/marketing";
+import { MOBILE_APPS } from "@/lib/mobile-apps";
 import { SERVICE_LINKS } from "@/lib/service-pages";
 import { BRAND_PROMISE, BRAND_SLOGAN, BRAND_TAGLINE, SITE_NAME } from "@/lib/site";
 
@@ -95,6 +97,18 @@ export function SiteFooter() {
               </a>
             </li>
           </ul>
+          <p className="mt-6 text-sm font-semibold text-zinc-900">Uygulamayı indir</p>
+          <StoreBadges app="musteri" size="sm" className="mt-2.5" />
+          <p className="mt-3 text-xs text-zinc-600">
+            Firma uygulaması:{" "}
+            <a href={MOBILE_APPS.firma.playUrl} target="_blank" rel="noopener" className="inline-block py-1 text-brand-700 hover:underline">
+              Google Play
+            </a>{" "}
+            ·{" "}
+            <a href={MOBILE_APPS.firma.appStoreUrl} target="_blank" rel="noopener" className="inline-block py-1 text-brand-700 hover:underline">
+              App Store
+            </a>
+          </p>
         </div>
         {COLUMNS.map((col) => (
           <nav key={col.title} aria-label={col.title} className="min-w-0">
