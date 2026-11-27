@@ -58,7 +58,7 @@ test("kaydı yarım firma: panelde adımlar, yönetimde liste ve hatırlatma", a
   await page.getByRole("link", { name: /Kaydı yarım firma/ }).click();
   await expect(page).toHaveURL(/rol=kaydi-yarim/);
   await page.getByRole("search").getByRole("searchbox").fill(fullName);
-  await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
+  await page.getByRole("search").getByRole("button", { name: "Ara", exact: true }).click();
   const row = page.getByRole("row", { name: new RegExp(fullName) });
   await expect(row.getByText("Firma bilgisi yok")).toBeVisible();
   await expectNoHorizontalScroll(page);

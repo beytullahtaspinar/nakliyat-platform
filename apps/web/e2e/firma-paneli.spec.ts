@@ -138,7 +138,7 @@ test("firma paneli CRM düzeninde: pano, süzgeçli talepler, işler ve müşter
   // İşlerim: müşteri araması, işlemler menüsü ve iş ayrıntısı
   await nav.getByRole("link", { name: /^İşlerim/ }).click();
   await page.getByRole("searchbox").fill(customerName);
-  await page.getByRole("button", { name: "Ara" }).click();
+  await page.getByRole("button", { name: "Ara", exact: true }).click();
   await expect(page).toHaveURL(/ara=/);
   const jobs = page.getByRole("table", { name: "İşlerim" });
   await expect(jobs.getByRole("row")).toHaveCount(2);
