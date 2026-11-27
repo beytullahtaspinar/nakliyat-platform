@@ -51,7 +51,7 @@ export function AppPrompt({ settingsPath }: { settingsPath: string }) {
         </a>
         ) ya da bu cihazda bildirimleri aç; müşteri talep oluşturduğunda veya teklifini kabul ettiğinde telefonun çalsın.{" "}
         <Link href={settingsPath} className="font-semibold underline">
-          Bildirim ayarları
+          Nasıl yapılır?
         </Link>
       </p>
       <button type="button" onClick={dismiss} aria-label="Hatırlatmayı kapat" className="-m-1 rounded p-1 text-brand-800 hover:bg-brand-100">

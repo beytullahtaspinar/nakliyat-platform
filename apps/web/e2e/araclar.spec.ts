@@ -95,7 +95,7 @@ test("firma aracını ekler; yönetici ruhsatı ve fotoğrafları yan yana incel
   await admin.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Araçlar/ }).click();
   await expect(admin.getByRole("heading", { level: 1, name: "Araçlar" })).toBeVisible();
   await admin.getByRole("search").getByRole("searchbox").fill(spaced(plate));
-  await admin.getByRole("search").getByRole("button", { name: "Ara" }).click();
+  await admin.getByRole("search").getByRole("button", { name: "Ara", exact: true }).click();
   const item = admin.getByRole("listitem").filter({ hasText: companyName });
   await expect(item.getByText(spaced(plate), { exact: true })).toBeVisible();
   await expect(item.getByRole("link", { name: /tam boyutta aç/ })).toHaveCount(4);

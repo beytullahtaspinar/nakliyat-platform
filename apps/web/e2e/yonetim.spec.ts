@@ -64,7 +64,7 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   await page.getByRole("navigation", { name: "Yönetim" }).getByRole("link", { name: /^Belgeler/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Belgeler" })).toBeVisible();
   await page.getByRole("search").getByRole("searchbox").fill(companyName);
-  await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
+  await page.getByRole("search").getByRole("button", { name: "Ara", exact: true }).click();
   await expect(page.getByRole("link", { name: companyName, exact: true })).toHaveCount(3);
   await expect(page.getByText("Yeni belge")).toHaveCount(3);
   await expectNoHorizontalScroll(page);
@@ -74,7 +74,7 @@ test("yönetici bekleyen firmayı inceler ve onaylar", async ({ page, request })
   // İlk ve varsayılan sekme "Tümü"
   await expect(page.getByRole("navigation", { name: "Firma durumu" }).getByRole("link", { name: "Tümü" })).toHaveAttribute("aria-current", "page");
   await page.getByRole("search").getByRole("searchbox").fill(companyName);
-  await page.getByRole("search").getByRole("button", { name: "Ara" }).click();
+  await page.getByRole("search").getByRole("button", { name: "Ara", exact: true }).click();
   await expectAccessible(page);
   await page.getByRole("link", { name: companyName }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(companyName);
